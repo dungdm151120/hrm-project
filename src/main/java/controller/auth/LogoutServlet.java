@@ -17,7 +17,9 @@ public class LogoutServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-
+        int Status = 0;
+        String email = request.getParameter("email");
+        String password = request.getParameter("password");
     }
 }
 
