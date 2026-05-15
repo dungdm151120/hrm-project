@@ -31,7 +31,7 @@ public class ChangePasswordServlet extends HttpServlet {
         request.setAttribute("user", user);
 
 
-        request.getRequestDispatcher("/WEB-INF/views/profile/change-password.jsp")
+        request.getRequestDispatcher("/WEB-INF/views/profile/change_password.jsp")
                 .forward(request, response);
     }
 
@@ -60,7 +60,7 @@ public class ChangePasswordServlet extends HttpServlet {
             request.setAttribute("success", "Đổi mật khẩu thành công");
         }
 
-        request.getRequestDispatcher("/WEB-INF/views/profile/change-password.jsp")
+        request.getRequestDispatcher("/WEB-INF/views/profile/change_password.jsp")
                 .forward(request, response);
     }
 }
