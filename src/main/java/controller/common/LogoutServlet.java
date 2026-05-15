@@ -1,6 +1,5 @@
 package controller;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,19 +8,17 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebServlet("/home")
-public class HomeServlet extends HttpServlet {
+@WebServlet("/logout")
+public class LogoutServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("currentUser") == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
+        if (session != null) {
+            session.invalidate();
         }
 
-        request.getRequestDispatcher("/WEB-INF/views/common/homepage.jsp")
-                .forward(request, response);
+        response.sendRedirect(request.getContextPath() + "/login");
     }
 }

@@ -1,16 +1,27 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: Admin
-  Date: 5/14/2026
-  Time: 10:23 PM
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <title>Title</title>
+    <title>Login</title>
 </head>
 <body>
+<h2>Login</h2>
 
+<% if (request.getAttribute("error") != null) { %>
+<p style="color:red;"><%= request.getAttribute("error") %></p>
+<% } %>
+
+<form action="<%= request.getContextPath() %>/login" method="post">
+    <div>
+        <label>Email</label>
+        <input type="email" name="email" required>
+    </div>
+
+    <div>
+        <label>Password</label>
+        <input type="password" name="password" required>
+    </div>
+
+    <button type="submit">Login</button>
+</form>
 </body>
 </html>
