@@ -34,7 +34,7 @@ public class LoginServlet extends HttpServlet {
 
             session.setAttribute("currentUser", user);
             session.setAttribute("userId", user.getId());
-            session.setAttribute("roleName", user.getRole_name());
+            session.setAttribute("roleName", user.getRoleName());
 
             response.sendRedirect(request.getContextPath() + "/home");
         } else {

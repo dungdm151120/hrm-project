@@ -29,7 +29,7 @@
     <table class="profile-table">
         <tr>
             <th>Full Name</th>
-            <td><%= user.getFull_name() %></td>
+            <td><%= user.getFullName() %></td>
         </tr>
 
         <tr>
@@ -49,7 +49,7 @@
 
         <tr>
             <th>Date of Birth</th>
-            <td><%= user.getDate_of_birth() %></td>
+            <td><%= user.getDateOfBirth() %></td>
         </tr>
 
         <tr>
@@ -59,7 +59,7 @@
 
         <tr>
             <th>Role</th>
-            <td><%= user.getRole_name() %></td>
+            <td><%= user.getRoleName() %></td>
         </tr>
 
         <tr>

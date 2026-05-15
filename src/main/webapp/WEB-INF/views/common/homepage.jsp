@@ -3,7 +3,7 @@
 
 <%
     User currentUser = (User) request.getAttribute("currentUser");
-    String roleName = currentUser.getRole_name();
+    String roleName = currentUser.getRoleName();
 %>
 
 <!DOCTYPE html>
@@ -17,7 +17,7 @@
     <div>HRM System</div>
 
     <div>
-        <span>Hello, <%= currentUser.getFull_name() %> - <%= roleName %></span>
+        <span>Hello, <%= currentUser.getFullName() %> - <%= roleName %></span>
         <a href="${pageContext.request.contextPath}/profile">View My Profile</a>
         <a href="${pageContext.request.contextPath}/logout">Logout</a>
 
