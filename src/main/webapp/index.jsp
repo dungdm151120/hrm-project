@@ -1,9 +1,4 @@
-
-<html>
-<head>
-    <title>Title</title>
-</head>
-<body>
-<h1>Hello</h1>
-</body>
-</html>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    response.sendRedirect(request.getContextPath() + "/login");
+%>

@@ -1,22 +1,23 @@
 package model;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class User {
     private int id;
-    private String full_name;
+    private String fullName;
     private String email;
     private String password;
     private String phone;
     private String gender;
-    private Date date_of_birth;
+    private LocalDateTime dateOfBirth;
     private String address;
-    private String avatar_url;
-    private int role_id;
-    private String role_name;
+    private String avatarUrl;
+    private int roleId;
+    private String roleName;
     private boolean active;
-    private String reset_token;
-    private Date reset_token_expired_at;
+    private String resetToken;
+    private LocalDateTime resetTokenExpiredAt;
 
     public User() {
     }
@@ -29,13 +30,15 @@ public class User {
         this.id = id;
     }
 
-    public String getFull_name() {
-        return full_name;
+
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setFull_name(String full_name) {
-        this.full_name = full_name;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
+
 
     public String getEmail() {
         return email;
@@ -45,21 +48,6 @@ public class User {
         this.email = email;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
 
     public String getPassword() {
         return password;
@@ -69,35 +57,33 @@ public class User {
         this.password = password;
     }
 
-    public int getRole_id() {
-        return role_id;
+
+    public String getPhone() {
+        return phone;
     }
 
-    public void setRole_id(int role_id) {
-        this.role_id = role_id;
-    }
-    public String getRole_name() {
-        return role_name;
-    }
-    public void setRole_name(String role_name) {
-        this.role_name = role_name;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
-    public String getAvatar_url() {
-        return avatar_url;
+
+    public String getGender() {
+        return gender;
     }
 
-    public void setAvatar_url(String avatar_url) {
-        this.avatar_url = avatar_url;
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 
-    public Date getDate_of_birth() {
-        return date_of_birth;
+
+    public LocalDateTime getDateOfBirth() {
+        return dateOfBirth;
     }
 
-    public void setDate_of_birth(Date date_of_birth) {
-        this.date_of_birth = date_of_birth;
+    public void setDateOfBirth(LocalDateTime dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
+
 
     public String getAddress() {
         return address;
@@ -107,6 +93,34 @@ public class User {
         this.address = address;
     }
 
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+
+    public int getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(int roleId) {
+        this.roleId = roleId;
+    }
+
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+
     public boolean isActive() {
         return active;
     }
@@ -115,19 +129,21 @@ public class User {
         this.active = active;
     }
 
-    public String getReset_token() {
-        return reset_token;
+
+    public String getResetToken() {
+        return resetToken;
     }
 
-    public void setReset_token(String reset_token) {
-        this.reset_token = reset_token;
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
     }
 
-    public Date getReset_token_expired_at() {
-        return reset_token_expired_at;
+
+    public LocalDateTime getResetTokenExpiredAt() {
+        return resetTokenExpiredAt;
     }
 
-    public void setReset_token_expired_at(Date reset_token_expired_at) {
-        this.reset_token_expired_at = reset_token_expired_at;
+    public void setResetTokenExpiredAt(LocalDateTime resetTokenExpiredAt) {
+        this.resetTokenExpiredAt = resetTokenExpiredAt;
     }
 }
