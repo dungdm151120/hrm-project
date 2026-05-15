@@ -1,17 +1,22 @@
 package controller.auth;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
+import model.User;
+import service.AuthService;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.*;
 import java.io.IOException;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
+    private final AuthService authService = new AuthService();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/WEB-INF/views/common/login.jsp")
+        request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp")
                 .forward(request, response);
     }
 
@@ -22,15 +27,19 @@ public class LoginServlet extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        // Tạm thời test trước, chưa cần database
-        if ("admin@gmail.com".equals(email) && "123".equals(password)) {
+        User user = authService.login(email, password);
+
+        if (user != null) {
             HttpSession session = request.getSession();
-            session.setAttribute("email", email);
+
+            session.setAttribute("currentUser", user);
+            session.setAttribute("userId", user.getId());
+            session.setAttribute("roleName", user.getRole_name());
 
             response.sendRedirect(request.getContextPath() + "/home");
         } else {
-            request.setAttribute("error", "Email hoặc mật khẩu không đúng");
-            request.getRequestDispatcher("/WEB-INF/views/common/login.jsp")
+            request.setAttribute("error", "Email hoặc mật khẩu không đúng, hoặc tài khoản đã bị khóa");
+            request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp")
                     .forward(request, response);
         }
     }

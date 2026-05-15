@@ -1,16 +1,18 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: Admin
-  Date: 5/14/2026
-  Time: 10:23 PM
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Title</title>
+    <title>HRM System</title>
+ <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
+
+<div class="landing-container">
+    <h1>Welcome to HRM System</h1>
+    <p>Human Resource Management System</p>
+
+    <a class="btn" href="${pageContext.request.contextPath}/login">Login</a>
+</div>
 
 </body>
 </html>
