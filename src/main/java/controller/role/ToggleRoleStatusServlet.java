@@ -1,24 +1,20 @@
 package controller.role;
 
-import dao.PermissionDAO;
 import dao.RoleDAO;
-import model.Permission;
 import model.Role;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
-import java.util.List;
 
-@WebServlet("/admin/roles/permissions")
-public class RolePermissionServlet extends HttpServlet {
+@WebServlet("/admin/roles/toggle-status")
+public class ToggleRoleStatusServlet extends HttpServlet {
 
     private final RoleDAO roleDAO = new RoleDAO();
-    private final PermissionDAO permissionDAO = new PermissionDAO();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String idParam = request.getParameter("roleId");
@@ -41,12 +37,10 @@ public class RolePermissionServlet extends HttpServlet {
             return;
         }
 
-        List<Permission> rolePermissions = permissionDAO.getPermissionsByRoleId(roleId);
+        // Đổi ngược trạng thái hiện tại
+        boolean newStatus = !role.isActive();
+        roleDAO.toggleStatus(roleId, newStatus);
 
-        request.setAttribute("role", role);
-        request.setAttribute("rolePermissions", rolePermissions);
-
-        request.getRequestDispatcher("/WEB-INF/views/role/role-permission.jsp")
-               .forward(request, response);
+        response.sendRedirect(request.getContextPath() + "/admin/roles");
     }
 }
