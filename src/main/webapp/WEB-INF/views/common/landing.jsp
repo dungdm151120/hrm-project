@@ -3,11 +3,10 @@
 <html>
 <head>
     <title>HRM System</title>
- <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
 
-<div class="landing-container">
+<div>
     <h1>Welcome to HRM System</h1>
     <p>Human Resource Management System</p>
 

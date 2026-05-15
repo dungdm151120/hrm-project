@@ -17,6 +17,12 @@
     </properties>
 
     <dependencies>
+        <!-- JSTL API -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jstl</artifactId>
+            <version>1.2</version>
+        </dependency>
         <!-- Servlet API for Tomcat 10 -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
@@ -24,6 +30,7 @@
             <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>

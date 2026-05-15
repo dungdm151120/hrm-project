@@ -1,31 +1,27 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<!DOCTYPE html>
 <html>
 <head>
     <title>Login</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
+<h2>Login</h2>
 
-<div class="form-container">
-    <h2>Login</h2>
+<% if (request.getAttribute("error") != null) { %>
+<p style="color:red;"><%= request.getAttribute("error") %></p>
+<% } %>
 
-    <form action="${pageContext.request.contextPath}/login" method="post">
+<form action="<%= request.getContextPath() %>/login" method="post">
+    <div>
         <label>Email</label>
         <input type="email" name="email" required>
+    </div>
 
+    <div>
         <label>Password</label>
         <input type="password" name="password" required>
+    </div>
 
-        <button type="submit">Login</button>
-    </form>
-
-    <p class="error">${error}</p>
-
-    <p>
-        <a href="${pageContext.request.contextPath}/landing">Back to landing page</a>
-    </p>
-</div>
-
+    <button type="submit">Login</button>
+</form>
 </body>
 </html>
