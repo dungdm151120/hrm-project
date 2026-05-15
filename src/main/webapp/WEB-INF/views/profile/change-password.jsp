@@ -1,5 +1,5 @@
 
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <!DOCTYPE html>
 <html>
@@ -39,6 +39,7 @@
 
         <button type="submit">Change Password</button>
     </form>
+
     <c:if test="${not empty error}">
         <p class="error">${error}</p>
     </c:if>
