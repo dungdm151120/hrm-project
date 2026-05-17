@@ -26,7 +26,7 @@
         <td>${user.email}</td>
     </tr>
     <tr>
-        <td><strong>Số điện thoại:</strong></td>
+        <td><strong>Phone:</strong></td>
         <td>${user.phone}</td>
     </tr>
     <tr>
