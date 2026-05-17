@@ -100,12 +100,12 @@
 
         </a>
 
-        <a href="${pageContext.request.contextPath}/admin/roles">
+        <a href="${pageContext.request.contextPath}/admin/roles/toggle_status">
             <h3>Active/Deactive Role</h3>
 
         </a>
 
-        <a href="${pageContext.request.contextPath}/admin/roles/permissions/edit">
+        <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions">
             <h3>Edit Role Permissions</h3>
         </a>
 
@@ -118,7 +118,6 @@
     <p>Role không hợp lệ.</p>
 
     <% } %>
-</div>
 
 </body>
 </html>

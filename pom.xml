@@ -16,17 +16,22 @@
     </properties>
 
     <dependencies>
+
+        <!-- JSTL API: dùng thẻ JSTL trong JSP như c:if, c:forEach -->
         <dependency>
             <groupId>jakarta.servlet.jsp.jstl</groupId>
             <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
             <version>3.0.0</version>
         </dependency>
+
+        <!-- JSTL Implementation: thư viện chạy JSTL -->
         <dependency>
             <groupId>org.glassfish.web</groupId>
             <artifactId>jakarta.servlet.jsp.jstl</artifactId>
             <version>3.0.1</version>
         </dependency>
 
+        <!-- Servlet API: dùng để code Servlet trên Tomcat 10+ -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
@@ -34,6 +39,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- MySQL Driver: kết nối Java với MySQL -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
