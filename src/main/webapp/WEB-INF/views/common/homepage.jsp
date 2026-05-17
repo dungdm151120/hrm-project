@@ -49,7 +49,7 @@
 
 
 
-        <a href="${pageContext.request.contextPath}/admin/users">
+        <a href="${pageContext.request.contextPath}/user_list">
             <h3>View User List</h3>
 
         </a>
@@ -75,7 +75,7 @@
     <h2>Admin Dashboard</h2>
 
 
-        <a href="${pageContext.request.contextPath}/admin/users">
+        <a href="${pageContext.request.contextPath}/user_list">
             <h3>View User List</h3>
 
         </a>
