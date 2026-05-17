@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <html>
 <head>
     <title>Login</title>
@@ -13,15 +13,22 @@
 <form action="<%= request.getContextPath() %>/login" method="post">
     <div>
         <label>Email</label>
-        <input type="email" name="email" required>
+        <label>
+            <input type="email" name="email" required>
+        </label>
     </div>
 
     <div>
         <label>Password</label>
-        <input type="password" name="password" required>
+        <label>
+            <input type="password" name="password" required>
+        </label>
     </div>
 
     <button type="submit">Login</button>
 </form>
+
+<br>
+<a href="<%= request.getContextPath() %>/forgot-password">Forgot password?</a>
 </body>
 </html>

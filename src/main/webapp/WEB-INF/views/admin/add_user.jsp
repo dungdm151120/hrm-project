@@ -66,7 +66,7 @@
             </tr>
             <tr>
                 <td><input type="submit" value="Add User"></td>
-                <td><a href="${pageContext.request.contextPath}/admin/users">Cancel</a></td>
+                <td><a href="${pageContext.request.contextPath}/user_list">Cancel</a></td>
             </tr>
         </table>
     </form>
