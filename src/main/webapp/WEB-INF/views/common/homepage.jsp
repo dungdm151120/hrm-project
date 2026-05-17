@@ -49,7 +49,7 @@
 
 
 
-        <a href="${pageContext.request.contextPath}/admin/users">
+        <a href="${pageContext.request.contextPath}/user_list">
             <h3>View User List</h3>
 
         </a>
@@ -75,7 +75,7 @@
     <h2>Admin Dashboard</h2>
 
 
-        <a href="${pageContext.request.contextPath}/admin/users">
+        <a href="${pageContext.request.contextPath}/user_list">
             <h3>View User List</h3>
 
         </a>
@@ -107,6 +107,10 @@
 
         <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions">
             <h3>Edit Role Permissions</h3>
+        </a>
+
+        <a href="${pageContext.request.contextPath}/admin/password-reset-requests">
+            <h3>Password Reset Requests</h3>
         </a>
 
 <% } else { %>

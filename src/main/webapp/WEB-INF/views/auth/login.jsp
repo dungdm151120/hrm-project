@@ -27,5 +27,8 @@
 
     <button type="submit">Login</button>
 </form>
+
+<br>
+<a href="<%= request.getContextPath() %>/forgot-password">Forgot password?</a>
 </body>
 </html>
