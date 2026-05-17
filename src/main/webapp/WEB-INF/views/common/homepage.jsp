@@ -100,15 +100,6 @@
 
         </a>
 
-        <a href="${pageContext.request.contextPath}/admin/roles/toggle_status">
-            <h3>Active/Deactive Role</h3>
-
-        </a>
-
-        <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions">
-            <h3>Edit Role Permissions</h3>
-        </a>
-
         <a href="${pageContext.request.contextPath}/admin/password-reset-requests">
             <h3>Password Reset Requests</h3>
         </a>
