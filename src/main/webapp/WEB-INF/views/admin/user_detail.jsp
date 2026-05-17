@@ -38,7 +38,7 @@
         <td>${user.gender}</td>
     </tr>
     <tr>
-        <td><strong>DOB:</strong></td>
+        <td><strong>Date of birth:</strong></td>
         <td>${user.dateOfBirth}</td>
     </tr>
     <tr>
@@ -46,8 +46,8 @@
         <td>${user.active ? "Active" : "Inactive"}</td>
     </tr>
     <tr>
-        <td><strong>Role (Role ID):</strong></td>
-        <td>${user.roleId}</td>
+        <td><strong>Role:</strong></td>
+        <td>${user.roleName}</td>
     </tr>
 </table>
 
