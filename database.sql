@@ -48,6 +48,25 @@ CREATE TABLE role_permissions (
                                           ON DELETE CASCADE
 );
 
+CREATE TABLE password_reset_requests (
+                                         id INT PRIMARY KEY AUTO_INCREMENT,
+                                         user_id INT NOT NULL,
+                                         email VARCHAR(100) NOT NULL,
+                                         reason VARCHAR(255),
+                                         status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+                                         generated_password VARCHAR(100),
+                                         admin_note VARCHAR(255),
+                                         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         handled_at DATETIME,
+                                         handled_by INT,
+
+                                         CONSTRAINT fk_password_reset_requests_user
+                                             FOREIGN KEY (user_id) REFERENCES users(id),
+
+                                         CONSTRAINT fk_password_reset_requests_admin
+                                             FOREIGN KEY (handled_by) REFERENCES users(id)
+);
+
 USE hrm_db;
 
 INSERT INTO roles (name, description, active)
