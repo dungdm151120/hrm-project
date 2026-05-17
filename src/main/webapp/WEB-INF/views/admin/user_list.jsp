@@ -36,7 +36,7 @@
 </table>
 
 <br>
-<a href="home">Back</a>
+<a href="${pageContext.request.contextPath}/home">Home</a>
 
 </body>
 </html>

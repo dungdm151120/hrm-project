@@ -7,7 +7,7 @@
     <title>Role Permission - ${role.name}</title>
 </head>
 <body>
-
+<a href="${pageContext.request.contextPath}/home">Home</a>
 <p><a href="${pageContext.request.contextPath}/admin/roles">Role list</a></p>
 
 <h2>Role Permission: ${role.name}</h2>
