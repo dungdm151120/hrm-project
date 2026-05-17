@@ -31,7 +31,7 @@
 </table>
 
 <br>
-<a href="index.jsp">Back to homepage</a>
+<a href="homepage.jsp">Back to homepage</a>
 
 </body>
 </html>
