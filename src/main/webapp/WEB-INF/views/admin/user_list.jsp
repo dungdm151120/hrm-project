@@ -13,6 +13,9 @@
     <tr>
         <th>ID</th>
         <th>Full Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
     </tr>
     </thead>
     <tbody>
@@ -20,9 +23,11 @@
         <tr>
             <td>${user.id}</td>
             <td>${user.fullName}</td>
+            <td>${user.email}</td>
+            <td>${user.roleName}</td>
+            <td>${user.active ? "Active" : "Inactive"}</td>
             <td>
-            <td>
-                <a href="user_detail?id=${user.id}">View</a>
+                <a href="user_detail?id=${user.id}">View Detail</a>
             </td>
             </td>
         </tr>
@@ -31,7 +36,7 @@
 </table>
 
 <br>
-<a href="homepage.jsp">Back to homepage</a>
+<a href="homepage.jsp">Back</a>
 
 </body>
 </html>
