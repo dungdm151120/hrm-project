@@ -1,16 +1,28 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: Admin
-  Date: 5/14/2026
-  Time: 10:25 PM
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<!DOCTYPE html>
+<html lang="vi">
 <head>
-    <title>Title</title>
+    <meta charset="UTF-8">
+    <title>Update Role</title>
 </head>
 <body>
+
+<p><a href="${pageContext.request.contextPath}/admin/roles">Back to role list</a></p>
+<h2>Update Role</h2>
+
+<c:if test="${not empty error}">
+    <p>${error}</p>
+</c:if>
+
+<c:if test="${not empty role}">
+<form action="${pageContext.request.contextPath}/admin/roles/update" method="post">
+    <input type="hidden" name="roleId" value="${role.id}">
+    <label>Role Name: <input type="text" name="name" value="${role.name}" required></label><br>
+    <label>Description: <input type="text" name="description" value="${role.description}"></label><br>
+    <button type="submit">Save</button>
+</form>
+</c:if>
 
 </body>
 </html>
