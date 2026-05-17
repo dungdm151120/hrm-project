@@ -36,7 +36,7 @@
 </table>
 
 <br>
-<a href="homepage.jsp">Back</a>
+<a href="${pageContext.request.contextPath}/home">Home</a>
 
 </body>
 </html>

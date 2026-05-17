@@ -7,7 +7,7 @@
     <title>List Of Roles</title>
 </head>
 <body>
-
+<a href="${pageContext.request.contextPath}/home">Home</a>
 <h2>List Of Roles</h2>
 
 <c:if test="${not empty param.success}">

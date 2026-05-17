@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<p>
+<p><a href="${pageContext.request.contextPath}/home">Home</a>
     <a href="${pageContext.request.contextPath}/admin/roles">List Of Roles</a>
     &gt;
     <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}">Permission of "${role.name}"</a>
