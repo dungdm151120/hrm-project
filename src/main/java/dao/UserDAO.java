@@ -305,11 +305,9 @@ public class UserDAO {
             ps.setInt(2, userId);
 
             return ps.executeUpdate() > 0;
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return false;
     }
 
