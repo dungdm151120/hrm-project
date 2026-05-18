@@ -18,7 +18,7 @@ public class UpdateUserServlet extends HttpServlet {
             throws ServletException, IOException {
         String idParam = req.getParameter("id");
         if (idParam == null || idParam.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/admin/users");
+            resp.sendRedirect(req.getContextPath() + "/user_list");
             return;
         }
 
@@ -65,7 +65,7 @@ public class UpdateUserServlet extends HttpServlet {
             boolean isSuccess = dao.updateUser(updatedUser);
 
             if (isSuccess) {
-                resp.sendRedirect(req.getContextPath() + "/admin/users");
+                resp.sendRedirect(req.getContextPath() + "/user_list");
             } else {
                 req.setAttribute("error", "Update failed in database!");
                 req.setAttribute("userToUpdate", updatedUser);

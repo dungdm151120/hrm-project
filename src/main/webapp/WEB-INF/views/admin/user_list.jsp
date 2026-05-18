@@ -29,6 +29,19 @@
             <td>
                 <a href="user_detail?id=${user.id}">View Detail</a>
             </td>
+            <td><a href="${pageContext.request.contextPath}/users/update?id=${user.id}">Update</a></td>
+            <td>
+                <c:choose>
+                    <c:when test="${user.active}">
+                        <a href="${pageContext.request.contextPath}/users/toggle-status?id=${user.id}&action=deactivate"
+                           onclick="return confirm('Deactivate this user?')">Deactivate</a>
+                    </c:when>
+
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/users/toggle-status?id=${user.id}&action=activate"
+                           onclick="return confirm('Activate this user?')">Activate</a>
+                    </c:otherwise>
+                </c:choose>
             </td>
         </tr>
     </c:forEach>

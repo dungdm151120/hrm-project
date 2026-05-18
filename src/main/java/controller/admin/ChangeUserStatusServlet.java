@@ -26,7 +26,7 @@ public class ChangeUserStatusServlet extends HttpServlet {
         String actionParam = req.getParameter("action");
 
         if (idParam == null || actionParam == null) {
-            resp.sendRedirect(req.getContextPath() + "/admin/users");
+            resp.sendRedirect(req.getContextPath() + "/user_list");
             return;
         }
 
@@ -48,6 +48,6 @@ public class ChangeUserStatusServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        resp.sendRedirect(req.getContextPath() + "/admin/users");
+        resp.sendRedirect(req.getContextPath() + "/user_list");
     }
 }
