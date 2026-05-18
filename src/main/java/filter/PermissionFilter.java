@@ -70,6 +70,13 @@ public class PermissionFilter implements Filter {
      *   USER_VIEW_LIST, USER_VIEW_DETAIL, USER_CREATE, USER_TOGGLE_STATUS, USER_UPDATE,
      *   ROLE_VIEW_LIST, ROLE_VIEW_PERMISSION, ROLE_UPDATE, ROLE_TOGGLE_STATUS, ROLE_EDIT_PERMISSION
      *
+     * Lưu ý URL mapping thực tế của các Servlet:
+     *   UserListServlet   -> /user_list
+     *   UserDetailServlet -> /user_detail
+     *   AddUserServlet    -> /admin/users/add
+     *   UpdateUserServlet -> /users/update
+     *   ChangeUserStatus  -> /users/toggle-status
+     *
      * @return permission code yêu cầu, hoặc null nếu URL không cần kiểm tra permission
      */
     private String resolveRequiredPermission(String path, String method) {
@@ -88,12 +95,16 @@ public class PermissionFilter implements Filter {
         if (path.equals("/change-password")) return "PROFILE_CHANGE_PASSWORD";
 
         // ===== USER MANAGEMENT =====
-        // GET /admin/users           -> xem danh sách user
-        if (path.equals("/admin/users") && "GET".equals(method))
+        // GET /user_list             -> xem danh sách user
+        // [SỬA LỖI] Sửa từ "/admin/users" thành "/user_list" để khớp với
+        // @WebServlet("/user_list") trong UserListServlet và redirect sau AddUser
+        if (path.equals("/user_list") && "GET".equals(method))
             return "USER_VIEW_LIST";
 
-        // GET /admin/users/detail    -> xem chi tiết user
-        if (path.equals("/admin/user_detail") && "GET".equals(method))
+        // GET /user_detail           -> xem chi tiết user
+        // [SỬA LỖI] Sửa từ "/admin/user_detail" thành "/user_detail" để khớp
+        // với @WebServlet("/user_detail") trong UserDetailServlet
+        if (path.equals("/user_detail") && "GET".equals(method))
             return "USER_VIEW_DETAIL";
 
         // GET /admin/users/add       -> form thêm user
@@ -102,12 +113,12 @@ public class PermissionFilter implements Filter {
             return "USER_CREATE";
 
         // POST /admin/users/toggle_status -> bật/tắt trạng thái user
-        if (path.equals("/admin/users/toggle_status") && "POST".equals(method))
+        if (path.equals("/users/toggle-status") && "POST".equals(method))
             return "USER_TOGGLE_STATUS";
 
         // GET  /admin/users/update   -> form cập nhật user
         // POST /admin/users/update   -> lưu cập nhật user
-        if (path.equals("/admin/users/update"))
+        if (path.equals("/users/update"))
             return "USER_UPDATE";
 
         // ===== ROLE MANAGEMENT =====

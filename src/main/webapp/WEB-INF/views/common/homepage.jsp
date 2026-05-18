@@ -59,12 +59,12 @@
 
         </a>
 
-        <a href="${pageContext.request.contextPath}/admin/users">
+        <a href="${pageContext.request.contextPath}/user_list">
             <h3>Update User Information</h3>
 
         </a>
 
-        <a href="${pageContext.request.contextPath}/admin/users">
+        <a href="${pageContext.request.contextPath}/user_list">
             <h3>Active/Deactive User</h3>
 
         </a>

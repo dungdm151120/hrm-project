@@ -16,7 +16,7 @@
 <% } %>
 
 <p>
-    <a href="${pageContext.request.contextPath}/login">Quay về trang chủ</a>
+    <a href="${pageContext.request.contextPath}/home">Quay về trang chủ</a>
 </p>
 
 </body>

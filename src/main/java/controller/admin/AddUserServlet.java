@@ -54,7 +54,7 @@ public class AddUserServlet extends HttpServlet {
             boolean isSuccess = dao.addUser(newUser);
 
             if (isSuccess) {
-                resp.sendRedirect(req.getContextPath() + "/user_list");
+                resp.sendRedirect(req.getContextPath() + "/admin/users");
             } else {
                 req.setAttribute("error", "Add new user failed in database!");
                 req.setAttribute("newUser", newUser);
