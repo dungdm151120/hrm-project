@@ -9,106 +9,93 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Homepage</title>
+    <title>Dashboard</title>
 </head>
 <body>
 
-<div>
-    <div>HRM System</div>
-
-    <div>
-        <span>Hello, <%= currentUser.getFullName() %> - <%= roleName %></span>
-        <a href="${pageContext.request.contextPath}/profile">View My Profile</a>
-        <a href="${pageContext.request.contextPath}/logout">Logout</a>
-
-    </div>
-</div>
+<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div>
-    <h1>Homepage</h1>
-
     <% if ("EMPLOYEE".equalsIgnoreCase(roleName)) { %>
 
-    <h2>Employee Dashboard</h2>
+        <h2>Employee Dashboard</h2>
 
-    <div>
-        <a href="${pageContext.request.contextPath}/profile">
-            <h3>View My Profile</h3>
-
-        </a>
-
-        <a href="${pageContext.request.contextPath}/change-password">
-            <h3>Change Password</h3>
-
-        </a>
-    </div>
+        <table>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/profile">View My Profile</a> ]</td>
+                <td>[ <a href="${pageContext.request.contextPath}/change-password">Change Password</a> ]</td>
+            </tr>
+        </table>
 
     <% } else if ("MANAGER".equalsIgnoreCase(roleName) || "HR".equalsIgnoreCase(roleName)) { %>
 
-    <h2>Manager Dashboard</h2>
+        <h2>Manager Dashboard</h2>
 
+        <h3>Personal</h3>
+        <table>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/profile">View My Profile</a> ]</td>
+                <td>[ <a href="${pageContext.request.contextPath}/change-password">Change Password</a> ]</td>
+            </tr>
+        </table>
 
-
-        <a href="${pageContext.request.contextPath}/user_list">
-            <h3>View User List</h3>
-
-        </a>
-
-        <a href="${pageContext.request.contextPath}/admin/users/add">
-            <h3>Add New User</h3>
-
-        </a>
-
-        <a href="${pageContext.request.contextPath}/user_list">
-            <h3>Update User Information</h3>
-
-        </a>
-
-        <a href="${pageContext.request.contextPath}/user_list">
-            <h3>Active/Deactive User</h3>
-
-        </a>
-    </div>
+        <h3>User Management</h3>
+        <table>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/user_list">View User List</a> ]</td>
+                <td>[ <a href="${pageContext.request.contextPath}/admin/users/add">Add New User</a> ]</td>
+            </tr>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/user_list">Update User Info</a> ]</td>
+                <td>[ <a href="${pageContext.request.contextPath}/user_list">Active/Deactive User</a> ]</td>
+            </tr>
+        </table>
 
     <% } else if ("ADMIN".equalsIgnoreCase(roleName)) { %>
 
-    <h2>Admin Dashboard</h2>
+        <h2>Admin Dashboard</h2>
 
+        <h3>Personal</h3>
+        <table>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/profile">View My Profile</a> ]</td>
+                <td>[ <a href="${pageContext.request.contextPath}/change-password">Change Password</a> ]</td>
+            </tr>
+        </table>
 
-        <a href="${pageContext.request.contextPath}/user_list">
-            <h3>View User List</h3>
+        <h3>User Management</h3>
+        <table>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/user_list">View User List</a> ]</td>
+                <td>[ <a href="${pageContext.request.contextPath}/admin/users/add">Add New User</a> ]</td>
+            </tr>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/user_list">Update User Info</a> ]</td>
+                <td>[ <a href="${pageContext.request.contextPath}/user_list">Active/Deactive User</a> ]</td>
+            </tr>
+        </table>
 
-        </a>
-
-        <a href="${pageContext.request.contextPath}/admin/users/add">
-            <h3>Add New User</h3>
-
-        </a>
-
-        <a href="${pageContext.request.contextPath}/admin/roles">
-            <h3>View Role List</h3>
-
-        </a>
-
-        <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=1">
-            <h3>View Role Permissions</h3>
-
-        </a>
-
-        <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=1">
-            <h3>Update Role Information</h3>
-
-        </a>
-
-        <a href="${pageContext.request.contextPath}/admin/password-reset-requests">
-            <h3>Password Reset Requests</h3>
-        </a>
+        <h3>Role Management</h3>
+        <table>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/admin/roles">View Role List</a> ]</td>
+                <td>[ <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=1">View Role Permissions</a> ]</td>
+            </tr>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=1">Update Role Info</a> ]</td>
+                <td>[ <a href="${pageContext.request.contextPath}/admin/roles">Active/Deactive Role</a> ]</td>
+            </tr>
+            <tr>
+                <td>[ <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=1">Edit Role Permissions</a> ]</td>
+            </tr>
+        </table>
 
 <% } else { %>
 
     <p>Role không hợp lệ.</p>
 
     <% } %>
+</div>
 
 </body>
 </html>

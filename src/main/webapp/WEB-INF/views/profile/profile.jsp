@@ -9,64 +9,36 @@
 <html>
 <head>
     <title>My Profile</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
 
-<div class="navbar">
-    <div class="logo">HRM System</div>
+<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-    <div class="nav-right">
-        <a href="${pageContext.request.contextPath}/home">Home</a>
-        <a href="${pageContext.request.contextPath}/change-password">Change Password</a>
-        <a href="${pageContext.request.contextPath}/logout">Logout</a>
-    </div>
-</div>
-
-<div class="page-container">
+<div>
     <h1>My Profile</h1>
 
-    <table class="profile-table">
+    <table>
         <tr>
-            <th>Full Name</th>
-            <td><%= user.getFullName() %></td>
-        </tr>
-
-        <tr>
-            <th>Email</th>
-            <td><%= user.getEmail() %></td>
-        </tr>
-
-        <tr>
-            <th>Phone</th>
-            <td><%= user.getPhone() %></td>
-        </tr>
-
-        <tr>
-            <th>Gender</th>
-            <td><%= user.getGender() %></td>
-        </tr>
-
-        <tr>
-            <th>Date of Birth</th>
-            <td><%= user.getDateOfBirth() %></td>
-        </tr>
-
-        <tr>
-            <th>Address</th>
-            <td><%= user.getAddress() %></td>
-        </tr>
-
-        <tr>
-            <th>Role</th>
-            <td><%= user.getRoleName() %></td>
-        </tr>
-
-        <tr>
-            <th>Status</th>
-            <td><%= user.isActive() ? "Active" : "Inactive" %></td>
+            <td><strong>Avatar:</strong></td>
+            <td>
+                <% if (user.getAvatarUrl() != null && !user.getAvatarUrl().trim().isEmpty()) { %>
+                    <img src="<%= user.getAvatarUrl() %>" width="100" height="100" alt="Avatar">
+                <% } else { %>
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='white' stroke='%23cccccc'/%3E%3Ctext x='8' y='18' font-size='14' fill='black'%3ENo Avatar%3C/text%3E%3C/svg%3E"
+                         width="100" height="100" alt="No Avatar">
+                <% } %>
+            </td>
         </tr>
     </table>
+
+    <p>Full Name: <%= user.getFullName() %></p>
+    <p>Email: <%= user.getEmail() %></p>
+    <p>Phone: <%= user.getPhone() %></p>
+    <p>Gender: <%= user.getGender() %></p>
+    <p>Date of Birth: <%= user.getDateOfBirth() != null ? user.getDateOfBirth().toLocalDate() : "" %></p>
+    <p>Address: <%= user.getAddress() %></p>
+    <p>Role: <%= user.getRoleName() %></p>
+    <p>Status: <%= user.isActive() ? "Active" : "Inactive" %></p>
 </div>
 
 </body>
