@@ -1,5 +1,7 @@
 package controller.auth;
 
+import dao.PermissionDAO;
+import model.Permission;
 import model.User;
 import service.AuthService;
 
@@ -7,11 +9,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
     private final AuthService authService = new AuthService();
+    private final PermissionDAO permissionDAO = new PermissionDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -26,14 +32,25 @@ public class LoginServlet extends HttpServlet {
 
         String email = request.getParameter("email");
         String password = request.getParameter("password");
+
         User user = authService.login(email, password);
 
         if (user != null) {
             HttpSession session = request.getSession();
 
+            // Lưu thông tin user vào session
             session.setAttribute("currentUser", user);
             session.setAttribute("userId", user.getId());
             session.setAttribute("roleName", user.getRoleName());
+
+            // Load danh sách permission codes của role user vào session
+            // để PermissionFilter kiểm tra nhanh mà không cần query DB mỗi request
+            List<Permission> permissions = permissionDAO.getPermissionsByRoleId(user.getRoleId());
+            Set<String> permissionCodes = new HashSet<>();
+            for (Permission p : permissions) {
+                permissionCodes.add(p.getCode());
+            }
+            session.setAttribute("userPermissions", permissionCodes);
 
             response.sendRedirect(request.getContextPath() + "/home");
         } else {
