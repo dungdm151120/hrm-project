@@ -90,12 +90,12 @@
 
         </a>
 
-        <a href="${pageContext.request.contextPath}/admin/roles/permissions">
+        <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=1">
             <h3>View Role Permissions</h3>
 
         </a>
 
-        <a href="${pageContext.request.contextPath}/admin/roles/update">
+        <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=1">
             <h3>Update Role Information</h3>
 
         </a>

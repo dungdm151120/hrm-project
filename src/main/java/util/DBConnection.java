@@ -5,9 +5,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/hrm_db?useSSL=false&serverTimezone=UTC";
+    private static final String URL =
+            "jdbc:mysql://localhost:3306/hrm_db?useSSL=false&serverTimezone=UTC";
     private static final String USER = "root";
-    private static final String PASSWORD = "123456";// thay password ae ở đây
+    private static final String PASSWORD = "nhuthuan";// thay password ae ở đây
 
     static {
         try {
