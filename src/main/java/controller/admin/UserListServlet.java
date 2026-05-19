@@ -17,18 +17,16 @@ public class UserListServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 1. Khởi tạo DAO để lấy dữ liệu từ Database
+
         UserDAO dao = new UserDAO();
 
-        // 2. Lấy danh sách User
+
         List<User> list = dao.findAllUsers();
 
-        // 3. Đẩy danh sách vào request attribute để JSP có thể lấy được
-        // Tên "userList" phải khớp với items="${userList}" trong thẻ c:forEach ở JSP
+
         request.setAttribute("userList", list);
 
-        // 4. Chuyển hướng sang trang JSP để hiển thị giao diện
-        // Đảm bảo đường dẫn file jsp của bạn chính xác
+
         request.getRequestDispatcher("/WEB-INF/views/admin/user_list.jsp").forward(request, response);
     }
 

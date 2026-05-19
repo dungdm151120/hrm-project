@@ -9,7 +9,7 @@ import java.util.List;
 
 public class RoleDAO {
 
-    // Lấy tất cả roles
+
     public List<Role> getAllRoles() {
         List<Role> roles = new ArrayList<>();
         String sql = "SELECT * FROM roles ORDER BY id";
@@ -25,7 +25,7 @@ public class RoleDAO {
         return roles;
     }
 
-    // Lấy role theo id
+
     public Role getRoleById(int id) {
         String sql = "SELECT * FROM roles WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -40,7 +40,7 @@ public class RoleDAO {
         return null;
     }
 
-    // Bật/tắt trạng thái role
+
     public boolean toggleStatus(int id, boolean active) {
         String sql = "UPDATE roles SET active = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -54,7 +54,23 @@ public class RoleDAO {
         return false;
     }
 
-    // Xoá toàn bộ permission của một role
+
+
+    public boolean updateRoleInfo(int id, String name, String description) {
+        String sql = "UPDATE roles SET name = ?, description = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, description);
+            ps.setInt(3, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
     public void deleteRolePermissions(int roleId) {
         String sql = "DELETE FROM role_permissions WHERE role_id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -66,7 +82,7 @@ public class RoleDAO {
         }
     }
 
-    // Thêm danh sách permission cho một role (dùng batch)
+
     public boolean insertRolePermissions(int roleId, List<Integer> permissionIds) {
         if (permissionIds == null || permissionIds.isEmpty()) return true;
         String sql = "INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)";
@@ -85,7 +101,7 @@ public class RoleDAO {
         return false;
     }
 
-    // Lấy danh sách permission_id hiện tại của một role
+
     public List<Integer> getPermissionIdsByRoleId(int roleId) {
         List<Integer> ids = new ArrayList<>();
         String sql = "SELECT permission_id FROM role_permissions WHERE role_id = ?";

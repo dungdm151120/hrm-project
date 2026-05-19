@@ -42,7 +42,9 @@
                 <td>
                     <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}">Inspect Role</a>
                     |
-                    <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=${role.id}">Edit role</a>
+                    <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=${role.id}">Edit Permissions</a>
+                    |
+                    <a href="${pageContext.request.contextPath}/admin/roles/update?roleId=${role.id}">Update Info</a>
                     |
                     <form action="${pageContext.request.contextPath}/admin/roles/toggle_status" method="post" style="display:inline;">
                         <input type="hidden" name="roleId" value="${role.id}">

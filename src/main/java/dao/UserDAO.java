@@ -13,7 +13,7 @@ import java.util.List;
 
 public class UserDAO {
 
-    //Tìm user qua email và password, check active
+
 
     public User findByEmailAndPassword(String email, String password) {
         String sql = """
@@ -46,7 +46,7 @@ public class UserDAO {
     }
 
 
-    //Tìm user bởi id
+
     public User findById(int id) {
         String sql = """
                 SELECT u.*, r.name AS role_name
@@ -73,7 +73,7 @@ public class UserDAO {
         return null;
     }
 
-    //Tìm user bởi email
+
     public User findByEmail(String email) {
         String sql = """
                 SELECT u.*, r.name AS role_name
@@ -101,7 +101,7 @@ public class UserDAO {
     }
 
 
-    //List all user
+
 
     public List<User> findAllUsers() {
         List<User> users = new ArrayList<>();
@@ -129,7 +129,7 @@ public class UserDAO {
     }
 
 
-    //tìm user bởi keyword
+
 
     public List<User> searchUsers(String keyword) {
         List<User> users = new ArrayList<>();
@@ -169,7 +169,7 @@ public class UserDAO {
     }
 
 
-    //thêm user
+
 
     public boolean addUser(User user) {
         String sql = """
@@ -213,7 +213,6 @@ public class UserDAO {
 
 
 
-    //update user bởi admin
 
     public boolean updateUser(User user) {
         String sql = """
@@ -254,7 +253,7 @@ public class UserDAO {
     }
 
 
-    // update profile
+
 
     public boolean updateProfile(User user) {
         String sql = """
@@ -289,7 +288,7 @@ public class UserDAO {
     }
 
 
-    //Active/deactive user
+
 
     public boolean updateUserStatus(int userId, boolean active) {
         String sql = """
@@ -312,7 +311,7 @@ public class UserDAO {
     }
 
 
-    //Check xem có đúng password cũ không
+
 
     public boolean checkOldPassword(int userId, String oldPassword) {
         String sql = """
@@ -339,7 +338,7 @@ public class UserDAO {
         return false;
     }
 
-    // update password
+
     public boolean updatePassword(int userId, String newPassword) {
         String sql = """
                 UPDATE users
@@ -468,7 +467,7 @@ public class UserDAO {
 //    }
 
 
-    //Kiểm tra xem có trùng email
+
     public boolean existsByEmail(String email) {
         String sql = """
                 SELECT id
@@ -492,7 +491,7 @@ public class UserDAO {
         return false;
     }
 
-    //Kiểm tra có trùng email ngoại trừ user hiện tại
+
     public boolean existsByEmailExceptCurrentUser(String email, int userId) {
         String sql = """
                 SELECT id
@@ -519,7 +518,7 @@ public class UserDAO {
     }
 
 
-    //Đếm user
+
 
     public int countAllUsers() {
         String sql = """
@@ -542,7 +541,7 @@ public class UserDAO {
         return 0;
     }
 
-    // đếm số lượng user active
+
     public int countActiveUsers() {
         String sql = """
                 SELECT COUNT(*) AS total
@@ -565,7 +564,7 @@ public class UserDAO {
         return 0;
     }
 
-    //Đếm số lượng user inactive
+
     public int countInactiveUsers() {
         String sql = """
                 SELECT COUNT(*) AS total
@@ -589,7 +588,7 @@ public class UserDAO {
     }
 
 
-    //Set User
+
 
     private User mapResultSetToUser(ResultSet rs) throws Exception {
         User user = new User();
@@ -614,7 +613,7 @@ public class UserDAO {
 
 
 
-    // Function phụ
+
     private LocalDateTime getNullableLocalDateTime(ResultSet rs, String columnName) throws Exception {
         Timestamp timestamp = rs.getTimestamp(columnName);
 

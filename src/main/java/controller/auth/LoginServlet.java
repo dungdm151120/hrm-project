@@ -38,13 +38,12 @@ public class LoginServlet extends HttpServlet {
         if (user != null) {
             HttpSession session = request.getSession();
 
-            // Lưu thông tin user vào session
+
             session.setAttribute("currentUser", user);
             session.setAttribute("userId", user.getId());
             session.setAttribute("roleName", user.getRoleName());
 
-            // Load danh sách permission codes của role user vào session
-            // để PermissionFilter kiểm tra nhanh mà không cần query DB mỗi request
+
             List<Permission> permissions = permissionDAO.getPermissionsByRoleId(user.getRoleId());
             Set<String> permissionCodes = new HashSet<>();
             for (Permission p : permissions) {
