@@ -19,15 +19,7 @@
 
     <table>
         <tr>
-            <td><strong>Avatar:</strong></td>
-            <td>
-                <% if (user.getAvatarUrl() != null && !user.getAvatarUrl().trim().isEmpty()) { %>
-                    <img src="<%= user.getAvatarUrl() %>" width="100" height="100" alt="Avatar">
-                <% } else { %>
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='white' stroke='%23cccccc'/%3E%3Ctext x='8' y='18' font-size='14' fill='black'%3ENo Avatar%3C/text%3E%3C/svg%3E"
-                         width="100" height="100" alt="No Avatar">
-                <% } %>
-            </td>
+            <td><img src="${user.avatarUrl}" width="100" height="100" alt="No Avatar"></td>
         </tr>
     </table>
 
