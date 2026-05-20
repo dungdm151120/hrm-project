@@ -1,0 +1,883 @@
+:root {
+    --primary: #1e40af;
+    --primary-dark: #1e3a8a;
+    --primary-light: #3b82f6;
+    --primary-bg: #eff6ff;
+    --success: #059669;
+    --success-bg: #ecfdf5;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --radius: 8px;
+    --radius-sm: 6px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--gray-100);
+    color: var(--gray-800);
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;        /* ✅ Bỏ padding */
+    min-height: 100vh;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 2rem;
+}
+
+/* Breadcrumb */
+.nav {
+    margin-bottom: 1.5rem;
+}
+
+.nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.nav a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.nav a::before {
+    content: '←';
+    font-size: 1.1rem;
+    margin-right: 0.25rem;
+}
+
+/* Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    position: relative;
+    padding-left: 1rem;
+}
+
+.page-header h2::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 32px;
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+/* Alerts */
+.alert {
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.alert-success {
+    background-color: var(--success-bg);
+    color: var(--success);
+    border-left: 4px solid var(--success);
+}
+
+.alert-error {
+    background-color: var(--danger-bg);
+    color: var(--danger);
+    border-left: 4px solid var(--danger);
+}
+
+/* Table Styles */
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+thead {
+    background-color: var(--primary);
+    color: var(--white);
+}
+
+th {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+tbody td {
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--gray-700);
+}
+
+tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+tbody tr:nth-child(even) {
+    background-color: var(--gray-50);
+}
+
+tbody tr:hover {
+    background-color: var(--primary-bg);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Status Badge */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.85rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
+.badge-active {
+    background-color: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.badge-inactive {
+    background-color: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+/* Action Buttons & Links */
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn, .actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+    background: none;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.actions a {
+    background-color: var(--primary-bg);
+    color: var(--primary);
+    border: 1px solid var(--primary-light);
+}
+
+.actions a:hover {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.btn-warning {
+    background-color: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+    font-family: inherit;
+}
+
+.btn-warning:hover {
+    background-color: var(--warning);
+    color: white;
+}
+
+.btn-danger {
+    background-color: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    font-family: inherit;
+}
+
+.btn-danger:hover {
+    background-color: var(--danger);
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--gray-500);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+/* Role Permission Detail Card */
+.role-detail {
+    background-color: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 3rem;
+    font-size: 0.95rem;
+}
+
+.role-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.role-meta-label {
+    font-weight: 600;
+    color: var(--gray-600);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.role-meta-value {
+    font-weight: 500;
+    color: var(--gray-800);
+    font-size: 1rem;
+}
+
+/* Nút "Edit permissions" chính */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 1.25rem;
+    background-color: var(--primary);
+    color: var(--white);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    color: var(--white);
+    text-decoration: none;
+}
+
+/* Dòng tổng permissions */
+.total-permission {
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.total-permission span {
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+/* Back link */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.back-link::before {
+    content: '←';
+    font-size: 1.1rem;
+}
+
+/* Form title */
+.form-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    position: relative;
+    padding-left: 1rem;
+    margin-bottom: 2rem;
+}
+
+.form-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 32px;
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+/* Role ID Badge */
+.role-id-badge {
+    display: inline-block;
+    background-color: var(--primary-bg);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.35rem 1rem;
+    border-radius: 50px;
+    border: 1px solid var(--primary-light);
+    margin-bottom: 1.5rem;
+}
+
+/* Form group */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    background-color: var(--white);
+    color: var(--gray-800);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Form actions */
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Buttons */
+.btn-save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem 1.5rem;
+    background-color: var(--primary);
+    color: var(--white);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.btn-save:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem 1.5rem;
+    background-color: var(--white);
+    color: var(--gray-700);
+    font-weight: 500;
+    font-size: 0.9rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.btn-cancel:hover {
+    background-color: var(--gray-100);
+    border-color: var(--gray-400);
+    color: var(--gray-800);
+}
+/* Breadcrumb */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--gray-500);
+}
+
+.breadcrumb a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.breadcrumb .separator {
+    margin: 0 0.3rem;
+    color: var(--gray-400);
+    user-select: none;
+}
+
+.breadcrumb .current {
+    color: var(--gray-700);
+    font-weight: 500;
+}
+
+/* Secondary button (cho Select All, Deselect All) */
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid var(--gray-300);
+    background-color: var(--white);
+    color: var(--gray-700);
+    font-family: inherit;
+}
+
+.btn-secondary:hover {
+    background-color: var(--gray-100);
+    border-color: var(--gray-400);
+}
+
+/* Counter */
+.selected-count-wrapper {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--gray-700);
+    margin-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.selected-count {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* Checkbox style */
+.perm-checkbox {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+/* Role description đơn giản */
+.role-description {
+    color: var(--gray-600);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+/* Toolbar cho các nút chọn */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+/* ============================================
+   LOGIN PAGE STYLES
+   ============================================ */
+
+/* Reset body padding để nền gradient phủ toàn màn hình */
+body.login-page {
+    padding: 0;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    min-height: 100vh;
+}
+
+/* Wrapper căn giữa màn hình */
+.login-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+/* Card đăng nhập */
+.login-card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 420px;
+}
+
+/* Header card */
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.5rem;
+}
+
+.login-header .brand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--primary);
+    color: white;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Form đăng nhập */
+.login-form .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.login-form .form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--gray-700);
+    margin-bottom: 0.4rem;
+}
+
+.login-form .form-group input {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    background-color: var(--gray-50);
+    color: var(--gray-800);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    outline: none;
+}
+
+.login-form .form-group input:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: var(--white);
+}
+
+/* Nút đăng nhập */
+.btn-login {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--primary);
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-family: inherit;
+    margin-top: 0.5rem;
+}
+
+.btn-login:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Footer link quên mật khẩu */
+.login-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.login-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.login-footer a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+/* ============================================
+   NAVBAR - Header chính
+   ============================================ */
+.navbar {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    margin: 0; /* đảm bảo không margin */
+}
+
+.navbar-brand {
+    color: var(--white);
+    font-weight: 700;
+    font-size: 1.25rem;
+    text-decoration: none;
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.navbar-links a {
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.2s, border-bottom 0.2s;
+    padding: 0.25rem 0;
+    border-bottom: 2px solid transparent;
+}
+
+.navbar-links a:hover {
+    color: var(--white);
+    border-bottom-color: var(--white);
+}
+
+/* ============================================
+   DASHBOARD
+   ============================================ */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.dashboard-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 2rem;
+    position: relative;
+    padding-left: 1rem;
+}
+
+.dashboard-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 32px;
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.dashboard-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    transition: box-shadow 0.2s;
+}
+
+.dashboard-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.dashboard-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-light);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dashboard-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dashboard-card li {
+    margin-bottom: 0.25rem;
+}
+
+.dashboard-card a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s, padding-left 0.2s;
+}
+
+.dashboard-card a::before {
+    content: "→";
+    margin-right: 0.5rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.dashboard-card a:hover {
+    background-color: var(--primary-bg);
+    padding-left: 0.75rem;
+}
+
+/* Role không hợp lệ */
+.role-invalid {
+    text-align: center;
+    color: var(--danger);
+    font-weight: 500;
+    padding: 2rem;
+    background: var(--danger-bg);
+    border-radius: var(--radius);
+}
+/* Badge cho trạng thái PENDING (màu vàng) */
+.badge-pending {
+    background-color: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+    .container {
+        padding: 1.5rem;
+    }
+    .actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

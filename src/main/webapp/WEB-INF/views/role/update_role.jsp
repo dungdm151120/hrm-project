@@ -4,17 +4,19 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Cập nhật thông tin Role</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cập nhật thông tin Role | HRM</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
 
 <div class="container">
-    <a class="back-link" href="${pageContext.request.contextPath}/admin/roles">← Quay lại danh sách Role</a>
+    <a class="back-link" href="${pageContext.request.contextPath}/admin/roles">Quay lại danh sách Role</a>
 
-    <h2>Cập nhật thông tin Role</h2>
+    <h2 class="form-title">Cập nhật thông tin Role</h2>
 
     <c:if test="${not empty error}">
-        <div class="alert alert-error">${error}</div>
+        <div class="alert alert-error">⚠ ${error}</div>
     </c:if>
 
     <c:choose>
@@ -25,7 +27,7 @@
                 <input type="hidden" name="roleId" value="${role.id}">
 
                 <div class="form-group">
-                    <label for="name">Tên Role <span style="color:red">*</span></label>
+                    <label for="name">Tên Role <span style="color: var(--danger);">*</span></label>
                     <input type="text" id="name" name="name"
                            value="${role.name}"
                            placeholder="Nhập tên role (VD: HR, MANAGER...)"
@@ -45,7 +47,10 @@
             </form>
         </c:when>
         <c:otherwise>
-            <p style="color: #c0392b;">Không tìm thấy role. <a href="${pageContext.request.contextPath}/admin/roles">Quay lại</a></p>
+            <p class="empty-state">
+                Không tìm thấy role.
+                <a href="${pageContext.request.contextPath}/admin/roles" style="color: var(--primary); font-weight: 500;">Quay lại danh sách</a>
+            </p>
         </c:otherwise>
     </c:choose>
 </div>
