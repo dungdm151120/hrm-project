@@ -110,7 +110,7 @@ public class UserDAO {
                 SELECT u.*, r.name AS role_name
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
-                ORDER BY u.id DESC
+                ORDER BY u.id ASC
                 """;
 
         try (Connection conn = DBConnection.getConnection();
