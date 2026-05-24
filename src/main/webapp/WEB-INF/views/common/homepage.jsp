@@ -69,7 +69,7 @@
             <p><a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=1">Update Role Info</a></p>
             <p><a href="${pageContext.request.contextPath}/admin/roles">Active/Deactive Role</a></p>
             <p><a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=1">Edit Role Permissions</a></p>
-            <p><a href="${pageContext.request.contextPath}/admin/password-reset-requests">Request reset password</a></p>
+
 
 
 <% } else { %>

@@ -4,67 +4,80 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Edit role permission - ${role.name}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit role permission - ${role.name} | HRM</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
 
-<p><a href="${pageContext.request.contextPath}/home">Home</a>
-    <a href="${pageContext.request.contextPath}/admin/roles">List Of Roles</a>
-    &gt;
-    <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}">Permission of "${role.name}"</a>
-    &gt; Edit
-</p>
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
+        <span class="separator">›</span>
+        <a href="${pageContext.request.contextPath}/admin/roles">Danh sách vai trò</a>
+        <span class="separator">›</span>
+        <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}">Quyền của "${role.name}"</a>
+        <span class="separator">›</span>
+        <span class="current">Chỉnh sửa</span>
+    </nav>
 
-<h2>Edit role permission: ${role.name}</h2>
-<p>Mo ta: ${role.description}</p>
+    <h2 class="form-title">Chỉnh sửa quyền: ${role.name}</h2>
+    <p class="role-description">Mô tả: ${role.description}</p>
 
-<form action="${pageContext.request.contextPath}/admin/roles/edit_permissions" method="post">
-    <input type="hidden" name="roleId" value="${role.id}">
+    <form action="${pageContext.request.contextPath}/admin/roles/edit_permissions" method="post">
+        <input type="hidden" name="roleId" value="${role.id}">
 
-    <p>
-        <button type="button" onclick="selectAll()">Select All</button>
-        <button type="button" onclick="clearAll()">Deselect All</button>
-        Select: <span id="selectedCount">0</span> / ${allPermissions.size()} permission
-    </p>
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button type="button" class="btn-secondary" onclick="selectAll()">Chọn tất cả</button>
+            <button type="button" class="btn-secondary" onclick="clearAll()">Bỏ chọn tất cả</button>
+            <span class="selected-count-wrapper">
+                Đã chọn: <span id="selectedCount" class="selected-count">0</span> / ${allPermissions.size()} quyền
+            </span>
+        </div>
 
-    <table border="1" cellpadding="5" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Select</th>
-                <th>Permission (Code)</th>
-                <th>Permission (Name)</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <c:forEach var="perm" items="${allPermissions}">
-                <%-- Kiem tra xem permission nay da duoc gan chua --%>
-                <c:set var="isAssigned" value="false"/>
-                <c:forEach var="assignedId" items="${assignedPermissionIds}">
-                    <c:if test="${assignedId == perm.id}">
-                        <c:set var="isAssigned" value="true"/>
-                    </c:if>
-                </c:forEach>
-                <tr>
-                    <td>
-                        <input type="checkbox"
-                               name="permissionIds"
-                               value="${perm.id}"
-                               class="perm-checkbox"
-                               ${isAssigned ? 'checked' : ''}>
-                    </td>
-                    <td>${perm.code}</td>
-                    <td>${perm.name}</td>
-                    <td>${perm.description}</td>
-                </tr>
-            </c:forEach>
-        </tbody>
-    </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Chọn</th>
+                        <th>Mã quyền</th>
+                        <th>Tên quyền</th>
+                        <th>Mô tả</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <c:forEach var="perm" items="${allPermissions}">
+                        <c:set var="isAssigned" value="false"/>
+                        <c:forEach var="assignedId" items="${assignedPermissionIds}">
+                            <c:if test="${assignedId == perm.id}">
+                                <c:set var="isAssigned" value="true"/>
+                            </c:if>
+                        </c:forEach>
+                        <tr>
+                            <td style="text-align: center;">
+                                <input type="checkbox"
+                                       name="permissionIds"
+                                       value="${perm.id}"
+                                       class="perm-checkbox"
+                                       ${isAssigned ? 'checked' : ''}>
+                            </td>
+                            <td><code>${perm.code}</code></td>
+                            <td>${perm.name}</td>
+                            <td>${perm.description}</td>
+                        </tr>
+                    </c:forEach>
+                </tbody>
+            </table>
+        </div>
 
-    <br>
-    <button type="submit">Save Changes</button>
-    <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}">Huy</a>
-</form>
+        <div class="form-actions">
+            <button type="submit" class="btn-save">Lưu thay đổi</button>
+            <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}" class="btn-cancel">Hủy</a>
+        </div>
+    </form>
+</div>
 
 <script>
     function updateCount() {
