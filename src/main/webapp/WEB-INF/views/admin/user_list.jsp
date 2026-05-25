@@ -17,6 +17,25 @@
         <h2>User List</h2>
     </div>
 
+    <div class="search-container" style="margin-bottom: 1.5rem; display: flex; gap: 8px; align-items: center;">
+        <form action="${pageContext.request.contextPath}/user_list" method="GET" style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" name="search" placeholder="Search name or email..."
+                   value="${oldKeyword}"
+                   style="height: 38px; padding: 0 12px; border: 1px solid #ccc; border-radius: 4px; width: 280px; box-sizing: border-box; font-size: 14px;">
+
+            <button type="submit" style="height: 38px; padding: 0 20px; background-color: #1E40AF; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                Search
+            </button>
+
+            <c:if test="${not empty oldKeyword}">
+                <a href="${pageContext.request.contextPath}/user_list"
+                   style="height: 38px; line-height: 38px; padding: 0 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; font-size: 14px;">
+                    Clear
+                </a>
+            </c:if>
+        </form>
+    </div>
+
     <div class="table-wrapper">
         <table>
             <thead>
