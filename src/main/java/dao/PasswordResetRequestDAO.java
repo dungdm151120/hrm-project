@@ -105,10 +105,10 @@ public class PasswordResetRequestDAO {
         return null;
     }
 
-    public boolean markDone(int requestId, String generatedPassword, int handledBy, String adminNote) {
+    public boolean approve(int requestId, String generatedPassword, int handledBy, String adminNote) {
         String sql = """
                 UPDATE password_reset_requests
-                SET status = 'DONE',
+                SET status = 'APPROVED',
                     generated_password = ?,
                     admin_note = ?,
                     handled_at = NOW(),
