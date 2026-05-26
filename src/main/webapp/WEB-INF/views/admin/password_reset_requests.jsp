@@ -59,8 +59,11 @@
                                 <c:when test="${resetRequest.status == 'APPROVED'}">
                                     <span class="badge badge-active">Approved</span>
                                 </c:when>
-                                <c:otherwise>
+                                <c:when test="${resetRequest.status == 'REJECTED'}">
                                     <span class="badge badge-inactive">Rejected</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="badge badge-inactive">${resetRequest.status}</span>
                                 </c:otherwise>
                             </c:choose>
                         </td>

@@ -17,16 +17,17 @@ public class UserListServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-
+        String keyword = request.getParameter("search");
         UserDAO dao = new UserDAO();
-
-
-        List<User> list = dao.findAllUsers();
-
+        List<User> list;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            list = dao.searchUsers(keyword.trim());
+            request.setAttribute("oldKeyword", keyword); // Giữ từ khóa trên ô input
+        } else {
+            list = dao.findAllUsers();
+        }
 
         request.setAttribute("userList", list);
-
-
         request.getRequestDispatcher("/WEB-INF/views/admin/user_list.jsp").forward(request, response);
     }
 

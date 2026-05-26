@@ -17,6 +17,18 @@
         <h2>User List</h2>
     </div>
 
+    <div class="search-container">
+    <form action="${pageContext.request.contextPath}/user_list" method="GET">
+        <input type="text" name="search" placeholder="Search name or email..." value="${oldKeyword}">
+        
+        <button type="submit" class="search-btn">Search</button>
+        
+        <c:if test="${not empty oldKeyword}">
+            <a href="${pageContext.request.contextPath}/user_list" class="clear-btn">Clear</a>
+        </c:if>
+    </form>
+</div>
+
     <div class="table-wrapper">
         <table>
             <thead>

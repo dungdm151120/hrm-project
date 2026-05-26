@@ -1,5 +1,9 @@
+<%@ page import="model.User" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%
+    User user = (User) request.getAttribute("user");
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -37,35 +41,35 @@
             </div>
             <div class="detail-info">
                 <div class="detail-row">
-                    <span class="detail-label">ID</span>
+                    <span class="detail-label">ID:</span>
                     <span class="detail-value">${user.id}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Full Name</span>
+                    <span class="detail-label">Full Name:</span>
                     <span class="detail-value">${user.fullName}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Email</span>
+                    <span class="detail-label">Email:</span>
                     <span class="detail-value">${user.email}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Phone</span>
+                    <span class="detail-label">Phone:</span>
                     <span class="detail-value">${user.phone}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Address</span>
+                    <span class="detail-label">Address:</span>
                     <span class="detail-value">${user.address}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Gender</span>
+                    <span class="detail-label">Gender:</span>
                     <span class="detail-value">${user.gender}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Date of Birth</span>
-                    <span class="detail-value">${user.dateOfBirth}</span>
+                    <span class="detail-label">Date of Birth:</span>
+                    <span class="detail-value"><%= user.getDateOfBirth() != null ? user.getDateOfBirth().toLocalDate() : "" %></span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Status</span>
+                    <span class="detail-label">Status:</span>
                     <span class="detail-value">
                         <c:choose>
                             <c:when test="${user.active}">
@@ -78,7 +82,7 @@
                     </span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Role</span>
+                    <span class="detail-label">Role:</span>
                     <span class="detail-value"><strong>${user.roleName}</strong></span>
                 </div>
             </div>

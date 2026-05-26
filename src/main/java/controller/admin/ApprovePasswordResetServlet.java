@@ -43,7 +43,7 @@ public class ApprovePasswordResetServlet extends HttpServlet {
         if (passwordUpdated) {
             boolean mailSent = EmailUtil.sendResetPasswordEmail(resetRequest.getEmail(), newPassword);
             String adminNote = mailSent ? "Password reset email sent." : "Password reset, but mail is not configured or failed.";
-            requestDAO.markDone(requestId, newPassword, adminId, adminNote);
+            requestDAO.approve(requestId, newPassword, adminId, adminNote);
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/password-reset-requests");
