@@ -7,6 +7,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>List Of Roles | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+    <style>
+        .search-filter {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .search-filter input[type="text"],
+        .search-filter select {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .search-filter button, .search-filter .btn-reset {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
@@ -15,8 +34,10 @@
 <div class="container" style="margin-top: 2rem;">
     <div class="page-header">
         <h2>List Of Roles</h2>
+        <a href="${pageContext.request.contextPath}/admin/roles/add" class="btn btn-primary">Add New Role</a>
     </div>
 
+    <%-- Hiển thị thông báo từ param (nếu có) --%>
     <c:if test="${not empty param.success}">
         <div class="alert alert-success">
             <span>✓</span> ${param.success}
@@ -27,6 +48,21 @@
             <span>⚠</span> ${param.error}
         </div>
     </c:if>
+
+    <%-- Form tìm kiếm và lọc --%>
+    <div class="search-filter">
+        <form action="${pageContext.request.contextPath}/admin/roles" method="get">
+            <input type="text" name="search" placeholder="Search by role name"
+                   value="${not empty search ? search : ''}">
+            <select name="status">
+                <option value="all" ${status == 'all' || empty status ? 'selected' : ''}>All status</option>
+                <option value="true" ${status == 'true' ? 'selected' : ''}>Active</option>
+                <option value="false" ${status == 'false' ? 'selected' : ''}>Inactive</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="${pageContext.request.contextPath}/admin/roles" class="btn btn-reset">Reset</a>
+        </form>
+    </div>
 
     <div class="table-wrapper">
         <table>

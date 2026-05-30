@@ -1,42 +1,42 @@
-package controller.role;
+package controller.department;
 
-import dao.RoleDAO;
-import model.Role;
-
+import dao.DepartmentDAO;
+import model.Department;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/admin/roles")
-public class RoleListServlet extends HttpServlet {
+@WebServlet("/admin/departments")
+public class DeptListServlet extends HttpServlet {
 
-    private final RoleDAO roleDAO = new RoleDAO();
+    private final DepartmentDAO departmentDAO = new DepartmentDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Lấy tham số tìm kiếm và lọc
         String search = request.getParameter("search");
         String statusParam = request.getParameter("status");
 
-        // Xác định giá trị active: null, true, false
         Boolean active = null;
         if (statusParam != null && !statusParam.isEmpty() && !statusParam.equals("all")) {
-            active = Boolean.parseBoolean(statusParam); // "true" hoặc "false"
+            active = Boolean.parseBoolean(statusParam);
         }
 
-        // Gọi DAO
-        List<Role> roles = roleDAO.searchRoles(search, active);
+        List<Department> departmentList;
+        if (search == null && active == null) {
+            departmentList = departmentDAO.getAllDepartmentsWithManager();
+        } else {
+            departmentList = departmentDAO.searchDepartmentsWithManager(search, active);
+        }
 
-        // Truyền dữ liệu sang view
-        request.setAttribute("roles", roles);
+        request.setAttribute("departmentList", departmentList);
         request.setAttribute("search", search);
         request.setAttribute("status", statusParam);
 
-        request.getRequestDispatcher("/WEB-INF/views/role/role_list.jsp")
+        request.getRequestDispatcher("/WEB-INF/views/department/dept_list.jsp")
                 .forward(request, response);
     }
 }
