@@ -14,7 +14,13 @@
 
 <div class="container" style="margin-top: 2rem;">
     <div class="page-header">
-        <h2>Employee List</h2>
+        <h2>
+            <c:if test="${not empty department}">
+                 ${department.name} -
+            </c:if>
+            Employee List
+
+        </h2>
         <a href="${pageContext.request.contextPath}/admin/departments/detail?id=${param.id}" class="btn btn-secondary">← Back to Department Detail</a>
     </div>
 

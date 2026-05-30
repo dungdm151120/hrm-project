@@ -1,11 +1,13 @@
 package controller.department;
 
+import dao.DepartmentDAO;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Department;
 import model.User;
 
 import java.io.IOException;
@@ -14,6 +16,7 @@ import java.util.List;
 @WebServlet("/admin/departments/employees")
 public class EmployeeListServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
+    private final DepartmentDAO departmentDAO = new DepartmentDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -35,8 +38,10 @@ public class EmployeeListServlet extends HttpServlet {
             return;
         }
         String keyword = request.getParameter("search");
+        Department department = departmentDAO.getDepartmentById(id);
         userList = userDAO.findByDepartmentId(id, keyword);
 
+        request.setAttribute("department", department);
         request.setAttribute("userList", userList);
         request.setAttribute("search", keyword);
 
