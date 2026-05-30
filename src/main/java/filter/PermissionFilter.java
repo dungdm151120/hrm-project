@@ -84,6 +84,16 @@ public class PermissionFilter implements Filter {
             return "ROLE_TOGGLE_STATUS";
         if (path.equals("/admin/roles/edit_permissions"))
             return "ROLE_EDIT_PERMISSION";
+        if (path.equals("/contracts") && "GET".equals(method))
+            return "CONTRACT_VIEW_OWN";
+        if (path.equals("/contracts/detail") && "GET".equals(method))
+            return "CONTRACT_VIEW_OWN";
+        if (path.equals("/contracts/add"))
+            return "CONTRACT_CREATE";
+        if (path.equals("/contracts/update"))
+            return "CONTRACT_UPDATE";
+        if (path.equals("/contracts/terminate") && "POST".equals(method))
+            return "CONTRACT_TERMINATE";
         return null;
     }
 }

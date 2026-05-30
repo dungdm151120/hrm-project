@@ -27,14 +27,16 @@
                 <h3>👤 Personal</h3>
                 <ul>
                     <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
+                    <li><a href="${pageContext.request.contextPath}/contracts">View My Contract</a></li>
                     <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
                 </ul>
             </div>
         </div>
 
-    <% } else if ("MANAGER".equalsIgnoreCase(roleName) || "HR".equalsIgnoreCase(roleName)) { %>
+    <% } else if ("MANAGER".equalsIgnoreCase(roleName) || "HR".equalsIgnoreCase(roleName)
+            || "HR_MANAGER".equalsIgnoreCase(roleName) || "HR_STAFF".equalsIgnoreCase(roleName)) { %>
 
-        <h2 class="dashboard-title">Manager Dashboard</h2>
+        <h2 class="dashboard-title">HR Dashboard</h2>
 
         <div class="dashboard-grid">
             <div class="dashboard-card">
@@ -52,6 +54,14 @@
                     <li><a href="${pageContext.request.contextPath}/admin/users/add">Add New User</a></li>
                     <li><a href="${pageContext.request.contextPath}/user_list">Update User Info</a></li>
                     <li><a href="${pageContext.request.contextPath}/user_list">Active/Deactive User</a></li>
+                </ul>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>Contract Management</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/contracts">View Contract List</a></li>
+                    <li><a href="${pageContext.request.contextPath}/contracts/add">Add Contract</a></li>
                 </ul>
             </div>
         </div>
