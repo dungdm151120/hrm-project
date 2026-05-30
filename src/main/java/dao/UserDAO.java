@@ -678,6 +678,72 @@ public class UserDAO {
         return 0;
     }
 
+    public List<User> findUsersByDeptId(int id) {
+        String sql = """
+                    SELECT u.*, d.name AS department_name, r.name AS role_name
+                    FROM users u
+                    LEFT JOIN departments d ON u.department_id = d.id
+                    LEFT JOIN roles r ON u.role_id = r.id
+                    WHERE u.department_id = ?
+                    """;
+
+        List<User> list = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToUser(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public void updateDepartment(int userId, Integer newDeptId, boolean activeStatus) {
+        String sql = "UPDATE users SET department_id = ?, active = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Set department_id
+            if (newDeptId == null) {
+                ps.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(1, newDeptId);
+            }
+
+            // Set active status (true=1, false=0)
+            ps.setBoolean(2, activeStatus);
+
+            // Set user ID
+            ps.setInt(3, userId);
+
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<User> findUnassignedUsers() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE department_id IS NULL";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new User(rs.getInt("id"), rs.getString("full_name")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 
     private User mapResultSetToUser(ResultSet rs) throws Exception {
         User user = new User();
