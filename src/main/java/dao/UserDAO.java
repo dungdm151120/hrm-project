@@ -3,10 +3,7 @@ package dao;
 import model.User;
 import util.DBConnection;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -337,6 +334,28 @@ public class UserDAO {
 
         return false;
     }
+    public List<User> getAllActiveUsers() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT id, full_name, email, active FROM users WHERE active = 1 ORDER BY full_name";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                users.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+    private User mapRow(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setFullName(rs.getString("full_name"));
+        user.setEmail(rs.getString("email"));
+        user.setActive(rs.getBoolean("active"));
+        return user;
+    }
 
 
     public boolean updatePassword(int userId, String newPassword) {
@@ -607,6 +626,16 @@ public class UserDAO {
         user.setActive(rs.getBoolean("active"));
         user.setResetToken(rs.getString("reset_token"));
         user.setResetTokenExpiredAt(getNullableLocalDateTime(rs, "reset_token_expired_at"));
+
+        // Thêm mapping department_id và position_id
+        int departmentId = rs.getInt("department_id");
+        if (!rs.wasNull()) {
+            user.setDepartmentId(departmentId);
+        }
+        int positionId = rs.getInt("position_id");
+        if (!rs.wasNull()) {
+            user.setPositionId(positionId);
+        }
 
         return user;
     }

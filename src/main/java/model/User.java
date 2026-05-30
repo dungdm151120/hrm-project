@@ -1,7 +1,6 @@
 package model;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 public class User {
     private int id;
@@ -15,13 +14,33 @@ public class User {
     private String avatarUrl;
     private int roleId;
     private String roleName;
+    private Integer departmentId;   // mới thêm
+    private Integer positionId;     // mới thêm (phòng hờ sau này)
     private boolean active;
     private String resetToken;
     private LocalDateTime resetTokenExpiredAt;
 
-    public User() {
+    public User() {}
+
+    // Getter/Setter cho departmentId
+    public Integer getDepartmentId() {
+        return departmentId;
     }
 
+    public void setDepartmentId(Integer departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    // Getter/Setter cho positionId
+    public Integer getPositionId() {
+        return positionId;
+    }
+
+    public void setPositionId(Integer positionId) {
+        this.positionId = positionId;
+    }
+
+    // --- Các getter/setter còn lại giữ nguyên ---
     public int getId() {
         return id;
     }
@@ -29,7 +48,6 @@ public class User {
     public void setId(int id) {
         this.id = id;
     }
-
 
     public String getFullName() {
         return fullName;
@@ -39,7 +57,6 @@ public class User {
         this.fullName = fullName;
     }
 
-
     public String getEmail() {
         return email;
     }
@@ -47,7 +64,6 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
-
 
     public String getPassword() {
         return password;
@@ -57,7 +73,6 @@ public class User {
         this.password = password;
     }
 
-
     public String getPhone() {
         return phone;
     }
@@ -65,7 +80,6 @@ public class User {
     public void setPhone(String phone) {
         this.phone = phone;
     }
-
 
     public String getGender() {
         return gender;
@@ -75,7 +89,6 @@ public class User {
         this.gender = gender;
     }
 
-
     public LocalDateTime getDateOfBirth() {
         return dateOfBirth;
     }
@@ -83,7 +96,6 @@ public class User {
     public void setDateOfBirth(LocalDateTime dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
-
 
     public String getAddress() {
         return address;
@@ -93,7 +105,6 @@ public class User {
         this.address = address;
     }
 
-
     public String getAvatarUrl() {
         return avatarUrl;
     }
@@ -101,7 +112,6 @@ public class User {
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
-
 
     public int getRoleId() {
         return roleId;
@@ -111,7 +121,6 @@ public class User {
         this.roleId = roleId;
     }
 
-
     public String getRoleName() {
         return roleName;
     }
@@ -119,7 +128,6 @@ public class User {
     public void setRoleName(String roleName) {
         this.roleName = roleName;
     }
-
 
     public boolean isActive() {
         return active;
@@ -129,7 +137,6 @@ public class User {
         this.active = active;
     }
 
-
     public String getResetToken() {
         return resetToken;
     }
@@ -137,7 +144,6 @@ public class User {
     public void setResetToken(String resetToken) {
         this.resetToken = resetToken;
     }
-
 
     public LocalDateTime getResetTokenExpiredAt() {
         return resetTokenExpiredAt;

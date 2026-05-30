@@ -55,35 +55,77 @@ public class PermissionFilter implements Filter {
 
 
     private String resolveRequiredPermission(String path, String method) {
+        // Public
+        if (path.equals("/login") || path.equals("/logout") || path.equals("/forgot-password") || path.equals("/reset-password")) {
+            return null;
+        }
 
+        // Home
+        if (path.equals("/home")) return "HOMEPAGE_VIEW";
 
-        if (path.equals("/login"))           return null; // public
-        if (path.equals("/logout"))          return null; // public
-        if (path.equals("/forgot-password")) return null; // public
-        if (path.equals("/reset-password"))  return null; // public
-        if (path.equals("/home"))            return "HOMEPAGE_VIEW";
-        if (path.equals("/profile"))         return "PROFILE_VIEW";
+        // Profile
+        if (path.equals("/profile")) return "PROFILE_VIEW";
         if (path.equals("/change-password")) return "PROFILE_CHANGE_PASSWORD";
-        if (path.equals("/user_list") && "GET".equals(method))
-            return "USER_VIEW_LIST";
-        if (path.equals("/user_detail") && "GET".equals(method))
-            return "USER_VIEW_DETAIL";
-        if (path.equals("/admin/users/add"))
-            return "USER_CREATE";
-        if (path.equals("/users/toggle-status") && "POST".equals(method))
-            return "USER_TOGGLE_STATUS";
-        if (path.equals("/users/update"))
-            return "USER_UPDATE";
-        if (path.equals("/admin/roles") && "GET".equals(method))
-            return "ROLE_VIEW_LIST";
-        if (path.equals("/admin/roles/permissions") && "GET".equals(method))
-            return "ROLE_VIEW_PERMISSION";
-        if (path.equals("/admin/roles/update"))
-            return "ROLE_UPDATE";
-        if (path.equals("/admin/roles/toggle_status") && "POST".equals(method))
-            return "ROLE_TOGGLE_STATUS";
-        if (path.equals("/admin/roles/edit_permissions"))
-            return "ROLE_EDIT_PERMISSION";
+
+        // User
+        if (path.equals("/user_list") && "GET".equals(method)) return "USER_VIEW_LIST";
+        if (path.equals("/user_detail") && "GET".equals(method)) return "USER_VIEW_DETAIL";
+        if (path.equals("/admin/users/add")) return "USER_CREATE";
+        if (path.equals("/users/update")) return "USER_UPDATE";
+        if (path.equals("/users/toggle-status") && "POST".equals(method)) return "USER_TOGGLE_STATUS";
+
+        // Role
+        if (path.equals("/admin/roles") && "GET".equals(method)) return "ROLE_VIEW_LIST";
+        if (path.equals("/admin/roles/permissions") && "GET".equals(method)) return "ROLE_VIEW_PERMISSION";
+        if (path.equals("/admin/roles/update")) return "ROLE_UPDATE";
+        if (path.equals("/admin/roles/toggle_status") && "POST".equals(method)) return "ROLE_TOGGLE_STATUS";
+        if (path.equals("/admin/roles/edit_permissions")) return "ROLE_EDIT_PERMISSION";
+        if (path.equals("/admin/roles/add")) return "ROLE_CREATE";  // <-- mới thêm
+
+        // Department
+        if (path.equals("/admin/departments") && "GET".equals(method)) return "DEPARTMENT_VIEW_LIST";
+        if (path.equals("/admin/departments/detail") && "GET".equals(method)) return "DEPARTMENT_VIEW_DETAIL";
+        if (path.equals("/admin/departments/add")) return "DEPARTMENT_CREATE";
+        if (path.equals("/admin/departments/update")) return "DEPARTMENT_UPDATE";
+        if (path.equals("/admin/departments/toggle-status") && "POST".equals(method)) return "DEPARTMENT_TOGGLE_STATUS";
+        if (path.equals("/admin/departments/assign-manager")) return "DEPARTMENT_ASSIGN_MANAGER";
+        if (path.equals("/admin/departments/employees")) return "DEPARTMENT_VIEW_EMPLOYEES";
+
+        // Position
+        if (path.equals("/admin/positions") && "GET".equals(method)) return "POSITION_VIEW_LIST";
+        if (path.equals("/admin/positions/detail") && "GET".equals(method)) return "POSITION_VIEW_DETAIL";
+        if (path.equals("/admin/positions/add")) return "POSITION_CREATE";
+        if (path.equals("/admin/positions/update")) return "POSITION_UPDATE";
+        if (path.equals("/admin/positions/toggle-status") && "POST".equals(method)) return "POSITION_TOGGLE_STATUS";
+
+        // Contract
+        if (path.equals("/admin/contracts") && "GET".equals(method)) return "CONTRACT_VIEW_LIST";
+        if (path.equals("/admin/contracts/detail") && "GET".equals(method)) return "CONTRACT_VIEW_DETAIL";
+        if (path.equals("/my-contract") && "GET".equals(method)) return "CONTRACT_VIEW_OWN";
+        if (path.equals("/admin/contracts/add")) return "CONTRACT_CREATE";
+        if (path.equals("/admin/contracts/update")) return "CONTRACT_UPDATE";
+        if (path.equals("/admin/contracts/terminate")) return "CONTRACT_TERMINATE";
+        if (path.equals("/admin/contracts/renew")) return "CONTRACT_RENEW";
+
+        // Attendance
+        if (path.equals("/attendance/check-in") && "POST".equals(method)) return "ATTENDANCE_CHECK_IN";
+        if (path.equals("/attendance/check-out") && "POST".equals(method)) return "ATTENDANCE_CHECK_OUT";
+        if (path.equals("/attendance/my") && "GET".equals(method)) return "ATTENDANCE_VIEW_OWN";
+        if (path.equals("/attendance/department") && "GET".equals(method)) return "ATTENDANCE_VIEW_DEPARTMENT";
+        if (path.equals("/attendance/all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
+        if (path.equals("/attendance/update")) return "ATTENDANCE_UPDATE";
+        if (path.equals("/attendance/export")) return "ATTENDANCE_EXPORT_REPORT";
+
+        // Payroll
+        if (path.equals("/payroll/my") && "GET".equals(method)) return "PAYROLL_VIEW_OWN";
+        if (path.equals("/payroll/list") && "GET".equals(method)) return "PAYROLL_VIEW_LIST";
+        if (path.equals("/payroll/detail") && "GET".equals(method)) return "PAYROLL_VIEW_DETAIL";
+        if (path.equals("/payroll/generate")) return "PAYROLL_GENERATE";
+        if (path.equals("/payroll/update-component")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/confirm")) return "PAYROLL_CONFIRM";
+        if (path.equals("/payroll/export")) return "PAYROLL_EXPORT_REPORT";
+
+        // Mặc định không yêu cầu quyền
         return null;
     }
 }
