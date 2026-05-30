@@ -15,7 +15,9 @@ public class User {
     private int roleId;
     private String roleName;
     private Integer departmentId;   // mới thêm
+    private String departmentName; // moi them
     private Integer positionId;     // mới thêm (phòng hờ sau này)
+    private String positionName; // moi them
     private boolean active;
     private String resetToken;
     private LocalDateTime resetTokenExpiredAt;
@@ -38,6 +40,22 @@ public class User {
 
     public void setPositionId(Integer positionId) {
         this.positionId = positionId;
+    }
+
+    //getter/setter cho position/department name
+    public String getPositionName() {
+        return positionName;
+    }
+    public void setPositionName(String positionName) {
+        this.positionName = positionName;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
     }
 
     // --- Các getter/setter còn lại giữ nguyên ---

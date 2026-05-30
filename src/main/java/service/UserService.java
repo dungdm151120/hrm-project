@@ -8,7 +8,7 @@ public class UserService {
     private final UserDAO userDAO = new UserDAO();
 
     public User getProfile(int userId) {
-        return userDAO.findById(userId);
+        return userDAO.findProfileById(userId);
     }
 
     public String changePassword(int userId, String oldPassword, String newPassword, String confirmPassword) {

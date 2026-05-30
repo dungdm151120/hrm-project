@@ -48,8 +48,10 @@
 <div class="container" style="margin-top: 2rem;">
     <div class="page-header">
         <h2>Department Detail</h2>
+        <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${department.id}" class="btn btn-secondary">View employee list</a>
         <a href="${pageContext.request.contextPath}/admin/departments" class="btn btn-secondary">← Back to List</a>
     </div>
+
 
     <c:if test="${empty department}">
         <div class="alert alert-error">
