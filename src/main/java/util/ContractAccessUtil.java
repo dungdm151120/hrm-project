@@ -27,9 +27,7 @@ public final class ContractAccessUtil {
         }
         String roleName = user.getRoleName();
         return "HR_STAFF".equalsIgnoreCase(roleName)
-                || "HR_MANAGER".equalsIgnoreCase(roleName)
-                || "HR".equalsIgnoreCase(roleName)
-                || "MANAGER".equalsIgnoreCase(roleName);
+                || "HR_MANAGER".equalsIgnoreCase(roleName);
     }
 
     public static boolean canViewContract(User user, LaborContract contract) {
