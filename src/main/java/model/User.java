@@ -24,6 +24,10 @@ public class User {
 
     public User() {}
 
+    public User(int id, String fullName) {
+        this.id = id;
+        this.fullName = fullName;
+    }
     // Getter/Setter cho departmentId
     public Integer getDepartmentId() {
         return departmentId;

@@ -21,7 +21,7 @@ public class MoveMemberServlet extends HttpServlet {
         int userId = Integer.parseInt(request.getParameter("userId"));
 
         request.setAttribute("user", userDAO.findById(userId));
-        request.setAttribute("deptList", deptDAO.findAllDepartment());
+        request.setAttribute("deptList", deptDAO.getAllDepartments());
 
         request.getRequestDispatcher("/WEB-INF/views/department/move_member.jsp").forward(request, response);
     }

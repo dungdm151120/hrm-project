@@ -88,24 +88,24 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/departments/add")) return "DEPARTMENT_CREATE";
         if (path.equals("/admin/departments/update")) return "DEPARTMENT_UPDATE";
         if (path.equals("/admin/departments/toggle-status") && "POST".equals(method)) return "DEPARTMENT_TOGGLE_STATUS";
-        if (path.equals("/admin/departments/assign-manager")) return "DEPARTMENT_ASSIGN_MANAGER";
+        if (path.equals("/add_member")) return "DEPARTMENT_ASSIGN_MANAGER";
         if (path.equals("/admin/departments/employees")) return "DEPARTMENT_VIEW_EMPLOYEES";
 
         // Position
-        if (path.equals("/admin/positions") && "GET".equals(method)) return "POSITION_VIEW_LIST";
-        if (path.equals("/admin/positions/detail") && "GET".equals(method)) return "POSITION_VIEW_DETAIL";
-        if (path.equals("/admin/positions/add")) return "POSITION_CREATE";
-        if (path.equals("/admin/positions/update")) return "POSITION_UPDATE";
-        if (path.equals("/admin/positions/toggle-status") && "POST".equals(method)) return "POSITION_TOGGLE_STATUS";
+        if (path.equals("/position/list") && "GET".equals(method)) return "POSITION_VIEW_LIST";
+        // POSITION_VIEW_DETAIL: chưa có servlet tương ứng
+        if (path.equals("/position/add")) return "POSITION_CREATE";
+        if (path.equals("/position/update")) return "POSITION_UPDATE";
+        if (path.equals("/position/toggle-status") && "POST".equals(method)) return "POSITION_TOGGLE_STATUS";
 
         // Contract
-        if (path.equals("/admin/contracts") && "GET".equals(method)) return "CONTRACT_VIEW_LIST";
-        if (path.equals("/admin/contracts/detail") && "GET".equals(method)) return "CONTRACT_VIEW_DETAIL";
+        if (path.equals("/contracts") && "GET".equals(method)) return "CONTRACT_VIEW_LIST";
+        if (path.equals("/contracts/detail") && "GET".equals(method)) return "CONTRACT_VIEW_DETAIL";
         if (path.equals("/my-contract") && "GET".equals(method)) return "CONTRACT_VIEW_OWN";
-        if (path.equals("/admin/contracts/add")) return "CONTRACT_CREATE";
-        if (path.equals("/admin/contracts/update")) return "CONTRACT_UPDATE";
-        if (path.equals("/admin/contracts/terminate")) return "CONTRACT_TERMINATE";
-        if (path.equals("/admin/contracts/renew")) return "CONTRACT_RENEW";
+        if (path.equals("/contracts/add")) return "CONTRACT_CREATE";
+        if (path.equals("/contracts/update")) return "CONTRACT_UPDATE";
+        if (path.equals("/contracts/terminate")) return "CONTRACT_TERMINATE";
+        // CONTRACT_RENEW: chưa có servlet tương ứng
 
         // Attendance
         if (path.equals("/attendance/check-in") && "POST".equals(method)) return "ATTENDANCE_CHECK_IN";
