@@ -39,6 +39,11 @@
             color: #6c757d;
             font-style: italic;
         }
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -48,8 +53,10 @@
 <div class="container" style="margin-top: 2rem;">
     <div class="page-header">
         <h2>Department Detail</h2>
-        <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${department.id}" class="btn btn-secondary">View employee list</a>
-        <a href="${pageContext.request.contextPath}/admin/departments" class="btn btn-secondary">← Back to List</a>
+        <div class="header-actions">
+            <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${department.id}" class="btn btn-secondary">View employee list</a>
+            <a href="${pageContext.request.contextPath}/admin/departments" class="btn btn-secondary">← Back to List</a>
+        </div>
     </div>
 
 
