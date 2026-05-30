@@ -24,6 +24,7 @@
                 <h3>👤 Personal</h3>
                 <ul>
                     <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
+                    <li><a href="${pageContext.request.contextPath}/contracts">View My Contract</a></li>
                     <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
                 </ul>
             </div>
