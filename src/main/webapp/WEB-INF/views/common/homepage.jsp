@@ -32,7 +32,7 @@
             </div>
         </div>
 
-    <% } else if ("MANAGER".equalsIgnoreCase(roleName) || "HR".equalsIgnoreCase(roleName)) { %>
+    <% } else if ("HR_MANAGER".equalsIgnoreCase(roleName) || "HR".equalsIgnoreCase(roleName)) { %>
 
         <h2 class="dashboard-title">Manager Dashboard</h2>
 
