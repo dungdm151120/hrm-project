@@ -731,18 +731,38 @@ public class UserDAO {
     }
 
     public List<User> findUnassignedUsers() {
-        List<User> list = new ArrayList<>();
-        String sql = "SELECT * FROM users WHERE department_id IS NULL";
+        List<User> users = new ArrayList<>();
+        String sql = """
+                SELECT u.id,
+                       u.full_name,
+                       u.email,
+                       u.phone,
+                       u.active,
+                       u.department_id,
+                       u.position_id,
+                       p.name AS position_name,
+                       d.name AS department_name
+                FROM users u
+                LEFT JOIN departments d ON d.id = u.department_id
+                LEFT JOIN positions p ON p.id = u.position_id
+                WHERE u.department_id IS NULL
+                  AND u.active = TRUE
+                ORDER BY u.full_name
+                """;
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
-                list.add(new User(rs.getInt("id"), rs.getString("full_name")));
+                users.add(mapEmployeeResultSetToUser(rs));
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return list;
+
+        return users;
     }
 
     private User mapResultSetToUser(ResultSet rs) throws Exception {

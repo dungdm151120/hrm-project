@@ -42,7 +42,7 @@ public class PermissionFilter implements Filter {
         @SuppressWarnings("unchecked")
         Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
 
-        if (userPermissions == null || !userPermissions.contains(requiredPermission)) {
+        if (userPermissions == null || !hasRequiredPermission(userPermissions, requiredPermission)) {
 
             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
             req.setAttribute("permissionDenied", requiredPermission);
@@ -51,6 +51,16 @@ public class PermissionFilter implements Filter {
         }
 
         chain.doFilter(request, response);
+    }
+
+    private boolean hasRequiredPermission(Set<String> userPermissions, String requiredPermission) {
+        String[] acceptedPermissions = requiredPermission.split("\\|");
+        for (String permission : acceptedPermissions) {
+            if (userPermissions.contains(permission)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -73,6 +83,9 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/users/add")) return "USER_CREATE";
         if (path.equals("/users/update")) return "USER_UPDATE";
         if (path.equals("/users/toggle-status") && "POST".equals(method)) return "USER_TOGGLE_STATUS";
+        if (path.equals("/admin/password-reset-requests") && "GET".equals(method)) return "USER_UPDATE";
+        if (path.equals("/admin/password-reset/approve") && "POST".equals(method)) return "USER_UPDATE";
+        if (path.equals("/admin/password-reset/reject") && "POST".equals(method)) return "USER_UPDATE";
 
         // Role
         if (path.equals("/admin/roles") && "GET".equals(method)) return "ROLE_VIEW_LIST";
@@ -90,8 +103,17 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/departments/toggle-status") && "POST".equals(method)) return "DEPARTMENT_TOGGLE_STATUS";
         if (path.equals("/admin/departments/assign-manager")) return "DEPARTMENT_ASSIGN_MANAGER";
         if (path.equals("/admin/departments/employees")) return "DEPARTMENT_VIEW_EMPLOYEES";
+        //
+        if (path.equals("/add_member")) return "DEPARTMENT_UPDATE";
+        if (path.equals("/move_member")) return "DEPARTMENT_UPDATE";
+        if (path.equals("/remove_member")) return "DEPARTMENT_UPDATE";
 
         // Position
+        if (path.equals("/position/list") && "GET".equals(method)) return "POSITION_VIEW_LIST";
+        if (path.equals("/position/add")) return "POSITION_CREATE";
+        if (path.equals("/position/update")) return "POSITION_UPDATE";
+        if (path.equals("/position/toggle-status")) return "POSITION_TOGGLE_STATUS";
+        //
         if (path.equals("/admin/positions") && "GET".equals(method)) return "POSITION_VIEW_LIST";
         if (path.equals("/admin/positions/detail") && "GET".equals(method)) return "POSITION_VIEW_DETAIL";
         if (path.equals("/admin/positions/add")) return "POSITION_CREATE";
@@ -99,6 +121,12 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/positions/toggle-status") && "POST".equals(method)) return "POSITION_TOGGLE_STATUS";
 
         // Contract
+        if (path.equals("/contracts") && "GET".equals(method)) return "CONTRACT_VIEW_LIST|CONTRACT_VIEW_OWN";
+        if (path.equals("/contracts/detail") && "GET".equals(method)) return "CONTRACT_VIEW_DETAIL|CONTRACT_VIEW_OWN";
+        if (path.equals("/contracts/add")) return "CONTRACT_CREATE";
+        if (path.equals("/contracts/update")) return "CONTRACT_UPDATE";
+        if (path.equals("/contracts/terminate")) return "CONTRACT_TERMINATE";
+        //
         if (path.equals("/admin/contracts") && "GET".equals(method)) return "CONTRACT_VIEW_LIST";
         if (path.equals("/admin/contracts/detail") && "GET".equals(method)) return "CONTRACT_VIEW_DETAIL";
         if (path.equals("/my-contract") && "GET".equals(method)) return "CONTRACT_VIEW_OWN";
