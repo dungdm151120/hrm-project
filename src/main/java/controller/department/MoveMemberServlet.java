@@ -27,13 +27,20 @@ public class MoveMemberServlet extends HttpServlet {
     }
 
     // Lưu phòng ban mới
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        int userId = Integer.parseInt(request.getParameter("userId"));
-        int newDeptId = Integer.parseInt(request.getParameter("newDeptId"));
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String userIdStr = request.getParameter("userId");
+        String newDeptIdStr = request.getParameter("newDeptId");
 
-        userDAO.updateDepartment(userId, newDeptId, true);
+        System.out.println("DEBUG: userId=" + userIdStr + ", newDeptId=" + newDeptIdStr); // Kiểm tra log này
 
-        response.sendRedirect(request.getContextPath() + "/department_members?deptId=" + newDeptId);
+        if (newDeptIdStr != null && !newDeptIdStr.isEmpty()) {
+            int userId = Integer.parseInt(userIdStr);
+            int newDeptId = Integer.parseInt(newDeptIdStr);
+            userDAO.updateDepartmentMember(userId, newDeptId, true);
+
+            response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + newDeptId);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/admin/departments?error=InvalidID");
+        }
     }
 }
