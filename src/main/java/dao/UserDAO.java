@@ -3,21 +3,20 @@ package dao;
 import model.User;
 import util.DBConnection;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDAO {
 
+
     public User findByEmailAndPassword(String email, String password) {
         String sql = """
                 SELECT u.*, r.name AS role_name
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
+                
                 WHERE u.email = ?
                   AND u.password = ?
                   AND u.active = TRUE
@@ -68,6 +67,94 @@ public class UserDAO {
         }
 
         return null;
+    }
+
+    public User findProfileById(int id) {
+        String sql = """
+                SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
+                FROM users u
+                JOIN roles r ON u.role_id = r.id
+                LEFT JOIN departments d ON d.id = u.department_id
+                LEFT JOIN positions p ON p.id = u.position_id
+                WHERE u.id = ?
+                """;
+        User user = new User();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    user.setId(rs.getInt("id"));
+                    user.setFullName(rs.getString("full_name"));
+                    user.setEmail(rs.getString("email"));
+                    user.setPassword(rs.getString("password"));
+                    user.setPhone(rs.getString("phone"));
+                    user.setGender(rs.getString("gender"));
+                    user.setDateOfBirth(getNullableLocalDateTime(rs, "date_of_birth"));
+                    user.setAddress(rs.getString("address"));
+                    user.setAvatarUrl(rs.getString("avatar_url"));
+                    user.setDepartmentName(rs.getString("department_name"));
+                    user.setPositionName(rs.getString("position_name"));
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return user;
+    }
+
+    public List<User> findByDepartmentId(int id) {
+        return findByDepartmentId(id, null);
+    }
+
+    public List<User> findByDepartmentId(int id, String keyword) {
+        List<User> users = new ArrayList<>();
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        String sql = """
+                      SELECT u.id,
+                             u.full_name,
+                             u.email,
+                             u.phone,
+                             u.active,
+                             u.department_id,
+                             u.position_id,
+                             p.name AS position_name,
+                             d.name AS department_name
+                      FROM users u
+                      LEFT JOIN departments d ON d.id = u.department_id
+                      LEFT JOIN positions p ON p.id = u.position_id
+                      WHERE u.department_id = ?
+                """;
+        if (hasKeyword) {
+            sql += " AND (u.full_name LIKE ? OR u.email LIKE ?) ";
+        }
+        sql += " ORDER BY u.full_name";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            if (hasKeyword) {
+                String searchKeyword = "%" + keyword.trim() + "%";
+                ps.setString(2, searchKeyword);
+                ps.setString(3, searchKeyword);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    users.add(mapEmployeeResultSetToUser(rs));
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return users;
     }
 
 
@@ -162,8 +249,6 @@ public class UserDAO {
     }
 
 
-
-
     public boolean addUser(User user) {
         String sql = """
                 INSERT INTO users (
@@ -205,8 +290,6 @@ public class UserDAO {
     }
 
 
-
-
     public boolean updateUser(User user) {
         String sql = """
                 UPDATE users
@@ -246,8 +329,6 @@ public class UserDAO {
     }
 
 
-
-
     public boolean updateProfile(User user) {
         String sql = """
                 UPDATE users
@@ -280,6 +361,7 @@ public class UserDAO {
         return false;
     }
 
+
     public boolean updateUserStatus(int userId, boolean active) {
         String sql = """
                 UPDATE users
@@ -299,6 +381,7 @@ public class UserDAO {
         }
         return false;
     }
+
 
     public boolean checkOldPassword(int userId, String oldPassword) {
         String sql = """
@@ -324,6 +407,31 @@ public class UserDAO {
 
         return false;
     }
+
+    public List<User> getAllActiveUsers() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT id, full_name, email, active FROM users WHERE active = 1 ORDER BY full_name";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                users.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    private User mapRow(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setFullName(rs.getString("full_name"));
+        user.setEmail(rs.getString("email"));
+        user.setActive(rs.getBoolean("active"));
+        return user;
+    }
+
 
     public boolean updatePassword(int userId, String newPassword) {
         String sql = """
@@ -453,7 +561,6 @@ public class UserDAO {
 //    }
 
 
-
     public boolean existsByEmail(String email) {
         String sql = """
                 SELECT id
@@ -502,8 +609,6 @@ public class UserDAO {
 
         return false;
     }
-
-
 
 
     public int countAllUsers() {
@@ -573,6 +678,73 @@ public class UserDAO {
         return 0;
     }
 
+    public List<User> findUsersByDeptId(int id) {
+        String sql = """
+                    SELECT u.*, d.name AS department_name, r.name AS role_name
+                    FROM users u
+                    LEFT JOIN departments d ON u.department_id = d.id
+                    LEFT JOIN roles r ON u.role_id = r.id
+                    WHERE u.department_id = ?
+                    """;
+
+        List<User> list = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToUser(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public void updateDepartment(int userId, Integer newDeptId, boolean activeStatus) {
+        String sql = "UPDATE users SET department_id = ?, active = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Set department_id
+            if (newDeptId == null) {
+                ps.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(1, newDeptId);
+            }
+
+            // Set active status (true=1, false=0)
+            ps.setBoolean(2, activeStatus);
+
+            // Set user ID
+            ps.setInt(3, userId);
+
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<User> findUnassignedUsers() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE department_id IS NULL";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new User(rs.getInt("id"), rs.getString("full_name")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     private User mapResultSetToUser(ResultSet rs) throws Exception {
         User user = new User();
 
@@ -590,11 +762,42 @@ public class UserDAO {
         user.setActive(rs.getBoolean("active"));
         user.setResetToken(rs.getString("reset_token"));
         user.setResetTokenExpiredAt(getNullableLocalDateTime(rs, "reset_token_expired_at"));
+        // Thêm mapping department_id và position_id
+        int departmentId = rs.getInt("department_id");
+        if (!rs.wasNull()) {
+            user.setDepartmentId(departmentId);
+        }
+        int positionId = rs.getInt("position_id");
+        if (!rs.wasNull()) {
+            user.setPositionId(positionId);
+        }
 
         return user;
     }
 
+    private User mapEmployeeResultSetToUser(ResultSet rs) throws SQLException {
+        User user = new User();
 
+        user.setId(rs.getInt("id"));
+        user.setFullName(rs.getString("full_name"));
+        user.setEmail(rs.getString("email"));
+        user.setPhone(rs.getString("phone"));
+        user.setActive(rs.getBoolean("active"));
+        user.setPositionName(rs.getString("position_name"));
+        user.setDepartmentName(rs.getString("department_name"));
+
+        int departmentId = rs.getInt("department_id");
+        if (!rs.wasNull()) {
+            user.setDepartmentId(departmentId);
+        }
+
+        int positionId = rs.getInt("position_id");
+        if (!rs.wasNull()) {
+            user.setPositionId(positionId);
+        }
+
+        return user;
+    }
 
 
     private LocalDateTime getNullableLocalDateTime(ResultSet rs, String columnName) throws Exception {

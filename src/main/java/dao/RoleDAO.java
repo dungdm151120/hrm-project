@@ -55,7 +55,6 @@ public class RoleDAO {
     }
 
 
-
     public boolean updateRoleInfo(int id, String name, String description) {
         String sql = "UPDATE roles SET name = ?, description = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -117,6 +116,66 @@ public class RoleDAO {
         return ids;
     }
 
+    public int addRole(Role role) {
+        String sql = "INSERT INTO roles (name, description, active) VALUES (?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, role.getName());
+            ps.setString(2, role.getDescription());
+            ps.setBoolean(3, role.isActive());
+
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Thêm role thất bại, không có dòng nào bị ảnh hưởng.");
+            }
+
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("Thêm role thất bại, không lấy được ID.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public List<Role> searchRoles(String keyword, Boolean active) {
+        List<Role> roles = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM roles WHERE 1=1");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND name LIKE ?");
+        }
+        if (active != null) {
+            sql.append(" AND active = ?");
+        }
+        sql.append(" ORDER BY id");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+            }
+            if (active != null) {
+                ps.setBoolean(paramIndex++, active);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    roles.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return roles;
+    }
     private Role mapRow(ResultSet rs) throws SQLException {
         return new Role(
                 rs.getInt("id"),

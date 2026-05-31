@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 @WebServlet("/login")
-public class LoginServlet extends HttpServlet {
+public class   LoginServlet extends HttpServlet {
 
     private final AuthService authService = new AuthService();
     private final PermissionDAO permissionDAO = new PermissionDAO();

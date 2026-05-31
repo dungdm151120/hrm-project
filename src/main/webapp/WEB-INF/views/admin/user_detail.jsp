@@ -82,6 +82,10 @@
                     </span>
                 </div>
                 <div class="detail-row">
+                    <span class="detail-label">Department:</span>
+                    <span class="detail-value"><strong>${user.departmentName}</strong></span>
+                </div>
+                <div class="detail-row">
                     <span class="detail-label">Role:</span>
                     <span class="detail-value"><strong>${user.roleName}</strong></span>
                 </div>
