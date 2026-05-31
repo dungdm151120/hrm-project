@@ -18,9 +18,9 @@ public class RemoveMemberServlet extends HttpServlet {
         String deptIdStr = request.getParameter("deptId");
 
         if (userIdStr != null) {
-            userDAO.updateDepartment(Integer.parseInt(userIdStr), null, false);
+            userDAO.updateDepartmentMember(Integer.parseInt(userIdStr), null, false);
         }
 
-        response.sendRedirect(request.getContextPath() + "/department_members?deptId=" + deptIdStr);
+        response.sendRedirect(request.getContextPath() + "/admin/departments/employees?deptId=" + deptIdStr);
     }
 }
