@@ -46,6 +46,7 @@
                     <th>Position</th>
                     <th>Department</th>
                     <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,6 +85,13 @@
                                     <span class="badge badge-inactive">Inactive</span>
                                 </c:otherwise>
                             </c:choose>
+                        </td>
+                        <td class="actions">
+                            <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}">Move</a>
+
+                            <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
+                               class="btn-danger"
+                               onclick="return confirm('Bạn chắc chắn muốn remove employee này khỏi phòng ban?')">Remove</a>
                         </td>
                     </tr>
                 </c:forEach>
