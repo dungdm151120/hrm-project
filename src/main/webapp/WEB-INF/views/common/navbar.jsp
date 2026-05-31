@@ -5,7 +5,7 @@
     <div class="navbar-links">
         <c:set var="showContracts" value="false" />
         <c:forEach var="permission" items="${sessionScope.userPermissions}">
-            <c:if test="${permission == 'CONTRACT_VIEW_OWN'}">
+            <c:if test="${permission == 'CONTRACT_VIEW_OWN' || permission == 'CONTRACT_VIEW_LIST'}">
                 <c:set var="showContracts" value="true" />
             </c:if>
         </c:forEach>

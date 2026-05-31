@@ -8,6 +8,7 @@ import model.LaborContract;
 import model.User;
 
 import java.io.IOException;
+import java.util.Set;
 
 public final class ContractAccessUtil {
     private ContractAccessUtil() {
@@ -21,20 +22,39 @@ public final class ContractAccessUtil {
         return (User) session.getAttribute("currentUser");
     }
 
-    public static boolean canManageContracts(User user) {
-        if (user == null || user.getRoleName() == null) {
+    public static boolean hasPermission(HttpServletRequest request, String permissionCode) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
             return false;
         }
-        String roleName = user.getRoleName();
-        return "HR_STAFF".equalsIgnoreCase(roleName)
-                || "HR_MANAGER".equalsIgnoreCase(roleName);
+
+        @SuppressWarnings("unchecked")
+        Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
+        return userPermissions != null && userPermissions.contains(permissionCode);
     }
 
-    public static boolean canViewContract(User user, LaborContract contract) {
+    public static boolean canViewAllContracts(HttpServletRequest request) {
+        return hasPermission(request, "CONTRACT_VIEW_LIST");
+    }
+
+    public static boolean canCreateContract(HttpServletRequest request) {
+        return hasPermission(request, "CONTRACT_CREATE");
+    }
+
+    public static boolean canUpdateContract(HttpServletRequest request) {
+        return hasPermission(request, "CONTRACT_UPDATE");
+    }
+
+    public static boolean canTerminateContract(HttpServletRequest request) {
+        return hasPermission(request, "CONTRACT_TERMINATE");
+    }
+
+    public static boolean canViewContract(HttpServletRequest request, User user, LaborContract contract) {
         if (user == null || contract == null) {
             return false;
         }
-        return canManageContracts(user) || contract.getUserId() == user.getId();
+        return hasPermission(request, "CONTRACT_VIEW_DETAIL")
+                || (hasPermission(request, "CONTRACT_VIEW_OWN") && contract.getUserId() == user.getId());
     }
 
     public static void forwardForbidden(HttpServletRequest request, HttpServletResponse response)

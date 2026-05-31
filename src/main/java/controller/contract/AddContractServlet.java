@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.LaborContract;
-import model.User;
 import util.ContractAccessUtil;
 
 import java.io.IOException;
@@ -21,7 +20,7 @@ public class AddContractServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!ensureManager(request, response)) {
+        if (!ensureCanCreate(request, response)) {
             return;
         }
         forwardForm(request, response, null, null);
@@ -30,7 +29,7 @@ public class AddContractServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!ensureManager(request, response)) {
+        if (!ensureCanCreate(request, response)) {
             return;
         }
 
@@ -54,10 +53,9 @@ public class AddContractServlet extends HttpServlet {
         }
     }
 
-    private boolean ensureManager(HttpServletRequest request, HttpServletResponse response)
+    private boolean ensureCanCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        User currentUser = ContractAccessUtil.currentUser(request);
-        if (!ContractAccessUtil.canManageContracts(currentUser)) {
+        if (!ContractAccessUtil.canCreateContract(request)) {
             ContractAccessUtil.forwardForbidden(request, response);
             return false;
         }

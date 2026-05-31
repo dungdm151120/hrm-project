@@ -19,7 +19,7 @@ public class TerminateContractServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         User currentUser = ContractAccessUtil.currentUser(request);
-        if (!ContractAccessUtil.canManageContracts(currentUser)) {
+        if (currentUser == null || !ContractAccessUtil.canTerminateContract(request)) {
             ContractAccessUtil.forwardForbidden(request, response);
             return;
         }

@@ -26,13 +26,14 @@ public class ContractListServlet extends HttpServlet {
             return;
         }
 
-        boolean canManageContracts = ContractAccessUtil.canManageContracts(currentUser);
-        List<LaborContract> contracts = canManageContracts
+        boolean canViewAllContracts = ContractAccessUtil.canViewAllContracts(request);
+        List<LaborContract> contracts = canViewAllContracts
                 ? contractDAO.findAll()
                 : contractDAO.findByUserId(currentUser.getId());
 
         request.setAttribute("contracts", contracts);
-        request.setAttribute("canManageContracts", canManageContracts);
+        request.setAttribute("canCreateContract", ContractAccessUtil.canCreateContract(request));
+        request.setAttribute("canUpdateContract", ContractAccessUtil.canUpdateContract(request));
         request.getRequestDispatcher("/WEB-INF/views/contract/contract_list.jsp").forward(request, response);
     }
 }

@@ -39,13 +39,14 @@ public class ContractDetailServlet extends HttpServlet {
             return;
         }
 
-        if (!ContractAccessUtil.canViewContract(currentUser, contract)) {
+        if (!ContractAccessUtil.canViewContract(request, currentUser, contract)) {
             ContractAccessUtil.forwardForbidden(request, response);
             return;
         }
 
         request.setAttribute("contract", contract);
-        request.setAttribute("canManageContracts", ContractAccessUtil.canManageContracts(currentUser));
+        request.setAttribute("canUpdateContract", ContractAccessUtil.canUpdateContract(request));
+        request.setAttribute("canTerminateContract", ContractAccessUtil.canTerminateContract(request));
         request.getRequestDispatcher("/WEB-INF/views/contract/contract_detail.jsp").forward(request, response);
     }
 }

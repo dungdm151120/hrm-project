@@ -15,7 +15,7 @@
 <div class="container" style="margin-top: 2rem;">
     <div class="page-header">
         <h2>Labor Contracts</h2>
-        <c:if test="${canManageContracts}">
+        <c:if test="${canCreateContract}">
             <a href="${pageContext.request.contextPath}/contracts/add" class="btn-primary">Add Contract</a>
         </c:if>
     </div>
@@ -67,7 +67,7 @@
                     <td>
                         <div class="actions">
                             <a href="${pageContext.request.contextPath}/contracts/detail?id=${contract.id}">View Detail</a>
-                            <c:if test="${canManageContracts}">
+                            <c:if test="${canUpdateContract}">
                                 <a href="${pageContext.request.contextPath}/contracts/update?id=${contract.id}">Update</a>
                             </c:if>
                         </div>
