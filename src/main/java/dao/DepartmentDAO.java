@@ -163,7 +163,7 @@ public class DepartmentDAO {
         }
         return list;
     }
-    public boolean updateDepartment(int id, String name, String description, boolean active) {
+    public boolean updateDepartmentMember(int id, String name, String description, boolean active) {
         String sql = "UPDATE departments SET name = ?, description = ?, active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
