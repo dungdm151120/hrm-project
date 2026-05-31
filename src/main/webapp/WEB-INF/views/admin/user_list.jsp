@@ -37,6 +37,7 @@
                     <th>Full Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Department</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -48,6 +49,16 @@
                         <td><strong>${user.fullName}</strong></td>
                         <td>${user.email}</td>
                         <td>${user.roleName}</td>
+                        <td>
+                            <c:choose>
+                                <c:when test="${not empty user.departmentName}">
+                                    ${user.departmentName}
+                                </c:when>
+                                <c:otherwise>
+                                    <em>N/A</em>
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
                         <td>
                             <c:choose>
                                 <c:when test="${user.active}">
