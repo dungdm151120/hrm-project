@@ -89,6 +89,7 @@
                             <div class="actions">
                                 <a href="${pageContext.request.contextPath}/admin/departments/detail?id=${dept.id}">View Detail</a>
                                 <a href="${pageContext.request.contextPath}/admin/departments/update?id=${dept.id}">Update</a>
+                                <a href="${pageContext.request.contextPath}/add_member?deptId=${dept.id}">Add Member</a>
                                 <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">
                                     <input type="hidden" name="id" value="${dept.id}">
                                     <button type="submit"
