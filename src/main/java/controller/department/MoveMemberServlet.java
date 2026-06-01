@@ -36,7 +36,7 @@ public class MoveMemberServlet extends HttpServlet {
         // Kiểm tra trước khi thực hiện
         if (deptDAO.isManager(userId)) {
             // Chặn lại và quay về trang danh sách với thông báo lỗi
-            String errorMessage = "Không thể chuyển phòng ban vì nhân viên này đang là Quản lý!";
+            String errorMessage = "Không thể chuyển phòng ban vì nhân viên này đang là Manager!";
             response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id="
                     + request.getParameter("currentDeptId") + "&error=" + URLEncoder.encode(errorMessage, "UTF-8"));
             return;
