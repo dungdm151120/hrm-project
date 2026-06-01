@@ -120,7 +120,7 @@
 </div>
 <script>
     function confirmManagerMove() {
-        alert("⚠ Cảnh báo: Nhân viên này đang là Manager, không được phép chuyển phòng ban!");
+        alert("Không thể chuyển phòng ban vì nhân viên này đang là Manager!");
         return false;
     }
 </script>
