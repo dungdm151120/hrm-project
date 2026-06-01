@@ -163,7 +163,7 @@ public class DepartmentDAO {
         }
         return list;
     }
-    public boolean updateDepartmentMember(int id, String name, String description, boolean active) {
+    public boolean updateDepartment(int id, String name, String description, boolean active) {
         String sql = "UPDATE departments SET name = ?, description = ?, active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -208,6 +208,26 @@ public class DepartmentDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public boolean isManager(int userId) {
+        String sql = "SELECT COUNT(*) FROM departments WHERE manager_user_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    // Nếu COUNT(*) > 0 nghĩa là user này đang là Manager
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private Department mapRowWithManager(ResultSet rs) throws SQLException {
