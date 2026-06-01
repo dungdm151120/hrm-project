@@ -49,12 +49,28 @@ public final class ContractAccessUtil {
         return hasPermission(request, "CONTRACT_TERMINATE");
     }
 
+    public static boolean canManageContracts(User user) {
+        if (user == null || user.getRoleName() == null) {
+            return false;
+        }
+        String roleName = user.getRoleName();
+        return "HR_STAFF".equalsIgnoreCase(roleName)
+                || "HR_MANAGER".equalsIgnoreCase(roleName);
+    }
+
     public static boolean canViewContract(HttpServletRequest request, User user, LaborContract contract) {
         if (user == null || contract == null) {
             return false;
         }
         return hasPermission(request, "CONTRACT_VIEW_DETAIL")
                 || (hasPermission(request, "CONTRACT_VIEW_OWN") && contract.getUserId() == user.getId());
+    }
+
+    public static boolean canViewContract(User user, LaborContract contract) {
+        if (user == null || contract == null) {
+            return false;
+        }
+        return canManageContracts(user) || contract.getUserId() == user.getId();
     }
 
     public static void forwardForbidden(HttpServletRequest request, HttpServletResponse response)

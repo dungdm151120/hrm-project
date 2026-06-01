@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.LaborContract;
+import model.User;
 import util.ContractAccessUtil;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class UpdateContractServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!ensureCanUpdate(request, response)) {
+        if (!ensureManager(request, response)) {
             return;
         }
 
@@ -35,7 +36,7 @@ public class UpdateContractServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!ensureCanUpdate(request, response)) {
+        if (!ensureManager(request, response)) {
             return;
         }
 
@@ -77,9 +78,10 @@ public class UpdateContractServlet extends HttpServlet {
         return contract;
     }
 
-    private boolean ensureCanUpdate(HttpServletRequest request, HttpServletResponse response)
+    private boolean ensureManager(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!ContractAccessUtil.canUpdateContract(request)) {
+        User currentUser = ContractAccessUtil.currentUser(request);
+        if (!ContractAccessUtil.canManageContracts(currentUser)) {
             ContractAccessUtil.forwardForbidden(request, response);
             return false;
         }

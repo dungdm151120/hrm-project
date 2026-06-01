@@ -16,7 +16,7 @@
     <a class="back-link" href="${pageContext.request.contextPath}/contracts">Back to contract list</a>
     <div class="page-header">
         <h2>Contract ${contract.contractCode}</h2>
-        <c:if test="${canUpdateContract}">
+        <c:if test="${canManageContracts}">
             <div class="actions">
                 <a href="${pageContext.request.contextPath}/contracts/update?id=${contract.id}">Update</a>
             </div>
@@ -86,7 +86,7 @@
         </div>
     </div>
 
-    <c:if test="${canTerminateContract && contract.status != 'TERMINATED'}">
+    <c:if test="${canManageContracts && contract.status != 'TERMINATED'}">
         <form action="${pageContext.request.contextPath}/contracts/terminate" method="post"
               onsubmit="return confirm('Terminate this contract?')">
             <input type="hidden" name="id" value="${contract.id}">

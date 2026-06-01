@@ -50,6 +50,58 @@ public class LaborContractDAO {
         return contracts;
     }
 
+    public List<LaborContract> search(Integer userId, String keyword, String contractType, String status) {
+        List<LaborContract> contracts = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(baseSelect()).append(" WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (userId != null) {
+            sql.append(" AND lc.user_id = ?");
+            params.add(userId);
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("""
+                     AND (
+                        LOWER(lc.contract_code) LIKE ?
+                        OR LOWER(u.full_name) LIKE ?
+                        OR LOWER(u.employee_code) LIKE ?
+                        OR LOWER(u.email) LIKE ?
+                     )
+                    """);
+            String likeKeyword = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+        }
+        if (contractType != null && !contractType.trim().isEmpty()) {
+            sql.append(" AND lc.contract_type = ?");
+            params.add(contractType.trim());
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND lc.status = ?");
+            params.add(status.trim());
+        }
+
+        sql.append(" ORDER BY lc.start_date DESC, lc.id DESC");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    contracts.add(mapRow(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return contracts;
+    }
+
     public LaborContract findById(int id) {
         String sql = baseSelect() + " WHERE lc.id = ?";
 
