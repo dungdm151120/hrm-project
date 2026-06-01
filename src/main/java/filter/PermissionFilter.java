@@ -87,29 +87,29 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/roles/add")) return permissions("ROLE_CREATE");
 
         // Department
-        if (path.equals("/admin/departments") && "GET".equals(method)) return permissions("DEPARTMENT_VIEW_LIST");
-        if (path.equals("/admin/departments/detail") && "GET".equals(method)) return permissions("DEPARTMENT_VIEW_DETAIL");
-        if (path.equals("/admin/departments/add")) return permissions("DEPARTMENT_CREATE");
-        if (path.equals("/admin/departments/update")) return permissions("DEPARTMENT_UPDATE");
-        if (path.equals("/admin/departments/toggle-status") && "POST".equals(method)) return permissions("DEPARTMENT_TOGGLE_STATUS");
-        if (path.equals("/admin/departments/assign-manager")) return permissions("DEPARTMENT_ASSIGN_MANAGER");
-        if (path.equals("/admin/departments/employees")) return permissions("DEPARTMENT_VIEW_EMPLOYEES");
-        if (path.equals("/add_member")) return permissions("DEPARTMENT_UPDATE");
-        if (path.equals("/move_member")) return permissions("DEPARTMENT_UPDATE");
-        if (path.equals("/remove_member") && "GET".equals(method)) return permissions("DEPARTMENT_UPDATE");
+        if (path.equals("/admin/departments") && "GET".equals(method)) return "DEPARTMENT_VIEW_LIST";
+        if (path.equals("/admin/departments/detail") && "GET".equals(method)) return "DEPARTMENT_VIEW_DETAIL";
+        if (path.equals("/admin/departments/add")) return "DEPARTMENT_CREATE";
+        if (path.equals("/admin/departments/update")) return "DEPARTMENT_UPDATE";
+        if (path.equals("/admin/departments/toggle-status") && "POST".equals(method)) return "DEPARTMENT_TOGGLE_STATUS";
+        if (path.equals("/add_member")) return "DEPARTMENT_ASSIGN_MANAGER";
+        if (path.equals("/admin/departments/employees")) return "DEPARTMENT_VIEW_EMPLOYEES";
 
         // Position
-        if (path.equals("/position/list") && "GET".equals(method)) return permissions("POSITION_VIEW_LIST");
-        if (path.equals("/position/add")) return permissions("POSITION_CREATE");
-        if (path.equals("/position/update")) return permissions("POSITION_UPDATE");
-        if (path.equals("/position/toggle-status") && "GET".equals(method)) return permissions("POSITION_TOGGLE_STATUS");
+        if (path.equals("/position/list") && "GET".equals(method)) return "POSITION_VIEW_LIST";
+        // POSITION_VIEW_DETAIL: chưa có servlet tương ứng
+        if (path.equals("/position/add")) return "POSITION_CREATE";
+        if (path.equals("/position/update")) return "POSITION_UPDATE";
+        if (path.equals("/position/toggle-status") && "POST".equals(method)) return "POSITION_TOGGLE_STATUS";
 
         // Contract
-        if (path.equals("/contracts") && "GET".equals(method)) return permissions("CONTRACT_VIEW_OWN", "CONTRACT_VIEW_LIST");
-        if (path.equals("/contracts/detail") && "GET".equals(method)) return permissions("CONTRACT_VIEW_OWN", "CONTRACT_VIEW_DETAIL");
-        if (path.equals("/contracts/add")) return permissions("CONTRACT_CREATE");
-        if (path.equals("/contracts/update")) return permissions("CONTRACT_UPDATE");
-        if (path.equals("/contracts/terminate") && "POST".equals(method)) return permissions("CONTRACT_TERMINATE");
+        if (path.equals("/contracts") && "GET".equals(method)) return "CONTRACT_VIEW_LIST";
+        if (path.equals("/contracts/detail") && "GET".equals(method)) return "CONTRACT_VIEW_DETAIL";
+        if (path.equals("/my-contract") && "GET".equals(method)) return "CONTRACT_VIEW_OWN";
+        if (path.equals("/contracts/add")) return "CONTRACT_CREATE";
+        if (path.equals("/contracts/update")) return "CONTRACT_UPDATE";
+        if (path.equals("/contracts/terminate")) return "CONTRACT_TERMINATE";
+        // CONTRACT_RENEW: chưa có servlet tương ứng
 
         // Attendance
         if (path.equals("/attendance/check-in") && "POST".equals(method)) return permissions("ATTENDANCE_CHECK_IN");

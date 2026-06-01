@@ -16,7 +16,7 @@
     <div class="page-header">
         <h2>
             <c:if test="${not empty department}">
-                 ${department.name} -
+                ${department.name} -
             </c:if>
             Employee List
 
@@ -24,7 +24,13 @@
         <a href="${pageContext.request.contextPath}/admin/departments/detail?id=${param.id}" class="btn btn-secondary">← Back to Department Detail</a>
     </div>
 
-    <div class="search-filter">
+    <c:if test="${not empty param.error}">
+        <div class="alert alert-error" style="margin-bottom: 1rem;">
+            ⚠ ${param.error}
+        </div>
+    </c:if>
+
+    <div class="search-filter" style="display: flex; justify-content: space-between">
         <form action="${pageContext.request.contextPath}/admin/departments/employees" method="get">
             <input type="hidden" name="id" value="${param.id}">
             <input type="text" name="search" placeholder="Search by name or email..." value="${search}">
@@ -33,69 +39,90 @@
                 <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${param.id}" class="btn btn-reset">Clear</a>
             </c:if>
         </form>
+        <a href="${pageContext.request.contextPath}/add_member?deptId=${param.id}" class="btn btn-primary">Add Member</a>
     </div>
 
     <div class="table-wrapper">
         <table>
             <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Position</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                </tr>
+            <tr>
+                <th>No.</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Position</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
             </thead>
             <tbody>
-                <c:forEach items="${userList}" var="user" varStatus="s">
-                    <tr>
-                        <td>${s.index + 1}</td>
-                        <td><strong>${user.fullName}</strong></td>
-                        <td>${user.email}</td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${not empty user.phone}">
-                                    ${user.phone}
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="text-muted">No phone</span>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${not empty user.positionName}">
-                                    ${user.positionName}
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="text-muted">No position</span>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                        <td>${user.departmentName}</td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${user.active}">
-                                    <span class="badge badge-active">Active</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="badge badge-inactive">Inactive</span>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                    </tr>
-                </c:forEach>
-                <c:if test="${empty userList}">
-                    <tr>
-                        <td colspan="7" class="empty-state">No employees found in this department.</td>
-                    </tr>
-                </c:if>
+            <c:forEach items="${userList}" var="user" varStatus="s">
+                <tr>
+                    <td>${s.index + 1}</td>
+                    <td><strong>${user.fullName}</strong></td>
+                    <td>${user.email}</td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${not empty user.phone}">
+                                ${user.phone}
+                            </c:when>
+                            <c:otherwise>
+                                <span class="text-muted">No phone</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${not empty user.positionName}">
+                                ${user.positionName}
+                            </c:when>
+                            <c:otherwise>
+                                <span class="text-muted">No position</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+                    <td>${user.departmentName}</td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${user.active}">
+                                <span class="badge badge-active">Active</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge badge-inactive">Inactive</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+
+                    <td class="actions">
+                        <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}"
+                           class="btn-move"
+                                <c:if test="${user.manager}">
+                                    onclick="return confirmManagerMove();"
+                                </c:if>>
+                            Move
+                        </a>
+
+                        <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
+                           class="btn-danger"
+                           onclick="return confirm('Bạn chắc chắn muốn remove employee này khỏi phòng ban?')">Remove</a>
+                    </td>
+                </tr>
+            </c:forEach>
+            <c:if test="${empty userList}">
+                <tr>
+                    <td colspan="8" class="empty-state">No employees found in this department.</td>
+                </tr>
+            </c:if>
             </tbody>
         </table>
     </div>
 </div>
-
+<script>
+    function confirmManagerMove() {
+        alert("Không thể chuyển phòng ban vì nhân viên này đang là Manager!");
+        return false;
+    }
+</script>
 </body>
 </html>

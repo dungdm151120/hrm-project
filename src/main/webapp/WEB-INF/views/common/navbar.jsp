@@ -12,7 +12,7 @@
         <a href="${pageContext.request.contextPath}/home">Home</a>
         <a href="${pageContext.request.contextPath}/profile">Profile</a>
         <c:if test="${showContracts}">
-            <a href="${pageContext.request.contextPath}/contracts">Contracts</a>
+            <a href="${pageContext.request.contextPath}/contracts/detail">Contracts</a>
         </c:if>
         <a href="${pageContext.request.contextPath}/change-password">Change Password</a>
         <a href="${pageContext.request.contextPath}/logout">Logout</a>

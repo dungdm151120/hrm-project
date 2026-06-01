@@ -12,8 +12,8 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="container" style="margin-top: 2rem;">
-    <a class="back-link" href="${pageContext.request.contextPath}/user_list">← Quay lại danh sách người dùng</a>
-    <h2 class="form-title">Thêm người dùng mới</h2>
+    <a class="back-link" href="${pageContext.request.contextPath}/position/list">← Quay lại danh sách vị trí</a>
+    <h2 class="form-title">Thêm vị trí mới</h2>
 
     <c:if test="${not empty error}">
         <div style="color: red; margin-bottom: 15px; font-weight: bold;">

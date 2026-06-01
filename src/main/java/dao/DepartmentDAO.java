@@ -210,6 +210,26 @@ public class DepartmentDAO {
         return list;
     }
 
+    public boolean isManager(int userId) {
+        String sql = "SELECT COUNT(*) FROM departments WHERE manager_user_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    // Nếu COUNT(*) > 0 nghĩa là user này đang là Manager
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     private Department mapRowWithManager(ResultSet rs) throws SQLException {
         Department dept = new Department();
         dept.setId(rs.getInt("id"));

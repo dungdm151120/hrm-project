@@ -45,70 +45,70 @@
     <div class="table-wrapper">
         <table>
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Manager</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Manager</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
             </thead>
             <tbody>
-                <c:forEach var="dept" items="${departmentList}" varStatus="s">
-                    <tr>
-                        <td>${s.index + 1}</td>
-                        <td><strong>${dept.name}</strong></td>
-                        <td>${dept.description}</td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${not empty dept.managerName}">
-                                    ${dept.managerName}
-                                </c:when>
-                                <c:otherwise>
-                                    <c:if test="${not empty dept.managerUserId}">
-                                        Manager #${dept.managerUserId}
-                                    </c:if>
-                                    <c:if test="${empty dept.managerUserId}">
-                                        <span class="text-muted">No manager</span>
-                                    </c:if>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${dept.active}">
-                                    <span class="badge badge-active">Active</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="badge badge-inactive">Inactive</span>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                <a href="${pageContext.request.contextPath}/admin/departments/detail?id=${dept.id}">View Detail</a>
-                                <a href="${pageContext.request.contextPath}/admin/departments/update?id=${dept.id}">Update</a>
-                                <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">
-                                    <input type="hidden" name="id" value="${dept.id}">
-                                    <button type="submit"
-                                            class="btn ${dept.active ? 'btn-danger' : 'btn-warning'}"
-                                            onclick="return confirm('Are you sure?')">
-                                        <c:choose>
-                                            <c:when test="${dept.active}">Deactivate</c:when>
-                                            <c:otherwise>Activate</c:otherwise>
-                                        </c:choose>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </c:forEach>
-                <c:if test="${empty departmentList}">
-                    <tr>
-                        <td colspan="6" class="empty-state">No departments found.</td>
-                    </tr>
-                </c:if>
+            <c:forEach var="dept" items="${departmentList}" varStatus="s">
+                <tr>
+                    <td>${s.index + 1}</td>
+                    <td><strong>${dept.name}</strong></td>
+                    <td>${dept.description}</td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${not empty dept.managerName}">
+                                ${dept.managerName}
+                            </c:when>
+                            <c:otherwise>
+                                <c:if test="${not empty dept.managerUserId}">
+                                    Manager #${dept.managerUserId}
+                                </c:if>
+                                <c:if test="${empty dept.managerUserId}">
+                                    <span class="text-muted">No manager</span>
+                                </c:if>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${dept.active}">
+                                <span class="badge badge-active">Active</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge badge-inactive">Inactive</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <a href="${pageContext.request.contextPath}/admin/departments/detail?id=${dept.id}">View Detail</a>
+                            <a href="${pageContext.request.contextPath}/admin/departments/update?id=${dept.id}">Update</a>
+                            <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">
+                                <input type="hidden" name="id" value="${dept.id}">
+                                <button type="submit"
+                                        class="btn ${dept.active ? 'btn-danger' : 'btn-warning'}"
+                                        onclick="return confirm('Are you sure?')">
+                                    <c:choose>
+                                        <c:when test="${dept.active}">Deactivate</c:when>
+                                        <c:otherwise>Activate</c:otherwise>
+                                    </c:choose>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </c:forEach>
+            <c:if test="${empty departmentList}">
+                <tr>
+                    <td colspan="6" class="empty-state">No departments found.</td>
+                </tr>
+            </c:if>
             </tbody>
         </table>
     </div>
