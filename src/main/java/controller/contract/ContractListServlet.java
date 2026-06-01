@@ -7,39 +7,28 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.LaborContract;
-import model.User;
-import util.ContractAccessUtil;
 
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet({"/contracts", "/my-contract"})
+@WebServlet("/contracts")
 public class ContractListServlet extends HttpServlet {
     private final LaborContractDAO contractDAO = new LaborContractDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        User currentUser = ContractAccessUtil.currentUser(request);
-        if (currentUser == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-
         String search = trimToNull(request.getParameter("search"));
         String contractType = trimToNull(request.getParameter("contractType"));
         String status = trimToNull(request.getParameter("status"));
-        boolean canManageContracts = ContractAccessUtil.canManageContracts(currentUser);
-        boolean viewOwnContract = "/my-contract".equals(request.getServletPath());
-        Integer userId = (!canManageContracts || viewOwnContract) ? currentUser.getId() : null;
-        List<LaborContract> contracts = contractDAO.search(userId, search, contractType, status);
+        List<LaborContract> contracts = contractDAO.search(null, search, contractType, status);
 
         request.setAttribute("contracts", contracts);
         request.setAttribute("search", search);
         request.setAttribute("contractType", contractType);
         request.setAttribute("status", status);
-        request.setAttribute("canManageContracts", canManageContracts);
-        request.setAttribute("viewOwnContract", viewOwnContract);
+        request.setAttribute("canCreateContract", ContractRequestHelper.hasPermission(request, "CONTRACT_CREATE"));
+        request.setAttribute("canUpdateContract", ContractRequestHelper.hasPermission(request, "CONTRACT_UPDATE"));
         request.getRequestDispatcher("/WEB-INF/views/contract/contract_list.jsp").forward(request, response);
     }
 

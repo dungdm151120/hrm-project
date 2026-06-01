@@ -6,8 +6,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.User;
-import util.ContractAccessUtil;
 
 import java.io.IOException;
 
@@ -18,12 +16,6 @@ public class TerminateContractServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        User currentUser = ContractAccessUtil.currentUser(request);
-        if (!ContractAccessUtil.canManageContracts(currentUser)) {
-            ContractAccessUtil.forwardForbidden(request, response);
-            return;
-        }
-
         int contractId;
         try {
             contractId = Integer.parseInt(request.getParameter("id"));

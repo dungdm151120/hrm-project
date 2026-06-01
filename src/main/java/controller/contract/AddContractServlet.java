@@ -8,8 +8,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.LaborContract;
-import model.User;
-import util.ContractAccessUtil;
 
 import java.io.IOException;
 
@@ -21,19 +19,12 @@ public class AddContractServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!ensureManager(request, response)) {
-            return;
-        }
         forwardForm(request, response, null, null);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!ensureManager(request, response)) {
-            return;
-        }
-
         LaborContract contract;
         try {
             contract = ContractFormMapper.fromRequest(request);
@@ -52,16 +43,6 @@ public class AddContractServlet extends HttpServlet {
         } else {
             forwardForm(request, response, contract, "Add contract failed.");
         }
-    }
-
-    private boolean ensureManager(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        User currentUser = ContractAccessUtil.currentUser(request);
-        if (!ContractAccessUtil.canManageContracts(currentUser)) {
-            ContractAccessUtil.forwardForbidden(request, response);
-            return false;
-        }
-        return true;
     }
 
     private void forwardForm(HttpServletRequest request, HttpServletResponse response,
