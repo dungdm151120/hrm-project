@@ -44,7 +44,7 @@ public class MoveMemberServlet extends HttpServlet {
 
         // Nếu qua được bước kiểm tra, mới thực hiện move
         userDAO.updateDepartmentMember(userId, newDeptId, true);
-        response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + newDeptId + "&success=Chuyển nhân viên thành công!");
+        response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + newDeptId + "&success=Move succesfully!");
     }
 }
 
