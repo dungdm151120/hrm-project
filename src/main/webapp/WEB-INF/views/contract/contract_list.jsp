@@ -14,14 +14,19 @@
 
 <div class="container" style="margin-top: 2rem;">
     <div class="page-header">
-        <h2>Labor Contracts</h2>
-        <c:if test="${canCreateContract}">
+        <h2>
+            <c:choose>
+                <c:when test="${viewOwnContract}">My Contracts</c:when>
+                <c:otherwise>Labor Contracts</c:otherwise>
+            </c:choose>
+        </h2>
+        <c:if test="${canManageContracts && !viewOwnContract}">
             <a href="${pageContext.request.contextPath}/contracts/add" class="btn-primary">Add Contract</a>
         </c:if>
     </div>
 
     <div class="search-filter">
-        <form action="${pageContext.request.contextPath}/contracts" method="get">
+        <form action="${pageContext.request.contextPath}${viewOwnContract ? '/my-contract' : '/contracts'}" method="get">
             <input type="text" name="search" placeholder="Search code, employee, or email..." value="${search}">
 
             <select name="contractType">
@@ -40,7 +45,7 @@
             </select>
 
             <button type="submit" class="btn btn-primary">Search</button>
-            <a href="${pageContext.request.contextPath}/contracts" class="btn btn-reset">Clear</a>
+            <a href="${pageContext.request.contextPath}${viewOwnContract ? '/my-contract' : '/contracts'}" class="btn btn-reset">Clear</a>
         </form>
     </div>
 
@@ -91,7 +96,7 @@
                     <td>
                         <div class="actions">
                             <a href="${pageContext.request.contextPath}/contracts/detail?id=${contract.id}">View Detail</a>
-                            <c:if test="${canUpdateContract}">
+                            <c:if test="${canManageContracts}">
                                 <a href="${pageContext.request.contextPath}/contracts/update?id=${contract.id}">Update</a>
                             </c:if>
                         </div>

@@ -102,7 +102,6 @@
             <div class="dashboard-card">
                 <h3>Contract</h3>
                 <ul>
-                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
                     <li><a href="${pageContext.request.contextPath}/contracts">View Contract List</a></li>
                 </ul>
             </div>
@@ -136,7 +135,6 @@
             <div class="dashboard-card">
                 <h3>Contract</h3>
                 <ul>
-                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
                     <li><a href="${pageContext.request.contextPath}/contracts">View Contract List</a></li>
                 </ul>
             </div>
