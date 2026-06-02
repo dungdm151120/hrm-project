@@ -706,24 +706,31 @@ public class UserDAO {
         return list;
     }
 
-    public void updateDepartmentMember(int userId, Integer newDeptId, boolean activeStatus) {
-        String sql = "UPDATE users SET department_id = ?, active = ? WHERE id = ?";
+    public void updateDepartmentMember(int userId, Integer newDeptId, Integer newPositionId, boolean activeStatus) {
+        String sql = "UPDATE users SET department_id = ?, position_id = ?, active = ? WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Set department_id
+            // 1. Set department_id
             if (newDeptId == null) {
                 ps.setNull(1, java.sql.Types.INTEGER);
             } else {
                 ps.setInt(1, newDeptId);
             }
 
-            // Set active status (true=1, false=0)
-            ps.setBoolean(2, activeStatus);
+            // 2. Set position_id (Tự động đưa về vị trí Employee khi chuyển phòng)
+            if (newPositionId == null) {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(2, newPositionId);
+            }
 
-            // Set user ID
-            ps.setInt(3, userId);
+            // 3. Set active status
+            ps.setBoolean(3, activeStatus);
+
+            // 4. Set user ID
+            ps.setInt(4, userId);
 
             ps.executeUpdate();
         } catch (Exception e) {
