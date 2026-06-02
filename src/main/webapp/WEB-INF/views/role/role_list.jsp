@@ -7,25 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>List Of Roles | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
-    <style>
-        .search-filter {
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .search-filter input[type="text"],
-        .search-filter select {
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .search-filter button, .search-filter .btn-reset {
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
 

@@ -27,16 +27,26 @@ public class AddMemberServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        int deptId = Integer.parseInt(request.getParameter("deptId"));
-        String[] userIds = request.getParameterValues("userIds");
+        String deptIdStr = request.getParameter("deptId");
 
-        if (userIds != null) {
-            for (String idStr : userIds) {
-                int userId = Integer.parseInt(idStr);
-                userDAO.updateDepartment(userId, deptId, true);
+        System.out.println("Gia tri deptId nhan duoc: " + deptIdStr);
+
+        if (deptIdStr != null && !deptIdStr.isEmpty()) {
+            int deptId = Integer.parseInt(deptIdStr);
+            String[] userIds = request.getParameterValues("userIds");
+
+            if (userIds != null) {
+                for (String idStr : userIds) {
+                    int userId = Integer.parseInt(idStr);
+                    userDAO.updateDepartmentMember(userId, deptId, true);
+                }
             }
+            // Redirect về đúng tên tham số 'id' mà trang Employee List đang đợi
+            response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptId);
+        } else {
+            System.out.println("Loi: deptId bi null");
+            // Redirect về danh sách phòng ban nếu deptId bị lỗi
+            response.sendRedirect(request.getContextPath() + "/admin/departments");
         }
-
-        response.sendRedirect(request.getContextPath() + "/department_members?deptId=" + deptId);
     }
 }

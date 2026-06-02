@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.List;
 
 @WebServlet("/admin/departments/employees")
-public class EmployeeListServlet extends HttpServlet {
+public class    EmployeeListServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
     private final DepartmentDAO departmentDAO = new DepartmentDAO();
 
@@ -40,6 +40,11 @@ public class EmployeeListServlet extends HttpServlet {
         String keyword = request.getParameter("search");
         Department department = departmentDAO.getDepartmentById(id);
         userList = userDAO.findByDepartmentId(id, keyword);
+
+        for (User u : userList) {
+            boolean isManager = departmentDAO.isManager(u.getId());
+            u.setManager(isManager);
+        }
 
         request.setAttribute("department", department);
         request.setAttribute("userList", userList);

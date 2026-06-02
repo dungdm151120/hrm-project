@@ -24,7 +24,6 @@
                 <h3>👤 Personal</h3>
                 <ul>
                     <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
-                    <li><a href="${pageContext.request.contextPath}/contracts">View My Contract</a></li>
                     <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
                 </ul>
             </div>
@@ -53,6 +52,12 @@
                 <ul>
                     <li><a href="${pageContext.request.contextPath}/admin/departments">View Department List</a></li>
                     <li><a href="${pageContext.request.contextPath}/admin/departments/add">Add New Department</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
                 </ul>
             </div>
             <div class="dashboard-card">
@@ -85,7 +90,6 @@
                     <li><a href="${pageContext.request.contextPath}/admin/users/add">Add New User</a></li>
                     <li><a href="${pageContext.request.contextPath}/user_list">Update User Info</a></li>
                     <li><a href="${pageContext.request.contextPath}/user_list">Active/Deactive User</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/password-reset-requests">Request Reset Password</a></li>
                 </ul>
             </div>
             <div class="dashboard-card">
@@ -95,7 +99,14 @@
                     <li><a href="${pageContext.request.contextPath}/admin/departments/add">Add New Department</a></li>
                 </ul>
             </div>
-            <!-- Các module khác như Position, Contract, Attendance, Payroll có thể thêm sau khi phát triển servlet -->
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
+                    <li><a href="${pageContext.request.contextPath}/contracts">View Contract List</a></li>
+                </ul>
+            </div>
+            <!-- Các module khác như Position, Attendance, Payroll có thể thêm sau khi phát triển servlet -->
         </div>
     </c:if>
 
@@ -122,6 +133,13 @@
                     <li><a href="${pageContext.request.contextPath}/admin/departments">View Department List</a></li>
                 </ul>
             </div>
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
+                    <li><a href="${pageContext.request.contextPath}/contracts">View Contract List</a></li>
+                </ul>
+            </div>
         </div>
     </c:if>
 
@@ -134,6 +152,12 @@
                 <ul>
                     <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
                     <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
                 </ul>
             </div>
             <c:if test="${not empty currentUser.departmentId}">
@@ -160,6 +184,12 @@
                     <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
                 </ul>
             </div>
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
+                </ul>
+            </div>
             <!-- Module Payroll sẽ xuất hiện sau khi có servlet -->
             <div class="dashboard-card">
                 <h3>💰 Payroll (Coming Soon)</h3>
@@ -182,7 +212,13 @@
                     <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
                 </ul>
             </div>
-            <!-- Self-service: Attendance, Contract, Payroll (cá nhân) sẽ bổ sung sau -->
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
+                </ul>
+            </div>
+            <!-- Self-service: Attendance, Payroll (cá nhân) sẽ bổ sung sau -->
         </div>
     </c:if>
 

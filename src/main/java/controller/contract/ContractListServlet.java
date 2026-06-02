@@ -7,8 +7,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.LaborContract;
-import model.User;
-import util.ContractAccessUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,19 +18,24 @@ public class ContractListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        User currentUser = ContractAccessUtil.currentUser(request);
-        if (currentUser == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-
-        boolean canManageContracts = ContractAccessUtil.canManageContracts(currentUser);
-        List<LaborContract> contracts = canManageContracts
-                ? contractDAO.findAll()
-                : contractDAO.findByUserId(currentUser.getId());
+        String search = trimToNull(request.getParameter("search"));
+        String contractType = trimToNull(request.getParameter("contractType"));
+        String status = trimToNull(request.getParameter("status"));
+        List<LaborContract> contracts = contractDAO.search(null, search, contractType, status);
 
         request.setAttribute("contracts", contracts);
-        request.setAttribute("canManageContracts", canManageContracts);
+        request.setAttribute("search", search);
+        request.setAttribute("contractType", contractType);
+        request.setAttribute("status", status);
+        request.setAttribute("canCreateContract", ContractRequestHelper.hasPermission(request, "CONTRACT_CREATE"));
+        request.setAttribute("canUpdateContract", ContractRequestHelper.hasPermission(request, "CONTRACT_UPDATE"));
         request.getRequestDispatcher("/WEB-INF/views/contract/contract_list.jsp").forward(request, response);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.trim().isEmpty() || "all".equalsIgnoreCase(value.trim())) {
+            return null;
+        }
+        return value.trim();
     }
 }

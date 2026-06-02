@@ -18,6 +18,7 @@ public class User {
     private String departmentName; // moi them
     private Integer positionId;     // mới thêm (phòng hờ sau này)
     private String positionName; // moi them
+    private boolean isManager;
     private boolean active;
     private String resetToken;
     private LocalDateTime resetTokenExpiredAt;
@@ -158,6 +159,10 @@ public class User {
     public void setActive(boolean active) {
         this.active = active;
     }
+
+    public boolean isManager() { return isManager; }
+
+    public void setManager(boolean manager) { isManager = manager; }
 
     public String getResetToken() {
         return resetToken;

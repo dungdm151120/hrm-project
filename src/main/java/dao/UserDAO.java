@@ -189,9 +189,10 @@ public class UserDAO {
         List<User> users = new ArrayList<>();
 
         String sql = """
-                SELECT u.*, r.name AS role_name
+                SELECT u.*, r.name AS role_name, d.name AS department_name
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
+                LEFT JOIN departments d ON u.department_id = d.id
                 ORDER BY u.id ASC
                 """;
 
@@ -705,7 +706,7 @@ public class UserDAO {
         return list;
     }
 
-    public void updateDepartment(int userId, Integer newDeptId, boolean activeStatus) {
+    public void updateDepartmentMember(int userId, Integer newDeptId, boolean activeStatus) {
         String sql = "UPDATE users SET department_id = ?, active = ? WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -767,9 +768,17 @@ public class UserDAO {
         if (!rs.wasNull()) {
             user.setDepartmentId(departmentId);
         }
+
         int positionId = rs.getInt("position_id");
         if (!rs.wasNull()) {
             user.setPositionId(positionId);
+        }
+
+        //mapping cho dept name
+        try {
+            user.setDepartmentName(rs.getString("department_name"));
+        } catch (Exception e) {
+
         }
 
         return user;

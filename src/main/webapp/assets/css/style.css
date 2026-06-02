@@ -132,6 +132,93 @@ body {
     border-left: 4px solid var(--danger);
 }
 
+/* Search and filters */
+.search-filter,
+.search-container {
+    margin-bottom: 1.5rem;
+}
+
+.search-filter form,
+.search-container form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search-filter input,
+.search-filter select,
+.search-container input,
+.search-container select {
+    min-width: 100px;
+    padding: 0.45rem 0.75rem;
+    height: 36px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    background-color: var(--white);
+    color: var(--gray-800);
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-filter input,
+.search-container input {
+    flex: 0 1 260px;
+}
+
+.search-filter input:focus,
+.search-filter select:focus,
+.search-container input:focus,
+.search-container select:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-btn,
+.clear-btn,
+.btn-reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 1.2rem;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.search-btn {
+    background-color: var(--primary);
+    color: var(--white);
+    border: 1px solid var(--primary);
+}
+
+.search-btn:hover {
+    background-color: var(--primary-dark);
+}
+
+.clear-btn,
+.btn-reset {
+    background-color: var(--white);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.clear-btn:hover,
+.btn-reset:hover {
+    background-color: var(--gray-100);
+    border-color: var(--gray-400);
+}
+
 /* Table Styles */
 .table-wrapper {
     overflow-x: auto;
@@ -321,7 +408,6 @@ tbody tr:last-child td {
     transition: background-color 0.2s ease;
     border: none;
     cursor: pointer;
-    margin-bottom: 1.5rem;
 }
 
 .btn-primary:hover {

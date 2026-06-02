@@ -1,28 +1,35 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-  <title>Move Member</title>
+  <meta charset="UTF-8">
+  <title>Chuyển thành viên sang phòng ban khác | HRM</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
+
 <body>
-<h2>Move: ${user.fullName}</h2>
+<div class="container">
+  <h2 class="form-title">Chuyển phòng ban</h2>
+  <p>Move: <strong>${user.fullName}</strong></p>
 
-<form action="${pageContext.request.contextPath}/move_member" method="POST">
-  <input type="hidden" name="userId" value="${user.id}">
+  <form action="${pageContext.request.contextPath}/move_member" method="POST">
+    <input type="hidden" name="userId" value="${user.id}">
 
-  <label>Select New Department:</label>
-  <select name="newDeptId">
-    <c:forEach items="${deptList}" var="d">
-      <option value="${d.id}" ${d.id == user.departmentId ? 'selected' : ''}>
-          ${d.name}
-      </option>
-    </c:forEach>
-  </select>
+    <div class="form-group">
+      <label>Select New Department:</label>
+      <select name="newDeptId" class="form-control">
+        <c:forEach items="${deptList}" var="d">
+          <option value="${d.id}">${d.name}</option>
+        </c:forEach>
+      </select>
+    </div>
 
-  <br><br>
-  <button type="submit">Move</button>
-  <a href="${pageContext.request.contextPath}/department_list">Cancel</a>
-</form>
+    <div class="form-actions">
+      <button type="submit" class="btn-save">Xác nhận chuyển</button>
+      <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${user.departmentId}" class="btn-cancel">Hủy</a>
+    </div>
+  </form>
+</div>
 </body>
 </html>

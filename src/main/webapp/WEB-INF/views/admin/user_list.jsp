@@ -15,85 +15,74 @@
 <div class="container" style="margin-top: 2rem;">
     <div class="page-header">
         <h2>User List</h2>
+        <a href="${pageContext.request.contextPath}/admin/users/add" class="btn btn-primary">Add New User</a>
     </div>
 
-    <div class="search-container">
-    <form action="${pageContext.request.contextPath}/user_list" method="GET">
-        <input type="text" name="search" placeholder="Search name or email..." value="${oldKeyword}">
-        
-        <button type="submit" class="search-btn">Search</button>
-        
-        <c:if test="${not empty oldKeyword}">
-            <a href="${pageContext.request.contextPath}/user_list" class="clear-btn">Clear</a>
-        </c:if>
-    </form>
-</div>
+    <div class="search-filter">
+        <form action="${pageContext.request.contextPath}/user_list" method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" name="search" placeholder="Search name or email..." value="${oldKeyword}">
+
+            <select name="status">
+                <option value="all" ${status == 'all' || empty status ? 'selected' : ''}>All Status</option>
+                <option value="true" ${status == 'true' ? 'selected' : ''}>Active</option>
+                <option value="false" ${status == 'false' ? 'selected' : ''}>Inactive</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="${pageContext.request.contextPath}/user_list" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
 
     <div class="table-wrapper">
         <table>
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
+            <tr>
+                <th>ID</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
             </thead>
             <tbody>
-                <c:forEach items="${userList}" var="user">
-                    <tr>
-                        <td>${user.id}</td>
-                        <td><strong>${user.fullName}</strong></td>
-                        <td>${user.email}</td>
-                        <td>${user.roleName}</td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${not empty user.departmentName}">
-                                    ${user.departmentName}
-                                </c:when>
-                                <c:otherwise>
-                                    <em>N/A</em>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${user.active}">
-                                    <span class="badge badge-active">Active</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="badge badge-inactive">Inactive</span>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                <a href="user_detail?id=${user.id}">View Detail</a>
-                                <a href="${pageContext.request.contextPath}/users/update?id=${user.id}">Update</a>
-                                <c:choose>
-                                    <c:when test="${user.active}">
-                                        <a href="${pageContext.request.contextPath}/users/toggle-status?id=${user.id}&action=deactivate"
-                                           class="btn btn-danger"
-                                           onclick="return confirm('Deactivate this user?')">Deactivate</a>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <a href="${pageContext.request.contextPath}/users/toggle-status?id=${user.id}&action=activate"
-                                           class="btn btn-warning"
-                                           onclick="return confirm('Activate this user?')">Activate</a>
-                                    </c:otherwise>
-                                </c:choose>
-                            </div>
-                        </td>
-                    </tr>
-                </c:forEach>
-                <c:if test="${empty userList}">
-                    <tr>
-                        <td colspan="6" class="empty-state">No users found.</td>
-                    </tr>
-                </c:if>
+            <c:forEach items="${userList}" var="user">
+                <tr>
+                    <td>${user.id}</td>
+                    <td><strong>${user.fullName}</strong></td>
+                    <td>${user.email}</td>
+                    <td>${user.roleName}</td>
+                    <td>${not empty user.departmentName ? user.departmentName : 'N/A'}</td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${user.active}">
+                                <span class="badge badge-active">Active</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge badge-inactive">Inactive</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <a href="user_detail?id=${user.id}" class="btn btn-secondary">View</a>
+                            <a href="${pageContext.request.contextPath}/users/update?id=${user.id}" class="btn btn-secondary">Update</a>
+
+                            <form action="${pageContext.request.contextPath}/users/toggle-status" method="GET" style="display:inline;">
+                                <input type="hidden" name="id" value="${user.id}">
+                                <input type="hidden" name="action" value="${user.active ? 'Deactivate' : 'Activate'}">
+
+                                <button type="submit"
+                                        class="btn ${user.active ? 'btn-danger' : 'btn-warning'}"
+                                        onclick="return confirm('${user.active ? 'Deactivate' : 'Activate'} this user?')">
+                                        ${user.active ? 'Deactivate' : 'Activate'}
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </c:forEach>
             </tbody>
         </table>
     </div>
