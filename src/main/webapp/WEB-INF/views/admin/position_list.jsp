@@ -77,8 +77,8 @@
             <select name="sort" onchange="this.form.submit()">
                 <option value="name_asc" ${sort == 'name_asc' ? 'selected' : ''}>Name A-Z</option>
                 <option value="name_desc" ${sort == 'name_desc' ? 'selected' : ''}>Name Z-A</option>
-                <option value="id_desc" ${sort == 'id_desc'  ? 'selected' : ''}>Newest</option>
-                <option value="id_asc" ${sort == 'id_asc' || empty sort ? 'selected' : ''}>Oldest</option>
+                <option value="id_desc" ${sort == 'id_desc' || empty sort ? 'selected' : ''}>Newest</option>
+                <option value="id_asc" ${sort == 'id_asc'  ? 'selected' : ''}>Oldest</option>
             </select>
 
             <button type="submit" class="btn btn-primary">Search</button>
