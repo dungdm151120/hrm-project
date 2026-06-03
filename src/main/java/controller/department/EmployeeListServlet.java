@@ -17,7 +17,7 @@ import java.util.List;
 public class EmployeeListServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
     private final DepartmentDAO departmentDAO = new DepartmentDAO();
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = 5;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
