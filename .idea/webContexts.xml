@@ -3,10 +3,7 @@
   <component name="WebContextManager">
     <option name="state">
       <map>
-        <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/index.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF" />
-        <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/common/homepage.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/common" />
-        <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/profile/change-password.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/profile" />
-        <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/role/edit_role_permission.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/role" />
+        <entry key="file://$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/department/dept_list.jsp" value="file://$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/department" />
       </map>
     </option>
   </component>
