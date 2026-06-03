@@ -6,6 +6,7 @@ import util.DBConnection;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class UserDAO {
@@ -112,8 +113,19 @@ public class UserDAO {
     }
 
     public List<User> findByDepartmentId(int id, String keyword) {
+        return getEmployeesByDepartment(id, keyword, "all", "name_asc", 1, Integer.MAX_VALUE);
+    }
+
+    public List<User> getEmployeesByDepartment(int departmentId, String keyword, String status, String sort, int page, int pageSize) {
+        List<User> employees = getAllEmployeesByDepartment(departmentId);
+        employees = searchEmployeesByKeyword(employees, keyword);
+        employees = filterEmployeesByStatus(employees, status);
+        employees = sortEmployeesByName(employees, sort);
+        return pagingEmployees(employees, page, pageSize);
+    }
+
+    public List<User> getAllEmployeesByDepartment(int departmentId) {
         List<User> users = new ArrayList<>();
-        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         String sql = """
                       SELECT u.id,
                              u.full_name,
@@ -129,20 +141,11 @@ public class UserDAO {
                       LEFT JOIN positions p ON p.id = u.position_id
                       WHERE u.department_id = ?
                 """;
-        if (hasKeyword) {
-            sql += " AND (u.full_name LIKE ? OR u.email LIKE ?) ";
-        }
-        sql += " ORDER BY u.full_name";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, id);
-            if (hasKeyword) {
-                String searchKeyword = "%" + keyword.trim() + "%";
-                ps.setString(2, searchKeyword);
-                ps.setString(3, searchKeyword);
-            }
+            ps.setInt(1, departmentId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -155,6 +158,71 @@ public class UserDAO {
         }
 
         return users;
+    }
+
+    public List<User> searchEmployeesByKeyword(List<User> employees, String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return employees;
+        }
+
+        String lowerKeyword = keyword.trim().toLowerCase();
+        List<User> result = new ArrayList<>();
+        for (User user : employees) {
+            String fullName = user.getFullName() == null ? "" : user.getFullName().toLowerCase();
+            String email = user.getEmail() == null ? "" : user.getEmail().toLowerCase();
+            if (fullName.contains(lowerKeyword) || email.contains(lowerKeyword)) {
+                result.add(user);
+            }
+        }
+        return result;
+    }
+
+    public List<User> filterEmployeesByStatus(List<User> employees, String status) {
+        if (!"active".equals(status) && !"inactive".equals(status)) {
+            return employees;
+        }
+
+        boolean active = "active".equals(status);
+        List<User> result = new ArrayList<>();
+        for (User user : employees) {
+            if (user.isActive() == active) {
+                result.add(user);
+            }
+        }
+        return result;
+    }
+
+    public List<User> sortEmployeesByName(List<User> employees, String sort) {
+        List<User> result = new ArrayList<>(employees);
+        Comparator<User> comparator = Comparator.comparing(
+                user -> user.getFullName() == null ? "" : user.getFullName(),
+                String.CASE_INSENSITIVE_ORDER
+        );
+        if ("name_desc".equals(sort)) {
+            comparator = comparator.reversed();
+        }
+        result.sort(comparator);
+        return result;
+    }
+
+    public List<User> pagingEmployees(List<User> employees, int page, int pageSize) {
+        if (page < 1) page = 1;
+        if (pageSize < 1) return employees;
+
+        int fromIndex = (page - 1) * pageSize;
+        if (fromIndex >= employees.size()) {
+            return new ArrayList<>();
+        }
+
+        int toIndex = Math.min(fromIndex + pageSize, employees.size());
+        return new ArrayList<>(employees.subList(fromIndex, toIndex));
+    }
+
+    public int countEmployeesByDepartment(int departmentId, String keyword, String status) {
+        List<User> employees = getAllEmployeesByDepartment(departmentId);
+        employees = searchEmployeesByKeyword(employees, keyword);
+        employees = filterEmployeesByStatus(employees, status);
+        return employees.size();
     }
 
 
@@ -189,9 +257,10 @@ public class UserDAO {
         List<User> users = new ArrayList<>();
 
         String sql = """
-                SELECT u.*, r.name AS role_name
+                SELECT u.*, r.name AS role_name, d.name AS department_name
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
+                LEFT JOIN departments d ON u.department_id = d.id
                 ORDER BY u.id ASC
                 """;
 
@@ -705,24 +774,31 @@ public class UserDAO {
         return list;
     }
 
-    public void updateDepartment(int userId, Integer newDeptId, boolean activeStatus) {
-        String sql = "UPDATE users SET department_id = ?, active = ? WHERE id = ?";
+    public void updateDepartmentMember(int userId, Integer newDeptId, Integer newPositionId, boolean activeStatus) {
+        String sql = "UPDATE users SET department_id = ?, position_id = ?, active = ? WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Set department_id
+            // 1. Set department_id
             if (newDeptId == null) {
                 ps.setNull(1, java.sql.Types.INTEGER);
             } else {
                 ps.setInt(1, newDeptId);
             }
 
-            // Set active status (true=1, false=0)
-            ps.setBoolean(2, activeStatus);
+            // 2. Set position_id (Tự động đưa về vị trí Employee khi chuyển phòng)
+            if (newPositionId == null) {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(2, newPositionId);
+            }
 
-            // Set user ID
-            ps.setInt(3, userId);
+            // 3. Set active status
+            ps.setBoolean(3, activeStatus);
+
+            // 4. Set user ID
+            ps.setInt(4, userId);
 
             ps.executeUpdate();
         } catch (Exception e) {
@@ -787,9 +863,17 @@ public class UserDAO {
         if (!rs.wasNull()) {
             user.setDepartmentId(departmentId);
         }
+
         int positionId = rs.getInt("position_id");
         if (!rs.wasNull()) {
             user.setPositionId(positionId);
+        }
+
+        //mapping cho dept name
+        try {
+            user.setDepartmentName(rs.getString("department_name"));
+        } catch (Exception e) {
+
         }
 
         return user;
@@ -819,7 +903,18 @@ public class UserDAO {
         return user;
     }
 
-
+    public boolean deactivateUsersByDepartment(int departmentId) {
+        String sql = "UPDATE users SET active = 0 WHERE department_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
     private LocalDateTime getNullableLocalDateTime(ResultSet rs, String columnName) throws Exception {
         Timestamp timestamp = rs.getTimestamp(columnName);
 

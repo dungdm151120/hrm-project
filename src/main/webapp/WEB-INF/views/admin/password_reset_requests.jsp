@@ -20,6 +20,7 @@
 <div class="container" style="margin-top: 2rem;">
     <div class="page-header">
         <h2>Password Reset Requests</h2>
+        <a href="${pageContext.request.contextPath}/home" class="btn btn-secondary">Back to Home</a>
     </div>
 
     <c:if test="${not empty param.success}">
@@ -28,6 +29,22 @@
     <c:if test="${not empty param.error}">
         <div class="alert alert-error"><span>⚠</span> ${param.error}</div>
     </c:if>
+
+    <div class="search-filter">
+        <form action="${pageContext.request.contextPath}/admin/password-reset-requests" method="get">
+            <input type="text" name="search" placeholder="Search user, email, or reason..." value="${search}">
+
+            <select name="status">
+                <option value="all" ${empty status ? 'selected' : ''}>All Status</option>
+                <option value="PENDING" ${status == 'PENDING' ? 'selected' : ''}>Pending</option>
+                <option value="APPROVED" ${status == 'APPROVED' ? 'selected' : ''}>Approved</option>
+                <option value="REJECTED" ${status == 'REJECTED' ? 'selected' : ''}>Rejected</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="${pageContext.request.contextPath}/admin/password-reset-requests" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
 
     <div class="table-wrapper">
         <table>
@@ -94,6 +111,41 @@
                 </c:if>
             </tbody>
         </table>
+    </div>
+
+    <div class="pagination-wrapper">
+        <div class="pagination-summary">
+            Showing page ${currentPage} of ${totalPages} (${totalRecords} requests)
+        </div>
+
+        <c:if test="${totalPages > 1}">
+            <div class="pagination">
+                <c:url var="previousPageUrl" value="/admin/password-reset-requests">
+                    <c:param name="search" value="${search}" />
+                    <c:param name="status" value="${status}" />
+                    <c:param name="page" value="${currentPage - 1}" />
+                </c:url>
+                <a class="page-link ${currentPage == 1 ? 'disabled' : ''}"
+                   href="${currentPage == 1 ? '#' : previousPageUrl}">Previous</a>
+
+                <c:forEach begin="1" end="${totalPages}" var="pageNumber">
+                    <c:url var="pageUrl" value="/admin/password-reset-requests">
+                        <c:param name="search" value="${search}" />
+                        <c:param name="status" value="${status}" />
+                        <c:param name="page" value="${pageNumber}" />
+                    </c:url>
+                    <a class="page-link ${pageNumber == currentPage ? 'active' : ''}" href="${pageUrl}">${pageNumber}</a>
+                </c:forEach>
+
+                <c:url var="nextPageUrl" value="/admin/password-reset-requests">
+                    <c:param name="search" value="${search}" />
+                    <c:param name="status" value="${status}" />
+                    <c:param name="page" value="${currentPage + 1}" />
+                </c:url>
+                <a class="page-link ${currentPage == totalPages ? 'disabled' : ''}"
+                   href="${currentPage == totalPages ? '#' : nextPageUrl}">Next</a>
+            </div>
+        </c:if>
     </div>
 </div>
 

@@ -13,198 +13,222 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <c:set var="role" value="${currentUser.roleName}" />
-<c:set var="permissions" value="${sessionScope.userPermissions}" />
 
 <div class="dashboard-container">
-    <h2 class="dashboard-title">
-        <c:choose>
-            <c:when test="${not empty role}">${role} Dashboard</c:when>
-            <c:otherwise>Dashboard</c:otherwise>
-        </c:choose>
-    </h2>
 
-    <c:if test="${not empty permissions}">
-    <div class="dashboard-grid">
-        <c:if test="${permissions.contains('PROFILE_VIEW') or permissions.contains('PROFILE_CHANGE_PASSWORD') or permissions.contains('CONTRACT_VIEW_OWN')}">
+    <%-- ========== ADMIN ========== --%>
+    <c:if test="${role eq 'ADMIN'}">
+        <h2 class="dashboard-title">Admin Dashboard</h2>
+        <div class="dashboard-grid">
             <div class="dashboard-card">
-                <h3>Personal</h3>
+                <h3>👤 Personal</h3>
                 <ul>
-                    <c:if test="${permissions.contains('PROFILE_VIEW')}">
-                        <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('CONTRACT_VIEW_OWN')}">
-                        <li><a href="${pageContext.request.contextPath}/contracts">View My Contract</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('PROFILE_CHANGE_PASSWORD')}">
-                        <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
-                    </c:if>
+                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
+                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
                 </ul>
             </div>
-        </c:if>
-
-        <c:if test="${permissions.contains('USER_VIEW_LIST') or permissions.contains('USER_CREATE') or permissions.contains('USER_UPDATE') or permissions.contains('USER_TOGGLE_STATUS')}">
             <div class="dashboard-card">
-                <h3>User Management</h3>
+                <h3>👥 User Management</h3>
                 <ul>
-                    <c:if test="${permissions.contains('USER_VIEW_LIST')}">
-                        <li><a href="${pageContext.request.contextPath}/user_list">View User List</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('USER_CREATE')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/users/add">Add New User</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('USER_UPDATE')}">
-                        <li><a href="${pageContext.request.contextPath}/user_list">Update User Info</a></li>
-                        <li><a href="${pageContext.request.contextPath}/admin/password-reset-requests">Password Reset Requests</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('USER_TOGGLE_STATUS')}">
-                        <li><a href="${pageContext.request.contextPath}/user_list">Activate/Deactivate User</a></li>
-                    </c:if>
+                    <li><a href="${pageContext.request.contextPath}/user_list">View User List</a></li>
+                    <li><a href="${pageContext.request.contextPath}/admin/users/add">Add New User</a></li>
+                    <li><a href="${pageContext.request.contextPath}/user_list">Update User Info</a></li>
+                    <li><a href="${pageContext.request.contextPath}/user_list">Active/Deactive User</a></li>
+                    <li><a href="${pageContext.request.contextPath}/admin/password-reset-requests">Request Reset Password</a></li>
                 </ul>
             </div>
-        </c:if>
-
-        <c:if test="${permissions.contains('ROLE_VIEW_LIST') or permissions.contains('ROLE_VIEW_PERMISSION') or permissions.contains('ROLE_CREATE') or permissions.contains('ROLE_UPDATE') or permissions.contains('ROLE_EDIT_PERMISSION') or permissions.contains('ROLE_TOGGLE_STATUS')}">
             <div class="dashboard-card">
-                <h3>Role Management</h3>
+                <h3>🛡️ Role Management</h3>
                 <ul>
-                    <c:if test="${permissions.contains('ROLE_VIEW_LIST')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/roles">View Role List</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('ROLE_VIEW_PERMISSION')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=1">View Role Permissions</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('ROLE_CREATE')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/roles/add">Add New Role</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('ROLE_UPDATE')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/roles/update?roleId=1">Update Role Info</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('ROLE_EDIT_PERMISSION')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=1">Edit Role Permissions</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('ROLE_TOGGLE_STATUS')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/roles">Activate/Deactivate Role</a></li>
-                    </c:if>
+                    <li><a href="${pageContext.request.contextPath}/admin/roles">View Role List</a></li>
+                    <li><a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=1">View Role Permissions</a></li>
+                    <li><a href="${pageContext.request.contextPath}/admin/roles/update?roleId=1">Update Role Info</a></li>
+                    <li><a href="${pageContext.request.contextPath}/admin/roles/add">Add New Role</a></li>
+                    <li><a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=1">Edit Role Permissions</a></li>
                 </ul>
             </div>
-        </c:if>
-
-        <c:if test="${permissions.contains('DEPARTMENT_VIEW_LIST') or permissions.contains('DEPARTMENT_VIEW_DETAIL') or permissions.contains('DEPARTMENT_CREATE') or permissions.contains('DEPARTMENT_UPDATE') or permissions.contains('DEPARTMENT_TOGGLE_STATUS') or permissions.contains('DEPARTMENT_VIEW_EMPLOYEES')}">
             <div class="dashboard-card">
-                <h3>Department Management</h3>
+                <h3>🏢 Department Management</h3>
                 <ul>
-                    <c:if test="${permissions.contains('DEPARTMENT_VIEW_LIST')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/departments">View Department List</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('DEPARTMENT_CREATE')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/departments/add">Add New Department</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('DEPARTMENT_VIEW_DETAIL') and not empty currentUser.departmentId}">
-                        <li><a href="${pageContext.request.contextPath}/admin/departments/detail?id=${currentUser.departmentId}">View My Department Detail</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('DEPARTMENT_VIEW_EMPLOYEES') and not empty currentUser.departmentId}">
-                        <li><a href="${pageContext.request.contextPath}/admin/departments/employees?id=${currentUser.departmentId}">View My Department Employees</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('DEPARTMENT_UPDATE')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/departments">Update Department Info</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('DEPARTMENT_TOGGLE_STATUS')}">
-                        <li><a href="${pageContext.request.contextPath}/admin/departments">Activate/Deactivate Department</a></li>
-                    </c:if>
+                    <li><a href="${pageContext.request.contextPath}/admin/departments">View Department List</a></li>
+                    <li><a href="${pageContext.request.contextPath}/admin/departments/add">Add New Department</a></li>
                 </ul>
             </div>
-        </c:if>
-
-        <c:if test="${permissions.contains('POSITION_VIEW_LIST') or permissions.contains('POSITION_CREATE') or permissions.contains('POSITION_UPDATE') or permissions.contains('POSITION_TOGGLE_STATUS')}">
             <div class="dashboard-card">
-                <h3>Position Management</h3>
+                <h3>Contract</h3>
                 <ul>
-                    <c:if test="${permissions.contains('POSITION_VIEW_LIST')}">
-                        <li><a href="${pageContext.request.contextPath}/position/list">View Position List</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('POSITION_CREATE')}">
-                        <li><a href="${pageContext.request.contextPath}/position/add">Add New Position</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('POSITION_UPDATE')}">
-                        <li><a href="${pageContext.request.contextPath}/position/list">Update Position Info</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('POSITION_TOGGLE_STATUS')}">
-                        <li><a href="${pageContext.request.contextPath}/position/list">Activate/Deactivate Position</a></li>
-                    </c:if>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
                 </ul>
             </div>
-        </c:if>
-
-        <c:if test="${permissions.contains('CONTRACT_VIEW_LIST') or permissions.contains('CONTRACT_VIEW_OWN') or permissions.contains('CONTRACT_CREATE') or permissions.contains('CONTRACT_UPDATE') or permissions.contains('CONTRACT_TERMINATE')}">
             <div class="dashboard-card">
-                <h3>Contract Management</h3>
-                <ul>
-                    <c:if test="${permissions.contains('CONTRACT_VIEW_LIST') or permissions.contains('CONTRACT_VIEW_OWN')}">
-                        <li><a href="${pageContext.request.contextPath}/contracts">View Contracts</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('CONTRACT_CREATE')}">
-                        <li><a href="${pageContext.request.contextPath}/contracts/add">Add New Contract</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('CONTRACT_UPDATE')}">
-                        <li><a href="${pageContext.request.contextPath}/contracts">Update Contract</a></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('CONTRACT_TERMINATE')}">
-                        <li><a href="${pageContext.request.contextPath}/contracts">Terminate Contract</a></li>
-                    </c:if>
-                </ul>
-            </div>
-        </c:if>
+                            <h3>Position Management</h3>
+                            <ul>
+                                <li><a href="${pageContext.request.contextPath}/position/list">View Position List</a></li>
+                                <li><a href="${pageContext.request.contextPath}/position/add">Add New Position</a></li>
+                                <li><a href="${pageContext.request.contextPath}/position/list">Update Position Info</a></li>
 
-        <c:if test="${permissions.contains('ATTENDANCE_VIEW_OWN') or permissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or permissions.contains('ATTENDANCE_VIEW_ALL') or permissions.contains('ATTENDANCE_CHECK_IN') or permissions.contains('ATTENDANCE_CHECK_OUT')}">
-            <div class="dashboard-card">
-                <h3>Attendance</h3>
-                <ul>
-                    <c:if test="${permissions.contains('ATTENDANCE_VIEW_OWN')}">
-                        <li><span>View My Attendance (Coming Soon)</span></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('ATTENDANCE_VIEW_DEPARTMENT')}">
-                        <li><span>View Department Attendance (Coming Soon)</span></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('ATTENDANCE_VIEW_ALL')}">
-                        <li><span>View All Attendance (Coming Soon)</span></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('ATTENDANCE_CHECK_IN')}">
-                        <li><span>Check In (Coming Soon)</span></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('ATTENDANCE_CHECK_OUT')}">
-                        <li><span>Check Out (Coming Soon)</span></li>
-                    </c:if>
-                </ul>
-            </div>
-        </c:if>
-
-        <c:if test="${permissions.contains('PAYROLL_VIEW_OWN') or permissions.contains('PAYROLL_VIEW_LIST') or permissions.contains('PAYROLL_GENERATE') or permissions.contains('PAYROLL_EXPORT_REPORT')}">
-            <div class="dashboard-card">
-                <h3>Payroll</h3>
-                <ul>
-                    <c:if test="${permissions.contains('PAYROLL_VIEW_OWN')}">
-                        <li><span>View My Payroll (Coming Soon)</span></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('PAYROLL_VIEW_LIST')}">
-                        <li><span>View Payroll List (Coming Soon)</span></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('PAYROLL_GENERATE')}">
-                        <li><span>Generate Payroll (Coming Soon)</span></li>
-                    </c:if>
-                    <c:if test="${permissions.contains('PAYROLL_EXPORT_REPORT')}">
-                        <li><span>Export Payroll Report (Coming Soon)</span></li>
-                    </c:if>
-                </ul>
-            </div>
-        </c:if>
-    </div>
-    </c:if>
-
-    <c:if test="${empty permissions}">
-        <div class="role-invalid">
-            <p>No permissions found for this account.</p>
+                            </ul>
+                        </div>
         </div>
     </c:if>
+
+    <%-- ========== HR MANAGER ========== --%>
+    <c:if test="${role eq 'HR_MANAGER'}">
+        <h2 class="dashboard-title">HR Manager Dashboard</h2>
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>👤 Personal</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
+                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>👥 User Management</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/user_list">View User List</a></li>
+                    <li><a href="${pageContext.request.contextPath}/admin/users/add">Add New User</a></li>
+                    <li><a href="${pageContext.request.contextPath}/user_list">Update User Info</a></li>
+                    <li><a href="${pageContext.request.contextPath}/user_list">Active/Deactive User</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>🏢 Department Management</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/admin/departments">View Department List</a></li>
+                    <li><a href="${pageContext.request.contextPath}/admin/departments/add">Add New Department</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
+                    <li><a href="${pageContext.request.contextPath}/contracts">View Contract List</a></li>
+                </ul>
+            </div>
+            <!-- Các module khác như Position, Attendance, Payroll có thể thêm sau khi phát triển servlet -->
+        </div>
+    </c:if>
+
+    <%-- ========== HR STAFF ========== --%>
+    <c:if test="${role eq 'HR_STAFF'}">
+        <h2 class="dashboard-title">HR Staff Dashboard</h2>
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>👤 Personal</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
+                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>👥 User Management</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/user_list">View User List</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>🏢 Department Management</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/admin/departments">View Department List</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
+                    <li><a href="${pageContext.request.contextPath}/contracts">View Contract List</a></li>
+                </ul>
+            </div>
+        </div>
+    </c:if>
+
+    <%-- ========== DEPARTMENT MANAGER ========== --%>
+    <c:if test="${role eq 'DEPARTMENT_MANAGER'}">
+        <h2 class="dashboard-title">Department Manager Dashboard</h2>
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>👤 Personal</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
+                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
+                </ul>
+            </div>
+            <c:if test="${not empty currentUser.departmentId}">
+                <div class="dashboard-card">
+                    <h3>🏢 My Department</h3>
+                    <ul>
+                        <li><a href="${pageContext.request.contextPath}/admin/departments/detail?id=${currentUser.departmentId}">View Department Detail</a></li>
+                        <!-- Sau này có thể thêm View Employees, Attendance Report... -->
+                    </ul>
+                </div>
+            </c:if>
+            <!-- Self-service: Attendance, Contract, Payroll (cá nhân) sẽ bổ sung khi có servlet -->
+        </div>
+    </c:if>
+
+    <%-- ========== PAYROLL STAFF ========== --%>
+    <c:if test="${role eq 'PAYROLL_STAFF'}">
+        <h2 class="dashboard-title">Payroll Staff Dashboard</h2>
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>👤 Personal</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
+                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
+                </ul>
+            </div>
+            <!-- Module Payroll sẽ xuất hiện sau khi có servlet -->
+            <div class="dashboard-card">
+                <h3>💰 Payroll (Coming Soon)</h3>
+                <ul>
+                    <li><span>Generate Payroll</span></li>
+                    <li><span>View Payroll List</span></li>
+                </ul>
+            </div>
+        </div>
+    </c:if>
+
+    <%-- ========== EMPLOYEE ========== --%>
+    <c:if test="${role eq 'EMPLOYEE'}">
+        <h2 class="dashboard-title">Employee Dashboard</h2>
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>👤 Personal</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
+                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
+                </ul>
+            </div>
+            <div class="dashboard-card">
+                <h3>Contract</h3>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
+                </ul>
+            </div>
+            <!-- Self-service: Attendance, Payroll (cá nhân) sẽ bổ sung sau -->
+        </div>
+    </c:if>
+
+    <%-- Nếu role không khớp --%>
+    <c:if test="${empty role or (role ne 'ADMIN' and role ne 'HR_MANAGER' and role ne 'HR_STAFF' and role ne 'DEPARTMENT_MANAGER' and role ne 'PAYROLL_STAFF' and role ne 'EMPLOYEE')}">
+        <div class="role-invalid">
+            <p>⚠ Role không hợp lệ hoặc chưa được hỗ trợ.</p>
+        </div>
+    </c:if>
+
 </div>
 
 </body>

@@ -12,8 +12,8 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="container" style="margin-top: 2rem;">
-    <a class="back-link" href="${pageContext.request.contextPath}/user_list">← Quay lại danh sách người dùng</a>
-    <h2 class="form-title">Thêm người dùng mới</h2>
+    <a class="back-link" href="${pageContext.request.contextPath}/user_list">Return to user list</a>
+    <h2 class="form-title">Add new user</h2>
 
     <c:if test="${not empty error}">
         <div>${error}</div>
@@ -22,22 +22,22 @@
     <form action="${pageContext.request.contextPath}/admin/users/add" method="post">
         <div class="form-group">
             <label for="fullName">Full Name <span style="color: var(--danger);">*</span></label>
-            <input type="text" id="fullName" name="fullName" placeholder="Nhập họ tên" required>
+            <input type="text" id="fullName" name="fullName" placeholder="Enter full name" required>
         </div>
 
         <div class="form-group">
             <label for="email">Email <span style="color: var(--danger);">*</span></label>
-            <input type="email" id="email" name="email" placeholder="Nhập địa chỉ email" required>
+            <input type="email" id="email" name="email" placeholder="Enter email address" required>
         </div>
 
         <div class="form-group">
             <label for="password">Password <span style="color: var(--danger);">*</span></label>
-            <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
+            <input type="password" id="password" name="password" placeholder="Enter password" required>
         </div>
 
         <div class="form-group">
             <label for="phone">Phone</label>
-            <input type="text" id="phone" name="phone" placeholder="Nhập số điện thoại">
+            <input type="text" id="phone" name="phone" placeholder="Enter phone number">
         </div>
 
         <div class="form-group">
@@ -56,17 +56,17 @@
 
         <div class="form-group">
             <label for="address">Address</label>
-            <input type="text" id="address" name="address" placeholder="Nhập địa chỉ">
+            <input type="text" id="address" name="address" placeholder="Enter address">
         </div>
 
         <div class="form-group">
             <label for="avatarUrl">Avatar URL</label>
-            <input type="text" id="avatarUrl" name="avatarUrl" placeholder="Nhập đường dẫn ảnh đại diện">
+            <input type="text" id="avatarUrl" name="avatarUrl" placeholder="Enter photo url">
         </div>
 
         <div class="form-group">
             <label for="roleId">Role ID <span style="color: var(--danger);">*</span></label>
-            <input type="text" id="roleId" name="roleId" placeholder="Nhập ID vai trò" required>
+            <input type="text" id="roleId" name="roleId" placeholder="Enter role id" required>
         </div>
 
         <div class="form-group">
@@ -84,8 +84,8 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn-save">Thêm người dùng</button>
-            <a href="${pageContext.request.contextPath}/user_list" class="btn-cancel">Hủy</a>
+            <button type="submit" class="btn-save">Add user</button>
+            <a href="${pageContext.request.contextPath}/user_list" class="btn-cancel">Cancel</a>
         </div>
     </form>
 </div>

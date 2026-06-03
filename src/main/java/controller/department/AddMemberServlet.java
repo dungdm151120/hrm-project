@@ -12,7 +12,7 @@ import java.io.IOException;
 @WebServlet(name = "AddMemberServlet", value = "/add_member")
 public class AddMemberServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
-
+    private final int empId = 9;
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String deptId = request.getParameter("deptId");
@@ -27,16 +27,23 @@ public class AddMemberServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        int deptId = Integer.parseInt(request.getParameter("deptId"));
-        String[] userIds = request.getParameterValues("userIds");
+        String deptIdStr = request.getParameter("deptId");
 
-        if (userIds != null) {
-            for (String idStr : userIds) {
-                int userId = Integer.parseInt(idStr);
-                userDAO.updateDepartment(userId, deptId, true);
+        if (deptIdStr != null && !deptIdStr.isEmpty()) {
+            int deptId = Integer.parseInt(deptIdStr);
+            String[] userIds = request.getParameterValues("userIds");
+
+            if (userIds != null) {
+                for (String idStr : userIds) {
+                    int userId = Integer.parseInt(idStr);
+                    userDAO.updateDepartmentMember(userId, deptId, empId,true);
+                }
             }
+            // Redirect về đúng tên tham số 'id' mà trang Employee List đang đợi
+            response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptId);
+        } else {
+            // Redirect về danh sách phòng ban nếu deptId bị lỗi
+            response.sendRedirect(request.getContextPath() + "/admin/departments");
         }
-
-        response.sendRedirect(request.getContextPath() + "/department_members?deptId=" + deptId);
     }
 }

@@ -7,24 +7,29 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.LaborContract;
+import model.User;
 
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/contracts")
-public class ContractListServlet extends HttpServlet {
+@WebServlet("/my-contract")
+public class MyContractServlet extends HttpServlet {
     private final LaborContractDAO contractDAO = new LaborContractDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String search = trimToNull(request.getParameter("search"));
-        String contractType = trimToNull(request.getParameter("contractType"));
+        User currentUser = ContractRequestHelper.currentUser(request);
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
         String status = trimToNull(request.getParameter("status"));
         int pageSize = 10;
         int currentPage = parsePositiveInt(request.getParameter("page"), 1);
 
-        int totalRecords = contractDAO.count(null, search, contractType, status);
+        int totalRecords = contractDAO.count(currentUser.getId(), null, null, status);
         int totalPages = Math.max(1, (int) Math.ceil((double) totalRecords / pageSize));
 
         if (currentPage > totalPages) {
@@ -32,19 +37,15 @@ public class ContractListServlet extends HttpServlet {
         }
 
         int offset = (currentPage - 1) * pageSize;
-        List<LaborContract> contracts = contractDAO.search(null, search, contractType, status, offset, pageSize);
+        List<LaborContract> contracts = contractDAO.search(currentUser.getId(), null, null, status, offset, pageSize);
 
         request.setAttribute("contracts", contracts);
-        request.setAttribute("search", search);
-        request.setAttribute("contractType", contractType);
         request.setAttribute("status", status);
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalRecords", totalRecords);
         request.setAttribute("pageSize", pageSize);
-        request.setAttribute("canCreateContract", ContractRequestHelper.hasPermission(request, "CONTRACT_CREATE"));
-        request.setAttribute("canUpdateContract", ContractRequestHelper.hasPermission(request, "CONTRACT_UPDATE"));
-        request.getRequestDispatcher("/WEB-INF/views/contract/contract_list.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/contract/my_contract_list.jsp").forward(request, response);
     }
 
     private String trimToNull(String value) {

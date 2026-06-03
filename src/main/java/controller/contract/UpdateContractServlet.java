@@ -8,8 +8,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.LaborContract;
-import model.User;
-import util.ContractAccessUtil;
 
 import java.io.IOException;
 
@@ -21,10 +19,6 @@ public class UpdateContractServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!ensureManager(request, response)) {
-            return;
-        }
-
         LaborContract contract = findRequestedContract(request, response);
         if (contract == null) {
             return;
@@ -36,21 +30,43 @@ public class UpdateContractServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!ensureManager(request, response)) {
+        LaborContract current = findRequestedContract(request, response);
+        if (current == null) {
             return;
         }
 
         LaborContract contract;
         try {
             contract = ContractFormMapper.fromRequest(request);
-            contract.setId(Integer.parseInt(request.getParameter("id")));
+            contract.setId(current.getId());
         } catch (Exception e) {
             forwardForm(request, response, null, "Invalid contract data.");
             return;
         }
 
+        if ("TERMINATED".equals(current.getStatus()) && !"TERMINATED".equals(contract.getStatus())) {
+            forwardForm(request, response, current, "Terminated contract cannot be reopened.");
+            return;
+        }
+
+        if (!"TERMINATED".equals(current.getStatus()) && "TERMINATED".equals(contract.getStatus())) {
+            forwardForm(request, response, contract, "Use the Terminate Contract action to terminate a contract.");
+            return;
+        }
+
+        if (!contractDAO.isActiveUser(contract.getUserId())) {
+            forwardForm(request, response, contract, "Contract can only be assigned to an active employee.");
+            return;
+        }
+
         if (contractDAO.existsByContractCode(contract.getContractCode(), contract.getId())) {
             forwardForm(request, response, contract, "Contract code already exists.");
+            return;
+        }
+
+        if ("ACTIVE".equals(contract.getStatus()) && contractDAO.existsOverlappingActiveContract(
+                contract.getUserId(), contract.getStartDate(), contract.getEndDate(), contract.getId())) {
+            forwardForm(request, response, contract, "This employee already has an active contract in the selected date range.");
             return;
         }
 
@@ -76,16 +92,6 @@ public class UpdateContractServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/contracts");
         }
         return contract;
-    }
-
-    private boolean ensureManager(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        User currentUser = ContractAccessUtil.currentUser(request);
-        if (!ContractAccessUtil.canManageContracts(currentUser)) {
-            ContractAccessUtil.forwardForbidden(request, response);
-            return false;
-        }
-        return true;
     }
 
     private void forwardForm(HttpServletRequest request, HttpServletResponse response,

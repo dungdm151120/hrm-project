@@ -14,30 +14,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LaborContractDAO {
-    public List<LaborContract> findAll() {
+    public List<LaborContract> search(Integer userId, String keyword, String contractType, String status,
+                                      int offset, int limit) {
         List<LaborContract> contracts = new ArrayList<>();
-        String sql = baseSelect() + " ORDER BY lc.start_date DESC, lc.id DESC";
+        List<Object> params = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(baseSelect()).append(" WHERE 1=1");
+        appendSearchFilters(sql, params, userId, keyword, contractType, status);
+        sql.append(" ORDER BY lc.start_date DESC, lc.id DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                contracts.add(mapRow(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return contracts;
-    }
-
-    public List<LaborContract> findByUserId(int userId) {
-        List<LaborContract> contracts = new ArrayList<>();
-        String sql = baseSelect() + " WHERE lc.user_id = ? ORDER BY lc.start_date DESC, lc.id DESC";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            bindParams(ps, params);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     contracts.add(mapRow(rs));
@@ -48,6 +37,31 @@ public class LaborContractDAO {
         }
 
         return contracts;
+    }
+
+    public int count(Integer userId, String keyword, String contractType, String status) {
+        List<Object> params = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+                SELECT COUNT(*) AS total
+                FROM labor_contracts lc
+                JOIN users u ON lc.user_id = u.id
+                WHERE 1=1
+                """);
+        appendSearchFilters(sql, params, userId, keyword, contractType, status);
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            bindParams(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
     }
 
     public LaborContract findById(int id) {
@@ -120,7 +134,7 @@ public class LaborContractDAO {
 
     public boolean terminate(int id, String reason) {
         LaborContract current = findById(id);
-        if (current == null) {
+        if (current == null || !"ACTIVE".equals(current.getStatus())) {
             return false;
         }
 
@@ -134,10 +148,11 @@ public class LaborContractDAO {
         String sql = """
                 UPDATE labor_contracts
                 SET status = 'TERMINATED',
+                    end_date = CURRENT_DATE,
                     note = ?,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
-                  AND status <> 'TERMINATED'
+                  AND status = 'ACTIVE'
                 """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -145,6 +160,55 @@ public class LaborContractDAO {
             ps.setString(1, note);
             ps.setInt(2, id);
             return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean existsOverlappingActiveContract(int userId, LocalDate startDate, LocalDate endDate, Integer exceptId) {
+        String sql = """
+                SELECT id
+                FROM labor_contracts
+                WHERE user_id = ?
+                  AND status = 'ACTIVE'
+                  AND (? IS NULL OR start_date <= ?)
+                  AND (end_date IS NULL OR end_date >= ?)
+                """ + (exceptId == null ? "" : " AND id <> ?");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            setNullableDate(ps, 2, endDate);
+            setNullableDate(ps, 3, endDate);
+            ps.setDate(4, Date.valueOf(startDate));
+            if (exceptId != null) {
+                ps.setInt(5, exceptId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean isActiveUser(int userId) {
+        String sql = "SELECT id FROM users WHERE id = ? AND active = TRUE";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -192,6 +256,43 @@ public class LaborContractDAO {
         ps.setString(9, contract.getStatus());
         ps.setString(10, contract.getFileUrl());
         ps.setString(11, contract.getNote());
+    }
+
+    private void appendSearchFilters(StringBuilder sql, List<Object> params, Integer userId, String keyword,
+                                     String contractType, String status) {
+        if (userId != null) {
+            sql.append(" AND lc.user_id = ?");
+            params.add(userId);
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("""
+                     AND (
+                        LOWER(lc.contract_code) LIKE ?
+                        OR LOWER(u.full_name) LIKE ?
+                        OR LOWER(u.employee_code) LIKE ?
+                        OR LOWER(u.email) LIKE ?
+                     )
+                    """);
+            String likeKeyword = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+            params.add(likeKeyword);
+        }
+        if (contractType != null && !contractType.trim().isEmpty()) {
+            sql.append(" AND lc.contract_type = ?");
+            params.add(contractType.trim());
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND lc.status = ?");
+            params.add(status.trim());
+        }
+    }
+
+    private void bindParams(PreparedStatement ps, List<Object> params) throws Exception {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
     }
 
     private LaborContract mapRow(ResultSet rs) throws Exception {

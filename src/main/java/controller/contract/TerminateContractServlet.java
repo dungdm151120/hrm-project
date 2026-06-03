@@ -6,10 +6,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.User;
-import util.ContractAccessUtil;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @WebServlet("/contracts/terminate")
 public class TerminateContractServlet extends HttpServlet {
@@ -18,12 +18,6 @@ public class TerminateContractServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        User currentUser = ContractAccessUtil.currentUser(request);
-        if (!ContractAccessUtil.canManageContracts(currentUser)) {
-            ContractAccessUtil.forwardForbidden(request, response);
-            return;
-        }
-
         int contractId;
         try {
             contractId = Integer.parseInt(request.getParameter("id"));
@@ -32,7 +26,13 @@ public class TerminateContractServlet extends HttpServlet {
             return;
         }
 
-        contractDAO.terminate(contractId, request.getParameter("terminationReason"));
-        response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contractId);
+        boolean terminated = contractDAO.terminate(contractId, request.getParameter("terminationReason"));
+        if (terminated) {
+            response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contractId);
+            return;
+        }
+
+        String error = URLEncoder.encode("Only active contracts can be terminated.", StandardCharsets.UTF_8);
+        response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contractId + "&error=" + error);
     }
 }

@@ -12,8 +12,8 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="container" style="margin-top: 2rem;">
-    <a class="back-link" href="${pageContext.request.contextPath}/user_list">← Quay lại danh sách người dùng</a>
-    <h2 class="form-title">Thêm người dùng mới</h2>
+    <a class="back-link" href="${pageContext.request.contextPath}/position/list">Return to position list</a>
+    <h2 class="form-title">Add new position</h2>
 
     <c:if test="${not empty error}">
         <div style="color: red; margin-bottom: 15px; font-weight: bold;">
@@ -24,12 +24,12 @@
     <form action="${pageContext.request.contextPath}/position/add" method="post">
         <div class="form-group">
             <label for="name">Name <span style="color: var(--danger);">*</span></label>
-            <input type="text" id="name" name="name" placeholder="Nhập tên vị trí" value="${newPosition.name}" required>
+            <input type="text" id="name" name="name" placeholder="Enter position name" value="${newPosition.name}" required>
         </div>
 
         <div class="form-group">
             <label for="description">Description</label>
-            <textarea id="description" name="description" placeholder="Nhập mô tả" >${newPosition.description}</textarea>
+            <textarea id="description" name="description" placeholder="Enter description" >${newPosition.description}</textarea>
         </div>
 
         <div class="form-group">
@@ -48,7 +48,7 @@
 
         <div class="form-actions">
             <button type="submit" class="btn-save">Add position</button>
-            <a href="${pageContext.request.contextPath}/position/list" class="btn-cancel">Hủy</a>
+            <a href="${pageContext.request.contextPath}/position/list" class="btn-cancel">Cancel</a>
         </div>
     </form>
 </div>

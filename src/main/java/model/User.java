@@ -18,12 +18,17 @@ public class User {
     private String departmentName; // moi them
     private Integer positionId;     // mới thêm (phòng hờ sau này)
     private String positionName; // moi them
+    private boolean isManager;
     private boolean active;
     private String resetToken;
     private LocalDateTime resetTokenExpiredAt;
 
     public User() {}
 
+    public User(int id, String fullName) {
+        this.id = id;
+        this.fullName = fullName;
+    }
     // Getter/Setter cho departmentId
     public Integer getDepartmentId() {
         return departmentId;
@@ -154,6 +159,10 @@ public class User {
     public void setActive(boolean active) {
         this.active = active;
     }
+
+    public boolean isManager() { return isManager; }
+
+    public void setManager(boolean manager) { isManager = manager; }
 
     public String getResetToken() {
         return resetToken;

@@ -11,16 +11,16 @@ import java.io.IOException;
 @WebServlet(name = "RemoveMemberServlet", value = "/remove_member")
 public class RemoveMemberServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
-
+    private final int empId = 9;
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String userIdStr = request.getParameter("userId");
         String deptIdStr = request.getParameter("deptId");
 
         if (userIdStr != null) {
-            userDAO.updateDepartment(Integer.parseInt(userIdStr), null, false);
+            userDAO.updateDepartmentMember(Integer.parseInt(userIdStr), null, empId, false);
         }
 
-        response.sendRedirect(request.getContextPath() + "/department_members?deptId=" + deptIdStr);
+        response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptIdStr);
     }
 }

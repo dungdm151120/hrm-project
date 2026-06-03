@@ -82,6 +82,46 @@ public class PositionDAO {
         return positions;
     }
 
+    public List<Position> findPositionsAdvanced(String keyword, String statusParam) {
+        List<Position> positions = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder("SELECT p.* FROM positions p WHERE 1=1 ");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND p.name LIKE ? ");
+        }
+
+        if (statusParam != null && !statusParam.trim().isEmpty()) {
+            sql.append("AND p.active = ? ");
+        }
+
+        sql.append("ORDER BY p.id ASC");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+            }
+
+            if (statusParam != null && !statusParam.trim().isEmpty()) {
+                boolean isActive = Boolean.parseBoolean(statusParam);
+                ps.setBoolean(paramIndex++, isActive);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    positions.add(mapResultSetToPosition(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return positions;
+    }
+
     public boolean addPosition(Position position) {
         String sql = """
                     INSERT INTO positions (

@@ -21,16 +21,16 @@ public class PositionListServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String keyword = request.getParameter("search");
+        String statusParam = request.getParameter("status");
+
+        String cleanKeyword = (keyword != null) ? keyword.trim() : "";
+        String cleanStatus = ("all".equals(statusParam) || statusParam == null) ? "" : statusParam.trim();
+
         PositionDAO dao = new PositionDAO();
-        List<Position> list = null;
+        List<Position> list = dao.findPositionsAdvanced(cleanKeyword, cleanStatus);
 
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            list = dao.searchPositions(keyword.trim());
-            request.setAttribute("oldKeyword", keyword);
-        } else {
-            list = dao.findAllPositions();
-        }
-
+        request.setAttribute("oldKeyword", keyword);
+        request.setAttribute("status", statusParam);
         request.setAttribute("positionList", list);
         request.getRequestDispatcher("/WEB-INF/views/admin/position_list.jsp").forward(request, response);
     }
