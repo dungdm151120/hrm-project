@@ -195,6 +195,23 @@ public class DepartmentDAO {
         return list;
     }
 
+    // Kiểm tra Dept có đang active ko
+    public boolean isDepartmentActive(int deptId) {
+        String sql = "SELECT active FROM departments WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, deptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("active");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     private Department mapRow(ResultSet rs) throws SQLException {
         Department dept = new Department();
         dept.setId(rs.getInt("id"));
