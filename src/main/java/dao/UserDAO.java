@@ -45,9 +45,11 @@ public class UserDAO {
 
     public User findById(int id) {
         String sql = """
-                SELECT u.*, r.name AS role_name
+                SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
+                LEFT JOIN departments d ON u.department_id = d.id
+                JOIN positions p ON u.position_id = p.id
                 WHERE u.id = ?
                 """;
 
@@ -189,10 +191,11 @@ public class UserDAO {
         List<User> users = new ArrayList<>();
 
         String sql = """
-                SELECT u.*, r.name AS role_name, d.name AS department_name
+                SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
                 LEFT JOIN departments d ON u.department_id = d.id
+                JOIN positions p ON u.position_id = p.id
                 ORDER BY u.id ASC
                 """;
 
@@ -212,29 +215,41 @@ public class UserDAO {
     }
 
 
-    public List<User> searchUsers(String keyword) {
+    public List<User> searchUsers(String keyword, Boolean status) {
         List<User> users = new ArrayList<>();
 
-        String sql = """
-                SELECT u.*, r.name AS role_name
-                FROM users u
-                JOIN roles r ON u.role_id = r.id
-                WHERE u.full_name LIKE ?
-                   OR u.email LIKE ?
-                   OR u.phone LIKE ?
-                   OR r.name LIKE ?
-                ORDER BY u.id ASC
-                """;
+        StringBuilder sql = new StringBuilder("""
+            SELECT u.*, r.name AS role_name, d.name AS department_name
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            WHERE 1=1
+            """);
+
+        // Search theo name
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND u.full_name LIKE ?");
+        }
+
+        // Filter theo status
+        if (status != null) {
+            sql.append(" AND u.active = ?");
+        }
+
+        sql.append(" ORDER BY u.id ASC");
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            String searchKeyword = "%" + keyword + "%";
-
-            ps.setString(1, searchKeyword);
-            ps.setString(2, searchKeyword);
-            ps.setString(3, searchKeyword);
-            ps.setString(4, searchKeyword);
+            int index = 1;
+            // Gán giá trị cho keyword
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(index++, "%" + keyword.trim() + "%");
+            }
+            // Gán giá trị cho status
+            if (status != null) {
+                ps.setBoolean(index++, status);
+            }
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -788,7 +803,224 @@ public class UserDAO {
 
         }
 
+        // mapping cho position name
+        try {
+            user.setPositionName(rs.getString("position_name"));
+        } catch (Exception e) {
+
+        }
+
         return user;
+    }
+
+    / Move
+    public String moveDepartmentMember(int userId, int newDeptId) {
+        String checkPositionSql = "SELECT p.name FROM users u " +
+                "JOIN positions p ON u.position_id = p.id " +
+                "WHERE u.id = ?";
+
+        String updateSql = "UPDATE users SET department_id = ?, " +
+                "position_id = (SELECT id FROM positions WHERE name = 'Employee' LIMIT 1) " +
+                "WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+
+            // 1. Kiểm tra chức danh (Position) hiện tại của User
+            try (PreparedStatement psCheck = conn.prepareStatement(checkPositionSql)) {
+                psCheck.setInt(1, userId);
+                try (ResultSet rs = psCheck.executeQuery()) {
+                    if (rs.next()) {
+                        String positionName = rs.getString("name");
+
+                        // Nếu chức danh có chứa từ "Manager", từ chối di chuyển
+                        if (positionName != null && positionName.toLowerCase().contains("manager")) {
+                            return "ERROR_IS_MANAGER";
+                        }
+                    } else {
+                        return "ERROR_USER_NOT_FOUND";
+                    }
+                }
+            }
+
+            // 2. Thực hiện cập nhật phòng ban mới và chuyển Position về Employee
+            try (PreparedStatement psUpdate = conn.prepareStatement(updateSql)) {
+                psUpdate.setInt(1, newDeptId);
+                psUpdate.setInt(2, userId);
+
+                int rowsAffected = psUpdate.executeUpdate();
+                if (rowsAffected > 0) {
+                    return "SUCCESS";
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "ERROR_SYSTEM";
+        }
+        return "ERROR_FAILED";
+    }
+
+    //Remove
+    public String removeMemberFromDepartment(int userId) {
+        String checkPositionSql = "SELECT p.name FROM users u " +
+                "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
+
+        String removeSql = "UPDATE users SET department_id = NULL, " +
+                "position_id = (SELECT id FROM positions WHERE name = 'Employee' LIMIT 1), " +
+                "active = 0 " +
+                "WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            // 1. Kiểm tra xem có phải Manager không
+            try (PreparedStatement psCheck = conn.prepareStatement(checkPositionSql)) {
+                psCheck.setInt(1, userId);
+                try (ResultSet rs = psCheck.executeQuery()) {
+                    if (rs.next()) {
+                        String pos = rs.getString("name");
+                        if (pos != null && pos.toLowerCase().contains("manager")) {
+                            return "ERROR_IS_MANAGER";
+                        }
+                    }
+                }
+            }
+
+            // 2. Thực hiện cập nhật
+            try (PreparedStatement psUpdate = conn.prepareStatement(removeSql)) {
+                psUpdate.setInt(1, userId);
+                return psUpdate.executeUpdate() > 0 ? "SUCCESS" : "FAILED";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "ERROR_SYSTEM";
+        }
+    }
+
+    // Lấy danh sách nhân viên chưa thuộc phòng ban nào
+    public List<User> getUnassignedUsers() {
+        List<User> list = new ArrayList<>();
+        // department_id IS NULL hoặc có thể là 0 tùy vào cách bạn thiết kế DB
+        String sql = "SELECT id, full_name FROM users WHERE department_id IS NULL OR department_id = 0";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                User u = new User();
+                u.setId(rs.getInt("id"));
+                u.setFullName(rs.getString("full_name"));
+                list.add(u);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
+    }
+
+    // Add member vào Dept
+    public boolean addMembersToDept(int[] userIds, int deptId) {
+        String sql = "UPDATE users SET department_id = ?, " +
+                    "position_id = (SELECT id FROM positions WHERE name = 'Employee' LIMIT 1), " +
+                    "active = 1 " +
+                    "WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            conn.setAutoCommit(false);
+
+            for (int userId : userIds) {
+                ps.setInt(1, deptId);
+                ps.setInt(2, userId);
+                ps.addBatch();
+            }
+
+            ps.executeBatch();
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    //
+    public int countUsers(String keyword, Boolean active) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE 1=1");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ?)");
+        }
+        if (active != null) {
+            sql.append(" AND u.active = ?");
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String search = "%" + keyword.trim() + "%";
+                ps.setString(idx++, search);
+                ps.setString(idx++, search);
+            }
+            if (active != null) {
+                ps.setBoolean(idx++, active);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // Lấy danh sách user theo trang
+    public List<User> getUsersWithPaging(String keyword, Boolean active, String sortBy, String sortOrder, int offset, int limit) {
+        List<User> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name " +
+                        "FROM users u " +
+                        "JOIN roles r ON u.role_id = r.id " +
+                        "LEFT JOIN departments d ON u.department_id = d.id " +
+                        "LEFT JOIN positions p ON u.position_id = p.id " +
+                        "WHERE 1=1");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND u.full_name LIKE ?");
+        }
+        if (active != null) {
+            sql.append(" AND u.active = ?");
+        }
+
+        // Logic Sort động đồng bộ giống Dept
+        if ("name".equals(sortBy)) {
+            sql.append(" ORDER BY u.full_name ").append("asc".equalsIgnoreCase(sortOrder) ? "ASC" : "DESC");
+        } else {
+            sql.append(" ORDER BY u.id ASC");
+        }
+
+        sql.append(" LIMIT ? OFFSET ?");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) ps.setString(idx++, "%" + keyword.trim() + "%");
+            if (active != null) ps.setBoolean(idx++, active);
+
+            ps.setInt(idx++, limit);
+            ps.setInt(idx++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToUser(rs));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     private User mapEmployeeResultSetToUser(ResultSet rs) throws SQLException {
