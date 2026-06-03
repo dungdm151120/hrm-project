@@ -104,13 +104,20 @@
                                     <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}"
                                        class="btn btn-secondary"
                                             <c:if test="${user.manager}">
-                                                onclick="return confirmManagerMove();"
+                                                onclick="alert('Cannot move Manager!'); return false;"
                                             </c:if>>
                                         Move
                                     </a>
                                     <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
                                        class="btn btn-danger"
-                                       onclick="return confirm('Bạn chắc chắn muốn remove employee này khỏi phòng ban?')">Remove</a>
+                                            <c:if test="${user.manager}">
+                                                onclick="alert('Cannot remove Manager!'); return false;"
+                                            </c:if>
+                                            <c:if test="${not user.manager}">
+                                                onclick="return confirm('Remove this employee?')"
+                                            </c:if>>
+                                        Remove
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -126,11 +133,5 @@
         </div>
     </main>
 </div>
-<script>
-    function confirmManagerMove() {
-        alert("Không thể chuyển phòng ban vì nhân viên này đang là Manager!");
-        return false;
-    }
-</script>
 </body>
 </html>
