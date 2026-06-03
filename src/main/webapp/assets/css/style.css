@@ -407,6 +407,13 @@ tbody tr:last-child td {
     border: 1px solid var(--danger);
 }
 
+.badge-manager {
+    margin-left: 0.5rem;
+    background-color: var(--primary-bg);
+    color: var(--primary);
+    border: 1px solid var(--primary-light);
+}
+
 /* Action Buttons & Links */
 .actions {
     display: flex;

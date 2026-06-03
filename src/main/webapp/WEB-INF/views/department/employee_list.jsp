@@ -73,7 +73,12 @@
             <c:forEach items="${employees}" var="user" varStatus="s">
                 <tr>
                     <td>${(currentPage - 1) * pageSize + s.index + 1}</td>
-                    <td><strong>${user.fullName}</strong></td>
+                    <td>
+                        <strong>${user.fullName}</strong>
+                        <c:if test="${user.manager}">
+                            <span class="badge badge-manager">Manager</span>
+                        </c:if>
+                    </td>
                     <td>${user.email}</td>
                     <td>
                         <c:choose>
