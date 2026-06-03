@@ -7,6 +7,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Position List | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+    <style>
+            .search-filter {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                margin-bottom: 1.5rem;
+            }
+            .search-filter input[type="text"],
+            .search-filter select {
+                padding: 0.5rem;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+            .pagination {
+                margin-top: 1.5rem;
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+                justify-content: center;
+            }
+            .pagination a, .pagination span {
+                padding: 0.25rem 0.75rem;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                text-decoration: none;
+                color: #333;
+                display: inline-block;
+            }
+            .pagination a:hover {
+                background: #007bff;
+                color: #fff;
+                border-color: #007bff;
+            }
+            .pagination .current {
+                background: #007bff;
+                color: #fff;
+                border-color: #007bff;
+                font-weight: bold;
+            }
+            .pagination .disabled {
+                pointer-events: none;
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        </style>
 </head>
 <body>
 
@@ -47,8 +93,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Name</th>
+                    <th>#</th> <th>ID</th> <th>Name</th>
                     <th>Description</th>
                     <th>Status</th>
                     <th>Last Updated</th>
@@ -56,8 +101,9 @@
                 </tr>
             </thead>
             <tbody>
-                <c:forEach items="${positionList}" var="position">
+                <c:forEach items="${positionList}" var="position" varStatus="s">
                     <tr>
+                        <td>${(currentPage - 1) * 5 + s.index + 1}</td>
                         <td>${position.id}</td>
                         <td><strong>${position.name}</strong></td>
                         <td>${position.description}</td>
@@ -77,30 +123,56 @@
                         <td>
                             <div class="actions">
                                 <a href="${pageContext.request.contextPath}/position/update?id=${position.id}">Update</a>
-                                <c:choose>
-                                    <c:when test="${position.active}">
-                                        <a href="${pageContext.request.contextPath}/position/toggle-status?id=${position.id}&action=deactivate"
-                                           class="btn btn-danger"
-                                           onclick="return confirm('Deactivate this position?')">Deactivate</a>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <a href="${pageContext.request.contextPath}/position/toggle-status?id=${position.id}&action=activate"
-                                           class="btn btn-warning"
-                                           onclick="return confirm('Activate this position?')">Activate</a>
-                                    </c:otherwise>
-                                </c:choose>
-                            </div>
+                                </div>
                         </td>
                     </tr>
                 </c:forEach>
                 <c:if test="${empty positionList}">
                     <tr>
-                        <td colspan="6" class="empty-state">No position found.</td>
+                        <td colspan="7" class="empty-state">No position found.</td>
                     </tr>
                 </c:if>
             </tbody>
         </table>
     </div>
+
+    <c:if test="${totalPage > 1}">
+        <div class="pagination">
+            <c:url var="firstPageUrl" value="/position/list">
+                <c:param name="page" value="1" />
+                <c:if test="${not empty keyword}"><c:param name="search" value="${keyword}" /></c:if>
+                <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
+            </c:url>
+            <a href="${firstPageUrl}" class="${currentPage == 1 ? 'disabled' : ''}">First</a>
+
+            <c:url var="prevPageUrl" value="/position/list">
+                <c:param name="page" value="${currentPage - 1}" />
+                <c:if test="${not empty keyword}"><c:param name="search" value="${keyword}" /></c:if>
+                <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
+            </c:url>
+            <a href="${prevPageUrl}" class="${currentPage <= 1 ? 'disabled' : ''}">Previous</a>
+
+            <span>Page <span class="current">${currentPage}</span> / ${totalPage}</span>
+
+            <c:url var="nextPageUrl" value="/position/list">
+                <c:param name="page" value="${currentPage + 1}" />
+                <c:if test="${not empty keyword}"><c:param name="search" value="${keyword}" /></c:if>
+                <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
+            </c:url>
+            <a href="${nextPageUrl}" class="${currentPage >= totalPage ? 'disabled' : ''}">Next</a>
+
+            <c:url var="lastPageUrl" value="/position/list">
+                <c:param name="page" value="${totalPage}" />
+                <c:if test="${not empty keyword}"><c:param name="search" value="${keyword}" /></c:if>
+                <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
+            </c:url>
+            <a href="${lastPageUrl}" class="${currentPage == totalPage ? 'disabled' : ''}">Last</a>
+        </div>
+    </c:if>
 </div>
 
 </body>

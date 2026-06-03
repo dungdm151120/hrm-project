@@ -32,11 +32,10 @@ public class PositionDAO {
         return positions;
     }
 
-    public List<Position> findPositionsAdvanced(String keyword, String status, String sort) {
+    public List<Position> findPositionsAdvanced(String keyword, Boolean active, String sort, int offset, int pageSize) {
         List<Position> positions = new ArrayList<>();
 
         String cleanKeyword = (keyword != null) ? keyword.trim() : "";
-        String cleanStatus = (status != null) ? status.trim() : "";
 
         StringBuilder sql = new StringBuilder("SELECT p.* FROM positions p WHERE 1=1 ");
 
@@ -44,7 +43,7 @@ public class PositionDAO {
             sql.append("AND p.name LIKE ? ");
         }
 
-        if (!cleanStatus.isEmpty()) {
+        if (active != null) {
             sql.append("AND p.active = ? ");
         }
 
@@ -52,10 +51,12 @@ public class PositionDAO {
         switch (sort != null ? sort : "") {
             case "name_asc":    sql.append("p.name ASC"); break;
             case "name_desc":   sql.append("p.name DESC"); break;
-            case "id_desc":     sql.append("p.id DESC"); break;
-            case "id_asc":
-            default:            sql.append("p.id ASC"); break;
+            case "id_asc":      sql.append("p.id ASC"); break;
+            case "id_desc":
+            default:            sql.append("p.id DESC"); break;
         }
+
+        sql.append(" LIMIT ? OFFSET ?");
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -63,12 +64,15 @@ public class PositionDAO {
             int paramIndex = 1;
 
             if (!cleanKeyword.isEmpty()) {
-                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+                ps.setString(paramIndex++, "%" + cleanKeyword + "%");
             }
 
-            if (!cleanStatus.isEmpty()) {
-                ps.setBoolean(paramIndex++, Boolean.parseBoolean(status));
+            if (active != null) {
+                ps.setBoolean(paramIndex++, active);
             }
+
+            ps.setInt(paramIndex++, pageSize);
+            ps.setInt(paramIndex++, offset);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -79,6 +83,33 @@ public class PositionDAO {
             e.printStackTrace();
         }
         return positions;
+    }
+
+    public int countPositions(String keyword, Boolean active) {
+        int totalRows = 0;
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM positions WHERE 1=1 ");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND name LIKE ? ");
+        }
+        if (active != null) { // Code ngắn gọn, không cần check trống chuỗi nữa
+            sql.append("AND active = ? ");
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+            }
+            if (active != null) {
+                ps.setBoolean(paramIndex++, active);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) totalRows = rs.getInt(1);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return totalRows;
     }
 
     public Position findById(int id) {
