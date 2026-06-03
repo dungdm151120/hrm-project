@@ -20,17 +20,24 @@
 
     <div class="search-filter">
         <form action="${pageContext.request.contextPath}/position/list" method="GET">
-            <input type="text" name="search" placeholder="Search name" value="${oldKeyword}">
+            <input type="text" name="search" placeholder="Search name" value="${keyword}">
 
-            <select name="status">
+            <select name="status" onchange="this.form.submit()">
                 <option value="all" ${status == 'all' || empty status ? 'selected' : ''}>All status</option>
                 <option value="true" ${status == 'true' ? 'selected' : ''}>Active</option>
                 <option value="false" ${status == 'false' ? 'selected' : ''}>Inactive</option>
             </select>
 
+            <select name="sort" onchange="this.form.submit()">
+                <option value="name_asc" ${sort == 'name_asc' ? 'selected' : ''}>Name A-Z</option>
+                <option value="name_desc" ${sort == 'name_desc' ? 'selected' : ''}>Name Z-A</option>
+                <option value="id_desc" ${sort == 'id_desc' || empty sort ? 'selected' : ''}>Newest</option>
+                <option value="id_asc" ${sort == 'id_asc' ? 'selected' : ''}>Oldest</option>
+            </select>
+
             <button type="submit" class="btn btn-primary">Search</button>
 
-            <c:if test="${not empty oldKeyword}">
+            <c:if test="${not empty keyword}">
                 <a href="${pageContext.request.contextPath}/position/list" class="btn btn-reset">Clear</a>
             </c:if>
         </form>

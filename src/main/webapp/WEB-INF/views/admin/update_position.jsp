@@ -13,8 +13,8 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="container" style="margin-top: 2rem;">
-    <a class="back-link" href="${pageContext.request.contextPath}/position/list">← Quay lại danh sách vị trí</a>
-    <h2 class="form-title">Cập nhật thông tin vị trí</h2>
+    <a class="back-link" href="${pageContext.request.contextPath}/position/list">Return to position list</a>
+    <h2 class="form-title">Update position information</h2>
 
     <c:if test="${not empty error}">
         <div style="color: red; margin-bottom: 15px; font-weight: bold;">
@@ -27,17 +27,17 @@
 
         <div class="form-group">
             <label for="name">Name <span style="color: var(--danger);">*</span></label>
-            <input type="text" id="name" name="name" placeholder="Nhập tên vị trí" value="${position.name}" required>
+            <input type="text" id="name" name="name" placeholder="Enter position name" value="${position.name}" required>
         </div>
 
         <div class="form-group">
             <label for="description">Description</label>
-            <textarea id="description" name="description" placeholder="Nhập mô tả">${position.description}</textarea>
+            <textarea id="description" name="description" placeholder="Enter description">${position.description}</textarea>
         </div>
 
         <div class="form-actions">
             <button type="submit" class="btn-save">Update position</button>
-            <a href="${pageContext.request.contextPath}/position/list" class="btn-cancel">Hủy</a>
+            <a href="${pageContext.request.contextPath}/position/list" class="btn-cancel">Cancel</a>
         </div>
     </form>
 </div>

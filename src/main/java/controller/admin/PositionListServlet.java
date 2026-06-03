@@ -1,14 +1,12 @@
 package controller.admin;
 
 import dao.PositionDAO;
-import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Position;
-import model.User;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,17 +19,19 @@ public class PositionListServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String keyword = request.getParameter("search");
-        String statusParam = request.getParameter("status");
+        String status = request.getParameter("status");
+        String sort = request.getParameter("sort");
 
         String cleanKeyword = (keyword != null) ? keyword.trim() : "";
-        String cleanStatus = ("all".equals(statusParam) || statusParam == null) ? "" : statusParam.trim();
+        String cleanStatus = ("all".equals(status) || status == null) ? "" : status.trim();
 
         PositionDAO dao = new PositionDAO();
-        List<Position> list = dao.findPositionsAdvanced(cleanKeyword, cleanStatus);
+        List<Position> positionList = dao.findPositionsAdvanced(cleanKeyword, cleanStatus, sort);
 
-        request.setAttribute("oldKeyword", keyword);
-        request.setAttribute("status", statusParam);
-        request.setAttribute("positionList", list);
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("status", status);
+        request.setAttribute("sort", sort);
+        request.setAttribute("positionList", positionList);
         request.getRequestDispatcher("/WEB-INF/views/admin/position_list.jsp").forward(request, response);
     }
 

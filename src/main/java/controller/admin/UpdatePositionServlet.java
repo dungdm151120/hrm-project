@@ -11,6 +11,7 @@ import model.Position;
 import model.User;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @WebServlet("/position/update")
 public class UpdatePositionServlet extends HttpServlet {
@@ -45,6 +46,7 @@ public class UpdatePositionServlet extends HttpServlet {
             updatedPost.setId(id);
             updatedPost.setName(name);
             updatedPost.setDescription(description);
+            updatedPost.setUpdatedAt(LocalDateTime.now());
 
             PositionDAO dao = new PositionDAO();
             boolean isSuccess = dao.updatePosition(updatedPost);
