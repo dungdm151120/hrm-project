@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ArtifactsWorkspaceSettings">
+    <artifacts-to-build>
+      <artifact name="HRM:war exploded" />
+    </artifacts-to-build>
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ddd73ede-973c-48d6-9f6d-143f46cd9769" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/webContexts.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.idea/dataSources.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.idea/dbnavigator.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.idea/material_theme_project_new.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.idea/sqldialects.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/.idea/webContexts.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/database.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/AddPositionServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/AddUserServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/ApprovePasswordResetServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/ChangePositionStatusServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/ChangeUserStatusServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/PasswordResetRequestListServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/PositionListServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/RejectPasswordResetServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/UpdatePositionServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/UpdateUserServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/UserDetailServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/admin/UserListServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/auth/ForgotPasswordServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/auth/LoginServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/auth/LogoutServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/common/HomeServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/contract/AddContractServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/contract/ContractDetailServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/contract/ContractFormMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/contract/ContractListServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/contract/ContractRequestHelper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/contract/MyContractServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/contract/TerminateContractServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/contract/UpdateContractServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/department/AddDeptServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/department/AddMemberServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/department/DeptDetailServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/department/DeptInfoUpdateServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/department/DeptListServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/department/DeptToggleStatusServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/department/EmployeeListServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/department/MoveMemberServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/department/RemoveMemberServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/profile/ChangePasswordServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/profile/ProfileServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/role/AddRoleServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/role/ChangeRoleStatusServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/role/EditRolePermissionServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/role/RoleListServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/role/RolePermissionServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/controller/role/UpdateRoleInformationServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/dao/DepartmentDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/dao/LaborContractDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/dao/PasswordResetRequestDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/dao/PermissionDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/dao/PositionDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/dao/RoleDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/dao/UserDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/filter/AdminFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/filter/AuthFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/filter/PermissionFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/model/Department.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/model/LaborContract.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/model/PasswordResetRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/model/Permission.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/model/Position.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/model/Role.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/model/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/service/AuthService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/service/RoleService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/service/UserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/util/DBConnection.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/util/DateUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/util/EmailUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/java/util/PasswordUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/admin/add_position.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/admin/add_user.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/admin/password_reset_requests.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/admin/position_list.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/admin/update_position.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/admin/update_user.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/admin/user_detail.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/admin/user_list.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/auth/forgot_password.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/auth/login.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/auth/reset_password.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/common/403.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/common/footer.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/common/header.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/common/homepage.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/common/navbar.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/common/sidebar.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/contract/contract_detail.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/contract/contract_form.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/contract/contract_list.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/contract/my_contract_list.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/department/add_member.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/department/dept_add.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/department/dept_detail.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/department/dept_list.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/department/dept_update.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/department/employee_list.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/department/move_member.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/profile/change_password.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/profile/profile.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/role/add_role.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/role/edit_role_permission.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/role/role_list.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/role/role_permission.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/views/role/update_role.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/WEB-INF/web.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/assets/css/dashboard.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/assets/css/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hrm-project-fixed3/src/main/webapp/index.jsp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "hdang976"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/hdang976/hrm-project-fixed3.git",
+    "accountId": "5161cb2d-d9c4-4613-8cc7-be5aea1f72cf"
+  }
+}]]></component>
+  <component name="LogFilters">
+    <option name="FILTER_ERRORS" value="false" />
+    <option name="FILTER_WARNINGS" value="false" />
+    <option name="FILTER_INFO" value="true" />
+    <option name="FILTER_DEBUG" value="true" />
+    <option name="CUSTOM_FILTER" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3EdAEwljNRDdNMMekJwMm3CGIet" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Tomcat Server.Tomcat 10.1.34.executor": "Run",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/OS/Desktop/hrm-project-fixed3",
+    "settings.editor.selected.configurable": "vcs.Git",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunDashboard">
+    <option name="configurationStatuses">
+      <map>
+        <entry key="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory">
+          <value>
+            <map>
+              <entry key="Tomcat 10.1.34" value="STOPPED" />
+            </map>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Tomcat 10.1.34" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat 10.1.34" ALTERNATIVE_JRE_ENABLED="false" nameIsGenerated="true">
+      <option name="UPDATING_POLICY" value="restart-server" />
+      <deployment>
+        <artifact name="HRM:war exploded">
+          <settings>
+            <option name="CONTEXT_PATH" value="/HRM_war_exploded" />
+          </settings>
+        </artifact>
+      </deployment>
+      <server-settings>
+        <option name="BASE_DIRECTORY_NAME" value="4ffe456d-81f2-4e41-a2af-868984e0e6a7" />
+      </server-settings>
+      <predefined_log_file enabled="true" id="Tomcat" />
+      <predefined_log_file enabled="true" id="Tomcat Catalina" />
+      <predefined_log_file id="Tomcat Manager" />
+      <predefined_log_file id="Tomcat Host Manager" />
+      <predefined_log_file id="Tomcat Localhost Access" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="49723" />
+      </RunnerSettings>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Cover">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Debug">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Profile">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Run">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <method v="2">
+        <option name="Make" enabled="true" />
+        <option name="BuildArtifacts" enabled="true">
+          <artifact name="HRM:war exploded" />
+        </option>
+      </method>
+    </configuration>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ddd73ede-973c-48d6-9f6d-143f46cd9769" name="Changes" comment="" />
+      <created>1780497965119</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1780497965119</updated>
+      <workItem from="1780497966335" duration="770000" />
+      <workItem from="1780498742911" duration="10832000" />
+      <workItem from="1780509596652" duration="116000" />
+      <workItem from="1780509722504" duration="1211000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

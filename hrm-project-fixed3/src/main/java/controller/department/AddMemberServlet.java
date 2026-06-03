@@ -1,0 +1,59 @@
+package controller.department;
+
+import dao.DepartmentDAO;
+import dao.UserDAO;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
+@WebServlet(name = "AddMemberServlet", value = "/add_member")
+public class AddMemberServlet extends HttpServlet {
+    private final UserDAO userDAO = new UserDAO();
+    private final DepartmentDAO departmentDAO = new DepartmentDAO();
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int deptId = Integer.parseInt(request.getParameter("deptId"));
+
+        // CHẶN Ở GET: Nếu phòng ban inactive, đá về trang danh sách kèm lỗi
+        if (!departmentDAO.isDepartmentActive(deptId)) {
+            response.sendRedirect(request.getContextPath() + "/admin/departments?error=Inactive department!");
+            return;
+        }
+
+        request.setAttribute("deptId", deptId);
+        request.setAttribute("unassignedUsers", userDAO.getUnassignedUsers());
+        request.getRequestDispatcher("/WEB-INF/views/department/add_member.jsp").forward(request, response);
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int deptId = Integer.parseInt(request.getParameter("deptId"));
+
+        // CHẶN Ở POST: Phòng hờ trường hợp người dùng cố tình dùng công cụ post lậu
+        if (!departmentDAO.isDepartmentActive(deptId)) {
+            response.sendRedirect(request.getContextPath() + "/admin/departments?error=Inactive department!");
+            return;
+        }
+
+        String[] userIdStrings = request.getParameterValues("userIds");
+        if (userIdStrings != null && userIdStrings.length > 0) {
+            int[] userIds = new int[userIdStrings.length];
+            for (int i = 0; i < userIdStrings.length; i++) {
+                userIds[i] = Integer.parseInt(userIdStrings[i]);
+            }
+
+            if (userDAO.addMembersToDept(userIds, deptId)) {
+                response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptId + "&msg=add_success");
+                return;
+            }
+        }
+
+        response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptId + "&error=add_failed");
+    }
+}
+
