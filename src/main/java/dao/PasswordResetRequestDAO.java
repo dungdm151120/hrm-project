@@ -80,6 +80,70 @@ public class PasswordResetRequestDAO {
         return requests;
     }
 
+    public List<PasswordResetRequest> search(String keyword, String status, int offset, int limit) {
+        List<PasswordResetRequest> requests = new ArrayList<>();
+        List<String> conditions = new ArrayList<>();
+        List<String> params = new ArrayList<>();
+
+        appendSearchConditions(conditions, params, keyword, status);
+
+        String sql = """
+                SELECT prr.*, u.full_name
+                FROM password_reset_requests prr
+                JOIN users u ON prr.user_id = u.id
+                """ + buildWhereClause(conditions) + """
+                ORDER BY prr.created_at DESC
+                LIMIT ? OFFSET ?
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int index = bindParams(ps, params);
+            ps.setInt(index++, limit);
+            ps.setInt(index, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    requests.add(mapResultSetToRequest(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return requests;
+    }
+
+    public int count(String keyword, String status) {
+        List<String> conditions = new ArrayList<>();
+        List<String> params = new ArrayList<>();
+
+        appendSearchConditions(conditions, params, keyword, status);
+
+        String sql = """
+                SELECT COUNT(*) AS total
+                FROM password_reset_requests prr
+                JOIN users u ON prr.user_id = u.id
+                """ + buildWhereClause(conditions);
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            bindParams(ps, params);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
     public PasswordResetRequest findById(int id) {
         String sql = """
                 SELECT prr.*, u.full_name
@@ -179,6 +243,37 @@ public class PasswordResetRequestDAO {
         }
 
         return request;
+    }
+
+    private void appendSearchConditions(List<String> conditions, List<String> params, String keyword, String status) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            conditions.add("(LOWER(u.full_name) LIKE ? OR LOWER(prr.email) LIKE ? OR LOWER(prr.reason) LIKE ?)");
+            String searchValue = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(searchValue);
+            params.add(searchValue);
+            params.add(searchValue);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            conditions.add("prr.status = ?");
+            params.add(status.trim().toUpperCase());
+        }
+    }
+
+    private String buildWhereClause(List<String> conditions) {
+        if (conditions.isEmpty()) {
+            return "";
+        }
+
+        return " WHERE " + String.join(" AND ", conditions) + " ";
+    }
+
+    private int bindParams(PreparedStatement ps, List<String> params) throws Exception {
+        int index = 1;
+        for (String param : params) {
+            ps.setString(index++, param);
+        }
+        return index;
     }
 
     private LocalDateTime getNullableLocalDateTime(ResultSet rs, String columnName) throws Exception {

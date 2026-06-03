@@ -1,15 +1,18 @@
 package controller.admin;
 
+import dao.RoleDAO;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Role;
 import model.User;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @WebServlet("/users/update")
 public class UpdateUserServlet extends HttpServlet {
@@ -26,6 +29,10 @@ public class UpdateUserServlet extends HttpServlet {
         UserDAO dao = new UserDAO();
         User user = dao.findById(userId);
 
+        RoleDAO daoR = new RoleDAO();
+        List<Role> roles = daoR.getAllRoles();
+
+        req.setAttribute("roles", roles);
         req.setAttribute("userToUpdate", user);
         req.getRequestDispatcher("/WEB-INF/views/admin/update_user.jsp").forward(req, resp);
     }

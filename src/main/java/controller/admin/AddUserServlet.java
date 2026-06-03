@@ -1,21 +1,27 @@
 package controller.admin;
 
+import dao.RoleDAO;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Role;
 import model.User;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @WebServlet("/admin/users/add")
 public class AddUserServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        RoleDAO dao = new RoleDAO();
+        List<Role> roles = dao.getAllRoles();
+        req.setAttribute("roles", roles);
         req.getRequestDispatcher("/WEB-INF/views/admin/add_user.jsp").forward(req, resp);
     }
 

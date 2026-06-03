@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Labor Contracts | HRM</title>
+    <title>My Contracts | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
@@ -14,27 +14,12 @@
 
 <div class="container" style="margin-top: 2rem;">
     <div class="page-header">
-        <h2>Labor Contracts</h2>
-        <div class="actions">
-            <a href="${pageContext.request.contextPath}/home" class="btn btn-secondary">Back to Home</a>
-            <c:if test="${canCreateContract}">
-                <a href="${pageContext.request.contextPath}/contracts/add" class="btn btn-primary">Add Contract</a>
-            </c:if>
-        </div>
+        <h2>My Contracts</h2>
+        <a href="${pageContext.request.contextPath}/home" class="btn btn-secondary">Back to Home</a>
     </div>
 
     <div class="search-filter">
-        <form action="${pageContext.request.contextPath}/contracts" method="get">
-            <input type="text" name="search" placeholder="Search code, employee, or email..." value="${search}">
-
-            <select name="contractType">
-                <option value="all" ${empty contractType ? 'selected' : ''}>All Types</option>
-                <option value="FIXED_TERM" ${contractType == 'FIXED_TERM' ? 'selected' : ''}>FIXED_TERM</option>
-                <option value="INDEFINITE_TERM" ${contractType == 'INDEFINITE_TERM' ? 'selected' : ''}>INDEFINITE_TERM</option>
-                <option value="PROBATION" ${contractType == 'PROBATION' ? 'selected' : ''}>PROBATION</option>
-                <option value="PART_TIME" ${contractType == 'PART_TIME' ? 'selected' : ''}>PART_TIME</option>
-            </select>
-
+        <form action="${pageContext.request.contextPath}/my-contract" method="get">
             <select name="status">
                 <option value="all" ${empty status ? 'selected' : ''}>All Status</option>
                 <option value="ACTIVE" ${status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
@@ -42,8 +27,8 @@
                 <option value="TERMINATED" ${status == 'TERMINATED' ? 'selected' : ''}>TERMINATED</option>
             </select>
 
-            <button type="submit" class="btn btn-primary">Search</button>
-            <a href="${pageContext.request.contextPath}/contracts" class="btn btn-reset">Clear</a>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="${pageContext.request.contextPath}/my-contract" class="btn btn-reset">Clear</a>
         </form>
     </div>
 
@@ -52,10 +37,10 @@
             <thead>
             <tr>
                 <th>Code</th>
-                <th>Employee</th>
                 <th>Type</th>
                 <th>Start Date</th>
                 <th>End Date</th>
+                <th>Base Salary</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
@@ -64,12 +49,6 @@
             <c:forEach items="${contracts}" var="contract">
                 <tr>
                     <td><strong>${contract.contractCode}</strong></td>
-                    <td>
-                        ${contract.employeeName}
-                        <c:if test="${not empty contract.employeeCode}">
-                            (${contract.employeeCode})
-                        </c:if>
-                    </td>
                     <td>${contract.contractType}</td>
                     <td>${contract.startDate}</td>
                     <td>
@@ -78,6 +57,7 @@
                             <c:otherwise>Open-ended</c:otherwise>
                         </c:choose>
                     </td>
+                    <td>${contract.baseSalary}</td>
                     <td>
                         <c:choose>
                             <c:when test="${contract.status == 'ACTIVE'}">
@@ -92,12 +72,7 @@
                         </c:choose>
                     </td>
                     <td>
-                        <div class="actions">
-                            <a href="${pageContext.request.contextPath}/contracts/detail?id=${contract.id}">View Detail</a>
-                            <c:if test="${canUpdateContract}">
-                                <a href="${pageContext.request.contextPath}/contracts/update?id=${contract.id}">Update</a>
-                            </c:if>
-                        </div>
+                        <a href="${pageContext.request.contextPath}/my-contract/detail?id=${contract.id}">View Detail</a>
                     </td>
                 </tr>
             </c:forEach>
@@ -117,9 +92,7 @@
 
         <c:if test="${totalPages > 1}">
             <div class="pagination">
-                <c:url var="previousPageUrl" value="/contracts">
-                    <c:param name="search" value="${search}" />
-                    <c:param name="contractType" value="${contractType}" />
+                <c:url var="previousPageUrl" value="/my-contract">
                     <c:param name="status" value="${status}" />
                     <c:param name="page" value="${currentPage - 1}" />
                 </c:url>
@@ -127,18 +100,14 @@
                    href="${currentPage == 1 ? '#' : previousPageUrl}">Previous</a>
 
                 <c:forEach begin="1" end="${totalPages}" var="pageNumber">
-                    <c:url var="pageUrl" value="/contracts">
-                        <c:param name="search" value="${search}" />
-                        <c:param name="contractType" value="${contractType}" />
+                    <c:url var="pageUrl" value="/my-contract">
                         <c:param name="status" value="${status}" />
                         <c:param name="page" value="${pageNumber}" />
                     </c:url>
                     <a class="page-link ${pageNumber == currentPage ? 'active' : ''}" href="${pageUrl}">${pageNumber}</a>
                 </c:forEach>
 
-                <c:url var="nextPageUrl" value="/contracts">
-                    <c:param name="search" value="${search}" />
-                    <c:param name="contractType" value="${contractType}" />
+                <c:url var="nextPageUrl" value="/my-contract">
                     <c:param name="status" value="${status}" />
                     <c:param name="page" value="${currentPage + 1}" />
                 </c:url>

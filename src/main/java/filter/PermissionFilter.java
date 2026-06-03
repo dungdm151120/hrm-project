@@ -102,6 +102,7 @@ public class PermissionFilter implements Filter {
         if (path.equals("/contracts") && "GET".equals(method)) return "CONTRACT_VIEW_LIST";
         if (path.equals("/contracts/detail") && "GET".equals(method)) return "CONTRACT_VIEW_DETAIL";
         if (path.equals("/my-contract") && "GET".equals(method)) return "CONTRACT_VIEW_OWN";
+        if (path.equals("/my-contract/detail") && "GET".equals(method)) return "CONTRACT_VIEW_OWN";
         if (path.equals("/contracts/add")) return "CONTRACT_CREATE";
         if (path.equals("/contracts/update")) return "CONTRACT_UPDATE";
         if (path.equals("/contracts/terminate")) return "CONTRACT_TERMINATE";

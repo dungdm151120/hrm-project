@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page import="model.User" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -17,8 +18,8 @@
 %>
 
 <div class="container" style="margin-top: 2rem;">
-    <a class="back-link" href="${pageContext.request.contextPath}/user_list">← Quay lại danh sách người dùng</a>
-    <h2 class="form-title">Cập nhật thông tin: <%= userToUpdate.getFullName() %></h2>
+    <a class="back-link" href="${pageContext.request.contextPath}/user_list">Return to user list</a>
+    <h2 class="form-title">Update info: <%= userToUpdate.getFullName() %></h2>
 
     <c:if test="${not empty error}">
         <div>${error}</div>
@@ -72,10 +73,18 @@
             <input type="text" id="avatarUrl" name="avatarUrl" value="<%= userToUpdate.getAvatarUrl() %>">
         </div>
 
-        <div class="form-group">
-            <label for="roleId">Role ID <span style="color: var(--danger);">*</span></label>
-            <input type="text" id="roleId" name="roleId" value="<%= userToUpdate.getRoleId() %>" required>
-        </div>
+       <div class="form-group">
+           <label for="roleId">Role <span style="color: var(--danger);">*</span></label>
+           <select id="roleId" name="roleId" required style="width: 100%; height: 38px; border-radius: 4px; border: 1px solid #ccc; padding: 0 10px;">
+               <option value="" disabled>-- Select a role --</option>
+
+               <c:forEach items="${roles}" var="role">
+                   <option value="${role.id}" ${role.id == userToUpdate.roleId ? 'selected' : ''}>
+                       ${role.name}
+                   </option>
+               </c:forEach>
+           </select>
+       </div>
 
         <div class="form-group">
             <label>Active Status</label>
@@ -92,8 +101,8 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn-save">Cập nhật</button>
-            <a href="${pageContext.request.contextPath}/user_list" class="btn-cancel">Hủy</a>
+            <button type="submit" class="btn-save">Update</button>
+            <a href="${pageContext.request.contextPath}/user_list" class="btn-cancel">Cancel</a>
         </div>
     </form>
 </div>

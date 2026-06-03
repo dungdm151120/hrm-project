@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -65,8 +66,14 @@
         </div>
 
         <div class="form-group">
-            <label for="roleId">Role ID <span style="color: var(--danger);">*</span></label>
-            <input type="text" id="roleId" name="roleId" placeholder="Enter role id" required>
+            <label for="roleId">Role <span style="color: var(--danger);">*</span></label>
+            <select id="roleId" name="roleId" required style="width: 100%; height: 38px; border-radius: 4px; border: 1px solid #ccc; padding: 0 10px;">
+                <option value="" disabled selected>-- Select a role --</option>
+
+                <c:forEach items="${roles}" var="role">
+                    <option value="${role.id}">${role.name}</option>
+                </c:forEach>
+            </select>
         </div>
 
         <div class="form-group">

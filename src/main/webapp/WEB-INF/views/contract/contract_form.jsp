@@ -85,9 +85,18 @@
         <div class="form-group">
             <label for="status">Status <span style="color: var(--danger);">*</span></label>
             <select id="status" name="status" class="form-select" required>
-                <option value="ACTIVE" ${empty contract.status || contract.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
-                <option value="EXPIRED" ${contract.status == 'EXPIRED' ? 'selected' : ''}>EXPIRED</option>
-                <option value="TERMINATED" ${contract.status == 'TERMINATED' ? 'selected' : ''}>TERMINATED</option>
+                <c:choose>
+                    <c:when test="${empty contract.id || contract.id <= 0}">
+                        <option value="ACTIVE" selected>ACTIVE</option>
+                    </c:when>
+                    <c:when test="${contract.status == 'TERMINATED'}">
+                        <option value="TERMINATED" selected>TERMINATED</option>
+                    </c:when>
+                    <c:otherwise>
+                        <option value="ACTIVE" ${empty contract.status || contract.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+                        <option value="EXPIRED" ${contract.status == 'EXPIRED' ? 'selected' : ''}>EXPIRED</option>
+                    </c:otherwise>
+                </c:choose>
             </select>
         </div>
 

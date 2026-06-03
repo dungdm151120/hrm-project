@@ -13,10 +13,13 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="container" style="margin-top: 2rem;">
-    <a class="back-link" href="${pageContext.request.contextPath}/contracts">Back to contract list</a>
+    <a class="back-link" href="${backUrl}">Back</a>
+    <c:if test="${not empty param.error}">
+        <div class="alert alert-error">${param.error}</div>
+    </c:if>
     <div class="page-header">
         <h2>Contract ${contract.contractCode}</h2>
-        <c:if test="${canManageContracts}">
+        <c:if test="${canUpdateContract}">
             <div class="actions">
                 <a href="${pageContext.request.contextPath}/contracts/update?id=${contract.id}">Update</a>
             </div>
@@ -86,7 +89,7 @@
         </div>
     </div>
 
-    <c:if test="${canManageContracts && contract.status != 'TERMINATED'}">
+    <c:if test="${canTerminateContract && contract.status != 'TERMINATED'}">
         <form action="${pageContext.request.contextPath}/contracts/terminate" method="post"
               onsubmit="return confirm('Terminate this contract?')">
             <input type="hidden" name="id" value="${contract.id}">

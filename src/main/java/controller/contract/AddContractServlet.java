@@ -33,8 +33,24 @@ public class AddContractServlet extends HttpServlet {
             return;
         }
 
+        if (!"ACTIVE".equals(contract.getStatus())) {
+            forwardForm(request, response, contract, "New contract status must be ACTIVE.");
+            return;
+        }
+
+        if (!contractDAO.isActiveUser(contract.getUserId())) {
+            forwardForm(request, response, contract, "Contract can only be created for an active employee.");
+            return;
+        }
+
         if (contractDAO.existsByContractCode(contract.getContractCode(), null)) {
             forwardForm(request, response, contract, "Contract code already exists.");
+            return;
+        }
+
+        if (contractDAO.existsOverlappingActiveContract(
+                contract.getUserId(), contract.getStartDate(), contract.getEndDate(), null)) {
+            forwardForm(request, response, contract, "This employee already has an active contract in the selected date range.");
             return;
         }
 
@@ -49,7 +65,7 @@ public class AddContractServlet extends HttpServlet {
                              LaborContract contract, String error)
             throws ServletException, IOException {
         request.setAttribute("contract", contract);
-        request.setAttribute("users", userDAO.findAllUsers());
+        request.setAttribute("users", userDAO.getAllActiveUsers());
         request.setAttribute("formAction", request.getContextPath() + "/contracts/add");
         request.setAttribute("error", error);
         request.getRequestDispatcher("/WEB-INF/views/contract/contract_form.jsp").forward(request, response);
