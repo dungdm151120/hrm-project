@@ -813,7 +813,7 @@ public class UserDAO {
         return user;
     }
 
-    / Move
+    // Move
     public String moveDepartmentMember(int userId, int newDeptId) {
         String checkPositionSql = "SELECT p.name FROM users u " +
                 "JOIN positions p ON u.position_id = p.id " +
