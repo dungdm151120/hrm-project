@@ -1,57 +1,67 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New User | HRM</title>
+    <title>Add New Position | HRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body>
+<body class="dashboard-page">
+<div class="dashboard-layout">
+    <jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
 
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
+    <main class="main-content">
+        <header class="main-header">
+            <h1 class="header-title">Add New Position</h1>
+            <div class="header-right">
+                <a href="${pageContext.request.contextPath}/position/list" class="btn btn-secondary">← Back to List</a>
+            </div>
+        </header>
 
-<div class="container" style="margin-top: 2rem;">
-    <a class="back-link" href="${pageContext.request.contextPath}/position/list">Return to position list</a>
-    <h2 class="form-title">Add new position</h2>
+        <div class="dashboard-content">
+            <c:if test="${not empty error}">
+                <div class="alert alert-error">⚠ ${error}</div>
+            </c:if>
 
-    <c:if test="${not empty error}">
-        <div style="color: red; margin-bottom: 15px; font-weight: bold;">
-            ${error}
-        </div>
-    </c:if>
+            <div class="form-wrapper">
+                <form action="${pageContext.request.contextPath}/position/add" method="post">
+                    <div class="form-group">
+                        <label for="name">Name <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="name" name="name" placeholder="Enter position name" value="${newPosition.name}" required>
+                    </div>
 
-    <form action="${pageContext.request.contextPath}/position/add" method="post">
-        <div class="form-group">
-            <label for="name">Name <span style="color: var(--danger);">*</span></label>
-            <input type="text" id="name" name="name" placeholder="Enter position name" value="${newPosition.name}" required>
-        </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" placeholder="Enter description">${newPosition.description}</textarea>
+                    </div>
 
-        <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description" name="description" placeholder="Enter description" >${newPosition.description}</textarea>
-        </div>
+                    <div class="form-group">
+                        <label>Active Status</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="active" value="true" ${newPosition == null || newPosition.active ? 'checked' : ''}>
+                                <span>Active</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="active" value="false" ${newPosition != null && !newPosition.active ? 'checked' : ''}>
+                                <span>Inactive</span>
+                            </label>
+                        </div>
+                    </div>
 
-        <div class="form-group">
-            <label>Active Status</label>
-            <div class="radio-group">
-                <label class="radio-label">
-                    <input type="radio" name="active" value="true" ${newPosition == null || newPosition.active ? 'checked' : ''}>
-                    <span>Active</span>
-                </label>
-                <label class="radio-label">
-                    <input type="radio" name="active" value="false" ${newPosition != null && !newPosition.active ? 'checked' : ''}>
-                    <span>Inactive</span>
-                </label>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">Add position</button>
+                        <a href="${pageContext.request.contextPath}/position/list" class="btn-cancel">Cancel</a>
+                    </div>
+                </form>
             </div>
         </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn-save">Add position</button>
-            <a href="${pageContext.request.contextPath}/position/list" class="btn-cancel">Cancel</a>
-        </div>
-    </form>
+    </main>
 </div>
-
 </body>
 </html>

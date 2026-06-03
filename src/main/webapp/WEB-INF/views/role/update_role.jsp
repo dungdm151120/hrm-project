@@ -5,55 +5,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cập nhật thông tin Role | HRM</title>
+    <title>Update Role | HRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body>
+<body class="dashboard-page">
+<div class="dashboard-layout">
+    <jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
 
-<div class="container">
-    <a class="back-link" href="${pageContext.request.contextPath}/admin/roles">Quay lại danh sách Role</a>
+    <main class="main-content">
+        <header class="main-header">
+            <h1 class="header-title">Update Role</h1>
+            <div class="header-right">
+                <a href="${pageContext.request.contextPath}/admin/roles" class="btn btn-secondary">← Back to List</a>
+            </div>
+        </header>
 
-    <h2 class="form-title">Cập nhật thông tin Role</h2>
+        <div class="dashboard-content">
+            <c:if test="${not empty error}">
+                <div class="alert alert-error">⚠ ${error}</div>
+            </c:if>
 
-    <c:if test="${not empty error}">
-        <div class="alert alert-error">⚠ ${error}</div>
-    </c:if>
+            <c:choose>
+                <c:when test="${not empty role}">
+                    <div class="role-id-badge" style="margin-bottom: 1.5rem;">ID: ${role.id}</div>
 
-    <c:choose>
-        <c:when test="${not empty role}">
-            <span class="role-id-badge">ID: ${role.id}</span>
+                    <div class="form-wrapper">
+                        <form action="${pageContext.request.contextPath}/admin/roles/update" method="post">
+                            <input type="hidden" name="roleId" value="${role.id}">
 
-            <form action="${pageContext.request.contextPath}/admin/roles/update" method="post">
-                <input type="hidden" name="roleId" value="${role.id}">
+                            <div class="form-group">
+                                <label for="name">Role Name <span style="color: var(--danger);">*</span></label>
+                                <input type="text" id="name" name="name"
+                                       value="${role.name}"
+                                       placeholder="Enter role name"
+                                       required>
+                            </div>
 
-                <div class="form-group">
-                    <label for="name">Tên Role <span style="color: var(--danger);">*</span></label>
-                    <input type="text" id="name" name="name"
-                           value="${role.name}"
-                           placeholder="Nhập tên role (VD: HR, MANAGER...)"
-                           required>
-                </div>
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" name="description"
+                                          placeholder="Enter description">${role.description}</textarea>
+                            </div>
 
-                <div class="form-group">
-                    <label for="description">Mô tả</label>
-                    <textarea id="description" name="description"
-                              placeholder="Mô tả chức năng của role này...">${role.description}</textarea>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn-save">Lưu thay đổi</button>
-                    <a href="${pageContext.request.contextPath}/admin/roles" class="btn-cancel">Hủy</a>
-                </div>
-            </form>
-        </c:when>
-        <c:otherwise>
-            <p class="empty-state">
-                Không tìm thấy role.
-                <a href="${pageContext.request.contextPath}/admin/roles" style="color: var(--primary); font-weight: 500;">Quay lại danh sách</a>
-            </p>
-        </c:otherwise>
-    </c:choose>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-save">Save Changes</button>
+                                <a href="${pageContext.request.contextPath}/admin/roles" class="btn-cancel">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="empty-state">
+                        Role not found.
+                        <a href="${pageContext.request.contextPath}/admin/roles" style="color: var(--primary); font-weight: 500;">Back to list</a>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </main>
 </div>
-
 </body>
 </html>
