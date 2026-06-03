@@ -34,7 +34,6 @@ public class AddMemberServlet extends HttpServlet {
             throws ServletException, IOException {
         int deptId = Integer.parseInt(request.getParameter("deptId"));
 
-        // CHẶN Ở POST: Phòng hờ trường hợp người dùng cố tình dùng công cụ post lậu
         if (!departmentDAO.isDepartmentActive(deptId)) {
             response.sendRedirect(request.getContextPath() + "/admin/departments?error=Inactive department!");
             return;
