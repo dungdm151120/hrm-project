@@ -14,67 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LaborContractDAO {
-    public List<LaborContract> findAll() {
-        List<LaborContract> contracts = new ArrayList<>();
-        String sql = baseSelect() + " ORDER BY lc.start_date DESC, lc.id DESC";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                contracts.add(mapRow(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return contracts;
-    }
-
-    public List<LaborContract> findByUserId(int userId) {
-        List<LaborContract> contracts = new ArrayList<>();
-        String sql = baseSelect() + " WHERE lc.user_id = ? ORDER BY lc.start_date DESC, lc.id DESC";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    contracts.add(mapRow(rs));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return contracts;
-    }
-
-    public List<LaborContract> search(Integer userId, String keyword, String contractType, String status) {
-        List<LaborContract> contracts = new ArrayList<>();
-        List<Object> params = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(baseSelect()).append(" WHERE 1=1");
-        appendSearchFilters(sql, params, userId, keyword, contractType, status);
-
-        sql.append(" ORDER BY lc.start_date DESC, lc.id DESC");
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    contracts.add(mapRow(rs));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return contracts;
-    }
-
     public List<LaborContract> search(Integer userId, String keyword, String contractType, String status,
                                       int offset, int limit) {
         List<LaborContract> contracts = new ArrayList<>();

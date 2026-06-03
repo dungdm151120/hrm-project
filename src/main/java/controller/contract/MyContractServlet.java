@@ -25,25 +25,42 @@ public class MyContractServlet extends HttpServlet {
             return;
         }
 
-        LaborContract contract = findCurrentUserContract(currentUser);
-        if (contract == null) {
-            request.setAttribute("message", "No contract found.");
-            request.getRequestDispatcher("/WEB-INF/views/contract/my_contract_empty.jsp").forward(request, response);
-            return;
+        String status = trimToNull(request.getParameter("status"));
+        int pageSize = 10;
+        int currentPage = parsePositiveInt(request.getParameter("page"), 1);
+
+        int totalRecords = contractDAO.count(currentUser.getId(), null, null, status);
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalRecords / pageSize));
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
         }
 
-        request.setAttribute("contract", contract);
-        request.setAttribute("canUpdateContract", false);
-        request.setAttribute("canTerminateContract", false);
-        request.setAttribute("backUrl", request.getContextPath() + "/home");
-        request.getRequestDispatcher("/WEB-INF/views/contract/contract_detail.jsp").forward(request, response);
+        int offset = (currentPage - 1) * pageSize;
+        List<LaborContract> contracts = contractDAO.search(currentUser.getId(), null, null, status, offset, pageSize);
+
+        request.setAttribute("contracts", contracts);
+        request.setAttribute("status", status);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalRecords", totalRecords);
+        request.setAttribute("pageSize", pageSize);
+        request.getRequestDispatcher("/WEB-INF/views/contract/my_contract_list.jsp").forward(request, response);
     }
 
-    private LaborContract findCurrentUserContract(User currentUser) {
-        List<LaborContract> contracts = contractDAO.findByUserId(currentUser.getId());
-        if (contracts.isEmpty()) {
+    private String trimToNull(String value) {
+        if (value == null || value.trim().isEmpty() || "all".equalsIgnoreCase(value.trim())) {
             return null;
         }
-        return contracts.get(0);
+        return value.trim();
+    }
+
+    private int parsePositiveInt(String value, int defaultValue) {
+        try {
+            int parsed = Integer.parseInt(value);
+            return parsed > 0 ? parsed : defaultValue;
+        } catch (Exception e) {
+            return defaultValue;
+        }
     }
 }
