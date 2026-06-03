@@ -7,6 +7,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Department List | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+    <style>
+        .search-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .search-filter input[type="text"],
+        .search-filter select {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .pagination {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .pagination a, .pagination span {
+            padding: 0.25rem 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        .pagination a:hover {
+            background: #007bff;
+            color: #fff;
+            border-color: #007bff;
+        }
+        .pagination .current {
+            background: #007bff;
+            color: #fff;
+            border-color: #007bff;
+            font-weight: bold;
+        }
+        .pagination .disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+    </style>
 </head>
 <body>
 
@@ -19,14 +62,10 @@
     </div>
 
     <c:if test="${not empty param.success}">
-        <div class="alert alert-success">
-            <span>✓</span> ${param.success}
-        </div>
+        <div class="alert alert-success">✓ ${param.success}</div>
     </c:if>
     <c:if test="${not empty param.error}">
-        <div class="alert alert-error">
-            <span>⚠</span> ${param.error}
-        </div>
+        <div class="alert alert-error">⚠ ${param.error}</div>
     </c:if>
 
     <div class="search-filter">
@@ -36,6 +75,12 @@
                 <option value="all" ${status == 'all' || empty status ? 'selected' : ''}>All Status</option>
                 <option value="true" ${status == 'true' ? 'selected' : ''}>Active</option>
                 <option value="false" ${status == 'false' ? 'selected' : ''}>Inactive</option>
+            </select>
+            <select name="sort" onchange="this.form.submit()">
+                <option value="name_asc" ${sort == 'name_asc' ? 'selected' : ''}>Name A-Z</option>
+                <option value="name_desc" ${sort == 'name_desc' ? 'selected' : ''}>Name Z-A</option>
+                <option value="members_desc" ${sort == 'members_desc' ? 'selected' : ''}>Most members</option>
+                <option value="members_asc" ${sort == 'members_asc' ? 'selected' : ''}>Least members</option>
             </select>
             <button type="submit" class="btn btn-primary">Search</button>
             <a href="${pageContext.request.contextPath}/admin/departments" class="btn btn-reset">Clear</a>
@@ -57,7 +102,7 @@
             <tbody>
             <c:forEach var="dept" items="${departmentList}" varStatus="s">
                 <tr>
-                    <td>${s.index + 1}</td>
+                    <td>${(currentPage - 1) * 5 + s.index + 1}</td>
                     <td><strong>${dept.name}</strong></td>
                     <td>${dept.description}</td>
                     <td>
@@ -112,6 +157,44 @@
             </tbody>
         </table>
     </div>
+
+    <c:if test="${totalPages > 1}">
+        <div class="pagination">
+            <c:url var="firstPageUrl" value="/admin/departments">
+                <c:param name="page" value="1" />
+                <c:if test="${not empty search}"><c:param name="search" value="${search}" /></c:if>
+                <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
+            </c:url>
+            <a href="${firstPageUrl}" class="${currentPage == 1 ? 'disabled' : ''}">First</a>
+
+            <c:url var="prevPageUrl" value="/admin/departments">
+                <c:param name="page" value="${currentPage - 1}" />
+                <c:if test="${not empty search}"><c:param name="search" value="${search}" /></c:if>
+                <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
+            </c:url>
+            <a href="${prevPageUrl}" class="${currentPage <= 1 ? 'disabled' : ''}">Previous</a>
+
+            <span>Page <span class="current">${currentPage}</span> / ${totalPages}</span>
+
+            <c:url var="nextPageUrl" value="/admin/departments">
+                <c:param name="page" value="${currentPage + 1}" />
+                <c:if test="${not empty search}"><c:param name="search" value="${search}" /></c:if>
+                <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
+            </c:url>
+            <a href="${nextPageUrl}" class="${currentPage >= totalPages ? 'disabled' : ''}">Next</a>
+
+            <c:url var="lastPageUrl" value="/admin/departments">
+                <c:param name="page" value="${totalPages}" />
+                <c:if test="${not empty search}"><c:param name="search" value="${search}" /></c:if>
+                <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
+            </c:url>
+            <a href="${lastPageUrl}" class="${currentPage == totalPages ? 'disabled' : ''}">Last</a>
+        </div>
+    </c:if>
 </div>
 
 </body>
