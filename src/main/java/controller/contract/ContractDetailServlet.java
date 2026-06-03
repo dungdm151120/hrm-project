@@ -7,10 +7,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.LaborContract;
+import model.User;
 
 import java.io.IOException;
 
-@WebServlet("/contracts/detail")
+@WebServlet({"/contracts/detail", "/my-contract/detail"})
 public class ContractDetailServlet extends HttpServlet {
     private final LaborContractDAO contractDAO = new LaborContractDAO();
 
@@ -31,10 +32,21 @@ public class ContractDetailServlet extends HttpServlet {
             return;
         }
 
+        boolean ownContractView = "/my-contract/detail".equals(request.getServletPath());
+        if (ownContractView && !isCurrentUserContract(request, contract)) {
+            response.sendRedirect(request.getContextPath() + "/my-contract");
+            return;
+        }
+
         request.setAttribute("contract", contract);
-        request.setAttribute("canUpdateContract", ContractRequestHelper.hasPermission(request, "CONTRACT_UPDATE"));
-        request.setAttribute("canTerminateContract", ContractRequestHelper.hasPermission(request, "CONTRACT_TERMINATE"));
-        request.setAttribute("backUrl", request.getContextPath() + "/contracts");
+        request.setAttribute("canUpdateContract", !ownContractView && ContractRequestHelper.hasPermission(request, "CONTRACT_UPDATE"));
+        request.setAttribute("canTerminateContract", !ownContractView && ContractRequestHelper.hasPermission(request, "CONTRACT_TERMINATE"));
+        request.setAttribute("backUrl", request.getContextPath() + (ownContractView ? "/my-contract" : "/contracts"));
         request.getRequestDispatcher("/WEB-INF/views/contract/contract_detail.jsp").forward(request, response);
+    }
+
+    private boolean isCurrentUserContract(HttpServletRequest request, LaborContract contract) {
+        User currentUser = ContractRequestHelper.currentUser(request);
+        return currentUser != null && currentUser.getId() == contract.getUserId();
     }
 }

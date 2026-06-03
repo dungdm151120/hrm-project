@@ -30,17 +30,43 @@ public class UpdateContractServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        LaborContract current = findRequestedContract(request, response);
+        if (current == null) {
+            return;
+        }
+
         LaborContract contract;
         try {
             contract = ContractFormMapper.fromRequest(request);
-            contract.setId(Integer.parseInt(request.getParameter("id")));
+            contract.setId(current.getId());
         } catch (Exception e) {
             forwardForm(request, response, null, "Invalid contract data.");
             return;
         }
 
+        if ("TERMINATED".equals(current.getStatus()) && !"TERMINATED".equals(contract.getStatus())) {
+            forwardForm(request, response, current, "Terminated contract cannot be reopened.");
+            return;
+        }
+
+        if (!"TERMINATED".equals(current.getStatus()) && "TERMINATED".equals(contract.getStatus())) {
+            forwardForm(request, response, contract, "Use the Terminate Contract action to terminate a contract.");
+            return;
+        }
+
+        if (!contractDAO.isActiveUser(contract.getUserId())) {
+            forwardForm(request, response, contract, "Contract can only be assigned to an active employee.");
+            return;
+        }
+
         if (contractDAO.existsByContractCode(contract.getContractCode(), contract.getId())) {
             forwardForm(request, response, contract, "Contract code already exists.");
+            return;
+        }
+
+        if ("ACTIVE".equals(contract.getStatus()) && contractDAO.existsOverlappingActiveContract(
+                contract.getUserId(), contract.getStartDate(), contract.getEndDate(), contract.getId())) {
+            forwardForm(request, response, contract, "This employee already has an active contract in the selected date range.");
             return;
         }
 

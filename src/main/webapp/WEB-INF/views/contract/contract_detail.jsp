@@ -81,6 +81,16 @@
                         </span>
                     </div>
                 </c:if>
+<div class="container" style="margin-top: 2rem;">
+    <a class="back-link" href="${backUrl}">Back</a>
+    <c:if test="${not empty param.error}">
+        <div class="alert alert-error">${param.error}</div>
+    </c:if>
+    <div class="page-header">
+        <h2>Contract ${contract.contractCode}</h2>
+        <c:if test="${canUpdateContract}">
+            <div class="actions">
+                <a href="${pageContext.request.contextPath}/contracts/update?id=${contract.id}">Update</a>
             </div>
 
             <div class="role-detail" style="margin-top: 1.5rem;">
