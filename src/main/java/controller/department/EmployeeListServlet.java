@@ -23,10 +23,7 @@ public class EmployeeListServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String idParam = request.getParameter("departmentId");
-        if (idParam == null || idParam.trim().isEmpty()) {
-            idParam = request.getParameter("id");
-        }
+        String idParam = request.getParameter("id");
 
         if (idParam == null || idParam.trim().isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/admin/departments?error=Missing department ID");
@@ -86,7 +83,7 @@ public class EmployeeListServlet extends HttpServlet {
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("pageSize", PAGE_SIZE);
-        request.setAttribute("departmentId", id);
+        request.setAttribute("id", id);
 
         request.getRequestDispatcher("/WEB-INF/views/department/employee_list.jsp")
                 .forward(request, response);

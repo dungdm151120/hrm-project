@@ -32,7 +32,7 @@
 
     <div class="employee-list-toolbar">
         <form action="${pageContext.request.contextPath}/admin/departments/employees" method="get" class="employee-search-form">
-            <input type="hidden" name="departmentId" value="${departmentId}">
+            <input type="hidden" name="id" value="${id}">
             <input type="hidden" name="page" value="${currentPage}">
 
             <input type="text" name="keyword" placeholder="Search by name or email..." value="${keyword}">
@@ -49,10 +49,10 @@
             </select>
 
             <button type="submit" class="search-btn">Search</button>
-            <a href="${pageContext.request.contextPath}/admin/departments/employees?departmentId=${departmentId}" class="btn-reset">Clear</a>
+            <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${id}" class="btn-reset">Clear</a>
         </form>
 
-        <a href="${pageContext.request.contextPath}/add_member?deptId=${departmentId}" class="btn btn-primary employee-add-member">Add Member</a>
+        <a href="${pageContext.request.contextPath}/add_member?deptId=${id}" class="btn btn-primary employee-add-member">Add Member</a>
     </div>
 
     <div class="table-wrapper">
@@ -108,7 +108,7 @@
                     </td>
 
                     <td class="actions">
-                        <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${departmentId}"
+                        <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${id}"
                            class="btn-move"
                                 <c:if test="${user.manager}">
                                     onclick="return confirmManagerMove();"
@@ -116,7 +116,7 @@
                             Move
                         </a>
 
-                        <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${departmentId}"
+                        <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${id}"
                            class="btn-danger"
                            onclick="return confirm('Bạn chắc chắn muốn remove employee này khỏi phòng ban?')">Remove</a>
                     </td>
@@ -133,7 +133,10 @@
 
     <div class="pagination employee-pagination">
         <span class="page-link active">
-            ${totalPages == 0 ? 1 : currentPage}/${totalPages == 0 ? 1 : totalPages}
+            <c:choose>
+                <c:when test="${totalPages == 0}">1/1</c:when>
+                <c:otherwise>${currentPage}/${totalPages}</c:otherwise>
+            </c:choose>
         </span>
 
         <c:if test="${totalPages > 1}">
@@ -143,7 +146,7 @@
                 </c:when>
                 <c:otherwise>
                     <c:url var="previousPageUrl" value="/admin/departments/employees">
-                        <c:param name="departmentId" value="${departmentId}" />
+                        <c:param name="id" value="${id}" />
                         <c:param name="keyword" value="${keyword}" />
                         <c:param name="status" value="${status}" />
                         <c:param name="sort" value="${sort}" />
@@ -155,7 +158,7 @@
 
             <c:forEach begin="1" end="${totalPages}" var="pageNumber">
                 <c:url var="pageUrl" value="/admin/departments/employees">
-                    <c:param name="departmentId" value="${departmentId}" />
+                    <c:param name="id" value="${id}" />
                     <c:param name="keyword" value="${keyword}" />
                     <c:param name="status" value="${status}" />
                     <c:param name="sort" value="${sort}" />
@@ -170,7 +173,7 @@
                 </c:when>
                 <c:otherwise>
                     <c:url var="nextPageUrl" value="/admin/departments/employees">
-                        <c:param name="departmentId" value="${departmentId}" />
+                        <c:param name="id" value="${id}" />
                         <c:param name="keyword" value="${keyword}" />
                         <c:param name="status" value="${status}" />
                         <c:param name="sort" value="${sort}" />

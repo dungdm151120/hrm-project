@@ -279,6 +279,7 @@ body {
     gap: 1rem;
     flex-wrap: wrap;
     margin-bottom: 1.5rem;
+    padding: 0;
 }
 
 .employee-search-form {
@@ -296,10 +297,19 @@ body {
     padding: 0.45rem 0.75rem;
     font-family: inherit;
     font-size: 0.9rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--gray-300);
     border-radius: var(--radius-sm);
-    background-color: var(--bg-input);
-    color: var(--text-primary);
+    background-color: var(--white);
+    color: var(--gray-800);
+    outline: none;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.employee-search-form input:focus,
+.employee-search-form select:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .employee-search-form input[type="text"] {
@@ -318,6 +328,10 @@ body {
 .employee-pagination {
     margin-top: 1.5rem;
     justify-content: center;
+}
+
+.employee-pagination .page-link {
+    border: 1px solid var(--gray-300);
 }
 
 /* Table Styles */
