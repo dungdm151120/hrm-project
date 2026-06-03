@@ -166,6 +166,12 @@
                             </span>
                         </div>
                         <div class="detail-row">
+                            <span class="detail-label">Position</span>
+                            <span class="detail-value">
+                                <strong>${user.positionName}</strong>
+                            </span>
+                        </div>
+                        <div class="detail-row">
                             <span class="detail-label">Role</span>
                             <span class="detail-value">
                                 <strong>${user.roleName}</strong>
