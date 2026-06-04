@@ -1,7 +1,6 @@
 package controller.contract;
 
 import dao.LaborContractDAO;
-import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,13 +13,16 @@ import java.io.IOException;
 @WebServlet("/contracts/update")
 public class UpdateContractServlet extends HttpServlet {
     private final LaborContractDAO contractDAO = new LaborContractDAO();
-    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         LaborContract contract = findRequestedContract(request, response);
         if (contract == null) {
+            return;
+        }
+        if (isTerminated(contract)) {
+            response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contract.getId());
             return;
         }
 
@@ -34,46 +36,30 @@ public class UpdateContractServlet extends HttpServlet {
         if (current == null) {
             return;
         }
+        if (isTerminated(current)) {
+            response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + current.getId());
+            return;
+        }
 
-        LaborContract contract;
+        LaborContract updatedContract;
         try {
-            contract = ContractFormMapper.fromRequest(request);
-            contract.setId(current.getId());
-        } catch (Exception e) {
-            forwardForm(request, response, null, "Invalid contract data.");
+            updatedContract = ContractFormMapper.fromRequest(request);
+        } catch (IllegalArgumentException e) {
+            forwardForm(request, response, current, e.getMessage());
+            return;
+        }
+        applyImmutableFields(current, updatedContract);
+
+        String validationError = validateUpdate(current, updatedContract);
+        if (validationError != null) {
+            forwardForm(request, response, updatedContract, validationError);
             return;
         }
 
-        if ("TERMINATED".equals(current.getStatus()) && !"TERMINATED".equals(contract.getStatus())) {
-            forwardForm(request, response, current, "Terminated contract cannot be reopened.");
-            return;
-        }
-
-        if (!"TERMINATED".equals(current.getStatus()) && "TERMINATED".equals(contract.getStatus())) {
-            forwardForm(request, response, contract, "Use the Terminate Contract action to terminate a contract.");
-            return;
-        }
-
-        if (!contractDAO.isActiveUser(contract.getUserId())) {
-            forwardForm(request, response, contract, "Contract can only be assigned to an active employee.");
-            return;
-        }
-
-        if (contractDAO.existsByContractCode(contract.getContractCode(), contract.getId())) {
-            forwardForm(request, response, contract, "Contract code already exists.");
-            return;
-        }
-
-        if ("ACTIVE".equals(contract.getStatus()) && contractDAO.existsOverlappingActiveContract(
-                contract.getUserId(), contract.getStartDate(), contract.getEndDate(), contract.getId())) {
-            forwardForm(request, response, contract, "This employee already has an active contract in the selected date range.");
-            return;
-        }
-
-        if (contractDAO.update(contract)) {
-            response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contract.getId());
+        if (contractDAO.update(updatedContract)) {
+            response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + updatedContract.getId());
         } else {
-            forwardForm(request, response, contract, "Update contract failed.");
+            forwardForm(request, response, updatedContract, "Update contract failed.");
         }
     }
 
@@ -98,9 +84,40 @@ public class UpdateContractServlet extends HttpServlet {
                              LaborContract contract, String error)
             throws ServletException, IOException {
         request.setAttribute("contract", contract);
-        request.setAttribute("users", userDAO.findAllUsers());
         request.setAttribute("formAction", request.getContextPath() + "/contracts/update");
         request.setAttribute("error", error);
         request.getRequestDispatcher("/WEB-INF/views/contract/contract_form.jsp").forward(request, response);
+    }
+
+    private void applyImmutableFields(LaborContract current, LaborContract contract) {
+        contract.setId(current.getId());
+        contract.setUserId(current.getUserId());
+        contract.setEmployeeCode(current.getEmployeeCode());
+        contract.setEmployeeName(current.getEmployeeName());
+        contract.setEmployeeEmail(current.getEmployeeEmail());
+        contract.setContractCode(current.getContractCode());
+    }
+
+    private String validateUpdate(LaborContract current, LaborContract contract) {
+        if (!"TERMINATED".equals(current.getStatus()) && "TERMINATED".equals(contract.getStatus())) {
+            return "Use the Terminate Contract action to terminate a contract.";
+        }
+
+        boolean activeDateOverlap = "ACTIVE".equals(contract.getStatus())
+                && contractDAO.existsOverlappingActiveContract(
+                        contract.getUserId(),
+                        contract.getStartDate(),
+                        contract.getEndDate(),
+                        contract.getId()
+                );
+        if (activeDateOverlap) {
+            return "This employee already has an active contract in the selected date range.";
+        }
+
+        return null;
+    }
+
+    private boolean isTerminated(LaborContract contract) {
+        return contract != null && "TERMINATED".equals(contract.getStatus());
     }
 }
