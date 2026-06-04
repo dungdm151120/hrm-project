@@ -4,13 +4,13 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Chuyển thành viên sang phòng ban khác | HRM</title>
+  <title>Move member | HRM</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 
 <body>
 <div class="container">
-  <h2 class="form-title">Chuyển phòng ban</h2>
+  <h2 class="form-title">Move member to a department</h2>
   <p>Move: <strong>${user.fullName}</strong></p>
 
   <form action="${pageContext.request.contextPath}/move_member" method="POST">
@@ -26,8 +26,8 @@
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn-save">Xác nhận chuyển</button>
-      <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${user.departmentId}" class="btn-cancel">Hủy</a>
+      <button type="submit" class="btn-save">Confirm</button>
+      <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${user.departmentId}" class="btn-cancel">Cancel</a>
     </div>
   </form>
 </div>

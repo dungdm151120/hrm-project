@@ -4,22 +4,22 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Thêm thành viên | HRM</title>
+  <title>Add member | HRM</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
 
 <div class="container">
-  <h2 class="form-title">Thêm thành viên vào phòng ban</h2>
+  <h2 class="form-title">Add member to a department</h2>
 
   <form action="${pageContext.request.contextPath}/add_member" method="POST">
     <input type="hidden" name="deptId" value="${deptId}">
 
     <div class="toolbar">
-      <button type="button" class="btn-secondary" onclick="selectAll()">Chọn tất cả</button>
-      <button type="button" class="btn-secondary" onclick="clearAll()">Bỏ chọn tất cả</button>
+      <button type="button" class="btn-secondary" onclick="selectAll()">Select</button>
+      <button type="button" class="btn-secondary" onclick="clearAll()">Clear All</button>
       <span class="selected-count-wrapper">
-                Đã chọn: <span id="selectedCount" class="selected-count">0</span> nhân viên
+                Selected: <span id="selectedCount" class="selected-count">0</span> Employee
             </span>
     </div>
 
@@ -28,7 +28,7 @@
         <thead>
         <tr>
           <th style="width: 60px; text-align: center;">Chọn</th>
-          <th>Tên nhân viên</th>
+          <th>Full Name</th>
         </tr>
         </thead>
         <tbody>
@@ -42,7 +42,7 @@
         </c:forEach>
         <c:if test="${empty unassignedUsers}">
           <tr>
-            <td colspan="3" class="empty-state">Không có nhân viên nào khả dụng.</td>
+            <td colspan="3" class="empty-state">No employees found.</td>
           </tr>
         </c:if>
         </tbody>
@@ -50,8 +50,8 @@
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn-save">Xác nhận thêm</button>
-      <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${deptId}" class="btn-cancel">Hủy</a>
+      <button type="submit" class="btn-save">Confirm</button>
+      <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${deptId}" class="btn-cancel">Cancel</a>
     </div>
   </form>
 </div>

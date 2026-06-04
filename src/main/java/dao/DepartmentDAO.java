@@ -36,6 +36,32 @@ public class DepartmentDAO {
         }
         return departments;
     }
+
+    // Lấy toàn bộ dept ngoại trừ dept hiện tại
+    public List<Department> getDepartmentsExcept(int excludeDeptId) {
+        List<Department> list = new ArrayList<>();
+
+        String sql = "SELECT * FROM departments d WHERE d.active = true AND d.id != ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, excludeDeptId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Department d = new Department();
+                    d.setId(rs.getInt("id"));
+                    d.setName(rs.getString("name"));
+                    list.add(d);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public Department getDepartmentByIdWithManager(int id) {
         String sql = "SELECT d.*, u.full_name AS manager_name FROM departments d " +
                 "LEFT JOIN users u ON d.manager_user_id = u.id WHERE d.id = ?";
@@ -193,6 +219,23 @@ public class DepartmentDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    // Kiểm tra Dept có đang active ko
+    public boolean isDepartmentActive(int deptId) {
+        String sql = "SELECT active FROM departments WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, deptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("active");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private Department mapRow(ResultSet rs) throws SQLException {
