@@ -94,7 +94,7 @@
                     <td>
                         <div class="actions">
                             <a href="${pageContext.request.contextPath}/contracts/detail?id=${contract.id}">View Detail</a>
-                            <c:if test="${canUpdateContract}">
+                            <c:if test="${canUpdateContract && contract.status != 'TERMINATED'}">
                                 <a href="${pageContext.request.contextPath}/contracts/update?id=${contract.id}">Update</a>
                             </c:if>
                         </div>
