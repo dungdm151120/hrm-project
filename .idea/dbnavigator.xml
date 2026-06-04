@@ -14,6 +14,9 @@
       <assistant-state connection-id="9e6a3409-44a1-418d-aa74-167c4123ec61" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
+      <assistant-state connection-id="f83ddd08-9e65-479c-aa85-961ceeff3abb" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
     </assistants>
     <selection-state>
       <model-selection />

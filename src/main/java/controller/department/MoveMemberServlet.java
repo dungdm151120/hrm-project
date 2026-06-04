@@ -67,7 +67,7 @@ public class MoveMemberServlet extends HttpServlet {
             String result = dao.moveDepartmentMember(userId, newDeptId);
 
             if ("SUCCESS".equals(result)) {
-                response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + newDeptId + "&msg=move_success");
+                response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + currentDeptId + "&msg=move_success");
             } else if ("ERROR_IS_MANAGER".equals(result)) {
                 response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + currentDeptId + "&error=is_manager");
             } else {

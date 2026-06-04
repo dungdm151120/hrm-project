@@ -91,7 +91,6 @@
             <tr>
                 <th>ID</th>
                 <th>Full Name</th>
-                <th>Role</th>
                 <th>Department</th>
                 <th>Position</th>
                 <th>Status</th>
@@ -103,7 +102,6 @@
                 <tr>
                     <td>${(currentPage - 1) * pageSize + s.index + 1}</td>
                     <td><strong>${user.fullName}</strong></td>
-                    <td>${user.roleName}</td>
                     <td>${not empty user.departmentName ? user.departmentName : 'N/A'}</td>
                     <td>${user.positionName}</td>
                     <td>
