@@ -60,9 +60,9 @@
             <input type="date" id="startDate" name="startDate" value="${contract.startDate}" required>
         </div>
 
-        <div class="form-group">
-            <label for="endDate">End Date</label>
-            <input type="date" id="endDate" name="endDate" value="${contract.endDate}">
+        <div class="form-group" id="endDateGroup">
+            <label for="endDate">End Date <span style="color: var(--danger);">*</span></label>
+            <input type="date" id="endDate" name="endDate" value="${contract.endDate}" required>
         </div>
 
         <div class="form-group">
@@ -105,5 +105,25 @@
     </form>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const contractType = document.getElementById('contractType');
+        const endDateGroup = document.getElementById('endDateGroup');
+        const endDate = document.getElementById('endDate');
+
+        function handleContractTypeChange() {
+            const isIndefiniteTerm = contractType.value === 'INDEFINITE_TERM';
+            endDateGroup.style.display = isIndefiniteTerm ? 'none' : '';
+            endDate.disabled = isIndefiniteTerm;
+
+            if (isIndefiniteTerm) {
+                endDate.value = '';
+            }
+        }
+
+        contractType.addEventListener('change', handleContractTypeChange);
+        handleContractTypeChange();
+    });
+</script>
 </body>
 </html>
