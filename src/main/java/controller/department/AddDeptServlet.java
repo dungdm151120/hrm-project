@@ -16,7 +16,6 @@ public class AddDeptServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Chỉ forward thẳng đến form, không cần user list
         request.getRequestDispatcher("/WEB-INF/views/department/dept_add.jsp")
                 .forward(request, response);
     }
@@ -54,9 +53,14 @@ public class AddDeptServlet extends HttpServlet {
         dept.setDescription(description.trim());
         dept.setActive(active);
 
-
         int newId = departmentDAO.addDepartment(dept);
         if (newId != -1) {
+
+            boolean positionAssigned = departmentDAO.assignDefaultEmployeePosition(newId);
+            if (!positionAssigned) {
+                System.err.println("Không thể gán position 'Employee' mặc định cho department ID " + newId);
+            }
+
             HttpSession session = request.getSession();
             session.setAttribute("successMessage", "Thêm phòng ban thành công (ID: " + newId + ")");
             response.sendRedirect(request.getContextPath() + "/admin/departments");

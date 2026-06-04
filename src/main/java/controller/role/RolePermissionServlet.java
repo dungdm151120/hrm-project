@@ -9,7 +9,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @WebServlet("/admin/roles/permissions")
 public class RolePermissionServlet extends HttpServlet {
@@ -41,10 +42,35 @@ public class RolePermissionServlet extends HttpServlet {
             return;
         }
 
+        List<Permission> allPermissions = permissionDAO.getAllPermissions();
         List<Permission> rolePermissions = permissionDAO.getPermissionsByRoleId(roleId);
+        Set<String> assignedPermissionIds = rolePermissions.stream()
+                .map(Permission::getCode)
+                .collect(Collectors.toSet());
+
+        // Nhóm permissions theo module
+        Map<String, List<Permission>> moduleMap = new LinkedHashMap<>();
+        String[] moduleOrder = {"HOMEPAGE","PROFILE","USER","ROLE","DEPARTMENT","POSITION","CONTRACT","ATTENDANCE","PAYROLL"};
+        for (String mod : moduleOrder) {
+            moduleMap.put(mod, new ArrayList<>());
+        }
+        for (Permission p : allPermissions) {
+            String code = p.getCode();
+            int idx = code.indexOf('_');
+            if (idx > 0) {
+                String prefix = code.substring(0, idx);
+                if (moduleMap.containsKey(prefix)) {
+                    moduleMap.get(prefix).add(p);
+                } else {
+                    moduleMap.computeIfAbsent(prefix, k -> new ArrayList<>()).add(p);
+                }
+            }
+        }
 
         request.setAttribute("role", role);
         request.setAttribute("rolePermissions", rolePermissions);
+        request.setAttribute("assignedPermissionIds", assignedPermissionIds);
+        request.setAttribute("moduleMap", moduleMap);
 
         request.getRequestDispatcher("/WEB-INF/views/role/role_permission.jsp")
                 .forward(request, response);

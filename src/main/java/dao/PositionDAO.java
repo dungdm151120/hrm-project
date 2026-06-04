@@ -342,6 +342,9 @@ public class PositionDAO {
         return false;
     }
 
+    public List<Position> findAllPositions() {
+        return getAllPositions(); // tận dụng phương thức đã có
+    }
     public boolean updatePositionStatus(int postId, boolean status) {
         String sql = """
                     UPDATE positions

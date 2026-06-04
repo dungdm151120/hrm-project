@@ -274,6 +274,25 @@ public class DepartmentDAO {
         return dept;
     }
 
+    public boolean assignDefaultEmployeePosition(int departmentId) {
+        String getPosIdSql = "SELECT id FROM positions WHERE name = 'Employee'";
+        String insertSql = "INSERT INTO department_positions (department_id, position_id) VALUES (?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement getPs = conn.prepareStatement(getPosIdSql)) {
+            ResultSet rs = getPs.executeQuery();
+            if (rs.next()) {
+                int employeePosId = rs.getInt("id");
+                try (PreparedStatement insertPs = conn.prepareStatement(insertSql)) {
+                    insertPs.setInt(1, departmentId);
+                    insertPs.setInt(2, employeePosId);
+                    return insertPs.executeUpdate() > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
     private Department mapRowWithManager(ResultSet rs) throws SQLException {
         Department dept = new Department();
         dept.setId(rs.getInt("id"));

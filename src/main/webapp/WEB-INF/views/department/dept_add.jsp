@@ -11,55 +11,55 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body class="navbar-layout">
-    <%-- Include navbar thay cho sidebar --%>
-    <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
+<body class="dashboard-body">
 
-    <main class="main-container">
-        <div class="container">
-            <%-- Header với nút quay lại --%>
-            <div class="page-header">
-                <h1 class="page-title">Add Department</h1>
-                <a href="${pageContext.request.contextPath}/admin/departments" class="btn btn-secondary">
-                    ← Back to List
-                </a>
+<div class="dashboard-wrapper">
+
+    <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
+
+    <div class="dashboard-main">
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1 class="header-title">Add Department</h1>
             </div>
+            <div class="header-right">
+                <a href="${pageContext.request.contextPath}/admin/departments" class="btn-secondary">← Back to List</a>
+            </div>
+        </div>
 
-            <%-- Hiển thị lỗi từ server --%>
+        <div class="dashboard-content">
             <c:if test="${not empty error}">
-                <div class="alert alert-error">
-                    ⚠ ${error}
-                </div>
+                <div class="alert alert-error">⚠ ${error}</div>
             </c:if>
 
-            <div class="form-wrapper">
+            <div class="detail-wrapper">
                 <form action="${pageContext.request.contextPath}/admin/departments/add" method="post">
                     <div class="form-group">
                         <label>Name <span class="required">*</span></label>
                         <input type="text" name="name" value="<c:out value='${name}'/>"
-                               required maxlength="100" placeholder="Nhập tên phòng ban">
+                               required maxlength="100" placeholder="Enter department name">
                     </div>
                     <div class="form-group">
                         <label>Description <span class="required">*</span></label>
                         <textarea name="description" required
-                                  placeholder="Nhập mô tả phòng ban"><c:out value="${description}"/></textarea>
+                                  placeholder="Enter department description"><c:out value="${description}"/></textarea>
                     </div>
                     <div class="form-group">
                         <label>Status</label>
                         <select name="active">
-                            <option value="true"
-                                    <c:if test="${empty active or active}">selected</c:if>>Active</option>
-                            <option value="false"
-                                    <c:if test="${not empty active and !active}">selected</c:if>>Inactive</option>
+                            <option value="true" <c:if test="${empty active or active}">selected</c:if>>Active</option>
+                            <option value="false" <c:if test="${not empty active and !active}">selected</c:if>>Inactive</option>
                         </select>
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Add</button>
-                        <a href="${pageContext.request.contextPath}/admin/departments" class="btn btn-cancel">Cancel</a>
+                        <button type="submit" class="btn-save">Add</button>
+                        <a href="${pageContext.request.contextPath}/admin/departments" class="btn-cancel">Cancel</a>
                     </div>
                 </form>
             </div>
         </div>
-    </main>
+    </div>
+</div>
+
 </body>
 </html>

@@ -9,8 +9,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @WebServlet("/admin/roles/edit_permissions")
 public class EditRolePermissionServlet extends HttpServlet {
@@ -18,7 +18,6 @@ public class EditRolePermissionServlet extends HttpServlet {
     private final RoleDAO roleDAO = new RoleDAO();
     private final PermissionDAO permissionDAO = new PermissionDAO();
 
-    // GET: hiển thị form chỉnh sửa permissions
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -46,16 +45,34 @@ public class EditRolePermissionServlet extends HttpServlet {
         List<Permission> allPermissions = permissionDAO.getAllPermissions();
         List<Integer> assignedPermissionIds = roleDAO.getPermissionIdsByRoleId(roleId);
 
+
+        Map<String, List<Permission>> moduleMap = new LinkedHashMap<>();
+        String[] moduleOrder = {"HOMEPAGE","PROFILE","USER","ROLE","DEPARTMENT","POSITION","CONTRACT","ATTENDANCE","PAYROLL"};
+        for (String mod : moduleOrder) {
+            moduleMap.put(mod, new ArrayList<>());
+        }
+        for (Permission p : allPermissions) {
+            String code = p.getCode();
+            int idx = code.indexOf('_');
+            if (idx > 0) {
+                String prefix = code.substring(0, idx);
+                if (moduleMap.containsKey(prefix)) {
+                    moduleMap.get(prefix).add(p);
+                } else {
+                    moduleMap.computeIfAbsent(prefix, k -> new ArrayList<>()).add(p);
+                }
+            }
+        }
+
         request.setAttribute("role", role);
         request.setAttribute("allPermissions", allPermissions);
         request.setAttribute("assignedPermissionIds", assignedPermissionIds);
+        request.setAttribute("moduleMap", moduleMap);
 
         request.getRequestDispatcher("/WEB-INF/views/role/edit_role_permission.jsp")
                 .forward(request, response);
     }
 
-    // POST: lưu permissions đã chọn
-    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -73,7 +90,6 @@ public class EditRolePermissionServlet extends HttpServlet {
             return;
         }
 
-        // Lấy danh sách permission được chọn từ form (checkbox)
         String[] selectedIds = request.getParameterValues("permissionIds");
         List<Integer> permissionIds = new ArrayList<>();
         if (selectedIds != null) {
@@ -84,13 +100,12 @@ public class EditRolePermissionServlet extends HttpServlet {
             }
         }
 
-        // Xoá cũ -> thêm mới
         roleDAO.deleteRolePermissions(roleId);
         roleDAO.insertRolePermissions(roleId, permissionIds);
+
 
         response.sendRedirect(request.getContextPath()
                 + "/admin/roles/permissions?roleId=" + roleId
                 + "&success=Edit successfully");
-
     }
 }

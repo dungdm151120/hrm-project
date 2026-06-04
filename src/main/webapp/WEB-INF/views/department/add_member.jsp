@@ -7,53 +7,67 @@
   <title>Add member | HRM</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body>
+<body class="dashboard-body">
 
-<div class="container">
-  <h2 class="form-title">Add member to a department</h2>
+<div class="dashboard-wrapper">
 
-  <form action="${pageContext.request.contextPath}/add_member" method="POST">
-    <input type="hidden" name="deptId" value="${deptId}">
+  <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
 
-    <div class="toolbar">
-      <button type="button" class="btn-secondary" onclick="selectAll()">Select</button>
-      <button type="button" class="btn-secondary" onclick="clearAll()">Clear All</button>
-      <span class="selected-count-wrapper">
-                Selected: <span id="selectedCount" class="selected-count">0</span> Employee
-            </span>
+  <div class="dashboard-main">
+    <div class="dashboard-header">
+      <div class="header-left">
+        <h1 class="header-title">Add member to department</h1>
+      </div>
+      <div class="header-right">
+        <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${deptId}" class="btn-secondary">← Back to employees</a>
+      </div>
     </div>
 
-    <div class="table-wrapper">
-      <table>
-        <thead>
-        <tr>
-          <th style="width: 60px; text-align: center;">Chọn</th>
-          <th>Full Name</th>
-        </tr>
-        </thead>
-        <tbody>
-        <c:forEach items="${unassignedUsers}" var="u">
-          <tr>
-            <td style="text-align: center;">
-              <input type="checkbox" name="userIds" value="${u.id}" class="perm-checkbox">
-            </td>
-            <td><strong>${u.fullName}</strong></td>
-          </tr>
-        </c:forEach>
-        <c:if test="${empty unassignedUsers}">
-          <tr>
-            <td colspan="3" class="empty-state">No employees found.</td>
-          </tr>
-        </c:if>
-        </tbody>
-      </table>
-    </div>
+    <div class="dashboard-content">
+      <form action="${pageContext.request.contextPath}/add_member" method="POST">
+        <input type="hidden" name="deptId" value="${deptId}">
 
-    <div class="form-actions">
-      <button type="submit" class="btn-save">Confirm</button>
-      <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${deptId}" class="btn-cancel">Cancel</a>
+        <div class="toolbar">
+          <button type="button" class="btn-secondary" onclick="selectAll()">Select All</button>
+          <button type="button" class="btn-secondary" onclick="clearAll()">Clear All</button>
+          <span class="selected-count-wrapper">
+            Selected: <span id="selectedCount" class="selected-count">0</span> Employee
+          </span>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+            <tr>
+              <th class="col-checkbox">Select</th>
+              <th>Full Name</th>
+            </tr>
+            </thead>
+            <tbody>
+            <c:forEach items="${unassignedUsers}" var="u">
+              <tr>
+                <td class="col-checkbox">
+                  <input type="checkbox" name="userIds" value="${u.id}" class="perm-checkbox">
+                </td>
+                <td><strong>${u.fullName}</strong></td>
+              </tr>
+            </c:forEach>
+            <c:if test="${empty unassignedUsers}">
+              <tr>
+                <td colspan="2" class="empty-state">No employees found.</td>
+              </tr>
+            </c:if>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-save">Confirm</button>
+          <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${deptId}" class="btn-cancel">Cancel</a>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>
 
 <script>

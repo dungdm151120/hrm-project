@@ -1,235 +1,133 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | HRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body>
+<body class="dashboard-body">
 
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
+<div class="dashboard-wrapper">
+    <jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
 
-<c:set var="role" value="${currentUser.roleName}" />
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 class="header-title">Dashboard</h1>
+            </div>
+            <div class="header-right">
 
-<div class="dashboard-container">
-
-    <%-- ========== ADMIN ========== --%>
-    <c:if test="${role eq 'ADMIN'}">
-        <h2 class="dashboard-title">Admin Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="dashboard-card">
-                <h3>👤 Personal</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
-                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>👥 User Management</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/user_list">View User List</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/users/add">Add New User</a></li>
-                    <li><a href="${pageContext.request.contextPath}/user_list">Update User Info</a></li>
-                    <li><a href="${pageContext.request.contextPath}/user_list">Active/Deactive User</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/password-reset-requests">Request Reset Password</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>🛡️ Role Management</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/admin/roles">View Role List</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=1">View Role Permissions</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/roles/update?roleId=1">Update Role Info</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/roles/add">Add New Role</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=1">Edit Role Permissions</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>🏢 Department Management</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/admin/departments">View Department List</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/departments/add">Add New Department</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>Contract</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                            <h3>Position Management</h3>
-                            <ul>
-                                <li><a href="${pageContext.request.contextPath}/position/list">View Position List</a></li>
-                                <li><a href="${pageContext.request.contextPath}/position/add">Add New Position</a></li>
-                                <li><a href="${pageContext.request.contextPath}/position/list">Update Position Info</a></li>
-
-                            </ul>
-                        </div>
-        </div>
-    </c:if>
-
-    <%-- ========== HR MANAGER ========== --%>
-    <c:if test="${role eq 'HR_MANAGER'}">
-        <h2 class="dashboard-title">HR Manager Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="dashboard-card">
-                <h3>👤 Personal</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
-                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>👥 User Management</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/user_list">View User List</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/users/add">Add New User</a></li>
-                    <li><a href="${pageContext.request.contextPath}/user_list">Update User Info</a></li>
-                    <li><a href="${pageContext.request.contextPath}/user_list">Active/Deactive User</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>🏢 Department Management</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/admin/departments">View Department List</a></li>
-                    <li><a href="${pageContext.request.contextPath}/admin/departments/add">Add New Department</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>Contract</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
-                    <li><a href="${pageContext.request.contextPath}/contracts">View Contract List</a></li>
-                </ul>
-            </div>
-            <!-- Các module khác như Position, Attendance, Payroll có thể thêm sau khi phát triển servlet -->
-        </div>
-    </c:if>
-
-    <%-- ========== HR STAFF ========== --%>
-    <c:if test="${role eq 'HR_STAFF'}">
-        <h2 class="dashboard-title">HR Staff Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="dashboard-card">
-                <h3>👤 Personal</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
-                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>👥 User Management</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/user_list">View User List</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>🏢 Department Management</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/admin/departments">View Department List</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>Contract</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
-                    <li><a href="${pageContext.request.contextPath}/contracts">View Contract List</a></li>
-                </ul>
-            </div>
-        </div>
-    </c:if>
-
-    <%-- ========== DEPARTMENT MANAGER ========== --%>
-    <c:if test="${role eq 'DEPARTMENT_MANAGER'}">
-        <h2 class="dashboard-title">Department Manager Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="dashboard-card">
-                <h3>👤 Personal</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
-                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>Contract</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
-                </ul>
-            </div>
-            <c:if test="${not empty currentUser.departmentId}">
-                <div class="dashboard-card">
-                    <h3>🏢 My Department</h3>
-                    <ul>
-                        <li><a href="${pageContext.request.contextPath}/admin/departments/detail?id=${currentUser.departmentId}">View Department Detail</a></li>
-                        <!-- Sau này có thể thêm View Employees, Attendance Report... -->
-                    </ul>
+                <button class="header-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </button>
+                <div class="header-profile" id="profileDropdownToggle">
+                    <c:choose>
+                        <c:when test="${not empty currentUser.avatarUrl}">
+                            <img src="${currentUser.avatarUrl}" alt="User" class="profile-avatar">
+                        </c:when>
+                        <c:otherwise>
+                            <div class="avatar-placeholder-small">${currentUser.fullName.substring(0,1)}</div>
+                        </c:otherwise>
+                    </c:choose>
+                    <div class="profile-info">
+                        <p class="profile-name">${currentUser.fullName}</p>
+                        <p class="profile-status">Online</p>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="${pageContext.request.contextPath}/profile" class="dropdown-item">View My Profile</a>
+                        <a href="${pageContext.request.contextPath}/change-password" class="dropdown-item">Change Password</a>
+                        <a href="${pageContext.request.contextPath}/logout" class="dropdown-item">Logout</a>
+                    </div>
                 </div>
-            </c:if>
-            <!-- Self-service: Attendance, Contract, Payroll (cá nhân) sẽ bổ sung khi có servlet -->
-        </div>
-    </c:if>
+            </div>
+        </header>
 
-    <%-- ========== PAYROLL STAFF ========== --%>
-    <c:if test="${role eq 'PAYROLL_STAFF'}">
-        <h2 class="dashboard-title">Payroll Staff Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="dashboard-card">
-                <h3>👤 Personal</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
-                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>Contract</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
-                </ul>
-            </div>
-            <!-- Module Payroll sẽ xuất hiện sau khi có servlet -->
-            <div class="dashboard-card">
-                <h3>💰 Payroll (Coming Soon)</h3>
-                <ul>
-                    <li><span>Generate Payroll</span></li>
-                    <li><span>View Payroll List</span></li>
-                </ul>
+        <div class="dashboard-content">
+            <div class="stats-grid">
+                <!-- Active Employees / Total Employees -->
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-1">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-13c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-body">
+                        <p class="stat-value">${activeUsers}</p>
+                        <p class="stat-label">Total Employees</p>
+                        <p class="stat-change">/ ${totalUsers}</p>
+                    </div>
+                </div>
+
+                <!-- Active Departments / Total Departments -->
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-2">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm5-3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm5 5c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7 19c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm5-2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm5-4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-body">
+                        <p class="stat-value">${activeDepartments}</p>
+                        <p class="stat-label">Active Departments</p>
+                        <p class="stat-change">/ ${totalDepartments}</p>
+                    </div>
+                </div>
+
+                <!-- Active Positions / Total Positions -->
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-3">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-body">
+                        <p class="stat-value">${activePositions}</p>
+                        <p class="stat-label">Active Positions</p>
+                        <p class="stat-change">/ ${totalPositions}</p>
+                    </div>
+                </div>
+
+                <!-- Active Roles / Total Roles -->
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-4">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-body">
+                        <p class="stat-value">${activeRoles}</p>
+                        <p class="stat-label">Active Roles</p>
+                        <p class="stat-change">/ ${totalRoles}</p>
+                    </div>
+                </div>
             </div>
         </div>
-    </c:if>
-
-    <%-- ========== EMPLOYEE ========== --%>
-    <c:if test="${role eq 'EMPLOYEE'}">
-        <h2 class="dashboard-title">Employee Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="dashboard-card">
-                <h3>👤 Personal</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/profile">View My Profile</a></li>
-                    <li><a href="${pageContext.request.contextPath}/change-password">Change Password</a></li>
-                </ul>
-            </div>
-            <div class="dashboard-card">
-                <h3>Contract</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/my-contract">View My Contract</a></li>
-                </ul>
-            </div>
-            <!-- Self-service: Attendance, Payroll (cá nhân) sẽ bổ sung sau -->
-        </div>
-    </c:if>
-
-    <%-- Nếu role không khớp --%>
-    <c:if test="${empty role or (role ne 'ADMIN' and role ne 'HR_MANAGER' and role ne 'HR_STAFF' and role ne 'DEPARTMENT_MANAGER' and role ne 'PAYROLL_STAFF' and role ne 'EMPLOYEE')}">
-        <div class="role-invalid">
-            <p>⚠ Role không hợp lệ hoặc chưa được hỗ trợ.</p>
-        </div>
-    </c:if>
-
+    </main>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggle = document.getElementById('profileDropdownToggle');
+        const dropdown = document.getElementById('profileDropdown');
+
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function() {
+            dropdown.classList.remove('show');
+        });
+    });
+</script>
 
 </body>
 </html>

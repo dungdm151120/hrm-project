@@ -5,37 +5,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forgot Password | HRM</title>
-    <!-- Font Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- CSS chung -->
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body class="login-page">
+<body class="forgot-password-page">
 
-<div class="login-wrapper">
-    <div class="login-card">
-        <div class="login-header">
+<div class="forgot-password-wrapper">
+    <div class="forgot-password-card">
+        <div class="forgot-password-header">
             <div class="brand">HRM</div>
             <h2>Quên mật khẩu</h2>
         </div>
 
         <% if (request.getAttribute("error") != null) { %>
-            <div class="alert alert-error">
-                <span>⚠</span> <%= request.getAttribute("error") %>
-            </div>
+            <div class="alert alert-error">⚠ <%= request.getAttribute("error") %></div>
         <% } %>
 
         <% if (request.getAttribute("success") != null) { %>
-            <div class="alert alert-success">
-                <span>✓</span> <%= request.getAttribute("success") %>
-            </div>
+            <div class="alert alert-success">✓ <%= request.getAttribute("success") %></div>
         <% } %>
 
-        <form class="login-form" action="<%= request.getContextPath() %>/forgot-password" method="post">
+        <form class="forgot-password-form" action="<%= request.getContextPath() %>/forgot-password" method="post">
             <div class="form-group">
-                <label for="email">Email <span style="color: var(--danger);">*</span></label>
+                <label for="email">Email <span class="required-star">*</span></label>
                 <input type="email" id="email" name="email" placeholder="Nhập email đã đăng ký" required>
             </div>
 
@@ -47,7 +41,7 @@
             <button type="submit" class="btn-login">Gửi yêu cầu đến admin</button>
         </form>
 
-        <div class="login-footer">
+        <div class="forgot-password-footer">
             <a href="<%= request.getContextPath() %>/login">← Quay lại đăng nhập</a>
         </div>
     </div>

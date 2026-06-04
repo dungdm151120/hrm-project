@@ -8,79 +8,100 @@
     <title>Role Permission - ${role.name} | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body>
-<div class="container">
-    <div class="nav">
-        <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
-        <span style="margin:0 0.5rem; color:var(--gray-400)">/</span>
-        <a href="${pageContext.request.contextPath}/admin/roles">Danh sách vai trò</a>
-    </div>
+<body class="dashboard-body">
 
-    <div class="page-header">
-        <h2>Role Permission: ${role.name}</h2>
-    </div>
+<div class="dashboard-wrapper">
+    <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
 
-    <!-- Thông tin chi tiết role -->
-    <div class="role-detail">
-        <div class="role-meta">
-            <span class="role-meta-label">Mô tả</span>
-            <span class="role-meta-value">${role.description}</span>
-        </div>
-        <div class="role-meta">
-            <span class="role-meta-label">Trạng thái</span>
-            <span class="role-meta-value">
-                <c:choose>
-                    <c:when test="${role.active}">
-                        <span class="badge badge-active">Active</span>
-                    </c:when>
-                    <c:otherwise>
-                        <span class="badge badge-inactive">Vô hiệu</span>
-                    </c:otherwise>
-                </c:choose>
-            </span>
-        </div>
-    </div>
-
-    <c:if test="${not empty param.success}">
-        <div class="alert alert-success">
-            <span>✓</span> ${param.success}
-        </div>
-    </c:if>
-
-    <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=${role.id}" class="btn-primary">
-        ✎ Chỉnh sửa quyền
-    </a>
-
-    <c:choose>
-        <c:when test="${not empty rolePermissions}">
-            <p class="total-permission">Tổng số quyền: <span>${rolePermissions.size()}</span></p>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>STT</th>
-                            <th>Mã quyền</th>
-                            <th>Tên quyền</th>
-                            <th>Mô tả</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:forEach var="perm" items="${rolePermissions}" varStatus="s">
-                            <tr>
-                                <td>${s.index + 1}</td>
-                                <td><code>${perm.code}</code></td>
-                                <td>${perm.name}</td>
-                                <td>${perm.description}</td>
-                            </tr>
-                        </c:forEach>
-                    </tbody>
-                </table>
+    <div class="dashboard-main">
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1 class="header-title">Permissions of ${role.name}</h1>
             </div>
-        </c:when>
-        <c:otherwise>
-            <p class="empty-state">Vai trò này hiện chưa có quyền nào.</p>
-        </c:otherwise>
-    </c:choose>
+            <div class="header-right">
+                <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=${role.id}" class="btn-primary">Edit Permissions</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <nav class="breadcrumb">
+                <a href="${pageContext.request.contextPath}/home">Home</a>
+                <span class="separator">›</span>
+                <a href="${pageContext.request.contextPath}/admin/roles">Roles</a>
+                <span class="separator">›</span>
+                <span class="current">${role.name}</span>
+            </nav>
+
+            <div class="role-detail">
+                <div class="role-meta">
+                    <span class="role-meta-label">Description</span>
+                    <span class="role-meta-value">${role.description}</span>
+                </div>
+                <div class="role-meta">
+                    <span class="role-meta-label">Status</span>
+                    <span class="role-meta-value">
+                        <c:choose>
+                            <c:when test="${role.active}">
+                                <span class="badge badge-active">Active</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge badge-inactive">Inactive</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </span>
+                </div>
+            </div>
+
+            <c:if test="${not empty param.success}">
+                <div class="alert alert-success">✓ ${param.success}</div>
+            </c:if>
+
+            <!-- Permission Matrix Horizontal -->
+            <div class="permission-matrix-horizontal">
+                <c:forEach var="entry" items="${moduleMap}">
+                    <c:if test="${not empty entry.value}">
+                        <div class="permission-module-row">
+                            <div class="module-label">
+                                <c:choose>
+                                    <c:when test="${entry.key eq 'HOMEPAGE'}">Home</c:when>
+                                    <c:when test="${entry.key eq 'PROFILE'}">Profile</c:when>
+                                    <c:when test="${entry.key eq 'USER'}">User Management</c:when>
+                                    <c:when test="${entry.key eq 'ROLE'}">Role Management</c:when>
+                                    <c:when test="${entry.key eq 'DEPARTMENT'}">Department</c:when>
+                                    <c:when test="${entry.key eq 'POSITION'}">Position</c:when>
+                                    <c:when test="${entry.key eq 'CONTRACT'}">Contract</c:when>
+                                    <c:when test="${entry.key eq 'ATTENDANCE'}">Attendance</c:when>
+                                    <c:when test="${entry.key eq 'PAYROLL'}">Payroll</c:when>
+                                    <c:otherwise>Other</c:otherwise>
+                                </c:choose>
+                            </div>
+                            <div class="module-permissions">
+                                <c:forEach var="perm" items="${entry.value}">
+                                    <div class="permission-item">
+                                        <div class="permission-info">
+                                            <code class="perm-code">${perm.code}</code>
+                                            <span class="perm-desc">${perm.description}</span>
+                                        </div>
+                                        <div class="permission-icon">
+                                            <c:choose>
+                                                <c:when test="${assignedPermissionIds.contains(perm.code)}">
+                                                    <span class="icon-check">✅</span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="icon-cross">❌</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                    </div>
+                                </c:forEach>
+                            </div>
+                        </div>
+                    </c:if>
+                </c:forEach>
+            </div>
+        </div>
+    </div>
 </div>
+
 </body>
 </html>

@@ -7,30 +7,46 @@
   <title>Move member | HRM</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
+<body class="dashboard-body">
 
-<body>
-<div class="container">
-  <h2 class="form-title">Move member to a department</h2>
-  <p>Move: <strong>${user.fullName}</strong></p>
+<div class="dashboard-wrapper">
 
-  <form action="${pageContext.request.contextPath}/move_member" method="POST">
-    <input type="hidden" name="userId" value="${user.id}">
-    <input type="hidden" name="currentDeptId" value="${user.departmentId}">
+  <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
 
-    <div class="form-group">
-      <label>Select New Department:</label>
-      <select name="newDeptId" class="form-control">
-        <c:forEach items="${deptList}" var="d">
-          <option value="${d.id}">${d.name}</option>
-        </c:forEach>
-      </select>
+  <div class="dashboard-main">
+    <div class="dashboard-header">
+      <div class="header-left">
+        <h1 class="header-title">Move member</h1>
+      </div>
+      <div class="header-right">
+        <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${user.departmentId}" class="btn-secondary">← Back to employees</a>
+      </div>
     </div>
 
-    <div class="form-actions">
-      <button type="submit" class="btn-save">Confirm</button>
-      <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${user.departmentId}" class="btn-cancel">Cancel</a>
+    <div class="dashboard-content">
+      <p>Move: <strong>${user.fullName}</strong></p>
+
+      <form action="${pageContext.request.contextPath}/move_member" method="POST">
+        <input type="hidden" name="userId" value="${user.id}">
+        <input type="hidden" name="currentDeptId" value="${user.departmentId}">
+
+        <div class="form-group">
+          <label>Select New Department:</label>
+          <select name="newDeptId">
+            <c:forEach items="${deptList}" var="d">
+              <option value="${d.id}">${d.name}</option>
+            </c:forEach>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-save">Confirm</button>
+          <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${user.departmentId}" class="btn-cancel">Cancel</a>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>
+
 </body>
 </html>

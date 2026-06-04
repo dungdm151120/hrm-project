@@ -5,65 +5,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New User | HRM</title>
+    <title>Add New Position | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body>
+<body class="dashboard-body">
 
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
+<div class="dashboard-wrapper">
 
-<div class="container" style="margin-top: 2rem;">
-    <a class="back-link" href="${pageContext.request.contextPath}/position/list">Return to position list</a>
-    <h2 class="form-title">Add new position</h2>
+    <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
 
-    <c:if test="${not empty error}">
-        <div style="color: red; margin-bottom: 15px; font-weight: bold;">
-            ${error}
-        </div>
-    </c:if>
-
-    <form action="${pageContext.request.contextPath}/position/add" method="post">
-        <div class="form-group">
-            <label for="departmentId">Department <span style="color: var(--danger);">*</span></label>
-            <select id="departmentId" name="departmentId" required style="width: 100%; height: 38px; border-radius: 4px; border: 1px solid #ccc; padding: 0 10px;">
-                <option value="" disabled selected>-- Select a department --</option>
-                <c:forEach items="${departments}" var="dept">
-                    <option value="${dept.id}" ${dept.id == param.departmentId ? 'selected' : ''}>
-                        ${dept.name}
-                    </option>
-                </c:forEach>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="name">Name <span style="color: var(--danger);">*</span></label>
-            <input type="text" id="name" name="name" placeholder="Enter position name" value="${newPosition.name}" required>
-        </div>
-
-        <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description" name="description" placeholder="Enter description" >${newPosition.description}</textarea>
-        </div>
-
-        <div class="form-group">
-            <label>Active Status</label>
-            <div class="radio-group">
-                <label class="radio-label">
-                    <input type="radio" name="active" value="true" ${newPosition == null || newPosition.active ? 'checked' : ''}>
-                    <span>Active</span>
-                </label>
-                <label class="radio-label">
-                    <input type="radio" name="active" value="false" ${newPosition != null && !newPosition.active ? 'checked' : ''}>
-                    <span>Inactive</span>
-                </label>
+    <div class="dashboard-main">
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1 class="header-title">Add New Position</h1>
             </div>
         </div>
 
-        <div class="form-actions">
-            <button type="submit" class="btn-save">Add position</button>
-            <a href="${pageContext.request.contextPath}/position/list" class="btn-cancel">Cancel</a>
+        <div class="dashboard-content">
+            <a class="back-link" href="${pageContext.request.contextPath}/position/list">Return to position list</a>
+            <h2 class="form-title">Add new position</h2>
+
+            <c:if test="${not empty error}">
+                <div class="alert alert-error">${error}</div>
+            </c:if>
+
+            <form action="${pageContext.request.contextPath}/position/add" method="post">
+                <div class="form-group">
+                    <label for="departmentId">Department <span class="required-star">*</span></label>
+                    <select id="departmentId" name="departmentId" required>
+                        <option value="" disabled selected>-- Select a department --</option>
+                        <c:forEach items="${departments}" var="dept">
+                            <option value="${dept.id}" ${dept.id == param.departmentId ? 'selected' : ''}>
+                                ${dept.name}
+                            </option>
+                        </c:forEach>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Name <span class="required-star">*</span></label>
+                    <input type="text" id="name" name="name" placeholder="Enter position name" value="${newPosition.name}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" placeholder="Enter description">${newPosition.description}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Active Status</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="active" value="true" ${newPosition == null || newPosition.active ? 'checked' : ''}>
+                            <span>Active</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="active" value="false" ${newPosition != null && !newPosition.active ? 'checked' : ''}>
+                            <span>Inactive</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">Add position</button>
+                    <a href="${pageContext.request.contextPath}/position/list" class="btn-cancel">Cancel</a>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 
 </body>

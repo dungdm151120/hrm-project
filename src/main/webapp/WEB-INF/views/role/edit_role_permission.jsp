@@ -8,75 +8,97 @@
     <title>Edit role permission - ${role.name} | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body>
+<body class="dashboard-body">
 
-<div class="container">
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb">
-        <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
-        <span class="separator">›</span>
-        <a href="${pageContext.request.contextPath}/admin/roles">Danh sách vai trò</a>
-        <span class="separator">›</span>
-        <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}">Quyền của "${role.name}"</a>
-        <span class="separator">›</span>
-        <span class="current">Chỉnh sửa</span>
-    </nav>
-
-    <h2 class="form-title">Chỉnh sửa quyền: ${role.name}</h2>
-    <p class="role-description">Mô tả: ${role.description}</p>
-
-    <form action="${pageContext.request.contextPath}/admin/roles/edit_permissions" method="post">
-        <input type="hidden" name="roleId" value="${role.id}">
-
-        <!-- Toolbar -->
-        <div class="toolbar">
-            <button type="button" class="btn-secondary" onclick="selectAll()">Chọn tất cả</button>
-            <button type="button" class="btn-secondary" onclick="clearAll()">Bỏ chọn tất cả</button>
-            <span class="selected-count-wrapper">
-                Đã chọn: <span id="selectedCount" class="selected-count">0</span> / ${allPermissions.size()} quyền
-            </span>
+<div class="dashboard-wrapper">
+    <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
+    <div class="dashboard-main">
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1 class="header-title">Edit permissions: ${role.name}</h1>
+            </div>
+            <div class="header-right">
+                <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}" class="btn-secondary">← Back to permissions</a>
+            </div>
         </div>
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 60px;">Chọn</th>
-                        <th>Mã quyền</th>
-                        <th>Tên quyền</th>
-                        <th>Mô tả</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <c:forEach var="perm" items="${allPermissions}">
-                        <c:set var="isAssigned" value="false"/>
-                        <c:forEach var="assignedId" items="${assignedPermissionIds}">
-                            <c:if test="${assignedId == perm.id}">
-                                <c:set var="isAssigned" value="true"/>
-                            </c:if>
-                        </c:forEach>
-                        <tr>
-                            <td style="text-align: center;">
-                                <input type="checkbox"
-                                       name="permissionIds"
-                                       value="${perm.id}"
-                                       class="perm-checkbox"
-                                       ${isAssigned ? 'checked' : ''}>
-                            </td>
-                            <td><code>${perm.code}</code></td>
-                            <td>${perm.name}</td>
-                            <td>${perm.description}</td>
-                        </tr>
+        <div class="dashboard-content">
+            <nav class="breadcrumb">
+                <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
+                <span class="separator">›</span>
+                <a href="${pageContext.request.contextPath}/admin/roles">Danh sách vai trò</a>
+                <span class="separator">›</span>
+                <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}">Quyền của "${role.name}"</a>
+                <span class="separator">›</span>
+                <span class="current">Chỉnh sửa</span>
+            </nav>
+
+            <p class="role-description">Mô tả: ${role.description}</p>
+
+            <form action="${pageContext.request.contextPath}/admin/roles/edit_permissions" method="post">
+                <input type="hidden" name="roleId" value="${role.id}">
+
+                <div class="toolbar">
+                    <button type="button" class="btn-secondary" onclick="selectAll()">Chọn tất cả</button>
+                    <button type="button" class="btn-secondary" onclick="clearAll()">Bỏ chọn tất cả</button>
+                    <span class="selected-count-wrapper">
+                        Đã chọn: <span id="selectedCount" class="selected-count">0</span> / ${allPermissions.size()} quyền
+                    </span>
+                </div>
+
+                <!-- Edit Permission Matrix -->
+                <div class="permission-matrix-horizontal">
+                    <c:forEach var="entry" items="${moduleMap}">
+                        <c:if test="${not empty entry.value}">
+                            <div class="permission-module-row">
+                                <div class="module-label">
+                                    <c:choose>
+                                        <c:when test="${entry.key eq 'HOMEPAGE'}">Home</c:when>
+                                        <c:when test="${entry.key eq 'PROFILE'}">Profile</c:when>
+                                        <c:when test="${entry.key eq 'USER'}">User Management</c:when>
+                                        <c:when test="${entry.key eq 'ROLE'}">Role Management</c:when>
+                                        <c:when test="${entry.key eq 'DEPARTMENT'}">Department</c:when>
+                                        <c:when test="${entry.key eq 'POSITION'}">Position</c:when>
+                                        <c:when test="${entry.key eq 'CONTRACT'}">Contract</c:when>
+                                        <c:when test="${entry.key eq 'ATTENDANCE'}">Attendance</c:when>
+                                        <c:when test="${entry.key eq 'PAYROLL'}">Payroll</c:when>
+                                        <c:otherwise>Other</c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <div class="module-permissions">
+                                    <c:forEach var="perm" items="${entry.value}">
+                                        <c:set var="isAssigned" value="false"/>
+                                        <c:forEach var="assignedId" items="${assignedPermissionIds}">
+                                            <c:if test="${assignedId == perm.id}">
+                                                <c:set var="isAssigned" value="true"/>
+                                            </c:if>
+                                        </c:forEach>
+                                        <label class="permission-item">
+                                            <input type="checkbox"
+                                                   name="permissionIds"
+                                                   value="${perm.id}"
+                                                   class="perm-checkbox"
+                                                   ${isAssigned ? 'checked' : ''}
+                                                   onchange="updateCount()">
+                                            <div class="permission-info">
+                                                <code class="perm-code">${perm.code}</code>
+                                                <span class="perm-desc">${perm.description}</span>
+                                            </div>
+                                        </label>
+                                    </c:forEach>
+                                </div>
+                            </div>
+                        </c:if>
                     </c:forEach>
-                </tbody>
-            </table>
-        </div>
+                </div>
 
-        <div class="form-actions">
-            <button type="submit" class="btn-save">Lưu thay đổi</button>
-            <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}" class="btn-cancel">Hủy</a>
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">Lưu thay đổi</button>
+                    <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}" class="btn-cancel">Hủy</a>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 
 <script>
