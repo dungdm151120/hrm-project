@@ -130,7 +130,7 @@
                                             onclick="return confirm('Are you sure?')">
                                         <c:choose>
                                             <c:when test="${role.active}">Deactivate</c:when>
-                                            <c:otherwise>Kích hoạt</c:otherwise>
+                                            <c:otherwise>Activate</c:otherwise>
                                         </c:choose>
                                     </button>
                                 </form>
