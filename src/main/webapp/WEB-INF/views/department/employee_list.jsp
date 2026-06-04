@@ -113,17 +113,24 @@
                     </td>
 
                     <td class="actions">
-                        <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${id}"
-                           class="btn-move"
+                        <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}"
+                           class="btn btn-secondary"
                                 <c:if test="${user.manager}">
-                                    onclick="return confirmManagerMove();"
+                                    onclick="alert('Cannot move Manager!'); return false;"
                                 </c:if>>
                             Move
                         </a>
 
-                        <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${id}"
-                           class="btn-danger"
-                           onclick="return confirm('Bạn chắc chắn muốn remove employee này khỏi phòng ban?')">Remove</a>
+                        <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
+                           class="btn btn-danger"
+                                <c:if test="${user.manager}">
+                                    onclick="alert('Cannot remove Manager!'); return false;"
+                                </c:if>
+                                <c:if test="${not user.manager}">
+                                    onclick="return confirm('Remove this employee?')"
+                                </c:if>>
+                            Remove
+                        </a>
                     </td>
                 </tr>
             </c:forEach>
@@ -218,11 +225,5 @@
         </c:choose>
     </div>
 </div>
-<script>
-    function confirmManagerMove() {
-        alert("Không thể chuyển phòng ban vì nhân viên này đang là Manager!");
-        return false;
-    }
-</script>
 </body>
 </html>

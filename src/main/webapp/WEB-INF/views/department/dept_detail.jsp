@@ -44,6 +44,21 @@
             gap: 1rem;
             align-items: center;
         }
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -51,10 +66,26 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="container" style="margin-top: 2rem;">
+
+    <%-- Hiển thị thông báo từ session --%>
+    <c:if test="${not empty sessionScope.successMessage}">
+        <div class="alert alert-success">
+            ${sessionScope.successMessage}
+        </div>
+        <% session.removeAttribute("successMessage"); %>
+    </c:if>
+    <c:if test="${not empty sessionScope.error}">
+        <div class="alert alert-error">
+            ${sessionScope.error}
+        </div>
+        <% session.removeAttribute("error"); %>
+    </c:if>
+
     <div class="page-header">
         <h2>Department Detail</h2>
         <div class="header-actions">
             <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${department.id}" class="btn btn-secondary">View employee list</a>
+            <a href="${pageContext.request.contextPath}/admin/departments/assign-manager?id=${department.id}" class="btn btn-primary">Assign Manager</a>
             <a href="${pageContext.request.contextPath}/admin/departments" class="btn btn-secondary">← Back to List</a>
         </div>
     </div>
@@ -119,7 +150,7 @@
 
             <div class="form-actions">
                 <a href="${pageContext.request.contextPath}/admin/departments/update?id=${department.id}" class="btn btn-primary">Update Info</a>
-                <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post">
+                <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">
                     <input type="hidden" name="id" value="${department.id}">
                     <button type="submit" class="btn ${department.active ? 'btn-danger' : 'btn-warning'}" onclick="return confirm('Are you sure?')">
                         <c:choose>
