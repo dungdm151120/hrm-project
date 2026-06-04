@@ -77,8 +77,8 @@
             <select name="sort" onchange="this.form.submit()">
                 <option value="name_asc" ${sort == 'name_asc' ? 'selected' : ''}>Name A-Z</option>
                 <option value="name_desc" ${sort == 'name_desc' ? 'selected' : ''}>Name Z-A</option>
-                <option value="id_desc" ${sort == 'id_desc' || empty sort ? 'selected' : ''}>Newest</option>
-                <option value="id_asc" ${sort == 'id_asc'  ? 'selected' : ''}>Oldest</option>
+                <option value="id_desc" ${sort == 'id_desc'  ? 'selected' : ''}>Newest</option>
+                <option value="id_asc" ${sort == 'id_asc'  || empty sort ? 'selected' : ''}>Oldest</option>
             </select>
 
             <button type="submit" class="btn btn-primary">Search</button>
@@ -93,7 +93,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>#</th> <th>ID</th> <th>Name</th>
+                    <th>ID</th> <th>Name</th>
                     <th>Description</th>
                     <th>Status</th>
                     <th>Last Updated</th>
@@ -103,7 +103,6 @@
             <tbody>
                 <c:forEach items="${positionList}" var="position" varStatus="s">
                     <tr>
-                        <td>${(currentPage - 1) * 5 + s.index + 1}</td>
                         <td>${position.id}</td>
                         <td><strong>${position.name}</strong></td>
                         <td>${position.description}</td>
@@ -123,13 +122,26 @@
                         <td>
                             <div class="actions">
                                 <a href="${pageContext.request.contextPath}/position/update?id=${position.id}">Update</a>
-                                </div>
+
+                                <c:choose>
+                                    <c:when test="${position.active}">
+                                        <a href="${pageContext.request.contextPath}/position/toggle-status?id=${position.id}&action=deactivate"
+                                           class="btn btn-danger"
+                                           onclick="return confirm('Deactivate this position?')">Deactivate</a>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a href="${pageContext.request.contextPath}/position/toggle-status?id=${position.id}&action=activate"
+                                           class="btn btn-warning"
+                                           onclick="return confirm('Activate this position?')">Activate</a>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
                         </td>
                     </tr>
                 </c:forEach>
                 <c:if test="${empty positionList}">
                     <tr>
-                        <td colspan="7" class="empty-state">No position found.</td>
+                        <td colspan="6" class="empty-state">No position found.</td>
                     </tr>
                 </c:if>
             </tbody>

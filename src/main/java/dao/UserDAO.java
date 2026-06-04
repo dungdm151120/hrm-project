@@ -333,9 +333,11 @@ public class UserDAO {
                     address,
                     avatar_url,
                     role_id,
+                    department_id,
+                    position_id,
                     active
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -350,7 +352,9 @@ public class UserDAO {
             ps.setString(7, user.getAddress());
             ps.setString(8, user.getAvatarUrl());
             ps.setInt(9, user.getRoleId());
-            ps.setBoolean(10, user.isActive());
+            ps.setInt(10, user.getDepartmentId());
+            ps.setInt(11, user.getPositionId());
+            ps.setBoolean(12, user.isActive());
 
             return ps.executeUpdate() > 0;
 
@@ -373,6 +377,8 @@ public class UserDAO {
                     address = ?,
                     avatar_url = ?,
                     role_id = ?,
+                    department_id = ?,
+                    position_id = ?,
                     active = ?
                 WHERE id = ?
                 """;
@@ -388,8 +394,10 @@ public class UserDAO {
             ps.setString(6, user.getAddress());
             ps.setString(7, user.getAvatarUrl());
             ps.setInt(8, user.getRoleId());
-            ps.setBoolean(9, user.isActive());
-            ps.setInt(10, user.getId());
+            ps.setInt(9, user.getDepartmentId());
+            ps.setInt(10, user.getPositionId());
+            ps.setBoolean(11, user.isActive());
+            ps.setInt(12, user.getId());
 
             return ps.executeUpdate() > 0;
 

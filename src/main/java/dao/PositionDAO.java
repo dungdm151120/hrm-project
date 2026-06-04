@@ -65,9 +65,9 @@ public class PositionDAO {
         switch (sort != null ? sort : "") {
             case "name_asc":    sql.append("p.name ASC"); break;
             case "name_desc":   sql.append("p.name DESC"); break;
-            case "id_asc":      sql.append("p.id ASC"); break;
-            case "id_desc":
-            default:            sql.append("p.id DESC"); break;
+            case "id_desc":     sql.append("p.id DESC"); break;
+            case "id_asc":
+            default:            sql.append("p.id ASC"); break;
         }
 
         sql.append(" LIMIT ? OFFSET ?");
