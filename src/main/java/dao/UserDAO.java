@@ -986,7 +986,7 @@ public class UserDAO {
 
         String removeSql = "UPDATE users SET department_id = NULL, " +
                 "position_id = (SELECT id FROM positions WHERE name = 'Employee' LIMIT 1), " +
-                "active = 0 " +
+                "active = 1 " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
