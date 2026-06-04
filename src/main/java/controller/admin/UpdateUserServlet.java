@@ -39,11 +39,7 @@ public class UpdateUserServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        System.out.println("====== DEBUG UPDATE POST ======");
-        System.out.println("ID nhận được: " + req.getParameter("id"));
-        System.out.println("Name nhận được: " + req.getParameter("fullName"));
-        System.out.println("Email nhận được: " + req.getParameter("email"));
-        System.out.println("===============================");
+
         try {
             int id = Integer.parseInt(req.getParameter("id"));
             String fullName = req.getParameter("fullName");
@@ -52,7 +48,19 @@ public class UpdateUserServlet extends HttpServlet {
             String gender = req.getParameter("gender");
             String address = req.getParameter("address");
             String avatarUrl = req.getParameter("avatarUrl");
-            int roleId = Integer.parseInt(req.getParameter("roleId"));
+            String roleIdParam = req.getParameter("roleId");
+            int roleId = 0;
+
+            if (roleIdParam != null && !roleIdParam.trim().isEmpty()) {
+                roleId = Integer.parseInt(roleIdParam);
+            } else {
+                UserDAO dao = new UserDAO();
+                User existingUser = dao.findById(id);
+                if (existingUser != null) {
+                    roleId = existingUser.getRoleId();
+                }
+            }
+
             boolean active = Boolean.parseBoolean(req.getParameter("active"));
 
             String dobParam = req.getParameter("dateOfBirth");
