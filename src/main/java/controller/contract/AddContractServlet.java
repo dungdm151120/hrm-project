@@ -66,8 +66,7 @@ public class AddContractServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setAttribute("contract", contract);
         request.setAttribute("users", userDAO.getAllActiveUsers());
-        request.setAttribute("formAction", request.getContextPath() + "/contracts/add");
         request.setAttribute("error", error);
-        request.getRequestDispatcher("/WEB-INF/views/contract/contract_form.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/contract/add_contract.jsp").forward(request, response);
     }
 }

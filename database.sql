@@ -351,7 +351,8 @@ VALUES
     ('ROLE_UPDATE', 'Update role information', 'Can update role information'),
     ('ROLE_TOGGLE_STATUS', 'Active/deactive role', 'Can activate or deactivate role'),
     ('ROLE_EDIT_PERMISSION', 'Edit role permissions', 'Can edit permissions of role'),
-
+	('ROLE_CREATE', 'Add new role', 'Can create new role'),
+    
     -- Department Management
     ('DEPARTMENT_VIEW_LIST', 'View department list', 'Can view list of departments'),
     ('DEPARTMENT_VIEW_DETAIL', 'View department detail', 'Can view department detail'),
@@ -421,7 +422,8 @@ WHERE r.name = 'ADMIN'
     'ROLE_VIEW_PERMISSION',
     'ROLE_UPDATE',
     'ROLE_TOGGLE_STATUS',
-    'ROLE_EDIT_PERMISSION'
+    'ROLE_EDIT_PERMISSION',
+    'ROLE_CREATE'
 );
 
 -- HR_MANAGER: full HR business management

@@ -84,9 +84,8 @@ public class UpdateContractServlet extends HttpServlet {
                              LaborContract contract, String error)
             throws ServletException, IOException {
         request.setAttribute("contract", contract);
-        request.setAttribute("formAction", request.getContextPath() + "/contracts/update");
         request.setAttribute("error", error);
-        request.getRequestDispatcher("/WEB-INF/views/contract/contract_form.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/contract/update_contract.jsp").forward(request, response);
     }
 
     private void applyImmutableFields(LaborContract current, LaborContract contract) {
