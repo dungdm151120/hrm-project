@@ -1,5 +1,5 @@
 DROP DATABASE IF EXISTS hrm_db;
-CREATE DATABASE hrm_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE hrm_db;
 USE hrm_db;
 
 -- 1. ROLES
@@ -36,7 +36,26 @@ CREATE TABLE positions (
     updated_at DATETIME
 );
 
--- 4. USERS
+-- 4. DEPARTMENT_POSITIONS
+-- Một department có nhiều position
+-- Một position có thể thuộc nhiều department
+
+CREATE TABLE department_positions (
+    department_id INT NOT NULL,
+    position_id INT NOT NULL,
+
+    PRIMARY KEY (department_id, position_id),
+
+    CONSTRAINT fk_department_positions_department
+        FOREIGN KEY (department_id) REFERENCES departments(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_department_positions_position
+        FOREIGN KEY (position_id) REFERENCES positions(id)
+        ON DELETE CASCADE
+);
+
+-- 5. USERS
 
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -74,14 +93,18 @@ CREATE TABLE users (
         FOREIGN KEY (department_id) REFERENCES departments(id),
 
     CONSTRAINT fk_users_positions
-        FOREIGN KEY (position_id) REFERENCES positions(id)
+        FOREIGN KEY (position_id) REFERENCES positions(id),
+
+    CONSTRAINT fk_users_department_positions
+        FOREIGN KEY (department_id, position_id)
+        REFERENCES department_positions(department_id, position_id)
 );
 
 ALTER TABLE departments
 ADD CONSTRAINT fk_departments_manager
     FOREIGN KEY (manager_user_id) REFERENCES users(id);
 
--- 5. PERMISSIONS
+-- 6. PERMISSIONS
 
 CREATE TABLE permissions (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -90,8 +113,7 @@ CREATE TABLE permissions (
     description VARCHAR(255)
 );
 
-
--- 6. ROLE_PERMISSIONS
+-- 7. ROLE_PERMISSIONS
 
 CREATE TABLE role_permissions (
     role_id INT NOT NULL,
@@ -108,7 +130,7 @@ CREATE TABLE role_permissions (
         ON DELETE CASCADE
 );
 
--- 7. PASSWORD RESET REQUESTS
+-- 8. PASSWORD RESET REQUESTS
 
 CREATE TABLE password_reset_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -129,8 +151,7 @@ CREATE TABLE password_reset_requests (
         FOREIGN KEY (handled_by) REFERENCES users(id)
 );
 
--- 8. LABOR CONTRACTS
--- One user can have many labor contracts
+-- 9. LABOR CONTRACTS
 
 CREATE TABLE labor_contracts (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -158,7 +179,7 @@ CREATE TABLE labor_contracts (
         FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- 9. INSERT ROLES
+-- 10. INSERT ROLES
 
 INSERT INTO roles (name, description, active)
 VALUES
@@ -169,7 +190,7 @@ VALUES
     ('PAYROLL_STAFF', 'Handles payroll processing', TRUE),
     ('EMPLOYEE', 'Normal employee with self-service functions', TRUE);
 
--- 10. INSERT DEPARTMENTS
+-- 11. INSERT DEPARTMENTS
 
 INSERT INTO departments (name, description, active)
 VALUES
@@ -178,7 +199,7 @@ VALUES
     ('Finance', 'Finance department', TRUE),
     ('Sales', 'Sales department', TRUE);
 
--- 11. INSERT POSITIONS
+-- 12. INSERT POSITIONS
 
 INSERT INTO positions (name, description, active)
 VALUES
@@ -192,7 +213,71 @@ VALUES
     ('Sales Staff', 'Responsible for sales activities', TRUE),
     ('Employee', 'Normal employee position', TRUE);
 
--- 12. INSERT USERS
+-- 13. INSERT DEPARTMENT_POSITIONS
+
+INSERT INTO department_positions (department_id, position_id)
+VALUES
+    -- Human Resources
+    (
+        (SELECT id FROM departments WHERE name = 'Human Resources'),
+        (SELECT id FROM positions WHERE name = 'HR Manager')
+    ),
+    (
+        (SELECT id FROM departments WHERE name = 'Human Resources'),
+        (SELECT id FROM positions WHERE name = 'HR Staff')
+    ),
+    (
+        (SELECT id FROM departments WHERE name = 'Human Resources'),
+        (SELECT id FROM positions WHERE name = 'Employee')
+    ),
+
+    -- Information Technology
+    (
+        (SELECT id FROM departments WHERE name = 'Information Technology'),
+        (SELECT id FROM positions WHERE name = 'System Administrator')
+    ),
+    (
+        (SELECT id FROM departments WHERE name = 'Information Technology'),
+        (SELECT id FROM positions WHERE name = 'Department Manager')
+    ),
+    (
+        (SELECT id FROM departments WHERE name = 'Information Technology'),
+        (SELECT id FROM positions WHERE name = 'Software Developer')
+    ),
+    (
+        (SELECT id FROM departments WHERE name = 'Information Technology'),
+        (SELECT id FROM positions WHERE name = 'Employee')
+    ),
+
+    -- Finance
+    (
+        (SELECT id FROM departments WHERE name = 'Finance'),
+        (SELECT id FROM positions WHERE name = 'Payroll Staff')
+    ),
+    (
+        (SELECT id FROM departments WHERE name = 'Finance'),
+        (SELECT id FROM positions WHERE name = 'Accountant')
+    ),
+    (
+        (SELECT id FROM departments WHERE name = 'Finance'),
+        (SELECT id FROM positions WHERE name = 'Employee')
+    ),
+
+    -- Sales
+    (
+        (SELECT id FROM departments WHERE name = 'Sales'),
+        (SELECT id FROM positions WHERE name = 'Sales Staff')
+    ),
+    (
+        (SELECT id FROM departments WHERE name = 'Sales'),
+        (SELECT id FROM positions WHERE name = 'Department Manager')
+    ),
+    (
+        (SELECT id FROM departments WHERE name = 'Sales'),
+        (SELECT id FROM positions WHERE name = 'Employee')
+    );
+
+-- 14. INSERT USERS
 -- Default password: 123456
 
 INSERT INTO users (
@@ -224,7 +309,7 @@ VALUES
         'Ho Chi Minh City',
         NULL,
         (SELECT id FROM roles WHERE name = 'ADMIN'),
-        (SELECT id FROM departments WHERE name = 'Human Resources'),
+        (SELECT id FROM departments WHERE name = 'Information Technology'),
         (SELECT id FROM positions WHERE name = 'System Administrator'),
         '2024-01-01',
         'WORKING',
@@ -316,7 +401,7 @@ VALUES
         TRUE
     );
 
--- 13. ASSIGN DEPARTMENT MANAGERS
+-- 15. ASSIGN DEPARTMENT MANAGERS
 
 UPDATE departments
 SET manager_user_id = (SELECT id FROM users WHERE email = 'hrmanager@company.com')
@@ -326,7 +411,7 @@ UPDATE departments
 SET manager_user_id = (SELECT id FROM users WHERE email = 'itmanager@company.com')
 WHERE name = 'Information Technology';
 
--- 14. INSERT PERMISSIONS
+-- 16. INSERT PERMISSIONS
 
 INSERT INTO permissions (code, name, description)
 VALUES
@@ -351,8 +436,8 @@ VALUES
     ('ROLE_UPDATE', 'Update role information', 'Can update role information'),
     ('ROLE_TOGGLE_STATUS', 'Active/deactive role', 'Can activate or deactivate role'),
     ('ROLE_EDIT_PERMISSION', 'Edit role permissions', 'Can edit permissions of role'),
-	('ROLE_CREATE', 'Add new role', 'Can create new role'),
-    
+    ('ROLE_CREATE', 'Add new role', 'Can create new role'),
+
     -- Department Management
     ('DEPARTMENT_VIEW_LIST', 'View department list', 'Can view list of departments'),
     ('DEPARTMENT_VIEW_DETAIL', 'View department detail', 'Can view department detail'),
@@ -374,7 +459,7 @@ VALUES
     ('CONTRACT_VIEW_DETAIL', 'View contract detail', 'Can view contract detail'),
     ('CONTRACT_VIEW_OWN', 'View own contract', 'Can view own labor contract'),
     ('CONTRACT_CREATE', 'Add contract', 'Can create new labor contract'),
-    ('CONTRACT_UPDATE', 'Update contract', 'Can update labor contract'),
+    ('CONTRACT_UPDATE', 'Update labor contract', 'Can update labor contract'),
     ('CONTRACT_TERMINATE', 'Terminate contract', 'Can terminate labor contract'),
     ('CONTRACT_RENEW', 'Renew contract', 'Can renew labor contract'),
 
@@ -396,9 +481,10 @@ VALUES
     ('PAYROLL_CONFIRM', 'Confirm payroll', 'Can confirm payroll'),
     ('PAYROLL_EXPORT_REPORT', 'Export payroll report', 'Can export payroll report');
 
--- 15. ROLE PERMISSIONS
+-- 17. ROLE PERMISSIONS
 
--- ADMIN: system administration only
+-- ADMIN
+
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -426,7 +512,8 @@ WHERE r.name = 'ADMIN'
     'ROLE_CREATE'
 );
 
--- HR_MANAGER: full HR business management
+-- HR_MANAGER
+
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -480,7 +567,8 @@ WHERE r.name = 'HR_MANAGER'
     'PAYROLL_EXPORT_REPORT'
 );
 
--- HR_STAFF: daily HR operations
+-- HR_STAFF
+
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -520,7 +608,8 @@ WHERE r.name = 'HR_STAFF'
     'PAYROLL_VIEW_OWN'
 );
 
--- DEPARTMENT_MANAGER: manage own department scope
+-- DEPARTMENT_MANAGER
+
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -543,7 +632,8 @@ WHERE r.name = 'DEPARTMENT_MANAGER'
     'PAYROLL_VIEW_OWN'
 );
 
--- PAYROLL_STAFF: payroll processing
+-- PAYROLL_STAFF
+
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -570,7 +660,8 @@ WHERE r.name = 'PAYROLL_STAFF'
     'PAYROLL_EXPORT_REPORT'
 );
 
--- EMPLOYEE: self-service
+-- EMPLOYEE
+
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -592,7 +683,7 @@ WHERE r.name = 'EMPLOYEE'
     'PAYROLL_VIEW_OWN'
 );
 
--- 16. SAMPLE LABOR CONTRACTS
+-- 18. SAMPLE LABOR CONTRACTS
 
 INSERT INTO labor_contracts (
     user_id,
@@ -674,7 +765,7 @@ VALUES
         'Sample contract for Employee'
     );
 
--- 17. TEST ACCOUNTS
+-- 19. TEST ACCOUNTS
 
 -- ADMIN:
 -- Email: admin@company.com
