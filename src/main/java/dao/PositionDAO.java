@@ -31,7 +31,21 @@ public class PositionDAO {
 
         return positions;
     }
-
+    public Position findByName(String name) {
+        String sql = "SELECT * FROM positions WHERE name = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToPosition(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     public List<Position> findPositionsAdvanced(String keyword, Boolean active, String sort, int offset, int pageSize) {
         List<Position> positions = new ArrayList<>();
 

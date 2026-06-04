@@ -1,6 +1,7 @@
 package controller.department;
 
 import dao.UserDAO;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,17 +11,26 @@ import java.io.IOException;
 
 @WebServlet(name = "RemoveMemberServlet", value = "/remove_member")
 public class RemoveMemberServlet extends HttpServlet {
-    private final UserDAO userDAO = new UserDAO();
-    private final int empId = 9;
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws ServletException, IOException {
+
         String userIdStr = request.getParameter("userId");
         String deptIdStr = request.getParameter("deptId");
 
-        if (userIdStr != null) {
-            userDAO.updateDepartmentMember(Integer.parseInt(userIdStr), null, empId, false);
-        }
+        try {
+            int userId = Integer.parseInt(userIdStr);
+            UserDAO dao = new UserDAO();
+            String result = dao.removeMemberFromDepartment(userId);
 
-        response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptIdStr);
+            if ("SUCCESS".equals(result)) {
+                response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptIdStr + "&msg=remove_success");
+            } else if ("ERROR_IS_MANAGER".equals(result)) {
+                response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptIdStr + "&error=cannot_remove_manager");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptIdStr + "&error=remove_failed");
+            }
+        } catch (Exception e) {
+            response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptIdStr + "&error=invalid_data");
+        }
     }
 }

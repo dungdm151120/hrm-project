@@ -36,6 +36,54 @@ public class DepartmentDAO {
         }
         return departments;
     }
+    public boolean updateManager(int deptId, int managerUserId) {
+        String sql = "UPDATE departments SET manager_user_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, managerUserId);
+            ps.setInt(2, deptId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    // Lấy toàn bộ dept ngoại trừ dept hiện tại
+    public List<Department> getDepartmentsExcept(int excludeDeptId) {
+        List<Department> list = new ArrayList<>();
+
+        String sql = "SELECT * FROM departments d WHERE d.active = true AND d.id != ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, excludeDeptId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Department d = new Department();
+                    d.setId(rs.getInt("id"));
+                    d.setName(rs.getString("name"));
+                    list.add(d);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    public boolean removeManager(int deptId) {
+        String sql = "UPDATE departments SET manager_user_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, deptId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public Department getDepartmentByIdWithManager(int id) {
         String sql = "SELECT d.*, u.full_name AS manager_name FROM departments d " +
                 "LEFT JOIN users u ON d.manager_user_id = u.id WHERE d.id = ?";
@@ -100,6 +148,7 @@ public class DepartmentDAO {
         }
         return -1;
     }
+
 
     public boolean isManager(int userId) {
         String sql = "SELECT COUNT(*) FROM departments WHERE manager_user_id = ?";
@@ -193,6 +242,23 @@ public class DepartmentDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    // Kiểm tra Dept có đang active ko
+    public boolean isDepartmentActive(int deptId) {
+        String sql = "SELECT active FROM departments WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, deptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("active");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private Department mapRow(ResultSet rs) throws SQLException {

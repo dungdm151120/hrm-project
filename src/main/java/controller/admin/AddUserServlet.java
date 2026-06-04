@@ -19,9 +19,6 @@ public class AddUserServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        RoleDAO dao = new RoleDAO();
-        List<Role> roles = dao.getAllRoles();
-        req.setAttribute("roles", roles);
         req.getRequestDispatcher("/WEB-INF/views/admin/add_user.jsp").forward(req, resp);
     }
 
@@ -33,16 +30,25 @@ public class AddUserServlet extends HttpServlet {
             String password = req.getParameter("password");
             String phone = req.getParameter("phone");
             String gender = req.getParameter("gender");
-            String address = req.getParameter("address");
-            String avatarUrl = req.getParameter("avatarUrl");
-            int roleId = Integer.parseInt(req.getParameter("roleId"));
-            boolean active = Boolean.parseBoolean(req.getParameter("active"));
-
             String dobParam = req.getParameter("dateOfBirth");
             LocalDateTime dateOfBirth = null;
             if (dobParam != null && !dobParam.trim().isEmpty()) {
                 dateOfBirth = java.time.LocalDate.parse(dobParam).atStartOfDay();
             }
+            String address = req.getParameter("address");
+            String avatarUrl = req.getParameter("avatarUrl");
+            int roleId = Integer.parseInt(req.getParameter("roleId"));
+            String deptParam = req.getParameter("departmentId");
+            int departmentId = 0;
+            if (deptParam != null && !deptParam.trim().isEmpty()) {
+                departmentId = Integer.parseInt(deptParam); // Trả về: 1, 2, 3, hoặc 4
+            }
+            String posParam = req.getParameter("positionId");
+            int positionId = 0;
+            if (posParam != null && !posParam.trim().isEmpty()) {
+                positionId = Integer.parseInt(posParam); // Trả về: 2, 3, 4, 5, 6, 7, 8, 9
+            }
+            boolean active = Boolean.parseBoolean(req.getParameter("active"));
 
             User newUser = new User();
             newUser.setFullName(fullName);
@@ -54,7 +60,10 @@ public class AddUserServlet extends HttpServlet {
             newUser.setAddress(address);
             newUser.setAvatarUrl(avatarUrl);
             newUser.setRoleId(roleId);
+            newUser.setDepartmentId(departmentId);
+            newUser.setPositionId(positionId);
             newUser.setActive(active);
+
 
             UserDAO dao = new UserDAO();
             boolean isSuccess = dao.addUser(newUser);
