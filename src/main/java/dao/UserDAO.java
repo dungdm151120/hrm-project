@@ -1051,6 +1051,18 @@ public class UserDAO {
         }
     }
 
+    public boolean removeDepartmentFromUsers(int departmentId) {
+        String sql = "UPDATE users SET department_id = NULL WHERE department_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
     //
     public int countUsers(String keyword, Boolean active) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE 1=1");

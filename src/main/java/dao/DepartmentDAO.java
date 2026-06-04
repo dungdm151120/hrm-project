@@ -72,7 +72,17 @@ public class DepartmentDAO {
         }
         return list;
     }
-
+    public boolean removeManager(int deptId) {
+        String sql = "UPDATE departments SET manager_user_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, deptId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
     public Department getDepartmentByIdWithManager(int id) {
         String sql = "SELECT d.*, u.full_name AS manager_name FROM departments d " +
                 "LEFT JOIN users u ON d.manager_user_id = u.id WHERE d.id = ?";
