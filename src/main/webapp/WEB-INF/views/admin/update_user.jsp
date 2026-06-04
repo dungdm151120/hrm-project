@@ -73,18 +73,23 @@
             <input type="text" id="avatarUrl" name="avatarUrl" value="<%= userToUpdate.getAvatarUrl() %>">
         </div>
 
-       <div class="form-group">
-           <label for="roleId">Role <span style="color: var(--danger);">*</span></label>
-           <select id="roleId" name="roleId" required style="width: 100%; height: 38px; border-radius: 4px; border: 1px solid #ccc; padding: 0 10px;">
-               <option value="" disabled>-- Select a role --</option>
+       <c:if test="${sessionScope.currentUser.roleId == 1}">
+           <div class="form-group">
+               <label for="roleId">Role <span style="color: var(--danger);">*</span></label>
+               <select id="roleId" name="roleId" required style="width: 100%; height: 38px; border-radius: 4px; border: 1px solid #ccc; padding: 0 10px;">
+                   <option value="" disabled>-- Select a role --</option>
+                   <c:forEach items="${roles}" var="role">
+                       <option value="${role.id}" ${role.id == userToUpdate.roleId ? 'selected' : ''}>
+                           ${role.name}
+                       </option>
+                   </c:forEach>
+               </select>
+           </div>
+       </c:if>
 
-               <c:forEach items="${roles}" var="role">
-                   <option value="${role.id}" ${role.id == userToUpdate.roleId ? 'selected' : ''}>
-                       ${role.name}
-                   </option>
-               </c:forEach>
-           </select>
-       </div>
+       <c:if test="${sessionScope.currentUser.roleId != 1}">
+           <input type="hidden" name="roleId" value="${userToUpdate.roleId}">
+       </c:if>
 
         <div class="form-group">
             <label>Active Status</label>
