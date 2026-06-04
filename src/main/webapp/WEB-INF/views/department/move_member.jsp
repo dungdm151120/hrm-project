@@ -15,6 +15,7 @@
 
   <form action="${pageContext.request.contextPath}/move_member" method="POST">
     <input type="hidden" name="userId" value="${user.id}">
+    <input type="hidden" name="currentDeptId" value="${user.departmentId}">
 
     <div class="form-group">
       <label>Select New Department:</label>
