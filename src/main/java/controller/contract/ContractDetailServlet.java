@@ -39,7 +39,10 @@ public class ContractDetailServlet extends HttpServlet {
         }
 
         request.setAttribute("contract", contract);
-        request.setAttribute("canUpdateContract", !ownContractView && ContractRequestHelper.hasPermission(request, "CONTRACT_UPDATE"));
+        request.setAttribute("canUpdateContract",
+                !ownContractView
+                        && !"TERMINATED".equals(contract.getStatus())
+                        && ContractRequestHelper.hasPermission(request, "CONTRACT_UPDATE"));
         request.setAttribute("canTerminateContract", !ownContractView && ContractRequestHelper.hasPermission(request, "CONTRACT_TERMINATE"));
         request.setAttribute("backUrl", request.getContextPath() + (ownContractView ? "/my-contract" : "/contracts"));
         request.getRequestDispatcher("/WEB-INF/views/contract/contract_detail.jsp").forward(request, response);
