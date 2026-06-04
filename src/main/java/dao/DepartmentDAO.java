@@ -36,7 +36,18 @@ public class DepartmentDAO {
         }
         return departments;
     }
-
+    public boolean updateManager(int deptId, int managerUserId) {
+        String sql = "UPDATE departments SET manager_user_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, managerUserId);
+            ps.setInt(2, deptId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
     // Lấy toàn bộ dept ngoại trừ dept hiện tại
     public List<Department> getDepartmentsExcept(int excludeDeptId) {
         List<Department> list = new ArrayList<>();

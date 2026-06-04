@@ -933,7 +933,44 @@ public class UserDAO {
         }
         return "ERROR_FAILED";
     }
-
+    public boolean updateUserPosition(int userId, int positionId) {
+        String sql = "UPDATE users SET position_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, positionId);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    public List<User> findActiveByDepartmentId(int departmentId) {
+        List<User> users = new ArrayList<>();
+        String sql = """
+            SELECT u.id, u.full_name, u.email, u.phone, u.active,
+                   u.department_id, u.position_id,
+                   p.name AS position_name,
+                   d.name AS department_name
+            FROM users u
+            LEFT JOIN departments d ON d.id = u.department_id
+            LEFT JOIN positions p ON p.id = u.position_id
+            WHERE u.department_id = ? AND u.active = TRUE
+            ORDER BY u.full_name
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    users.add(mapEmployeeResultSetToUser(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
     //Remove
     public String removeMemberFromDepartment(int userId) {
         String checkPositionSql = "SELECT p.name FROM users u " +
