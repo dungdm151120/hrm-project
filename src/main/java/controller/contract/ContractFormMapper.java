@@ -32,6 +32,10 @@ final class ContractFormMapper {
         contract.setFileUrl(trimToNull(request.getParameter("fileUrl")));
         contract.setNote(trimToNull(request.getParameter("note")));
 
+        if ("INDEFINITE_TERM".equals(contract.getContractType())) {
+            contract.setEndDate(null);
+        }
+
         if (contract.getEndDate() != null && !contract.getEndDate().isAfter(contract.getStartDate())) {
             throw new IllegalArgumentException("End date must be after start date.");
         }
