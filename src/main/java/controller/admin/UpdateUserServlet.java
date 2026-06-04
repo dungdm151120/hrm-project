@@ -29,10 +29,6 @@ public class UpdateUserServlet extends HttpServlet {
         UserDAO dao = new UserDAO();
         User user = dao.findById(userId);
 
-        RoleDAO daoR = new RoleDAO();
-        List<Role> roles = daoR.getAllRoles();
-
-        req.setAttribute("roles", roles);
         req.setAttribute("userToUpdate", user);
         req.getRequestDispatcher("/WEB-INF/views/admin/update_user.jsp").forward(req, resp);
     }
@@ -48,6 +44,17 @@ public class UpdateUserServlet extends HttpServlet {
             String address = req.getParameter("address");
             String avatarUrl = req.getParameter("avatarUrl");
             int roleId = Integer.parseInt(req.getParameter("roleId"));
+            String deptParam = req.getParameter("departmentId");
+            int departmentId = 0;
+            if (deptParam != null && !deptParam.trim().isEmpty()) {
+                departmentId = Integer.parseInt(deptParam);
+            }
+
+            String posParam = req.getParameter("positionId");
+            int positionId = 0;
+            if (posParam != null && !posParam.trim().isEmpty()) {
+                positionId = Integer.parseInt(posParam);
+            }
             boolean active = Boolean.parseBoolean(req.getParameter("active"));
 
             String dobParam = req.getParameter("dateOfBirth");
@@ -66,6 +73,8 @@ public class UpdateUserServlet extends HttpServlet {
             updatedUser.setAddress(address);
             updatedUser.setAvatarUrl(avatarUrl);
             updatedUser.setRoleId(roleId);
+            updatedUser.setDepartmentId(departmentId);
+            updatedUser.setPositionId(positionId);
             updatedUser.setActive(active);
 
             UserDAO dao = new UserDAO();
