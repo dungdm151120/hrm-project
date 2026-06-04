@@ -103,7 +103,7 @@
                     <td>${(currentPage - 1) * pageSize + s.index + 1}</td>
                     <td><strong>${user.fullName}</strong></td>
                     <td>${not empty user.departmentName ? user.departmentName : 'N/A'}</td>
-                    <td>${user.positionName}</td>
+                    <td>${not empty user.positionName ? user.positionName : 'N/A'}</td>
                     <td>
                         <c:choose>
                             <c:when test="${user.active}">
