@@ -137,57 +137,85 @@
     </div>
 
     <div class="pagination employee-pagination">
-        <span class="page-link active">
+        <c:url var="firstPageUrl" value="/admin/departments/employees">
+            <c:param name="id" value="${id}" />
+            <c:param name="keyword" value="${keyword}" />
+            <c:param name="status" value="${status}" />
+            <c:param name="sort" value="${sort}" />
+            <c:param name="page" value="1" />
+        </c:url>
+        <c:url var="previousPageUrl" value="/admin/departments/employees">
+            <c:param name="id" value="${id}" />
+            <c:param name="keyword" value="${keyword}" />
+            <c:param name="status" value="${status}" />
+            <c:param name="sort" value="${sort}" />
+            <c:param name="page" value="${currentPage - 1}" />
+        </c:url>
+        <c:url var="nextPageUrl" value="/admin/departments/employees">
+            <c:param name="id" value="${id}" />
+            <c:param name="keyword" value="${keyword}" />
+            <c:param name="status" value="${status}" />
+            <c:param name="sort" value="${sort}" />
+            <c:param name="page" value="${currentPage + 1}" />
+        </c:url>
+        <c:url var="lastPageUrl" value="/admin/departments/employees">
+            <c:param name="id" value="${id}" />
+            <c:param name="keyword" value="${keyword}" />
+            <c:param name="status" value="${status}" />
+            <c:param name="sort" value="${sort}" />
+            <c:param name="page" value="${totalPages}" />
+        </c:url>
+
+        <c:choose>
+            <c:when test="${currentPage <= 1 || totalPages <= 1}">
+                <span class="page-link disabled">First</span>
+            </c:when>
+            <c:otherwise>
+                <a href="${firstPageUrl}" class="page-link">First</a>
+            </c:otherwise>
+        </c:choose>
+
+        <c:choose>
+            <c:when test="${currentPage <= 1 || totalPages <= 1}">
+                <span class="page-link disabled">Previous</span>
+            </c:when>
+            <c:otherwise>
+                <a href="${previousPageUrl}" class="page-link">Previous</a>
+            </c:otherwise>
+        </c:choose>
+
+        <span class="page-link">
+            Page
+            <span class="page-link active">
+                <c:choose>
+                    <c:when test="${totalPages == 0}">1</c:when>
+                    <c:otherwise>${currentPage}</c:otherwise>
+                </c:choose>
+            </span>
+            /
             <c:choose>
-                <c:when test="${totalPages == 0}">1/1</c:when>
-                <c:otherwise>${currentPage}/${totalPages}</c:otherwise>
+                <c:when test="${totalPages == 0}">1</c:when>
+                <c:otherwise>${totalPages}</c:otherwise>
             </c:choose>
         </span>
 
-        <c:if test="${totalPages > 1}">
-            <c:choose>
-                <c:when test="${currentPage <= 1}">
-                    <span class="page-link disabled">Previous</span>
-                </c:when>
-                <c:otherwise>
-                    <c:url var="previousPageUrl" value="/admin/departments/employees">
-                        <c:param name="id" value="${id}" />
-                        <c:param name="keyword" value="${keyword}" />
-                        <c:param name="status" value="${status}" />
-                        <c:param name="sort" value="${sort}" />
-                        <c:param name="page" value="${currentPage - 1}" />
-                    </c:url>
-                    <a href="${previousPageUrl}" class="page-link">Previous</a>
-                </c:otherwise>
-            </c:choose>
+        <c:choose>
+            <c:when test="${currentPage >= totalPages || totalPages <= 1}">
+                <span class="page-link disabled">Next</span>
+            </c:when>
+            <c:otherwise>
+                <a href="${nextPageUrl}" class="page-link">Next</a>
+            </c:otherwise>
+        </c:choose>
 
-            <c:forEach begin="1" end="${totalPages}" var="pageNumber">
-                <c:url var="pageUrl" value="/admin/departments/employees">
-                    <c:param name="id" value="${id}" />
-                    <c:param name="keyword" value="${keyword}" />
-                    <c:param name="status" value="${status}" />
-                    <c:param name="sort" value="${sort}" />
-                    <c:param name="page" value="${pageNumber}" />
-                </c:url>
-                <a href="${pageUrl}" class="page-link ${currentPage == pageNumber ? 'active' : ''}">${pageNumber}</a>
-            </c:forEach>
-
-            <c:choose>
-                <c:when test="${currentPage >= totalPages}">
-                    <span class="page-link disabled">Next</span>
-                </c:when>
-                <c:otherwise>
-                    <c:url var="nextPageUrl" value="/admin/departments/employees">
-                        <c:param name="id" value="${id}" />
-                        <c:param name="keyword" value="${keyword}" />
-                        <c:param name="status" value="${status}" />
-                        <c:param name="sort" value="${sort}" />
-                        <c:param name="page" value="${currentPage + 1}" />
-                    </c:url>
-                    <a href="${nextPageUrl}" class="page-link">Next</a>
-                </c:otherwise>
-            </c:choose>
-        </c:if>
+        <c:choose>
+            <c:when test="${currentPage >= totalPages || totalPages <= 1}">
+                <span class="page-link disabled">Last</span>
+            </c:when>
+            <c:otherwise>
+                <a href="${lastPageUrl}" class="page-link">Last</a>
+            </c:otherwise>
+        </c:choose>
     </div>
 </div>
 <script>
