@@ -23,6 +23,11 @@ public class PositionListServlet extends HttpServlet {
         String sort = request.getParameter("sort");
         String pageParam = request.getParameter("page");
 
+        // Mặc định sắp xếp cũ nhất trước nếu không có tham số sort
+        if (sort == null || sort.trim().isEmpty()) {
+            sort = "id_asc";
+        }
+
         Boolean active = null;
         if (statusParam != null && !statusParam.isEmpty() && !"all".equals(statusParam)) {
             active = Boolean.parseBoolean(statusParam);

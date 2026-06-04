@@ -1,12 +1,14 @@
 package controller.admin;
 
 import dao.PositionDAO;
+import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.Position;
 
 import java.io.IOException;
 
@@ -32,23 +34,43 @@ public class ChangePositionStatusServlet extends HttpServlet {
 
         try {
             int positionId = Integer.parseInt(idParam);
-
             boolean newStatus = "activate".equalsIgnoreCase(actionParam);
 
-            PositionDAO dao = new PositionDAO();
-            boolean isUpdated = dao.updatePositionStatus(positionId, newStatus);
+            PositionDAO positionDAO = new PositionDAO();
+
+            if (!newStatus) {
+                Position position = positionDAO.findById(positionId);
+                if (position != null) {
+                    String posName = position.getName();
+                    if ("System Administrator".equalsIgnoreCase(posName) ||
+                            "HR Manager".equalsIgnoreCase(posName) ||
+                            "Department Manager".equalsIgnoreCase(posName)) {
+                        session.setAttribute("error", "Không thể vô hiệu hóa vị trí quản lý: " + posName);
+                        response.sendRedirect(request.getContextPath() + "/position/list");
+                        return;
+                    }
+                }
+            }
+
+            boolean isUpdated = positionDAO.updatePositionStatus(positionId, newStatus);
 
             if (isUpdated) {
-                session.setAttribute("message", "Status changed successfully!");
+                if (!newStatus) { // deactivate
+                    UserDAO userDAO = new UserDAO();
+                    userDAO.clearPositionForUsers(positionId);
+                    session.setAttribute("message", "Đã vô hiệu hóa vị trí và xóa khỏi tất cả nhân viên đang giữ.");
+                } else {
+                    session.setAttribute("message", "Đã kích hoạt vị trí thành công.");
+                }
             } else {
-                session.setAttribute("error", "Status changed successfully!");
+                session.setAttribute("error", "Thay đổi trạng thái thất bại.");
             }
 
         } catch (NumberFormatException e) {
             e.printStackTrace();
+            session.setAttribute("error", "Dữ liệu không hợp lệ.");
         }
 
         response.sendRedirect(request.getContextPath() + "/position/list");
     }
-
 }

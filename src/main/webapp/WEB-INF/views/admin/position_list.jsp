@@ -8,57 +8,86 @@
     <title>Position List | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <style>
-            .search-filter {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                flex-wrap: wrap;
-                margin-bottom: 1.5rem;
-            }
-            .search-filter input[type="text"],
-            .search-filter select {
-                padding: 0.5rem;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-            }
-            .pagination {
-                margin-top: 1.5rem;
-                display: flex;
-                gap: 0.5rem;
-                align-items: center;
-                justify-content: center;
-            }
-            .pagination a, .pagination span {
-                padding: 0.25rem 0.75rem;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                text-decoration: none;
-                color: #333;
-                display: inline-block;
-            }
-            .pagination a:hover {
-                background: #007bff;
-                color: #fff;
-                border-color: #007bff;
-            }
-            .pagination .current {
-                background: #007bff;
-                color: #fff;
-                border-color: #007bff;
-                font-weight: bold;
-            }
-            .pagination .disabled {
-                pointer-events: none;
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-        </style>
+        .search-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .search-filter input[type="text"],
+        .search-filter select {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .pagination {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+        }
+        .pagination a, .pagination span {
+            padding: 0.25rem 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            display: inline-block;
+        }
+        .pagination a:hover {
+            background: #007bff;
+            color: #fff;
+            border-color: #007bff;
+        }
+        .pagination .current {
+            background: #007bff;
+            color: #fff;
+            border-color: #007bff;
+            font-weight: bold;
+        }
+        .pagination .disabled {
+            pointer-events: none;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
 
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="container" style="margin-top: 2rem;">
+    <%-- Hiển thị thông báo từ session --%>
+    <c:if test="${not empty sessionScope.message}">
+        <div class="alert alert-success">
+            ${sessionScope.message}
+        </div>
+        <% session.removeAttribute("message"); %>
+    </c:if>
+    <c:if test="${not empty sessionScope.error}">
+        <div class="alert alert-error">
+            ${sessionScope.error}
+        </div>
+        <% session.removeAttribute("error"); %>
+    </c:if>
+
     <div class="page-header">
         <h2>Position List</h2>
         <a href="${pageContext.request.contextPath}/position/add" class="btn btn-primary">Add New Position</a>

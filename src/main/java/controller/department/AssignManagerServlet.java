@@ -43,7 +43,6 @@ public class AssignManagerServlet extends HttpServlet {
             return;
         }
 
-        // Lấy danh sách nhân viên active trong phòng ban
         List<User> employees = userDAO.findActiveByDepartmentId(deptId);
 
         request.setAttribute("department", department);
@@ -62,7 +61,6 @@ public class AssignManagerServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
 
-        // Validate input
         if (departmentIdParam == null || departmentIdParam.trim().isEmpty()
                 || userIdParam == null || userIdParam.trim().isEmpty()) {
             session.setAttribute("error", "Vui lòng chọn một nhân viên.");
@@ -88,7 +86,7 @@ public class AssignManagerServlet extends HttpServlet {
             return;
         }
 
-        // Kiểm tra xem người được chọn có phải là trưởng phòng hiện tại không
+
         Integer currentManagerId = department.getManagerUserId();
         if (currentManagerId != null && currentManagerId == newManagerId) {
             session.setAttribute("error", "Nhân viên này đã là trưởng phòng của phòng ban này.");
@@ -96,47 +94,41 @@ public class AssignManagerServlet extends HttpServlet {
             return;
         }
 
-        // Xác định phòng ban có phải Human Resources không
         boolean isHR = "Human Resources".equalsIgnoreCase(department.getName());
 
-        // 1. Xử lý trưởng phòng cũ (nếu có)
+        // Xử lý trưởng phòng cũ
         if (currentManagerId != null) {
-            String oldPositionName;
-            if (isHR) {
-                oldPositionName = "HR Staff";
-            } else {
-                oldPositionName = "Employee";
-            }
-
+            String oldPositionName = isHR ? "HR Staff" : "Employee";
             Position oldPosition = positionDAO.findByName(oldPositionName);
-            if (oldPosition != null) {
+
+            if (oldPosition != null && oldPosition.isActive()) {
                 userDAO.updateUserPosition(currentManagerId, oldPosition.getId());
             } else {
-                session.setAttribute("error", "Không tìm thấy vị trí '" + oldPositionName + "' trong hệ thống.");
-                response.sendRedirect("assign-manager?id=" + deptId);
-                return;
+
+                userDAO.updateUserPosition(currentManagerId, null);
             }
         }
 
-        // 2. Xác định vị trí mới cho trưởng phòng mới
-        String newPositionName;
-        if (isHR) {
-            newPositionName = "HR Manager";
-        } else {
-            newPositionName = "Department Manager";
-        }
 
+        String newPositionName = isHR ? "HR Manager" : "Department Manager";
         Position newPosition = positionDAO.findByName(newPositionName);
+
         if (newPosition == null) {
             session.setAttribute("error", "Không tìm thấy vị trí '" + newPositionName + "' trong hệ thống.");
             response.sendRedirect("assign-manager?id=" + deptId);
             return;
         }
 
-        // 3. Cập nhật position cho người được chọn
+        if (!newPosition.isActive()) {
+            session.setAttribute("error", "Vị trí '" + newPositionName + "' hiện không khả dụng (đã bị vô hiệu).");
+            response.sendRedirect("assign-manager?id=" + deptId);
+            return;
+        }
+
+
         boolean updatedPosition = userDAO.updateUserPosition(newManagerId, newPosition.getId());
 
-        // 4. Cập nhật manager cho phòng ban
+
         boolean updatedManager = departmentDAO.updateManager(deptId, newManagerId);
 
         if (updatedPosition && updatedManager) {

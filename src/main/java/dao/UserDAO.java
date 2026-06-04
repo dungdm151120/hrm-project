@@ -933,17 +933,34 @@ public class UserDAO {
         }
         return "ERROR_FAILED";
     }
-    public boolean updateUserPosition(int userId, int positionId) {
+    public boolean updateUserPosition(int userId, Integer positionId) {
         String sql = "UPDATE users SET position_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, positionId);
+            if (positionId == null || positionId <= 0) {
+                ps.setNull(1, Types.INTEGER);
+            } else {
+                ps.setInt(1, positionId);
+            }
             ps.setInt(2, userId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public boolean clearPositionForUsers(int positionId) {
+        String sql = "UPDATE users SET position_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE position_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, positionId);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
     public List<User> findActiveByDepartmentId(int departmentId) {
         List<User> users = new ArrayList<>();

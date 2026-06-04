@@ -86,6 +86,7 @@
         <div class="header-actions">
             <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${department.id}" class="btn btn-secondary">View employee list</a>
             <a href="${pageContext.request.contextPath}/admin/departments/assign-manager?id=${department.id}" class="btn btn-primary">Assign Manager</a>
+            <a href="${pageContext.request.contextPath}/admin/departments/assign-positions?id=${department.id}" class="btn btn-primary">Assign Positions</a>
             <a href="${pageContext.request.contextPath}/admin/departments" class="btn btn-secondary">← Back to List</a>
         </div>
     </div>

@@ -17,7 +17,7 @@ public class PositionDAO {
                 FROM positions p
                 LEFT JOIN department_positions dp ON p.id = dp.position_id
                 LEFT JOIN departments d ON dp.department_id = d.id
-                ORDER BY p.id DESC
+                ORDER BY p.id 
                 """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -126,6 +126,31 @@ public class PositionDAO {
         return list;
     }
 
+
+    public List<Position> getAssignablePositionsByDepartment(int departmentId) {
+        List<Position> list = new ArrayList<>();
+        String sql = "SELECT p.id, p.name FROM positions p " +
+                "JOIN department_positions dp ON p.id = dp.position_id " +
+                "WHERE dp.department_id = ? " +
+                "AND p.active = true " +
+                "AND p.name NOT IN ('HR Manager', 'System Administrator', 'Department Manager') " +
+                "ORDER BY p.name";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Position pos = new Position();
+                    pos.setId(rs.getInt("id"));
+                    pos.setName(rs.getString("name"));
+                    list.add(pos);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
     public int countPositions(String keyword, Boolean active) {
         int totalRows = 0;
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM positions WHERE 1=1 ");
