@@ -24,7 +24,7 @@ public class MoveMemberServlet extends HttpServlet {
         String userIdStr = request.getParameter("userId");
         String currentDeptIdStr = request.getParameter("currentDeptId");
 
-        if (userIdStr == null || userIdStr.isEmpty() ) {
+        if (userIdStr == null || userIdStr.isEmpty() || currentDeptIdStr == null || currentDeptIdStr.isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/admin/departments/list");
             return;
         }
@@ -52,7 +52,8 @@ public class MoveMemberServlet extends HttpServlet {
         String newDeptIdStr = request.getParameter("newDeptId");
         String currentDeptIdStr = request.getParameter("currentDeptId");
 
-        if (userIdStr == null || newDeptIdStr == null || currentDeptIdStr == null) {
+        if (userIdStr == null || newDeptIdStr == null || currentDeptIdStr == null
+                || userIdStr.isEmpty() || newDeptIdStr.isEmpty() || currentDeptIdStr.isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/admin/departments/list?error=invalid_access");
             return;
         }
