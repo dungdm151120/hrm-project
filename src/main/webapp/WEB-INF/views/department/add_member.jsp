@@ -27,7 +27,7 @@
       <table>
         <thead>
         <tr>
-          <th style="width: 60px; text-align: center;">Chọn</th>
+          <th style="width: 60px; text-align: center;">Select</th>
           <th>Full Name</th>
         </tr>
         </thead>
