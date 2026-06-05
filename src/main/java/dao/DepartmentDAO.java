@@ -128,23 +128,66 @@ public class DepartmentDAO {
     }
 
     public int addDepartment(Department department) {
-        String sql = "INSERT INTO departments (name, description, manager_user_id, active) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, department.getName());
-            ps.setString(2, department.getDescription());
-            if (department.getManagerUserId() != null) {
-                ps.setInt(3, department.getManagerUserId());
-            } else {
-                ps.setNull(3, Types.INTEGER);
+        String sqlDept = "INSERT INTO departments (name, description, manager_user_id, active) VALUES (?, ?, ?, ?)";
+        // SQL để thêm quan hệ phòng ban - vị trí
+        String sqlDeptPos = "INSERT INTO department_positions (department_id, position_id) VALUES (?, ?)";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            int newDeptId = -1;
+            // 1. Thêm phòng ban
+            try (PreparedStatement psDept = conn.prepareStatement(sqlDept, Statement.RETURN_GENERATED_KEYS)) {
+                psDept.setString(1, department.getName());
+                psDept.setString(2, department.getDescription());
+                if (department.getManagerUserId() != null) {
+                    psDept.setInt(3, department.getManagerUserId());
+                } else {
+                    psDept.setNull(3, Types.INTEGER);
+                }
+                psDept.setBoolean(4, department.isActive());
+                psDept.executeUpdate();
+
+                try (ResultSet rs = psDept.getGeneratedKeys()) {
+                    if (rs.next()) newDeptId = rs.getInt(1);
+                }
             }
-            ps.setBoolean(4, department.isActive());
-            ps.executeUpdate();
-            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
-                if (generatedKeys.next()) return generatedKeys.getInt(1);
+
+            if (newDeptId != -1) {
+                // 2. Lấy ID của 'Employee' và 'Department Manager'
+                int empPosId = getPositionIdByName(conn, "Employee");
+                int mgrPosId = getPositionIdByName(conn, "Department Manager");
+
+                // 3. Gán vị trí cho phòng ban mới
+                try (PreparedStatement psPos = conn.prepareStatement(sqlDeptPos)) {
+                    // Gán Employee
+                    psPos.setInt(1, newDeptId);
+                    psPos.setInt(2, empPosId);
+                    psPos.executeUpdate();
+
+                    // Gán Department Manager
+                    psPos.setInt(1, newDeptId);
+                    psPos.setInt(2, mgrPosId);
+                    psPos.executeUpdate();
+                }
             }
+
+            conn.commit();
+            return newDeptId;
         } catch (SQLException e) {
             e.printStackTrace();
+            return -1;
+        }
+    }
+
+    // Lấy ID của position bằng Position Name
+    private int getPositionIdByName(Connection conn, String positionName) throws SQLException {
+        String sql = "SELECT id FROM positions WHERE name = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, positionName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("id");
+            }
         }
         return -1;
     }
