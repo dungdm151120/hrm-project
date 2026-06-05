@@ -25,6 +25,15 @@
         </div>
 
         <div class="dashboard-content">
+            <c:if test="${not empty sessionScope.message}">
+                <div class="alert alert-success">${sessionScope.message}</div>
+                <c:remove var="message" scope="session"/>
+            </c:if>
+            <c:if test="${not empty sessionScope.error}">
+                <div class="alert alert-error">${sessionScope.error}</div>
+                <c:remove var="error" scope="session"/>
+            </c:if>
+
             <div class="search-filter">
                 <form action="${pageContext.request.contextPath}/user_list" method="GET">
                     <input type="text" name="keyword" placeholder="Search name" value="${keyword}">

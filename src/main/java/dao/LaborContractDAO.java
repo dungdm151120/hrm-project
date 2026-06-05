@@ -236,6 +236,41 @@ public class LaborContractDAO {
         return false;
     }
 
+    public boolean canDeactivateUser(int userId) {
+        String sql = """
+                SELECT
+                    EXISTS (
+                        SELECT 1
+                        FROM labor_contracts
+                        WHERE user_id = ?
+                          AND status = 'ACTIVE'
+                    ) AS has_active_contract,
+                    EXISTS (
+                        SELECT 1
+                        FROM labor_contracts
+                        WHERE user_id = ?
+                          AND status IN ('EXPIRED', 'TERMINATED')
+                    ) AS has_finished_contract
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return !rs.getBoolean("has_active_contract")
+                            && rs.getBoolean("has_finished_contract");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     private String baseSelect() {
         return """
                 SELECT lc.*, u.employee_code, u.full_name AS employee_name, u.email AS employee_email
