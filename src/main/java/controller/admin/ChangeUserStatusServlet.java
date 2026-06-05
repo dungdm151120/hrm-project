@@ -39,7 +39,7 @@ public class ChangeUserStatusServlet extends HttpServlet {
             if (!newStatus) {
                 LaborContractDAO contractDAO = new LaborContractDAO();
                 if (!contractDAO.canDeactivateUser(userId)) {
-                    session.setAttribute("error", "User can only be deactivated when their contract is expired or terminated.");
+                    session.setAttribute("error", "User cannot be deactivated while they still have an active contract.");
                     resp.sendRedirect(req.getContextPath() + "/user_list");
                     return;
                 }

@@ -74,7 +74,7 @@ public class UpdateUserServlet extends HttpServlet {
             if (existingUser.isActive() && !active) {
                 LaborContractDAO contractDAO = new LaborContractDAO();
                 if (!contractDAO.canDeactivateUser(id)) {
-                    req.setAttribute("error", "User can only be deactivated when their contract is expired or terminated.");
+                    req.setAttribute("error", "User cannot be deactivated while they still have an active contract.");
                     req.setAttribute("userToUpdate", existingUser);
                     req.setAttribute("roles", new RoleDAO().getAllRoles());
                     req.getRequestDispatcher("/WEB-INF/views/admin/update_user.jsp").forward(req, resp);

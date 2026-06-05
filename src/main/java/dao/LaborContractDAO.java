@@ -238,30 +238,21 @@ public class LaborContractDAO {
 
     public boolean canDeactivateUser(int userId) {
         String sql = """
-                SELECT
-                    EXISTS (
-                        SELECT 1
-                        FROM labor_contracts
-                        WHERE user_id = ?
-                          AND status = 'ACTIVE'
-                    ) AS has_active_contract,
-                    EXISTS (
-                        SELECT 1
-                        FROM labor_contracts
-                        WHERE user_id = ?
-                          AND status IN ('EXPIRED', 'TERMINATED')
-                    ) AS has_finished_contract
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM labor_contracts
+                    WHERE user_id = ?
+                      AND status = 'ACTIVE'
+                ) AS has_active_contract
                 """;
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            ps.setInt(2, userId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return !rs.getBoolean("has_active_contract")
-                            && rs.getBoolean("has_finished_contract");
+                    return !rs.getBoolean("has_active_contract");
                 }
             }
         } catch (Exception e) {

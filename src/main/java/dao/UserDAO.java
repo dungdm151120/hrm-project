@@ -2,6 +2,7 @@ package dao;
 
 import model.User;
 import util.DBConnection;
+import util.PasswordUtil;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -29,6 +30,34 @@ public class UserDAO {
 
             ps.setString(1, email);
             ps.setString(2, password);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public User findActiveUserByEmail(String email) {
+        String sql = """
+                SELECT u.*, r.name AS role_name
+                FROM users u
+                JOIN roles r ON u.role_id = r.id
+                WHERE u.email = ?
+                  AND u.active = TRUE
+                  AND r.active = TRUE
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -454,28 +483,8 @@ public class UserDAO {
 
 
     public boolean checkOldPassword(int userId, String oldPassword) {
-        String sql = """
-                SELECT id
-                FROM users
-                WHERE id = ?
-                  AND password = ?
-                """;
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, userId);
-            ps.setString(2, oldPassword);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
+        User user = findById(userId);
+        return user != null && PasswordUtil.verifyPassword(oldPassword, user.getPassword());
     }
 
     public List<User> getAllActiveUsers() {
