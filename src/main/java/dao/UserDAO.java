@@ -964,7 +964,18 @@ public class UserDAO {
         }
     }
     public List<User> findActiveByDepartmentId(int departmentId) {
+        return findActiveUsersByDepartmentScope(departmentId, false);
+    }
+
+    public List<User> findActiveManagerCandidates(int departmentId) {
+        return findActiveUsersByDepartmentScope(departmentId, true);
+    }
+
+    private List<User> findActiveUsersByDepartmentScope(int departmentId, boolean includeUnassigned) {
         List<User> users = new ArrayList<>();
+        String departmentCondition = includeUnassigned
+                ? "(u.department_id = ? OR u.department_id IS NULL)"
+                : "u.department_id = ?";
         String sql = """
             SELECT u.id, u.full_name, u.email, u.phone, u.active,
                    u.department_id, u.position_id,
@@ -973,9 +984,10 @@ public class UserDAO {
             FROM users u
             LEFT JOIN departments d ON d.id = u.department_id
             LEFT JOIN positions p ON p.id = u.position_id
-            WHERE u.department_id = ? AND u.active = TRUE
-            ORDER BY u.full_name
-            """;
+            WHERE %s
+              AND u.active = TRUE
+            ORDER BY u.department_id IS NULL, u.full_name
+            """.formatted(departmentCondition);
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, departmentId);

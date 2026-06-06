@@ -48,6 +48,73 @@ public class DepartmentDAO {
         }
         return false;
     }
+
+    public boolean assignManager(int departmentId, int newManagerId, Integer currentManagerId,
+                                 Integer oldManagerPositionId, int newManagerPositionId) {
+        String updateOldManagerSql =
+                "UPDATE users SET position_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        String updateNewManagerSql = """
+                UPDATE users
+                SET department_id = ?, position_id = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                  AND active = TRUE
+                  AND (department_id = ? OR department_id IS NULL)
+                """;
+        String updateDepartmentSql = """
+                UPDATE departments
+                SET manager_user_id = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """;
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                if (currentManagerId != null) {
+                    try (PreparedStatement ps = conn.prepareStatement(updateOldManagerSql)) {
+                        if (oldManagerPositionId == null) {
+                            ps.setNull(1, Types.INTEGER);
+                        } else {
+                            ps.setInt(1, oldManagerPositionId);
+                        }
+                        ps.setInt(2, currentManagerId);
+                        if (ps.executeUpdate() != 1) {
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(updateNewManagerSql)) {
+                    ps.setInt(1, departmentId);
+                    ps.setInt(2, newManagerPositionId);
+                    ps.setInt(3, newManagerId);
+                    ps.setInt(4, departmentId);
+                    if (ps.executeUpdate() != 1) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(updateDepartmentSql)) {
+                    ps.setInt(1, newManagerId);
+                    ps.setInt(2, departmentId);
+                    if (ps.executeUpdate() != 1) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
     // Lấy toàn bộ dept ngoại trừ dept hiện tại
     public List<Department> getDepartmentsExcept(int excludeDeptId) {
         List<Department> list = new ArrayList<>();
