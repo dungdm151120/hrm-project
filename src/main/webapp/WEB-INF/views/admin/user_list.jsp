@@ -46,7 +46,7 @@
                 <table>
                     <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>No.</th>
                         <th>Full Name</th>
                         <th>Department</th>
                         <th>Position</th>

@@ -899,14 +899,14 @@ public class UserDAO {
 
         try (Connection conn = DBConnection.getConnection()) {
 
-            // 1. Kiểm tra chức danh (Position) hiện tại của User
+            // 1. Kiểm tra Position hiện tại của User
             try (PreparedStatement psCheck = conn.prepareStatement(checkPositionSql)) {
                 psCheck.setInt(1, userId);
                 try (ResultSet rs = psCheck.executeQuery()) {
                     if (rs.next()) {
                         String positionName = rs.getString("name");
 
-                        // Nếu chức danh có chứa từ "Manager", từ chối di chuyển
+                        // Nếu là Manager, chặn Move
                         if (positionName != null && positionName.toLowerCase().contains("manager")) {
                             return "ERROR_IS_MANAGER";
                         }
@@ -933,6 +933,7 @@ public class UserDAO {
         }
         return "ERROR_FAILED";
     }
+
     public boolean updateUserPosition(int userId, Integer positionId) {
         String sql = "UPDATE users SET position_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -988,7 +989,8 @@ public class UserDAO {
         }
         return users;
     }
-    //Remove
+
+    // Remove
     public String removeMemberFromDepartment(int userId) {
         String checkPositionSql = "SELECT p.name FROM users u " +
                 "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
@@ -1025,7 +1027,7 @@ public class UserDAO {
     // Lấy danh sách nhân viên chưa thuộc phòng ban nào và đang Active
     public List<User> getUnassignedUsers() {
         List<User> list = new ArrayList<>();
-        // department_id IS NULL hoặc có thể là 0 tùy vào cách bạn thiết kế DB
+
         String sql = "SELECT id, full_name FROM users " +
                 "WHERE (department_id IS NULL OR department_id = 0)" +
                 "AND active = 1";
@@ -1119,7 +1121,8 @@ public class UserDAO {
         }
         return false;
     }
-    //
+
+    // Đếm số lượng user
     public int countUsers(String keyword, Boolean active) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE 1=1");
 
@@ -1136,7 +1139,6 @@ public class UserDAO {
             int idx = 1;
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String search = "%" + keyword.trim() + "%";
-                ps.setString(idx++, search);
                 ps.setString(idx++, search);
             }
             if (active != null) {
@@ -1170,7 +1172,7 @@ public class UserDAO {
             sql.append(" AND u.active = ?");
         }
 
-        // Logic Sort động đồng bộ giống Dept
+        // Sort
         if ("name".equals(sortBy)) {
             sql.append(" ORDER BY u.full_name ").append("asc".equalsIgnoreCase(sortOrder) ? "ASC" : "DESC");
         } else {
