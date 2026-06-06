@@ -1045,6 +1045,24 @@ public class UserDAO {
         }
     }
 
+    public boolean isPositionAssigned(int positionId) {
+        String sql = "SELECT COUNT(*) FROM users WHERE position_id = ? AND active = true";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, positionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     // Lấy danh sách nhân viên chưa thuộc phòng ban nào và đang Active
     public List<User> getUnassignedUsers() {
         List<User> list = new ArrayList<>();
