@@ -1,17 +1,21 @@
 package controller.department;
 
 import dao.DepartmentDAO;
+import dao.UserDAO;
 import model.Department;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/admin/departments")
 public class DeptListServlet extends HttpServlet {
 
     private final DepartmentDAO departmentDAO = new DepartmentDAO();
+    private final UserDAO userDAO = new UserDAO();
     private static final int PAGE_SIZE = 5;
 
     @Override
@@ -72,7 +76,13 @@ public class DeptListServlet extends HttpServlet {
             departmentList = departmentDAO.getDepartmentsWithPaging(search, active, sortBy, sortOrder, offset, PAGE_SIZE);
         }
 
+        Map<Integer, Integer> memberCountMap = new HashMap<>();
+        for (Department dept : departmentList) {
+            memberCountMap.put(dept.getId(), userDAO.countUsersByDepartment(dept.getId()));
+        }
+
         request.setAttribute("departmentList", departmentList);
+        request.setAttribute("memberCountMap", memberCountMap);
         request.setAttribute("search", search);
         request.setAttribute("status", statusParam);
         request.setAttribute("sort", sort);
