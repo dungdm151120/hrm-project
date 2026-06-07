@@ -434,16 +434,23 @@ public class UserDAO {
 
     public boolean updateUserStatus(int userId, boolean active) {
         String sql = """
-                UPDATE users
-                SET active = ?
-                WHERE id = ?
+                UPDATE users u
+                LEFT JOIN department_positions dp ON u.department_id = dp.department_id AND u.position_id = dp.position_id
+                LEFT JOIN departments d ON d.id = u.department_id
+                LEFT JOIN positions p ON p.id = u.position_id
+                SET u.active = ?,
+                u.department_id = IF(? = true, IF(d.active = true AND p.active = true, u.department_id, NULL), u.department_id),
+                u.position_id = IF(? = true, IF(d.active = true AND p.active = true, u.position_id, NULL), u.position_id)
+                WHERE u.id = ?
                 """;
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setBoolean(1, active);
-            ps.setInt(2, userId);
+            ps.setBoolean(2, active);
+            ps.setBoolean(3, active);
+            ps.setInt(4, userId);
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
@@ -857,8 +864,6 @@ public class UserDAO {
         user.setRoleId(rs.getInt("role_id"));
         user.setRoleName(rs.getString("role_name"));
         user.setActive(rs.getBoolean("active"));
-        user.setResetToken(rs.getString("reset_token"));
-        user.setResetTokenExpiredAt(getNullableLocalDateTime(rs, "reset_token_expired_at"));
         // Thêm mapping department_id và position_id
         int departmentId = rs.getInt("department_id");
         if (!rs.wasNull()) {

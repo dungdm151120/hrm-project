@@ -41,7 +41,7 @@ public class ChangeUserStatusServlet extends HttpServlet {
             if (isUpdated) {
                 session.setAttribute("message", "Status changed successfully!");
             } else {
-                session.setAttribute("error", "Status changed successfully!");
+                session.setAttribute("error", "Status changed unsuccessfully due to department or position not active!");
             }
 
         } catch (NumberFormatException e) {
