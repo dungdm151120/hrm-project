@@ -1441,6 +1441,15 @@ body.dashboard-body {
     gap: 1.5rem;
 }
 
+.page-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
 .search-box {
     position: relative;
     width: 300px;
@@ -2876,6 +2885,13 @@ body.dashboard-body {
     }
     .header-right {
         flex-wrap: wrap;
+    }
+    .global-header-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .page-actions {
+        justify-content: flex-start;
     }
     .search-box {
         width: 100%;
