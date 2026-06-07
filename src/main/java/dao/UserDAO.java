@@ -826,22 +826,23 @@ public class UserDAO {
     public List<User> findUnassignedUsers() {
         List<User> users = new ArrayList<>();
         String sql = """
-                SELECT u.id,
-                       u.full_name,
-                       u.email,
-                       u.phone,
-                       u.active,
-                       u.department_id,
-                       u.position_id,
-                       p.name AS position_name,
-                       d.name AS department_name
-                FROM users u
-                LEFT JOIN departments d ON d.id = u.department_id
-                LEFT JOIN positions p ON p.id = u.position_id
-                WHERE u.department_id IS NULL
-                  AND u.active = TRUE
-                ORDER BY u.full_name
-                """;
+            SELECT u.id,
+                   u.full_name,
+                   u.email,
+                   u.phone,
+                   u.active,
+                   u.department_id,
+                   u.position_id,
+                   p.name AS position_name,
+                   d.name AS department_name
+            FROM users u
+            LEFT JOIN departments d ON d.id = u.department_id
+            LEFT JOIN positions p ON p.id = u.position_id
+            WHERE u.department_id IS NULL
+              AND u.active = TRUE
+              AND u.role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')
+            ORDER BY u.full_name
+            """;
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -857,7 +858,6 @@ public class UserDAO {
 
         return users;
     }
-
     private User mapResultSetToUser(ResultSet rs) throws Exception {
         User user = new User();
 
@@ -1068,13 +1068,12 @@ public class UserDAO {
         return false;
     }
 
-    // Lấy danh sách nhân viên chưa thuộc phòng ban nào và đang Active
     public List<User> getUnassignedUsers() {
         List<User> list = new ArrayList<>();
-
         String sql = "SELECT id, full_name FROM users " +
-                "WHERE (department_id IS NULL OR department_id = 0)" +
-                "AND active = 1";
+                "WHERE (department_id IS NULL OR department_id = 0) " +
+                "AND active = 1 " +
+                "AND role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -1166,12 +1165,11 @@ public class UserDAO {
         return false;
     }
 
-    // Đếm số lượng user
     public int countUsers(String keyword, Boolean active) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE u.role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')");
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (u.full_name LIKE ?)");
+            sql.append(" AND u.full_name LIKE ?");
         }
         if (active != null) {
             sql.append(" AND u.active = ?");
@@ -1198,7 +1196,6 @@ public class UserDAO {
         return 0;
     }
 
-    // Lấy danh sách user theo trang
     public List<User> getUsersWithPaging(String keyword, Boolean active, String sortBy, String sortOrder, int offset, int limit) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -1207,7 +1204,7 @@ public class UserDAO {
                         "JOIN roles r ON u.role_id = r.id " +
                         "LEFT JOIN departments d ON u.department_id = d.id " +
                         "LEFT JOIN positions p ON u.position_id = p.id " +
-                        "WHERE 1=1");
+                        "WHERE u.role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')");
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND u.full_name LIKE ?");
@@ -1216,7 +1213,6 @@ public class UserDAO {
             sql.append(" AND u.active = ?");
         }
 
-        // Sort
         if ("name".equals(sortBy)) {
             sql.append(" ORDER BY u.full_name ").append("asc".equalsIgnoreCase(sortOrder) ? "ASC" : "DESC");
         } else {
