@@ -7,11 +7,20 @@
   <title>Add member | HRM</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body>
+<body class="dashboard-body">
 
-<div class="container">
-  <h2 class="form-title">Add member to a department</h2>
+<div class="dashboard-wrapper">
+  <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
 
+  <div class="dashboard-main">
+    <div class="dashboard-header">
+      <div class="header-left">
+        <h1 class="header-title">Add Member</h1>
+      </div>
+    </div>
+
+    <div class="dashboard-content">
+      <div class="container">
   <form action="${pageContext.request.contextPath}/add_member" method="POST">
     <input type="hidden" name="deptId" value="${deptId}">
 
@@ -42,7 +51,7 @@
         </c:forEach>
         <c:if test="${empty unassignedUsers}">
           <tr>
-            <td colspan="3" class="empty-state">No employees found.</td>
+            <td colspan="2" class="empty-state">No employees found.</td>
           </tr>
         </c:if>
         </tbody>
@@ -54,6 +63,9 @@
       <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${deptId}" class="btn-cancel">Cancel</a>
     </div>
   </form>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
