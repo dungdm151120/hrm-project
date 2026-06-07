@@ -10,7 +10,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @WebServlet("/admin/roles/edit_permissions")
 public class EditRolePermissionServlet extends HttpServlet {
@@ -42,9 +41,14 @@ public class EditRolePermissionServlet extends HttpServlet {
             return;
         }
 
+        // Chặn sửa permissions của BUSINESS ADMIN
+        if ("BUSINESS ADMIN".equals(role.getName())) {
+            response.sendRedirect(request.getContextPath() + "/admin/roles?error=Cannot modify permissions of BUSINESS ADMIN");
+            return;
+        }
+
         List<Permission> allPermissions = permissionDAO.getAllPermissions();
         List<Integer> assignedPermissionIds = roleDAO.getPermissionIdsByRoleId(roleId);
-
 
         Map<String, List<Permission>> moduleMap = new LinkedHashMap<>();
         String[] moduleOrder = {"HOMEPAGE","PROFILE","USER","ROLE","DEPARTMENT","POSITION","CONTRACT","ATTENDANCE","PAYROLL"};
@@ -73,6 +77,7 @@ public class EditRolePermissionServlet extends HttpServlet {
                 .forward(request, response);
     }
 
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -90,6 +95,18 @@ public class EditRolePermissionServlet extends HttpServlet {
             return;
         }
 
+        Role role = roleDAO.getRoleById(roleId);
+        if (role == null) {
+            response.sendRedirect(request.getContextPath() + "/admin/roles");
+            return;
+        }
+
+        // Chặn sửa permissions của BUSINESS ADMIN
+        if ("BUSINESS ADMIN".equals(role.getName())) {
+            response.sendRedirect(request.getContextPath() + "/admin/roles?error=Cannot modify permissions of BUSINESS ADMIN");
+            return;
+        }
+
         String[] selectedIds = request.getParameterValues("permissionIds");
         List<Integer> permissionIds = new ArrayList<>();
         if (selectedIds != null) {
@@ -102,7 +119,6 @@ public class EditRolePermissionServlet extends HttpServlet {
 
         roleDAO.deleteRolePermissions(roleId);
         roleDAO.insertRolePermissions(roleId, permissionIds);
-
 
         response.sendRedirect(request.getContextPath()
                 + "/admin/roles/permissions?roleId=" + roleId
