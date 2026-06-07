@@ -34,6 +34,15 @@
                 <div class="alert alert-error">⚠ ${param.error}</div>
             </c:if>
 
+            <c:if test="${not empty param.msg}">
+                <div class="alert alert-success">
+                    <c:choose>
+                        <c:when test="${param.msg == 'unassign_manager_success'}">Manager unassigned successfully.</c:when>
+                        <c:otherwise>${param.msg}</c:otherwise>
+                    </c:choose>
+                </div>
+            </c:if>
+
             <div class="employee-list-toolbar">
                 <form action="${pageContext.request.contextPath}/admin/departments/employees" method="get" class="employee-search-form">
                     <input type="hidden" name="id" value="${id}">
@@ -134,6 +143,20 @@
                                    </c:if>>
                                     Remove
                                 </a>
+
+                                <c:if test="${user.manager}">
+                                    <form action="${pageContext.request.contextPath}/admin/departments/unassign-manager"
+                                          method="post"
+                                          class="inline-action-form">
+                                        <input type="hidden" name="departmentId" value="${id}">
+                                        <input type="hidden" name="userId" value="${user.id}">
+                                        <button type="submit"
+                                                class="btn btn-warning"
+                                                onclick="return confirm('Unassign this manager?')">
+                                            Unassign
+                                        </button>
+                                    </form>
+                                </c:if>
                             </td>
                         </tr>
                     </c:forEach>

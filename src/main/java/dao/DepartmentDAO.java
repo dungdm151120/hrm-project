@@ -151,6 +151,58 @@ public class DepartmentDAO {
         return false;
     }
 
+    public boolean unassignManager(int departmentId, int managerUserId, Integer fallbackPositionId) {
+        String updateDepartmentSql = """
+                UPDATE departments
+                SET manager_user_id = NULL, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                  AND manager_user_id = ?
+                """;
+        String updateManagerSql = """
+                UPDATE users
+                SET position_id = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                  AND department_id = ?
+                """;
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(updateDepartmentSql)) {
+                    ps.setInt(1, departmentId);
+                    ps.setInt(2, managerUserId);
+                    if (ps.executeUpdate() != 1) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(updateManagerSql)) {
+                    if (fallbackPositionId == null) {
+                        ps.setNull(1, Types.INTEGER);
+                    } else {
+                        ps.setInt(1, fallbackPositionId);
+                    }
+                    ps.setInt(2, managerUserId);
+                    ps.setInt(3, departmentId);
+                    if (ps.executeUpdate() != 1) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public Department getDepartmentByIdWithManager(int id) {
         String sql = "SELECT d.*, u.full_name AS manager_name FROM departments d " +
                 "LEFT JOIN users u ON d.manager_user_id = u.id WHERE d.id = ?";

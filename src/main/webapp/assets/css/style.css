@@ -430,6 +430,11 @@ tbody tr:last-child td {
     gap: 0.5rem;
 }
 
+.inline-action-form {
+    display: inline-flex;
+    margin: 0;
+}
+
 .btn, .actions a {
     display: inline-flex;
     align-items: center;
