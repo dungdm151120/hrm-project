@@ -43,7 +43,7 @@ public class AssignManagerServlet extends HttpServlet {
             return;
         }
 
-        List<User> employees = userDAO.findActiveByDepartmentId(deptId);
+        List<User> employees = userDAO.findActiveManagerCandidates(deptId);
 
         request.setAttribute("department", department);
         request.setAttribute("employees", employees);
@@ -95,22 +95,28 @@ public class AssignManagerServlet extends HttpServlet {
         }
 
         boolean isHR = "Human Resources".equalsIgnoreCase(department.getName());
+        boolean isIT = "Information Technology".equalsIgnoreCase(department.getName());
 
         // Xử lý trưởng phòng cũ
+        Integer oldManagerPositionId = null;
         if (currentManagerId != null) {
             String oldPositionName = isHR ? "HR Staff" : "Employee";
             Position oldPosition = positionDAO.findByName(oldPositionName);
 
             if (oldPosition != null && oldPosition.isActive()) {
-                userDAO.updateUserPosition(currentManagerId, oldPosition.getId());
-            } else {
-
-                userDAO.updateUserPosition(currentManagerId, null);
+                oldManagerPositionId = oldPosition.getId();
             }
         }
 
 
-        String newPositionName = isHR ? "HR Manager" : "Department Manager";
+        String newPositionName;
+        if (isHR) {
+            newPositionName = "HR Manager";
+        } else if (isIT) {
+            newPositionName = "System Administrator";
+        } else {
+            newPositionName = "Department Manager";
+        }
         Position newPosition = positionDAO.findByName(newPositionName);
 
         if (newPosition == null) {
@@ -126,12 +132,15 @@ public class AssignManagerServlet extends HttpServlet {
         }
 
 
-        boolean updatedPosition = userDAO.updateUserPosition(newManagerId, newPosition.getId());
+        boolean assigned = departmentDAO.assignManager(
+                deptId,
+                newManagerId,
+                currentManagerId,
+                oldManagerPositionId,
+                newPosition.getId()
+        );
 
-
-        boolean updatedManager = departmentDAO.updateManager(deptId, newManagerId);
-
-        if (updatedPosition && updatedManager) {
+        if (assigned) {
             session.setAttribute("successMessage", "Đã phân công trưởng phòng thành công!");
         } else {
             session.setAttribute("error", "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");

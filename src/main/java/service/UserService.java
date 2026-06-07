@@ -2,6 +2,7 @@ package service;
 
 import dao.UserDAO;
 import model.User;
+import util.PasswordUtil;
 
 import java.time.LocalDate;
 
@@ -52,13 +53,12 @@ public class UserService {
             return "Mật khẩu mới phải có ít nhất 6 ký tự";
         }
 
-        boolean oldPasswordCorrect = userDAO.checkOldPassword(userId, oldPassword);
-
-        if (!oldPasswordCorrect) {
+        User user = userDAO.findById(userId);
+        if (user == null || !PasswordUtil.verifyPassword(oldPassword, user.getPassword())) {
             return "Mật khẩu cũ không đúng";
         }
 
-        boolean updated = userDAO.updatePassword(userId, newPassword);
+        boolean updated = userDAO.updatePassword(userId, PasswordUtil.hashPassword(newPassword));
 
         if (!updated) {
             return "Đổi mật khẩu thất bại";

@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Role;
 import model.User;
+import util.PasswordUtil;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -47,7 +48,7 @@ public class AddUserServlet extends HttpServlet {
             User newUser = new User();
             newUser.setFullName(fullName);
             newUser.setEmail(email);
-            newUser.setPassword(password);
+            newUser.setPassword(PasswordUtil.hashPassword(password));
             newUser.setPhone(phone);
             newUser.setGender(gender);
             newUser.setDateOfBirth(dateOfBirth);

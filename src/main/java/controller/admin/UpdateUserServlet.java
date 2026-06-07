@@ -1,5 +1,6 @@
 package controller.admin;
 
+import dao.LaborContractDAO;
 import dao.RoleDAO;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
@@ -62,6 +63,24 @@ public class UpdateUserServlet extends HttpServlet {
             }
 
             boolean active = Boolean.parseBoolean(req.getParameter("active"));
+            UserDAO dao = new UserDAO();
+            User existingUser = dao.findById(id);
+
+            if (existingUser == null) {
+                resp.sendRedirect(req.getContextPath() + "/user_list");
+                return;
+            }
+
+            if (existingUser.isActive() && !active) {
+                LaborContractDAO contractDAO = new LaborContractDAO();
+                if (!contractDAO.canDeactivateUser(id)) {
+                    req.setAttribute("error", "User cannot be deactivated while they still have an active contract.");
+                    req.setAttribute("userToUpdate", existingUser);
+                    req.setAttribute("roles", new RoleDAO().getAllRoles());
+                    req.getRequestDispatcher("/WEB-INF/views/admin/update_user.jsp").forward(req, resp);
+                    return;
+                }
+            }
 
             String dobParam = req.getParameter("dateOfBirth");
             LocalDateTime dateOfBirth = null;
@@ -81,7 +100,6 @@ public class UpdateUserServlet extends HttpServlet {
             updatedUser.setRoleId(roleId);
             updatedUser.setActive(active);
 
-            UserDAO dao = new UserDAO();
             boolean isSuccess = dao.updateUser(updatedUser);
 
             if (isSuccess) {

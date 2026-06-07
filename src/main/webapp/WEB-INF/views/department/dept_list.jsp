@@ -59,6 +59,7 @@
                         <th>Name</th>
                         <th>Description</th>
                         <th>Manager</th>
+                        <th>Members</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -84,6 +85,7 @@
                                     </c:otherwise>
                                 </c:choose>
                             </td>
+                            <td>${memberCountMap[dept.id]}</td>
                             <td>
                                 <c:choose>
                                     <c:when test="${dept.active}">
@@ -115,7 +117,7 @@
                     </c:forEach>
                     <c:if test="${empty departmentList}">
                         <tr>
-                            <td colspan="6" class="empty-state">No departments found.</td>
+                            <td colspan="7" class="empty-state">No departments found.</td>
                         </tr>
                     </c:if>
                     </tbody>

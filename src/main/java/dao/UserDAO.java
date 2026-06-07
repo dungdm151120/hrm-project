@@ -2,6 +2,7 @@ package dao;
 
 import model.User;
 import util.DBConnection;
+import util.PasswordUtil;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -29,6 +30,34 @@ public class UserDAO {
 
             ps.setString(1, email);
             ps.setString(2, password);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public User findActiveUserByEmail(String email) {
+        String sql = """
+                SELECT u.*, r.name AS role_name
+                FROM users u
+                JOIN roles r ON u.role_id = r.id
+                WHERE u.email = ?
+                  AND u.active = TRUE
+                  AND r.active = TRUE
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -461,28 +490,8 @@ public class UserDAO {
 
 
     public boolean checkOldPassword(int userId, String oldPassword) {
-        String sql = """
-                SELECT id
-                FROM users
-                WHERE id = ?
-                  AND password = ?
-                """;
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, userId);
-            ps.setString(2, oldPassword);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
+        User user = findById(userId);
+        return user != null && PasswordUtil.verifyPassword(oldPassword, user.getPassword());
     }
 
     public List<User> getAllActiveUsers() {
@@ -904,14 +913,14 @@ public class UserDAO {
 
         try (Connection conn = DBConnection.getConnection()) {
 
-            // 1. Kiểm tra chức danh (Position) hiện tại của User
+            // 1. Kiểm tra Position hiện tại của User
             try (PreparedStatement psCheck = conn.prepareStatement(checkPositionSql)) {
                 psCheck.setInt(1, userId);
                 try (ResultSet rs = psCheck.executeQuery()) {
                     if (rs.next()) {
                         String positionName = rs.getString("name");
 
-                        // Nếu chức danh có chứa từ "Manager", từ chối di chuyển
+                        // Nếu là Manager, chặn Move
                         if (positionName != null && positionName.toLowerCase().contains("manager")) {
                             return "ERROR_IS_MANAGER";
                         }
@@ -938,6 +947,7 @@ public class UserDAO {
         }
         return "ERROR_FAILED";
     }
+
     public boolean updateUserPosition(int userId, Integer positionId) {
         String sql = "UPDATE users SET position_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -968,7 +978,18 @@ public class UserDAO {
         }
     }
     public List<User> findActiveByDepartmentId(int departmentId) {
+        return findActiveUsersByDepartmentScope(departmentId, false);
+    }
+
+    public List<User> findActiveManagerCandidates(int departmentId) {
+        return findActiveUsersByDepartmentScope(departmentId, true);
+    }
+
+    private List<User> findActiveUsersByDepartmentScope(int departmentId, boolean includeUnassigned) {
         List<User> users = new ArrayList<>();
+        String departmentCondition = includeUnassigned
+                ? "(u.department_id = ? OR u.department_id IS NULL)"
+                : "u.department_id = ?";
         String sql = """
             SELECT u.id, u.full_name, u.email, u.phone, u.active,
                    u.department_id, u.position_id,
@@ -977,9 +998,10 @@ public class UserDAO {
             FROM users u
             LEFT JOIN departments d ON d.id = u.department_id
             LEFT JOIN positions p ON p.id = u.position_id
-            WHERE u.department_id = ? AND u.active = TRUE
-            ORDER BY u.full_name
-            """;
+            WHERE %s
+              AND u.active = TRUE
+            ORDER BY u.department_id IS NULL, u.full_name
+            """.formatted(departmentCondition);
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, departmentId);
@@ -993,7 +1015,8 @@ public class UserDAO {
         }
         return users;
     }
-    //Remove
+
+    // Remove
     public String removeMemberFromDepartment(int userId) {
         String checkPositionSql = "SELECT p.name FROM users u " +
                 "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
@@ -1048,7 +1071,7 @@ public class UserDAO {
     // Lấy danh sách nhân viên chưa thuộc phòng ban nào và đang Active
     public List<User> getUnassignedUsers() {
         List<User> list = new ArrayList<>();
-        // department_id IS NULL hoặc có thể là 0 tùy vào cách bạn thiết kế DB
+
         String sql = "SELECT id, full_name FROM users " +
                 "WHERE (department_id IS NULL OR department_id = 0)" +
                 "AND active = 1";
@@ -1091,7 +1114,44 @@ public class UserDAO {
             return false;
         }
     }
-
+    public int countUsersByDepartment(int departmentId) {
+        String sql = "SELECT COUNT(*) FROM users WHERE department_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+    public void clearDepartmentAndPosition(int userId) {
+        String sql = "UPDATE users SET department_id = NULL, position_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public int countUsersByRole(int roleId) {
+        String sql = "SELECT COUNT(*) FROM users WHERE role_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, roleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
     public boolean removeDepartmentFromUsers(int departmentId) {
         String sql = "UPDATE users SET department_id = NULL WHERE department_id = ?";
@@ -1105,7 +1165,8 @@ public class UserDAO {
         }
         return false;
     }
-    //
+
+    // Đếm số lượng user
     public int countUsers(String keyword, Boolean active) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE 1=1");
 
@@ -1122,7 +1183,6 @@ public class UserDAO {
             int idx = 1;
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String search = "%" + keyword.trim() + "%";
-                ps.setString(idx++, search);
                 ps.setString(idx++, search);
             }
             if (active != null) {
@@ -1156,7 +1216,7 @@ public class UserDAO {
             sql.append(" AND u.active = ?");
         }
 
-        // Logic Sort động đồng bộ giống Dept
+        // Sort
         if ("name".equals(sortBy)) {
             sql.append(" ORDER BY u.full_name ").append("asc".equalsIgnoreCase(sortOrder) ? "ASC" : "DESC");
         } else {

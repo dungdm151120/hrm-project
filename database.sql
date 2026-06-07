@@ -37,8 +37,7 @@ CREATE TABLE positions (
 );
 
 -- 4. DEPARTMENT_POSITIONS
--- Một department có nhiều position
--- Một position có thể thuộc nhiều department
+-- Quy định position nào được phép thuộc department nào
 
 CREATE TABLE department_positions (
     department_id INT NOT NULL,
@@ -200,6 +199,10 @@ VALUES
     ('Sales', 'Sales department', TRUE);
 
 -- 12. INSERT POSITIONS
+-- Đã sửa theo yêu cầu:
+-- HR: HR Manager, HR Staff
+-- IT: System Administrator, Employee
+-- Các phòng còn lại: Department Manager, Employee
 
 INSERT INTO positions (name, description, active)
 VALUES
@@ -207,17 +210,13 @@ VALUES
     ('HR Manager', 'Responsible for HR management', TRUE),
     ('HR Staff', 'Responsible for HR daily operations', TRUE),
     ('Department Manager', 'Responsible for managing a department', TRUE),
-    ('Payroll Staff', 'Responsible for payroll processing', TRUE),
-    ('Software Developer', 'Responsible for software development', TRUE),
-    ('Accountant', 'Responsible for finance and accounting tasks', TRUE),
-    ('Sales Staff', 'Responsible for sales activities', TRUE),
     ('Employee', 'Normal employee position', TRUE);
 
 -- 13. INSERT DEPARTMENT_POSITIONS
 
 INSERT INTO department_positions (department_id, position_id)
 VALUES
-    -- Human Resources
+    -- Human Resources: chỉ có HR Manager và HR Staff
     (
         (SELECT id FROM departments WHERE name = 'Human Resources'),
         (SELECT id FROM positions WHERE name = 'HR Manager')
@@ -226,48 +225,28 @@ VALUES
         (SELECT id FROM departments WHERE name = 'Human Resources'),
         (SELECT id FROM positions WHERE name = 'HR Staff')
     ),
-    (
-        (SELECT id FROM departments WHERE name = 'Human Resources'),
-        (SELECT id FROM positions WHERE name = 'Employee')
-    ),
 
-    -- Information Technology
+    -- Information Technology: chỉ có System Administrator và Employee
     (
         (SELECT id FROM departments WHERE name = 'Information Technology'),
         (SELECT id FROM positions WHERE name = 'System Administrator')
     ),
     (
         (SELECT id FROM departments WHERE name = 'Information Technology'),
+        (SELECT id FROM positions WHERE name = 'Employee')
+    ),
+
+    -- Finance: chỉ có Department Manager và Employee
+    (
+        (SELECT id FROM departments WHERE name = 'Finance'),
         (SELECT id FROM positions WHERE name = 'Department Manager')
     ),
     (
-        (SELECT id FROM departments WHERE name = 'Information Technology'),
-        (SELECT id FROM positions WHERE name = 'Software Developer')
-    ),
-    (
-        (SELECT id FROM departments WHERE name = 'Information Technology'),
-        (SELECT id FROM positions WHERE name = 'Employee')
-    ),
-
-    -- Finance
-    (
-        (SELECT id FROM departments WHERE name = 'Finance'),
-        (SELECT id FROM positions WHERE name = 'Payroll Staff')
-    ),
-    (
-        (SELECT id FROM departments WHERE name = 'Finance'),
-        (SELECT id FROM positions WHERE name = 'Accountant')
-    ),
-    (
         (SELECT id FROM departments WHERE name = 'Finance'),
         (SELECT id FROM positions WHERE name = 'Employee')
     ),
 
-    -- Sales
-    (
-        (SELECT id FROM departments WHERE name = 'Sales'),
-        (SELECT id FROM positions WHERE name = 'Sales Staff')
-    ),
+    -- Sales: chỉ có Department Manager và Employee
     (
         (SELECT id FROM departments WHERE name = 'Sales'),
         (SELECT id FROM positions WHERE name = 'Department Manager')
@@ -298,15 +277,16 @@ INSERT INTO users (
     active
 )
 VALUES
+    -- Information Technology
     (
         'EMP001',
-        'Admin User',
+        'Nguyễn Minh Quân',
         'admin@company.com',
         '123456',
         '0900000001',
         'Male',
-        '2000-01-01 00:00:00',
-        'Ho Chi Minh City',
+        '1998-01-10 00:00:00',
+        'Hà Nội',
         NULL,
         (SELECT id FROM roles WHERE name = 'ADMIN'),
         (SELECT id FROM departments WHERE name = 'Information Technology'),
@@ -317,13 +297,66 @@ VALUES
     ),
     (
         'EMP002',
-        'HR Manager',
-        'hrmanager@company.com',
+        'Trần Đức Anh',
+        'ducanh.it@company.com',
         '123456',
         '0900000002',
+        'Male',
+        '2000-03-15 00:00:00',
+        'Đà Nẵng',
+        NULL,
+        (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
+        (SELECT id FROM departments WHERE name = 'Information Technology'),
+        (SELECT id FROM positions WHERE name = 'Employee'),
+        '2024-01-10',
+        'WORKING',
+        TRUE
+    ),
+    (
+        'EMP003',
+        'Phạm Gia Huy',
+        'giahuy.it@company.com',
+        '123456',
+        '0900000003',
+        'Male',
+        '2001-07-20 00:00:00',
+        'Hồ Chí Minh',
+        NULL,
+        (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
+        (SELECT id FROM departments WHERE name = 'Information Technology'),
+        (SELECT id FROM positions WHERE name = 'Employee'),
+        '2024-02-01',
+        'WORKING',
+        TRUE
+    ),
+    (
+        'EMP004',
+        'Lê Hoàng Nam',
+        'hoangnam.it@company.com',
+        '123456',
+        '0900000004',
+        'Male',
+        '1999-11-05 00:00:00',
+        'Hà Nội',
+        NULL,
+        (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
+        (SELECT id FROM departments WHERE name = 'Information Technology'),
+        (SELECT id FROM positions WHERE name = 'Employee'),
+        '2024-02-15',
+        'WORKING',
+        TRUE
+    ),
+
+    -- Human Resources
+    (
+        'EMP005',
+        'Nguyễn Thu Hà',
+        'hrmanager@company.com',
+        '123456',
+        '0900000005',
         'Female',
-        '1998-02-02 00:00:00',
-        'Ha Noi',
+        '1995-02-12 00:00:00',
+        'Hà Nội',
         NULL,
         (SELECT id FROM roles WHERE name = 'HR_MANAGER'),
         (SELECT id FROM departments WHERE name = 'Human Resources'),
@@ -333,14 +366,14 @@ VALUES
         TRUE
     ),
     (
-        'EMP003',
-        'HR Staff',
-        'hrstaff@company.com',
+        'EMP006',
+        'Trần Mai Anh',
+        'maianh.hr@company.com',
         '123456',
-        '0900000003',
+        '0900000006',
         'Female',
-        '2001-03-03 00:00:00',
-        'Ha Noi',
+        '1999-04-18 00:00:00',
+        'Hà Nội',
         NULL,
         (SELECT id FROM roles WHERE name = 'HR_STAFF'),
         (SELECT id FROM departments WHERE name = 'Human Resources'),
@@ -350,53 +383,159 @@ VALUES
         TRUE
     ),
     (
-        'EMP004',
-        'IT Manager',
-        'itmanager@company.com',
+        'EMP007',
+        'Phạm Ngọc Linh',
+        'ngoclinh.hr@company.com',
         '123456',
-        '0900000004',
-        'Male',
-        '1997-04-04 00:00:00',
-        'Da Nang',
+        '0900000007',
+        'Female',
+        '2000-08-25 00:00:00',
+        'Hồ Chí Minh',
         NULL,
-        (SELECT id FROM roles WHERE name = 'DEPARTMENT_MANAGER'),
-        (SELECT id FROM departments WHERE name = 'Information Technology'),
-        (SELECT id FROM positions WHERE name = 'Department Manager'),
-        '2024-02-15',
+        (SELECT id FROM roles WHERE name = 'HR_STAFF'),
+        (SELECT id FROM departments WHERE name = 'Human Resources'),
+        (SELECT id FROM positions WHERE name = 'HR Staff'),
+        '2024-02-20',
         'WORKING',
         TRUE
     ),
     (
-        'EMP005',
-        'Payroll Staff',
-        'payroll@company.com',
+        'EMP008',
+        'Vũ Hải Yến',
+        'haiyen.hr@company.com',
         '123456',
-        '0900000005',
+        '0900000008',
         'Female',
-        '1999-05-05 00:00:00',
-        'Ho Chi Minh City',
+        '2001-12-03 00:00:00',
+        'Đà Nẵng',
         NULL,
-        (SELECT id FROM roles WHERE name = 'PAYROLL_STAFF'),
-        (SELECT id FROM departments WHERE name = 'Finance'),
-        (SELECT id FROM positions WHERE name = 'Payroll Staff'),
+        (SELECT id FROM roles WHERE name = 'HR_STAFF'),
+        (SELECT id FROM departments WHERE name = 'Human Resources'),
+        (SELECT id FROM positions WHERE name = 'HR Staff'),
         '2024-03-01',
         'WORKING',
         TRUE
     ),
+
+    -- Finance
     (
-        'EMP006',
-        'Employee User',
-        'employee@company.com',
+        'EMP009',
+        'Đỗ Quang Huy',
+        'financemanager@company.com',
         '123456',
-        '0900000006',
+        '0900000009',
         'Male',
-        '2002-06-06 00:00:00',
-        'Da Nang',
+        '1994-06-09 00:00:00',
+        'Hồ Chí Minh',
+        NULL,
+        (SELECT id FROM roles WHERE name = 'DEPARTMENT_MANAGER'),
+        (SELECT id FROM departments WHERE name = 'Finance'),
+        (SELECT id FROM positions WHERE name = 'Department Manager'),
+        '2024-01-20',
+        'WORKING',
+        TRUE
+    ),
+    (
+        'EMP010',
+        'Nguyễn Thảo Vy',
+        'thaovy.finance@company.com',
+        '123456',
+        '0900000010',
+        'Female',
+        '2000-09-14 00:00:00',
+        'Hồ Chí Minh',
         NULL,
         (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
-        (SELECT id FROM departments WHERE name = 'Information Technology'),
-        (SELECT id FROM positions WHERE name = 'Software Developer'),
-        '2024-03-15',
+        (SELECT id FROM departments WHERE name = 'Finance'),
+        (SELECT id FROM positions WHERE name = 'Employee'),
+        '2024-02-10',
+        'WORKING',
+        TRUE
+    ),
+    (
+        'EMP011',
+        'Bùi Minh Khang',
+        'minhkhang.finance@company.com',
+        '123456',
+        '0900000011',
+        'Male',
+        '1998-10-22 00:00:00',
+        'Hà Nội',
+        NULL,
+        (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
+        (SELECT id FROM departments WHERE name = 'Finance'),
+        (SELECT id FROM positions WHERE name = 'Employee'),
+        '2024-03-05',
+        'WORKING',
+        TRUE
+    ),
+    (
+        'EMP012',
+        'Lê Phương Anh',
+        'phuonganh.finance@company.com',
+        '123456',
+        '0900000012',
+        'Female',
+        '2001-05-17 00:00:00',
+        'Đà Nẵng',
+        NULL,
+        (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
+        (SELECT id FROM departments WHERE name = 'Finance'),
+        (SELECT id FROM positions WHERE name = 'Employee'),
+        '2024-03-18',
+        'WORKING',
+        TRUE
+    ),
+
+    -- Sales
+    (
+        'EMP013',
+        'Hoàng Minh Đức',
+        'salesmanager@company.com',
+        '123456',
+        '0900000013',
+        'Male',
+        '1993-03-30 00:00:00',
+        'Hà Nội',
+        NULL,
+        (SELECT id FROM roles WHERE name = 'DEPARTMENT_MANAGER'),
+        (SELECT id FROM departments WHERE name = 'Sales'),
+        (SELECT id FROM positions WHERE name = 'Department Manager'),
+        '2024-01-25',
+        'WORKING',
+        TRUE
+    ),
+    (
+        'EMP014',
+        'Nguyễn Khánh Ly',
+        'khanhly.sales@company.com',
+        '123456',
+        '0900000014',
+        'Female',
+        '2000-07-11 00:00:00',
+        'Hồ Chí Minh',
+        NULL,
+        (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
+        (SELECT id FROM departments WHERE name = 'Sales'),
+        (SELECT id FROM positions WHERE name = 'Employee'),
+        '2024-02-12',
+        'WORKING',
+        TRUE
+    ),
+    (
+        'EMP015',
+        'Trần Quốc Bảo',
+        'quocbao.sales@company.com',
+        '123456',
+        '0900000015',
+        'Male',
+        '1999-01-28 00:00:00',
+        'Đà Nẵng',
+        NULL,
+        (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
+        (SELECT id FROM departments WHERE name = 'Sales'),
+        (SELECT id FROM positions WHERE name = 'Employee'),
+        '2024-03-08',
         'WORKING',
         TRUE
     );
@@ -407,9 +546,18 @@ UPDATE departments
 SET manager_user_id = (SELECT id FROM users WHERE email = 'hrmanager@company.com')
 WHERE name = 'Human Resources';
 
+-- IT theo yêu cầu không có Department Manager
 UPDATE departments
-SET manager_user_id = (SELECT id FROM users WHERE email = 'itmanager@company.com')
+SET manager_user_id = NULL
 WHERE name = 'Information Technology';
+
+UPDATE departments
+SET manager_user_id = (SELECT id FROM users WHERE email = 'financemanager@company.com')
+WHERE name = 'Finance';
+
+UPDATE departments
+SET manager_user_id = (SELECT id FROM users WHERE email = 'salesmanager@company.com')
+WHERE name = 'Sales';
 
 -- 16. INSERT PERMISSIONS
 
@@ -633,6 +781,9 @@ WHERE r.name = 'DEPARTMENT_MANAGER'
 );
 
 -- PAYROLL_STAFF
+-- Role này vẫn giữ lại để sau này làm payroll.
+-- Tuy nhiên trong sample users hiện tại chưa gán user nào là PAYROLL_STAFF,
+-- vì Finance chỉ có position Department Manager và Employee.
 
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
@@ -726,43 +877,69 @@ VALUES
         'Sample contract for HR Staff'
     ),
     (
-        (SELECT id FROM users WHERE email = 'itmanager@company.com'),
+        (SELECT id FROM users WHERE email = 'itemployee@company.com'),
         'HDLD-2024-003',
         'FIXED_TERM',
         '2024-02-15',
         '2025-02-15',
-        22000000,
+        12000000,
         'Monday to Friday, 8:00 - 17:00',
         'Da Nang Office',
         'ACTIVE',
         NULL,
-        'Sample contract for IT Manager'
+        'Sample contract for IT Employee'
     ),
     (
-        (SELECT id FROM users WHERE email = 'payroll@company.com'),
+        (SELECT id FROM users WHERE email = 'financemanager@company.com'),
         'HDLD-2024-004',
         'FIXED_TERM',
         '2024-03-01',
         '2025-03-01',
-        16000000,
+        22000000,
         'Monday to Friday, 8:00 - 17:00',
         'Ho Chi Minh Office',
         'ACTIVE',
         NULL,
-        'Sample contract for Payroll Staff'
+        'Sample contract for Finance Manager'
     ),
     (
-        (SELECT id FROM users WHERE email = 'employee@company.com'),
+        (SELECT id FROM users WHERE email = 'financeemployee@company.com'),
         'HDLD-2024-005',
         'FIXED_TERM',
         '2024-03-15',
         '2025-03-15',
         12000000,
         'Monday to Friday, 8:00 - 17:00',
-        'Da Nang Office',
+        'Ho Chi Minh Office',
         'ACTIVE',
         NULL,
-        'Sample contract for Employee'
+        'Sample contract for Finance Employee'
+    ),
+    (
+        (SELECT id FROM users WHERE email = 'salesmanager@company.com'),
+        'HDLD-2024-006',
+        'FIXED_TERM',
+        '2024-04-01',
+        '2025-04-01',
+        20000000,
+        'Monday to Friday, 8:00 - 17:00',
+        'Ha Noi Office',
+        'ACTIVE',
+        NULL,
+        'Sample contract for Sales Manager'
+    ),
+    (
+        (SELECT id FROM users WHERE email = 'salesemployee@company.com'),
+        'HDLD-2024-007',
+        'FIXED_TERM',
+        '2024-04-15',
+        '2025-04-15',
+        11000000,
+        'Monday to Friday, 8:00 - 17:00',
+        'Ha Noi Office',
+        'ACTIVE',
+        NULL,
+        'Sample contract for Sales Employee'
     );
 
 -- 19. TEST ACCOUNTS
@@ -779,14 +956,22 @@ VALUES
 -- Email: hrstaff@company.com
 -- Password: 123456
 
--- DEPARTMENT_MANAGER:
--- Email: itmanager@company.com
+-- IT EMPLOYEE:
+-- Email: itemployee@company.com
 -- Password: 123456
 
--- PAYROLL_STAFF:
--- Email: payroll@company.com
+-- FINANCE MANAGER:
+-- Email: financemanager@company.com
 -- Password: 123456
 
--- EMPLOYEE:
--- Email: employee@company.com
+-- FINANCE EMPLOYEE:
+-- Email: financeemployee@company.com
+-- Password: 123456
+
+-- SALES MANAGER:
+-- Email: salesmanager@company.com
+-- Password: 123456
+
+-- SALES EMPLOYEE:
+-- Email: salesemployee@company.com
 -- Password: 123456
