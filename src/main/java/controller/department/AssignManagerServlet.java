@@ -96,11 +96,18 @@ public class AssignManagerServlet extends HttpServlet {
 
         boolean isHR = "Human Resources".equalsIgnoreCase(department.getName());
         boolean isIT = "Information Technology".equalsIgnoreCase(department.getName());
-
+        boolean isFI =  "Finance".equalsIgnoreCase(department.getName());
         // Xử lý trưởng phòng cũ
         Integer oldManagerPositionId = null;
         if (currentManagerId != null) {
-            String oldPositionName = isHR ? "HR Staff" : "Employee";
+            String oldPositionName = null;
+            if(isHR){
+                oldPositionName = "HR Staff";
+            }else if(isFI){
+                oldPositionName = "Payroll Staff";
+            }else{
+                oldPositionName = "Employee";
+            }
             Position oldPosition = positionDAO.findByName(oldPositionName);
 
             if (oldPosition != null && oldPosition.isActive()) {
@@ -114,6 +121,8 @@ public class AssignManagerServlet extends HttpServlet {
             newPositionName = "HR Manager";
         } else if (isIT) {
             newPositionName = "System Administrator";
+        } else if (isFI) {
+            newPositionName = "Payroll Manager";
         } else {
             newPositionName = "Department Manager";
         }

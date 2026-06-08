@@ -54,11 +54,19 @@ public class UnassignManagerServlet extends HttpServlet {
             response.sendRedirect(employeeListUrl + "&error=not_current_manager");
             return;
         }
+        boolean isHR = "Human Resources".equalsIgnoreCase(department.getName());
+        boolean isIT = "Information Technology".equalsIgnoreCase(department.getName());
+        boolean isFI =  "Finance".equalsIgnoreCase(department.getName());
 
         Integer fallbackPositionId = null;
-        String fallbackPositionName = "Human Resources".equalsIgnoreCase(department.getName())
-                ? "HR Staff"
-                : "Employee";
+        String fallbackPositionName = null;
+        if(isHR){
+            fallbackPositionName = "HR Staff";
+        }else if(isFI){
+            fallbackPositionName = "Payroll Staff";
+        }else{
+            fallbackPositionName = "Employee";
+        }
         Position fallbackPosition = positionDAO.findByName(fallbackPositionName);
         if (fallbackPosition != null && fallbackPosition.isActive()) {
             fallbackPositionId = fallbackPosition.getId();
