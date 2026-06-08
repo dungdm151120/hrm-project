@@ -203,7 +203,9 @@ VALUES
      (SELECT id FROM positions WHERE name = 'Payroll Manager')),
     ((SELECT id FROM departments WHERE name = 'Finance'),
      (SELECT id FROM positions WHERE name = 'Payroll Staff')),
-
+	((SELECT id FROM departments WHERE name = 'Finance'),
+	 (SELECT id FROM positions WHERE name = 'Employee')),
+    
     ((SELECT id FROM departments WHERE name = 'Sales'),
      (SELECT id FROM positions WHERE name = 'Department Manager')),
     ((SELECT id FROM departments WHERE name = 'Sales'),
@@ -548,354 +550,105 @@ WHERE r.name = 'EMPLOYEE'
     );
 
 -- 18. SAMPLE LABOR CONTRACTS
--- Mỗi user mẫu đều có một hợp đồng lao động tương ứng
 
 INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, end_date,
                              base_salary, working_time, work_location, status, file_url, note)
 VALUES
-    -- EMP001 - ADMIN / System Administrator / IT
-    (
-        (SELECT id FROM users WHERE email = 'admin@company.com'),
-        'HDLD-2024-001',
-        'FIXED_TERM',
-        '2024-01-01',
-        '2025-01-01',
-        30000000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ha Noi Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for Admin User - System Administrator'
-    ),
-
-    -- EMP002 - IT Employee
-    (
-        (SELECT id FROM users WHERE email = 'ducanh.it@company.com'),
-        'HDLD-2024-002',
-        'FIXED_TERM',
-        '2024-01-10',
-        '2025-01-10',
-        14000000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Da Nang Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for IT Employee'
-    ),
-
-    -- EMP003 - IT Employee
-    (
-        (SELECT id FROM users WHERE email = 'giahuy.it@company.com'),
-        'HDLD-2024-003',
-        'FIXED_TERM',
-        '2024-02-01',
-        '2025-02-01',
-        13500000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ho Chi Minh Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for IT Employee'
-    ),
-
-    -- EMP004 - IT Employee
-    (
-        (SELECT id FROM users WHERE email = 'hoangnam.it@company.com'),
-        'HDLD-2024-004',
-        'FIXED_TERM',
-        '2024-02-15',
-        '2025-02-15',
-        13000000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ha Noi Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for IT Employee'
-    ),
-
-    -- EMP005 - HR Manager
-    (
-        (SELECT id FROM users WHERE email = 'hrmanager@company.com'),
-        'HDLD-2024-005',
-        'FIXED_TERM',
-        '2024-01-15',
-        '2025-01-15',
-        25000000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ha Noi Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for HR Manager'
-    ),
-
-    -- EMP006 - HR Staff
-    (
-        (SELECT id FROM users WHERE email = 'maianh.hr@company.com'),
-        'HDLD-2024-006',
-        'FIXED_TERM',
-        '2024-02-01',
-        '2025-02-01',
-        15000000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ha Noi Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for HR Staff'
-    ),
-
-    -- EMP007 - HR Staff
-    (
-        (SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'),
-        'HDLD-2024-007',
-        'FIXED_TERM',
-        '2024-02-20',
-        '2025-02-20',
-        14500000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ho Chi Minh Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for HR Staff'
-    ),
-
-    -- EMP008 - HR Staff
-    (
-        (SELECT id FROM users WHERE email = 'haiyen.hr@company.com'),
-        'HDLD-2024-008',
-        'FIXED_TERM',
-        '2024-03-01',
-        '2025-03-01',
-        14500000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Da Nang Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for HR Staff'
-    ),
-
-    -- EMP009 - Finance Manager
-    (
-        (SELECT id FROM users WHERE email = 'financemanager@company.com'),
-        'HDLD-2024-009',
-        'FIXED_TERM',
-        '2024-01-20',
-        '2025-01-20',
-        23000000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ho Chi Minh Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for Finance Department Manager'
-    ),
-
-    -- EMP010 - Finance Employee
-    (
-        (SELECT id FROM users WHERE email = 'thaovy.finance@company.com'),
-        'HDLD-2024-010',
-        'FIXED_TERM',
-        '2024-02-10',
-        '2025-02-10',
-        12500000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ho Chi Minh Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for Finance Employee'
-    ),
-
-    -- EMP011 - Finance Employee
-    (
-        (SELECT id FROM users WHERE email = 'minhkhang.finance@company.com'),
-        'HDLD-2024-011',
-        'FIXED_TERM',
-        '2024-03-05',
-        '2025-03-05',
-        12500000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ha Noi Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for Finance Employee'
-    ),
-
-    -- EMP012 - Finance Employee
-    (
-        (SELECT id FROM users WHERE email = 'phuonganh.finance@company.com'),
-        'HDLD-2024-012',
-        'FIXED_TERM',
-        '2024-03-18',
-        '2025-03-18',
-        12000000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Da Nang Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for Finance Employee'
-    ),
-
-    -- EMP013 - Sales Manager
-    (
-        (SELECT id FROM users WHERE email = 'salesmanager@company.com'),
-        'HDLD-2024-013',
-        'FIXED_TERM',
-        '2024-01-25',
-        '2025-01-25',
-        22000000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ha Noi Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for Sales Department Manager'
-    ),
-
-    -- EMP014 - Sales Employee
-    (
-        (SELECT id FROM users WHERE email = 'khanhly.sales@company.com'),
-        'HDLD-2024-014',
-        'FIXED_TERM',
-        '2024-02-12',
-        '2025-02-12',
-        11500000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Ho Chi Minh Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for Sales Employee'
-    ),
-
-    -- EMP015 - Sales Employee
-    (
-        (SELECT id FROM users WHERE email = 'quocbao.sales@company.com'),
-        'HDLD-2024-015',
-        'FIXED_TERM',
-        '2024-03-08',
-        '2025-03-08',
-        11500000,
-        'Monday to Friday, 8:00 - 17:00',
-        'Da Nang Office',
-        'ACTIVE',
-        NULL,
-        'Sample contract for Sales Employee'
-    );
+    ((SELECT id FROM users WHERE email = 'admin@company.com'),
+     'HDLD-2024-001', 'FIXED_TERM', '2024-01-01', '2025-01-01',
+     30000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
+     'Contract for System Admin'),
+    ((SELECT id FROM users WHERE email = 'hrmanager@company.com'),
+     'HDLD-2024-002', 'FIXED_TERM', '2024-01-15', '2025-01-15',
+     25000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
+     'Contract for HR Manager'),
+    ((SELECT id FROM users WHERE email = 'maianh.hr@company.com'),
+     'HDLD-2024-003', 'FIXED_TERM', '2024-02-01', '2025-02-01',
+     15000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
+     'Contract for HR Staff'),
+    ((SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'),
+     'HDLD-2024-004', 'FIXED_TERM', '2024-02-20', '2025-02-20',
+     15000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
+     'Contract for HR Staff'),
+    ((SELECT id FROM users WHERE email = 'haiyen.hr@company.com'),
+     'HDLD-2024-005', 'FIXED_TERM', '2024-03-01', '2025-03-01',
+     15000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', NULL,
+     'Contract for HR Staff'),
+    ((SELECT id FROM users WHERE email = 'ducanh.it@company.com'),
+     'HDLD-2024-006', 'FIXED_TERM', '2024-01-10', '2025-01-10',
+     12000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', NULL,
+     'Contract for IT Employee'),
+    ((SELECT id FROM users WHERE email = 'giahuy.it@company.com'),
+     'HDLD-2024-007', 'FIXED_TERM', '2024-02-01', '2025-02-01',
+     12000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
+     'Contract for IT Employee'),
+    ((SELECT id FROM users WHERE email = 'hoangnam.it@company.com'),
+     'HDLD-2024-008', 'FIXED_TERM', '2024-02-15', '2025-02-15',
+     12000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
+     'Contract for IT Employee'),
+    ((SELECT id FROM users WHERE email = 'payrollmanager@company.com'),
+     'HDLD-2024-009', 'FIXED_TERM', '2024-01-20', '2025-01-20',
+     22000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
+     'Contract for Payroll Manager'),
+    ((SELECT id FROM users WHERE email = 'thaovy.payroll@company.com'),
+     'HDLD-2024-010', 'FIXED_TERM', '2024-02-10', '2025-02-10',
+     11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
+     'Contract for Payroll Staff'),
+    ((SELECT id FROM users WHERE email = 'minhkhang.payroll@company.com'),
+     'HDLD-2024-011', 'FIXED_TERM', '2024-03-05', '2025-03-05',
+     11000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
+     'Contract for Payroll Staff'),
+    ((SELECT id FROM users WHERE email = 'phuonganh.payroll@company.com'),
+     'HDLD-2024-012', 'FIXED_TERM', '2024-03-18', '2025-03-18',
+     11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', NULL,
+     'Contract for Payroll Staff'),
+    ((SELECT id FROM users WHERE email = 'payroll@company.com'),
+     'HDLD-2024-013', 'FIXED_TERM', '2024-04-10', '2025-04-10',
+     16000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
+     'Contract for Payroll Staff'),
+    ((SELECT id FROM users WHERE email = 'salesmanager@company.com'),
+     'HDLD-2024-014', 'FIXED_TERM', '2024-01-25', '2025-01-25',
+     20000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
+     'Contract for Sales Manager'),
+    ((SELECT id FROM users WHERE email = 'khanhly.sales@company.com'),
+     'HDLD-2024-015', 'FIXED_TERM', '2024-02-12', '2025-02-12',
+     11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
+     'Contract for Sales Employee'),
+    ((SELECT id FROM users WHERE email = 'quocbao.sales@company.com'),
+     'HDLD-2024-016', 'FIXED_TERM', '2024-03-08', '2025-03-08',
+     11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', NULL,
+     'Contract for Sales Employee'),
+    ((SELECT id FROM users WHERE email = 'businessadmin@company.com'),
+     'HDLD-2024-017', 'FIXED_TERM', '2024-04-01', '2025-04-01',
+     28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
+     'Contract for Business Admin');
 
 -- 19. TEST ACCOUNTS
--- Default password for all accounts: 123456
 
--- INFORMATION TECHNOLOGY DEPARTMENT
+-- SYSTEM ADMIN (IT Manager):
+-- Email: admin@company.com / Password: 123456
 
--- Role: ADMIN
--- Position: System Administrator
--- Department: Information Technology
--- Email: admin@company.com
+-- BUSINESS ADMIN (không phòng ban, không chức vụ):
+-- Email: businessadmin@company.com / Password: 123456
+
+-- HR_MANAGER (HR Manager):
+-- Email: hrmanager@company.com / Password: 123456
+
+-- HR_STAFF:
+-- Email: maianh.hr@company.com / ngoclinh.hr@company.com / haiyen.hr@company.com
 -- Password: 123456
 
--- Role: EMPLOYEE
--- Position: Employee
--- Department: Information Technology
--- Email: ducanh.it@company.com
+-- PAYROLL_MANAGER (Finance Manager):
+-- Email: payrollmanager@company.com / Password: 123456
+
+-- PAYROLL_STAFF:
+-- Email: thaovy.payroll@company.com / minhkhang.payroll@company.com / phuonganh.payroll@company.com / payroll@company.com
 -- Password: 123456
 
--- Role: EMPLOYEE
--- Position: Employee
--- Department: Information Technology
--- Email: giahuy.it@company.com
+-- DEPARTMENT_MANAGER (Sales Manager):
+-- Email: salesmanager@company.com / Password: 123456
+
+-- EMPLOYEE:
+-- IT: ducanh.it@company.com / giahuy.it@company.com / hoangnam.it@company.com
+-- Sales: khanhly.sales@company.com / quocbao.sales@company.com
 -- Password: 123456
-
--- Role: EMPLOYEE
--- Position: Employee
--- Department: Information Technology
--- Email: hoangnam.it@company.com
--- Password: 123456
-
-
--- HUMAN RESOURCES DEPARTMENT
-
--- Role: HR_MANAGER
--- Position: HR Manager
--- Department: Human Resources
--- Email: hrmanager@company.com
--- Password: 123456
-
--- Role: HR_STAFF
--- Position: HR Staff
--- Department: Human Resources
--- Email: maianh.hr@company.com
--- Password: 123456
-
--- Role: HR_STAFF
--- Position: HR Staff
--- Department: Human Resources
--- Email: ngoclinh.hr@company.com
--- Password: 123456
-
--- Role: HR_STAFF
--- Position: HR Staff
--- Department: Human Resources
--- Email: haiyen.hr@company.com
--- Password: 123456
-
-
--- FINANCE DEPARTMENT
-
--- Role: DEPARTMENT_MANAGER
--- Position: Department Manager
--- Department: Finance
--- Email: financemanager@company.com
--- Password: 123456
-
--- Role: EMPLOYEE
--- Position: Employee
--- Department: Finance
--- Email: thaovy.finance@company.com
--- Password: 123456
-
--- Role: EMPLOYEE
--- Position: Employee
--- Department: Finance
--- Email: minhkhang.finance@company.com
--- Password: 123456
-
--- Role: EMPLOYEE
--- Position: Employee
--- Department: Finance
--- Email: phuonganh.finance@company.com
--- Password: 123456
-
-
--- SALES DEPARTMENT
-
--- Role: DEPARTMENT_MANAGER
--- Position: Department Manager
--- Department: Sales
--- Email: salesmanager@company.com
--- Password: 123456
-
--- Role: EMPLOYEE
--- Position: Employee
--- Department: Sales
--- Email: khanhly.sales@company.com
--- Password: 123456
-
--- Role: EMPLOYEE
--- Position: Employee
--- Department: Sales
--- Email: quocbao.sales@company.com
--- Password: 123456
-
-
--- =====================================================
--- NOTE
--- =====================================================
-
--- Human Resources department only has:
--- HR Manager, HR Staff
-
--- Information Technology department only has:
--- System Administrator, Employee
-
--- Finance and Sales departments only have:
--- Department Manager, Employee
-
--- PAYROLL_STAFF role is still available in roles and permissions,
--- but no sample user is assigned to this role because the current position rule
--- says Finance only has Department Manager and Employee.
