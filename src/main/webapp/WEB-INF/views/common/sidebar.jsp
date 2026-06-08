@@ -287,29 +287,96 @@
     </nav>
 </aside>
 
+<template id="globalHeaderActions">
+  <div class="header-right global-header-actions">
+    <button type="button" class="header-icon" aria-label="Notifications">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+    </button>
+
+    <div class="header-profile" data-profile-dropdown-toggle>
+      <c:choose>
+        <c:when test="${not empty sessionScope.currentUser.avatarUrl}">
+          <img src="${sessionScope.currentUser.avatarUrl}" alt="User" class="profile-avatar">
+        </c:when>
+        <c:otherwise>
+          <div class="avatar-placeholder-small">${sessionScope.currentUser.fullName.substring(0,1)}</div>
+        </c:otherwise>
+      </c:choose>
+      <div class="profile-info">
+        <p class="profile-name">${sessionScope.currentUser.fullName}</p>
+        <p class="profile-status">Online</p>
+      </div>
+      <div class="dropdown-menu" data-profile-dropdown>
+        <a href="${ctx}/profile" class="dropdown-item">View My Profile</a>
+        <a href="${ctx}/change-password" class="dropdown-item">Change Password</a>
+        <a href="${ctx}/logout" class="dropdown-item">Logout</a>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script>
   (function() {
-    const toggles = document.querySelectorAll('.nav-toggle');
-    toggles.forEach(function(toggle) {
-      const submenu = toggle.nextElementSibling;
-      if (!submenu) return;
-      if (toggle.classList.contains('open')) {
-        submenu.style.display = 'flex';
-      } else {
-        submenu.style.display = 'none';
-      }
-      toggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (this.classList.contains('open') && submenu.querySelector('.submenu-item.active')) {
-          return;
-        }
-        this.classList.toggle('open');
-        if (this.classList.contains('open')) {
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggles = document.querySelectorAll('.nav-toggle');
+      toggles.forEach(function(toggle) {
+        const submenu = toggle.nextElementSibling;
+        if (!submenu) return;
+        if (toggle.classList.contains('open')) {
           submenu.style.display = 'flex';
         } else {
           submenu.style.display = 'none';
         }
+        toggle.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (this.classList.contains('open') && submenu.querySelector('.submenu-item.active')) {
+            return;
+          }
+          this.classList.toggle('open');
+          if (this.classList.contains('open')) {
+            submenu.style.display = 'flex';
+          } else {
+            submenu.style.display = 'none';
+          }
+        });
       });
+
+      const header = document.querySelector('.dashboard-header');
+      const content = document.querySelector('.dashboard-content');
+      const headerTemplate = document.getElementById('globalHeaderActions');
+
+      if (header && headerTemplate) {
+        const existingActions = header.querySelector('.header-right:not(.global-header-actions)');
+        if (existingActions) {
+          if (content && existingActions.children.length > 0) {
+            const pageActions = document.createElement('div');
+            pageActions.className = 'page-actions';
+            while (existingActions.firstChild) {
+              pageActions.appendChild(existingActions.firstChild);
+            }
+            content.prepend(pageActions);
+          }
+          existingActions.remove();
+        }
+
+        header.appendChild(headerTemplate.content.cloneNode(true));
+      }
+
+      const profileToggle = document.querySelector('[data-profile-dropdown-toggle]');
+      const profileDropdown = document.querySelector('[data-profile-dropdown]');
+      if (profileToggle && profileDropdown) {
+        profileToggle.addEventListener('click', function(e) {
+          e.stopPropagation();
+          profileDropdown.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function() {
+          profileDropdown.classList.remove('show');
+        });
+      }
     });
   })();
 </script>

@@ -430,6 +430,11 @@ tbody tr:last-child td {
     gap: 0.5rem;
 }
 
+.inline-action-form {
+    display: inline-flex;
+    margin: 0;
+}
+
 .btn, .actions a {
     display: inline-flex;
     align-items: center;
@@ -1439,6 +1444,15 @@ body.dashboard-body {
     display: flex;
     align-items: center;
     gap: 1.5rem;
+}
+
+.page-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
 }
 
 .search-box {
@@ -2876,6 +2890,13 @@ body.dashboard-body {
     }
     .header-right {
         flex-wrap: wrap;
+    }
+    .global-header-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .page-actions {
+        justify-content: flex-start;
     }
     .search-box {
         width: 100%;

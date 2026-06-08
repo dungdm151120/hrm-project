@@ -21,34 +21,6 @@
             <div class="header-left">
                 <h1 class="header-title">Dashboard</h1>
             </div>
-            <div class="header-right">
-
-                <button class="header-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    </svg>
-                </button>
-                <div class="header-profile" id="profileDropdownToggle">
-                    <c:choose>
-                        <c:when test="${not empty currentUser.avatarUrl}">
-                            <img src="${currentUser.avatarUrl}" alt="User" class="profile-avatar">
-                        </c:when>
-                        <c:otherwise>
-                            <div class="avatar-placeholder-small">${currentUser.fullName.substring(0,1)}</div>
-                        </c:otherwise>
-                    </c:choose>
-                    <div class="profile-info">
-                        <p class="profile-name">${currentUser.fullName}</p>
-                        <p class="profile-status">Online</p>
-                    </div>
-                    <div class="dropdown-menu" id="profileDropdown">
-                        <a href="${pageContext.request.contextPath}/profile" class="dropdown-item">View My Profile</a>
-                        <a href="${pageContext.request.contextPath}/change-password" class="dropdown-item">Change Password</a>
-                        <a href="${pageContext.request.contextPath}/logout" class="dropdown-item">Logout</a>
-                    </div>
-                </div>
-            </div>
         </header>
 
         <div class="dashboard-content">
@@ -112,22 +84,6 @@
         </div>
     </main>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toggle = document.getElementById('profileDropdownToggle');
-        const dropdown = document.getElementById('profileDropdown');
-
-        toggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            dropdown.classList.toggle('show');
-        });
-
-        document.addEventListener('click', function() {
-            dropdown.classList.remove('show');
-        });
-    });
-</script>
 
 </body>
 </html>
