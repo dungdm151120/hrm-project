@@ -1,5 +1,6 @@
 package controller.admin;
 
+import dao.LaborContractDAO;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -35,13 +36,22 @@ public class ChangeUserStatusServlet extends HttpServlet {
 
             boolean newStatus = "activate".equalsIgnoreCase(actionParam);
 
+            if (!newStatus) {
+                LaborContractDAO contractDAO = new LaborContractDAO();
+                if (!contractDAO.canDeactivateUser(userId)) {
+                    session.setAttribute("error", "User cannot be deactivated while they still have an active contract.");
+                    resp.sendRedirect(req.getContextPath() + "/user_list");
+                    return;
+                }
+            }
+
             UserDAO dao = new UserDAO();
             boolean isUpdated = dao.updateUserStatus(userId, newStatus);
 
             if (isUpdated) {
                 session.setAttribute("message", "Status changed successfully!");
             } else {
-                session.setAttribute("error", "Status changed successfully!");
+                session.setAttribute("error", "Status change failed!");
             }
 
         } catch (NumberFormatException e) {

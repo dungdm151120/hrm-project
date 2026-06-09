@@ -21,7 +21,7 @@ public class UpdateContractServlet extends HttpServlet {
         if (contract == null) {
             return;
         }
-        if (isTerminated(contract)) {
+        if (!isActive(contract)) {
             response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contract.getId());
             return;
         }
@@ -36,7 +36,7 @@ public class UpdateContractServlet extends HttpServlet {
         if (current == null) {
             return;
         }
-        if (isTerminated(current)) {
+        if (!isActive(current)) {
             response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + current.getId());
             return;
         }
@@ -98,10 +98,6 @@ public class UpdateContractServlet extends HttpServlet {
     }
 
     private String validateUpdate(LaborContract current, LaborContract contract) {
-        if (!"TERMINATED".equals(current.getStatus()) && "TERMINATED".equals(contract.getStatus())) {
-            return "Use the Terminate Contract action to terminate a contract.";
-        }
-
         boolean activeDateOverlap = "ACTIVE".equals(contract.getStatus())
                 && contractDAO.existsOverlappingActiveContract(
                         contract.getUserId(),
@@ -116,7 +112,7 @@ public class UpdateContractServlet extends HttpServlet {
         return null;
     }
 
-    private boolean isTerminated(LaborContract contract) {
-        return contract != null && "TERMINATED".equals(contract.getStatus());
+    private boolean isActive(LaborContract contract) {
+        return contract != null && "ACTIVE".equals(contract.getStatus());
     }
 }

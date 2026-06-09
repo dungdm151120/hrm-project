@@ -91,10 +91,8 @@
 
                 <div class="form-group">
                     <label for="status">Status <span class="required-star">*</span></label>
-                    <select id="status" name="status" required>
-                        <option value="ACTIVE" ${empty contract.status || contract.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
-                        <option value="EXPIRED" ${contract.status == 'EXPIRED' ? 'selected' : ''}>EXPIRED</option>
-                    </select>
+                    <input type="hidden" id="status" name="status" value="ACTIVE">
+                    <input type="text" value="${contract.status}" readonly>
                 </div>
 
                 <div class="form-group">
@@ -121,6 +119,9 @@
         const contractType = document.getElementById('contractType');
         const endDateGroup = document.getElementById('endDateGroup');
         const endDate = document.getElementById('endDate');
+        const today = new Date().toISOString().split('T')[0];
+
+        endDate.min = today;
 
         function handleContractTypeChange() {
             const isIndefiniteTerm = contractType.value === 'INDEFINITE_TERM';

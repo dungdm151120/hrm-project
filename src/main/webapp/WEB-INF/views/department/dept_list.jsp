@@ -20,7 +20,9 @@
                 <h1 class="header-title">Department List</h1>
             </div>
             <div class="header-right">
-                <a href="${pageContext.request.contextPath}/admin/departments/add" class="btn-primary">Add New Department</a>
+                <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                    <a href="${pageContext.request.contextPath}/admin/departments/add" class="btn-primary">Add New Department</a>
+                </c:if>
             </div>
         </div>
 
@@ -59,6 +61,7 @@
                         <th>Name</th>
                         <th>Description</th>
                         <th>Manager</th>
+                        <th>Members</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -84,6 +87,7 @@
                                     </c:otherwise>
                                 </c:choose>
                             </td>
+                            <td>${memberCountMap[dept.id]}</td>
                             <td>
                                 <c:choose>
                                     <c:when test="${dept.active}">
@@ -97,25 +101,27 @@
                             <td>
                                 <div class="actions">
                                     <a href="${pageContext.request.contextPath}/admin/departments/detail?id=${dept.id}">View Detail</a>
-                                    <a href="${pageContext.request.contextPath}/admin/departments/update?id=${dept.id}">Update</a>
-                                    <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">
-                                        <input type="hidden" name="id" value="${dept.id}">
-                                        <button type="submit"
-                                                class="btn ${dept.active ? 'btn-danger' : 'btn-warning'}"
-                                                onclick="return confirm('Are you sure?')">
-                                            <c:choose>
-                                                <c:when test="${dept.active}">Deactivate</c:when>
-                                                <c:otherwise>Activate</c:otherwise>
-                                            </c:choose>
-                                        </button>
-                                    </form>
+                                    <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                                        <a href="${pageContext.request.contextPath}/admin/departments/update?id=${dept.id}">Update</a>
+                                        <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">
+                                            <input type="hidden" name="id" value="${dept.id}">
+                                            <button type="submit"
+                                                    class="btn ${dept.active ? 'btn-danger' : 'btn-warning'}"
+                                                    onclick="return confirm('Are you sure?')">
+                                                <c:choose>
+                                                    <c:when test="${dept.active}">Deactivate</c:when>
+                                                    <c:otherwise>Activate</c:otherwise>
+                                                </c:choose>
+                                            </button>
+                                        </form>
+                                    </c:if>
                                 </div>
                             </td>
                         </tr>
                     </c:forEach>
                     <c:if test="${empty departmentList}">
                         <tr>
-                            <td colspan="6" class="empty-state">No departments found.</td>
+                            <td colspan="7" class="empty-state">No departments found.</td>
                         </tr>
                     </c:if>
                     </tbody>

@@ -311,8 +311,15 @@ body {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
 }
 
-.employee-search-form input[type="text"] {
+.employee-search-form input[type="text"],
+.employee-search-form input[type="search"] {
     flex: 0 1 260px;
+}
+
+.employee-search-summary {
+    margin: -0.75rem 0 1rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
 .employee-add-member {
@@ -428,6 +435,11 @@ tbody tr:last-child td {
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
+}
+
+.inline-action-form {
+    display: inline-flex;
+    margin: 0;
 }
 
 .btn, .actions a {
@@ -1439,6 +1451,15 @@ body.dashboard-body {
     display: flex;
     align-items: center;
     gap: 1.5rem;
+}
+
+.page-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
 }
 
 .search-box {
@@ -2876,6 +2897,13 @@ body.dashboard-body {
     }
     .header-right {
         flex-wrap: wrap;
+    }
+    .global-header-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .page-actions {
+        justify-content: flex-start;
     }
     .search-box {
         width: 100%;

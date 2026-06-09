@@ -41,18 +41,28 @@ public class DeptToggleStatusServlet extends HttpServlet {
         }
 
         boolean newStatus = !dept.isActive();
+
+        if (!newStatus) {
+            int memberCount = userDAO.countUsersByDepartment(id);
+            if (memberCount > 0) {
+                response.sendRedirect(redirectURL + "?error=Cannot deactivate department with existing members. Please move or remove all employees first.");
+                return;
+            }
+        }
+
         boolean updated = departmentDAO.toggleStatus(id, newStatus);
 
         if (updated) {
             if (!newStatus) {
-                // Deactivate: đá toàn bộ thành viên khỏi phòng ban
-                userDAO.removeDepartmentFromUsers(id);
-                // Xóa trưởng phòng (set manager_user_id = NULL)
-                departmentDAO.removeManager(id);
+                Integer managerId = dept.getManagerUserId();
+                if (managerId != null) {
+                    departmentDAO.removeManager(id);
+                    userDAO.clearDepartmentAndPosition(managerId);
+                }
             }
             String msg = newStatus
                     ? "Department activated successfully"
-                    : "Department deactivated successfully. All members removed and manager cleared.";
+                    : "Department deactivated successfully.";
             response.sendRedirect(redirectURL + "?success=" + java.net.URLEncoder.encode(msg, "UTF-8"));
         } else {
             response.sendRedirect(redirectURL + "?error=Toggle failed");

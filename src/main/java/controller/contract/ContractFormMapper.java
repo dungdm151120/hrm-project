@@ -12,7 +12,7 @@ final class ContractFormMapper {
             "FIXED_TERM", "INDEFINITE_TERM", "PROBATION", "PART_TIME"
     );
     private static final Set<String> VALID_STATUSES = Set.of(
-            "ACTIVE", "EXPIRED", "TERMINATED"
+            "ACTIVE"
     );
 
     private ContractFormMapper() {
@@ -40,6 +40,10 @@ final class ContractFormMapper {
             throw new IllegalArgumentException("End date must be after start date.");
         }
 
+        if (contract.getEndDate() != null && contract.getEndDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("End date cannot be in the past.");
+        }
+
         return contract;
     }
 
@@ -54,7 +58,7 @@ final class ContractFormMapper {
     private static String validStatus(String value) {
         String status = required(value, "Status is required.").toUpperCase();
         if (!VALID_STATUSES.contains(status)) {
-            throw new IllegalArgumentException("Invalid contract status.");
+            throw new IllegalArgumentException("Contract status is managed automatically.");
         }
         return status;
     }

@@ -37,15 +37,24 @@ public class ChangePositionStatusServlet extends HttpServlet {
             boolean newStatus = "activate".equalsIgnoreCase(actionParam);
 
             PositionDAO positionDAO = new PositionDAO();
+            UserDAO userDAO = new UserDAO();
 
             if (!newStatus) {
+
+                boolean isAssigned = userDAO.isPositionAssigned(positionId);
+                if (isAssigned) {
+                    session.setAttribute("error", "Không thể vô hiệu hóa vì đang có nhân viên đảm nhận vị trí này!");
+                    response.sendRedirect(request.getContextPath() + "/position/list");
+                    return;
+                }
+
                 Position position = positionDAO.findById(positionId);
                 if (position != null) {
                     String posName = position.getName();
                     if ("System Administrator".equalsIgnoreCase(posName) ||
                             "HR Manager".equalsIgnoreCase(posName) ||
                             "Department Manager".equalsIgnoreCase(posName)) {
-                        session.setAttribute("error", "Không thể vô hiệu hóa vị trí quản lý: " + posName);
+                        session.setAttribute("error", "Không thể vô hiệu hóa vị trí quản lý hệ thống: " + posName);
                         response.sendRedirect(request.getContextPath() + "/position/list");
                         return;
                     }
@@ -55,10 +64,9 @@ public class ChangePositionStatusServlet extends HttpServlet {
             boolean isUpdated = positionDAO.updatePositionStatus(positionId, newStatus);
 
             if (isUpdated) {
-                if (!newStatus) { // deactivate
-                    UserDAO userDAO = new UserDAO();
+                if (!newStatus) {
                     userDAO.clearPositionForUsers(positionId);
-                    session.setAttribute("message", "Đã vô hiệu hóa vị trí và xóa khỏi tất cả nhân viên đang giữ.");
+                    session.setAttribute("message", "Đã vô hiệu hóa vị trí thành công.");
                 } else {
                     session.setAttribute("message", "Đã kích hoạt vị trí thành công.");
                 }

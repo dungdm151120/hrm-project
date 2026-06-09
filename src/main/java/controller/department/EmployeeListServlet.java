@@ -41,6 +41,7 @@ public class EmployeeListServlet extends HttpServlet {
         String keyword = request.getParameter("keyword");
         if (keyword == null) keyword = request.getParameter("search");
         if (keyword == null) keyword = "";
+        keyword = keyword.trim().replaceAll("\\s+", " ");
 
         String status = request.getParameter("status");
         if (status == null || status.trim().isEmpty()) status = "all";
@@ -62,13 +63,15 @@ public class EmployeeListServlet extends HttpServlet {
         }
 
         Department department = departmentDAO.getDepartmentById(id);
+        Integer managerUserId = department != null ? department.getManagerUserId() : null;
         int totalEmployees = userDAO.countEmployeesByDepartment(id, keyword, status);
         int totalPages = (int) Math.ceil((double) totalEmployees / PAGE_SIZE);
         if (totalPages > 0 && currentPage > totalPages) currentPage = totalPages;
 
-        List<User> employees = userDAO.getEmployeesByDepartment(id, keyword, status, sort, currentPage, PAGE_SIZE);
+        List<User> employees = userDAO.getEmployeesByDepartment(
+                id, keyword, status, sort, currentPage, PAGE_SIZE, managerUserId
+        );
 
-        Integer managerUserId = department != null ? department.getManagerUserId() : null;
         for (User u : employees) {
             boolean isDepartmentManager = managerUserId != null && managerUserId == u.getId();
             u.setManager(isDepartmentManager);
@@ -83,6 +86,7 @@ public class EmployeeListServlet extends HttpServlet {
         request.setAttribute("sort", sort);
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalEmployees", totalEmployees);
         request.setAttribute("pageSize", PAGE_SIZE);
         request.setAttribute("id", id);
 

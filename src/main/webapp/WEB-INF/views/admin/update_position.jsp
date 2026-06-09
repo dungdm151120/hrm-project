@@ -34,14 +34,15 @@
 
                 <div class="form-group">
                     <label for="departmentId">Department <span class="required-star">*</span></label>
-                    <select id="departmentId" name="departmentId" required>
-                        <option value="" disabled>-- Select a department --</option>
+
+                    <select id="departmentIdDisplay" class="form-control" disabled>
                         <c:forEach items="${departments}" var="dept">
                             <option value="${dept.id}" ${dept.id == position.departmentId ? 'selected' : ''}>
                                 ${dept.name}
                             </option>
                         </c:forEach>
                     </select>
+                    <input type="hidden" name="departmentId" value="${position.departmentId}" />
                 </div>
 
                 <div class="form-group">

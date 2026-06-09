@@ -46,11 +46,12 @@
 
             <c:if test="${not empty department}">
 
-                <!-- Nút hành động màu xanh, đặt trên cùng của nội dung chi tiết -->
                 <div class="department-actions">
                     <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${department.id}" class="btn-primary">View employee list</a>
-                    <a href="${pageContext.request.contextPath}/admin/departments/assign-manager?id=${department.id}" class="btn-primary">Assign Manager</a>
-                    <a href="${pageContext.request.contextPath}/admin/departments/assign-positions?id=${department.id}" class="btn-primary">Assign Positions</a>
+                    <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                        <a href="${pageContext.request.contextPath}/admin/departments/assign-manager?id=${department.id}" class="btn-primary">Assign Manager</a>
+                        <a href="${pageContext.request.contextPath}/admin/departments/assign-positions?id=${department.id}" class="btn-primary">Assign Positions</a>
+                    </c:if>
                 </div>
 
                 <div class="detail-content">
@@ -103,18 +104,20 @@
                         </tr>
                     </table>
 
-                    <div class="form-actions">
-                        <a href="${pageContext.request.contextPath}/admin/departments/update?id=${department.id}" class="btn-primary">Update Info</a>
-                        <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">
-                            <input type="hidden" name="id" value="${department.id}">
-                            <button type="submit" class="btn ${department.active ? 'btn-danger' : 'btn-warning'}" onclick="return confirm('Are you sure?')">
-                                <c:choose>
-                                    <c:when test="${department.active}">Deactivate</c:when>
-                                    <c:otherwise>Activate</c:otherwise>
-                                </c:choose>
-                            </button>
-                        </form>
-                    </div>
+                    <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                        <div class="form-actions">
+                            <a href="${pageContext.request.contextPath}/admin/departments/update?id=${department.id}" class="btn-primary">Update Info</a>
+                            <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">
+                                <input type="hidden" name="id" value="${department.id}">
+                                <button type="submit" class="btn ${department.active ? 'btn-danger' : 'btn-warning'}" onclick="return confirm('Are you sure?')">
+                                    <c:choose>
+                                        <c:when test="${department.active}">Deactivate</c:when>
+                                        <c:otherwise>Activate</c:otherwise>
+                                    </c:choose>
+                                </button>
+                            </form>
+                        </div>
+                    </c:if>
                 </div>
             </c:if>
         </div>

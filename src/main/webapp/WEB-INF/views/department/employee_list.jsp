@@ -34,20 +34,33 @@
                 <div class="alert alert-error">⚠ ${param.error}</div>
             </c:if>
 
+            <c:if test="${not empty param.msg}">
+                <div class="alert alert-success">
+                    <c:choose>
+                        <c:when test="${param.msg == 'unassign_manager_success'}">Manager unassigned successfully.</c:when>
+                        <c:otherwise>${param.msg}</c:otherwise>
+                    </c:choose>
+                </div>
+            </c:if>
+
             <div class="employee-list-toolbar">
                 <form action="${pageContext.request.contextPath}/admin/departments/employees" method="get" class="employee-search-form">
                     <input type="hidden" name="id" value="${id}">
-                    <input type="hidden" name="page" value="${currentPage}">
+                    <input type="hidden" name="page" value="1">
 
-                    <input type="text" name="keyword" placeholder="Search by name or email..." value="${keyword}">
+                    <input type="search"
+                           name="keyword"
+                           aria-label="Search employees"
+                           placeholder="Search by name, email, phone or position..."
+                           value="<c:out value='${keyword}'/>">
 
-                    <select name="status">
+                    <select name="status" aria-label="Filter by status" onchange="this.form.submit()">
                         <option value="all" ${status == 'all' ? 'selected' : ''}>All Status</option>
                         <option value="active" ${status == 'active' ? 'selected' : ''}>Active</option>
                         <option value="inactive" ${status == 'inactive' ? 'selected' : ''}>Inactive</option>
                     </select>
 
-                    <select name="sort" onchange="this.form.submit()">
+                    <select name="sort" aria-label="Sort by name" onchange="this.form.submit()">
                         <option value="name_asc" ${sort == 'name_asc' ? 'selected' : ''}>Name A-Z</option>
                         <option value="name_desc" ${sort == 'name_desc' ? 'selected' : ''}>Name Z-A</option>
                     </select>
@@ -56,8 +69,16 @@
                     <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${id}" class="btn-reset">Clear</a>
                 </form>
 
-                <a href="${pageContext.request.contextPath}/add_member?deptId=${id}" class="employee-add-member">Add Member</a>
+                <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                    <a href="${pageContext.request.contextPath}/add_member?deptId=${id}" class="employee-add-member">Add Member</a>
+                </c:if>
             </div>
+
+            <c:if test="${not empty keyword || status != 'all'}">
+                <div class="employee-search-summary">
+                    ${totalEmployees} employee${totalEmployees == 1 ? '' : 's'} found.
+                </div>
+            </c:if>
 
             <div class="table-wrapper">
                 <table>
@@ -70,7 +91,9 @@
                         <th>Position</th>
                         <th>Department</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                            <th>Action</th>
+                        </c:if>
                     </tr>
                     </thead>
                     <tbody>
@@ -115,31 +138,56 @@
                                     </c:otherwise>
                                 </c:choose>
                             </td>
-                            <td class="actions">
-                                <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}"
-                                   class="btn-secondary"
-                                   <c:if test="${user.manager}">
-                                       onclick="alert('Cannot move Manager!'); return false;"
-                                   </c:if>>
-                                    Move
-                                </a>
+                            <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                                <td class="actions">
+                                    <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}"
+                                       class="btn-secondary"
+                                       <c:if test="${user.manager}">
+                                           onclick="alert('Cannot move Manager!'); return false;"
+                                       </c:if>>
+                                        Move
+                                    </a>
 
-                                <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
-                                   class="btn-danger"
-                                   <c:if test="${user.manager}">
-                                       onclick="alert('Cannot remove Manager!'); return false;"
-                                   </c:if>
-                                   <c:if test="${not user.manager}">
-                                       onclick="return confirm('Remove this employee?')"
-                                   </c:if>>
-                                    Remove
-                                </a>
-                            </td>
+                                    <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
+                                       class="btn-danger"
+                                       <c:if test="${user.manager}">
+                                           onclick="alert('Cannot remove Manager!'); return false;"
+                                       </c:if>
+                                       <c:if test="${not user.manager}">
+                                           onclick="return confirm('Remove this employee?')"
+                                       </c:if>>
+                                        Remove
+                                    </a>
+
+                                    <c:if test="${user.manager}">
+                                        <form action="${pageContext.request.contextPath}/admin/departments/unassign-manager"
+                                              method="post"
+                                              class="inline-action-form">
+                                            <input type="hidden" name="departmentId" value="${id}">
+                                            <input type="hidden" name="userId" value="${user.id}">
+                                            <button type="submit"
+                                                    class="btn btn-warning"
+                                                    onclick="return confirm('Unassign this manager?')">
+                                                Unassign
+                                            </button>
+                                        </form>
+                                    </c:if>
+                                </td>
+                            </c:if>
                         </tr>
                     </c:forEach>
                     <c:if test="${empty employees}">
                         <tr>
-                            <td colspan="8" class="empty-state">No employees found in this department.</td>
+                            <td colspan="8" class="empty-state">
+                                <c:choose>
+                                    <c:when test="${not empty keyword || status != 'all'}">
+                                        No employees match the current search or filter.
+                                    </c:when>
+                                    <c:otherwise>
+                                        No employees found in this department.
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
                         </tr>
                     </c:if>
                     </tbody>

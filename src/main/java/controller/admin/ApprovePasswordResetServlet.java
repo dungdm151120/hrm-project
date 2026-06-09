@@ -38,12 +38,13 @@ public class ApprovePasswordResetServlet extends HttpServlet {
         }
 
         String newPassword = PasswordUtil.generateRandomPassword(10);
-        boolean passwordUpdated = userDAO.updatePassword(resetRequest.getUserId(), newPassword);
+        String passwordHash = PasswordUtil.hashPassword(newPassword);
+        boolean passwordUpdated = userDAO.updatePassword(resetRequest.getUserId(), passwordHash);
 
         if (passwordUpdated) {
             boolean mailSent = EmailUtil.sendResetPasswordEmail(resetRequest.getEmail(), newPassword);
             String adminNote = mailSent ? "Password reset email sent." : "Password reset, but mail is not configured or failed.";
-            requestDAO.approve(requestId, newPassword, adminId, adminNote);
+            requestDAO.approve(requestId, null, adminId, adminNote);
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/password-reset-requests");

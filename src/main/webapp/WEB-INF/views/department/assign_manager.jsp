@@ -26,7 +26,9 @@
 
         <div class="dashboard-content">
             <h2 class="form-title">Department: <strong>${department.name}</strong></h2>
-            <p class="role-description">Select an active employee to become the department manager.</p>
+            <p class="role-description">
+                Select an active employee in this department or an employee who has not been assigned to a department.
+            </p>
 
             <c:if test="${not empty sessionScope.error}">
                 <div class="alert alert-error">${sessionScope.error}</div>
@@ -37,7 +39,7 @@
                 <input type="hidden" name="departmentId" value="${department.id}" />
 
                 <c:if test="${empty employees}">
-                    <div class="empty-state">No active employees found in this department.</div>
+                    <div class="empty-state">No eligible active employees found.</div>
                 </c:if>
 
                 <c:if test="${not empty employees}">
@@ -50,16 +52,15 @@
                                     <c:if test="${not empty emp.positionName}">
                                         <span class="badge badge-manager">${emp.positionName}</span>
                                     </c:if>
+                                    <c:if test="${empty emp.departmentId}">
+                                        <span class="badge">Unassigned</span>
+                                    </c:if>
                                 </div>
                             </label>
                         </c:forEach>
                     </div>
 
-                    <div class="info-note">
-                        <strong>Note:</strong> If this is the <em>Human Resources</em> department,
-                        the selected employee will become <strong>HR Manager</strong>.
-                        For other departments, the position will be <strong>Department Manager</strong>.
-                    </div>
+
 
                     <div class="form-actions">
                         <button type="submit" class="btn-save" onclick="return confirm('Assign this employee as department manager?')">Assign Manager</button>

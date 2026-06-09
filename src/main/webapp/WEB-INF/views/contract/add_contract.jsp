@@ -32,10 +32,13 @@
             <form action="${pageContext.request.contextPath}/contracts/add" method="post">
                 <div class="form-group">
                     <label for="userId">Employee <span class="required-star">*</span></label>
+                    <input type="text" id="employeeSearch" placeholder="Search employee by name or email...">
                     <select id="userId" name="userId" required>
                         <option value="">Select employee</option>
                         <c:forEach items="${users}" var="user">
-                            <option value="${user.id}" ${contract.userId == user.id ? 'selected' : ''}>
+                            <option value="${user.id}"
+                                    data-search="${user.fullName} ${user.email}"
+                                    ${contract.userId == user.id ? 'selected' : ''}>
                                     ${user.fullName} - ${user.email}
                             </option>
                         </c:forEach>
@@ -84,9 +87,8 @@
 
                 <div class="form-group">
                     <label for="status">Status <span class="required-star">*</span></label>
-                    <select id="status" name="status" required>
-                        <option value="ACTIVE" selected>ACTIVE</option>
-                    </select>
+                    <input type="hidden" id="status" name="status" value="ACTIVE">
+                    <input type="text" value="ACTIVE" readonly>
                 </div>
 
                 <div class="form-group">
@@ -113,6 +115,12 @@
         const contractType = document.getElementById('contractType');
         const endDateGroup = document.getElementById('endDateGroup');
         const endDate = document.getElementById('endDate');
+        const employeeSearch = document.getElementById('employeeSearch');
+        const employeeSelect = document.getElementById('userId');
+        const employeeOptions = Array.from(employeeSelect.options);
+        const today = new Date().toISOString().split('T')[0];
+
+        endDate.min = today;
 
         function handleContractTypeChange() {
             const isIndefiniteTerm = contractType.value === 'INDEFINITE_TERM';
@@ -123,7 +131,19 @@
             }
         }
 
+        function handleEmployeeSearch() {
+            const keyword = employeeSearch.value.trim().toLowerCase();
+            employeeOptions.forEach(function (option) {
+                if (!option.value) {
+                    option.hidden = false;
+                    return;
+                }
+                option.hidden = !option.dataset.search.toLowerCase().includes(keyword);
+            });
+        }
+
         contractType.addEventListener('change', handleContractTypeChange);
+        employeeSearch.addEventListener('input', handleEmployeeSearch);
         handleContractTypeChange();
     });
 </script>

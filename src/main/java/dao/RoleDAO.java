@@ -89,7 +89,15 @@ public class RoleDAO {
         }
     }
 
+    private boolean isBusinessAdminRole(int roleId) {
+        Role role = getRoleById(roleId);
+        return role != null && "BUSINESS ADMIN".equals(role.getName());
+    }
+
     public void deleteRolePermissions(int roleId) {
+        if (isBusinessAdminRole(roleId)) {
+            return;
+        }
         String sql = "DELETE FROM role_permissions WHERE role_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -99,8 +107,24 @@ public class RoleDAO {
             e.printStackTrace();
         }
     }
+    public Role findByName(String name) {
+        String sql = "SELECT * FROM roles WHERE name = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public boolean insertRolePermissions(int roleId, List<Integer> permissionIds) {
+        if (isBusinessAdminRole(roleId)) {
+            return false;
+        }
         if (permissionIds == null || permissionIds.isEmpty()) return true;
         String sql = "INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)";
         try (Connection conn = DBConnection.getConnection();

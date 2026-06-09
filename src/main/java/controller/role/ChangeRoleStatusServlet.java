@@ -1,6 +1,7 @@
 package controller.role;
 
 import dao.RoleDAO;
+import dao.UserDAO;
 import model.Role;
 
 import jakarta.servlet.ServletException;
@@ -12,14 +13,17 @@ import java.io.IOException;
 public class ChangeRoleStatusServlet extends HttpServlet {
 
     private final RoleDAO roleDAO = new RoleDAO();
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String idParam = request.getParameter("roleId");
+        String redirectURL = request.getContextPath() + "/admin/roles";
+
         if (idParam == null || idParam.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/admin/roles");
+            response.sendRedirect(redirectURL);
             return;
         }
 
@@ -27,20 +31,27 @@ public class ChangeRoleStatusServlet extends HttpServlet {
         try {
             roleId = Integer.parseInt(idParam);
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/roles");
+            response.sendRedirect(redirectURL);
             return;
         }
 
         Role role = roleDAO.getRoleById(roleId);
         if (role == null) {
-            response.sendRedirect(request.getContextPath() + "/admin/roles");
+            response.sendRedirect(redirectURL);
             return;
         }
 
-        // Đổi ngược trạng thái hiện tại
         boolean newStatus = !role.isActive();
-        roleDAO.toggleStatus(roleId, newStatus);
 
-        response.sendRedirect(request.getContextPath() + "/admin/roles");
+        if (!newStatus) {
+            int userCount = userDAO.countUsersByRole(roleId);
+            if (userCount > 0) {
+                response.sendRedirect(redirectURL + "?error=Cannot deactivate role with assigned users");
+                return;
+            }
+        }
+
+        roleDAO.toggleStatus(roleId, newStatus);
+        response.sendRedirect(redirectURL + "?success=Role status changed successfully");
     }
 }

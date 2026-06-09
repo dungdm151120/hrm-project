@@ -285,25 +285,16 @@ public class PositionDAO {
     }
 
     public boolean updatePosition(Position position) {
-        // 1. Sửa thông tin cơ bản của Position
         String sqlPosition = """
-                UPDATE positions
-                SET name = ?,
-                    description = ?,
-                    updated_at = ?
-                WHERE id = ?
-                """;
-
-        // 2. Xóa liên kết cũ trong bảng trung gian
-        String sqlDeleteMapping = "DELETE FROM department_positions WHERE position_id = ?";
-
-        // 3. Chèn liên kết mới vào bảng trung gian
-        String sqlInsertMapping = "INSERT INTO department_positions (department_id, position_id) VALUES (?, ?)";
+            UPDATE positions
+            SET name = ?,
+                description = ?,
+                updated_at = ?
+            WHERE id = ?
+            """;
 
         Connection conn = null;
         PreparedStatement psPos = null;
-        PreparedStatement psDel = null;
-        PreparedStatement psIns = null;
 
         try {
             conn = DBConnection.getConnection();
@@ -316,15 +307,6 @@ public class PositionDAO {
             psPos.setInt(4, position.getId());
             psPos.executeUpdate();
 
-            psDel = conn.prepareStatement(sqlDeleteMapping);
-            psDel.setInt(1, position.getId());
-            psDel.executeUpdate();
-
-            psIns = conn.prepareStatement(sqlInsertMapping);
-            psIns.setInt(1, position.getDepartmentId());
-            psIns.setInt(2, position.getId());
-            psIns.executeUpdate();
-
             conn.commit();
             return true;
 
@@ -335,8 +317,6 @@ public class PositionDAO {
             e.printStackTrace();
         } finally {
             try { if (psPos != null) psPos.close(); } catch (Exception e) {}
-            try { if (psDel != null) psDel.close(); } catch (Exception e) {}
-            try { if (psIns != null) psIns.close(); } catch (Exception e) {}
             try { if (conn != null) conn.close(); } catch (Exception e) {}
         }
         return false;

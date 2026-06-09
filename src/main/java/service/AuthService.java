@@ -2,6 +2,7 @@ package service;
 
 import dao.UserDAO;
 import model.User;
+import util.PasswordUtil;
 
 public class AuthService {
 
@@ -16,6 +17,17 @@ public class AuthService {
             return null;
         }
 
-        return userDAO.findByEmailAndPassword(email.trim(), password.trim());
+        String trimmedPassword = password.trim();
+        User user = userDAO.findActiveUserByEmail(email.trim());
+
+        if (user == null || !PasswordUtil.verifyPassword(trimmedPassword, user.getPassword())) {
+            return null;
+        }
+
+        if (PasswordUtil.needsHashUpgrade(user.getPassword())) {
+            userDAO.updatePassword(user.getId(), PasswordUtil.hashPassword(trimmedPassword));
+        }
+
+        return user;
     }
 }
