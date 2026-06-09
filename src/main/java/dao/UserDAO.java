@@ -1015,24 +1015,17 @@ public class UserDAO {
     // Move
     public String moveDepartmentMember(int userId, int newDeptId) {
         String checkPositionSql = "SELECT p.name FROM users u " +
-                "JOIN positions p ON u.position_id = p.id " +
-                "WHERE u.id = ?";
-
-        String updateSql = "UPDATE users SET department_id = ?, " +
-                "position_id = (SELECT id FROM positions WHERE name = 'Employee' LIMIT 1) " +
-                "WHERE id = ?";
+                "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
+        String getDeptNameSql = "SELECT name FROM departments WHERE id = ?";
+        String getPositionIdSql = "SELECT id FROM positions WHERE name = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
-
-            // 1. Kiểm tra Position hiện tại của User
             try (PreparedStatement psCheck = conn.prepareStatement(checkPositionSql)) {
                 psCheck.setInt(1, userId);
                 try (ResultSet rs = psCheck.executeQuery()) {
                     if (rs.next()) {
-                        String positionName = rs.getString("name");
-
-                        // Nếu là Manager, chặn Move
-                        if (positionName != null && positionName.toLowerCase().contains("manager")) {
+                        String posName = rs.getString("name");
+                        if (posName != null && posName.toLowerCase().contains("manager")) {
                             return "ERROR_IS_MANAGER";
                         }
                     } else {
@@ -1041,22 +1034,66 @@ public class UserDAO {
                 }
             }
 
-            // 2. Thực hiện cập nhật phòng ban mới và chuyển Position về Employee
-            try (PreparedStatement psUpdate = conn.prepareStatement(updateSql)) {
-                psUpdate.setInt(1, newDeptId);
-                psUpdate.setInt(2, userId);
-
-                int rowsAffected = psUpdate.executeUpdate();
-                if (rowsAffected > 0) {
-                    return "SUCCESS";
+            String deptName = null;
+            try (PreparedStatement psDept = conn.prepareStatement(getDeptNameSql)) {
+                psDept.setInt(1, newDeptId);
+                try (ResultSet rs = psDept.executeQuery()) {
+                    if (rs.next()) deptName = rs.getString("name");
                 }
             }
 
+            String defaultPositionName;
+            String roleName;
+            if ("Human Resources".equalsIgnoreCase(deptName)) {
+                defaultPositionName = "HR Staff";
+                roleName = "HR_STAFF";
+            } else if ("Finance".equalsIgnoreCase(deptName)) {
+                defaultPositionName = "Payroll Staff";
+                roleName = "PAYROLL_STAFF";
+            } else {
+                defaultPositionName = "Employee";
+                roleName = "EMPLOYEE";
+            }
+
+            int positionId = -1;
+            try (PreparedStatement psPos = conn.prepareStatement(getPositionIdSql)) {
+                psPos.setString(1, defaultPositionName);
+                try (ResultSet rs = psPos.executeQuery()) {
+                    if (rs.next()) positionId = rs.getInt("id");
+                }
+            }
+            if (positionId == -1) return "ERROR_FAILED";
+
+            int roleId = getRoleIdByName(conn, roleName);
+            if (roleId == -1) return "ERROR_FAILED";
+
+            String updateSql = "UPDATE users SET department_id = ?, position_id = ?, role_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            try (PreparedStatement psUpdate = conn.prepareStatement(updateSql)) {
+                psUpdate.setInt(1, newDeptId);
+                psUpdate.setInt(2, positionId);
+                psUpdate.setInt(3, roleId);
+                psUpdate.setInt(4, userId);
+                int rows = psUpdate.executeUpdate();
+                if (rows > 0) return "SUCCESS";
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return "ERROR_SYSTEM";
         }
         return "ERROR_FAILED";
+    }
+
+    private int getRoleIdByName(Connection conn, String roleName) throws SQLException {
+        String sql = "SELECT id FROM roles WHERE name = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, roleName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        }
+        return -1;
     }
 
     public boolean updateUserPosition(int userId, Integer positionId) {
@@ -1201,44 +1238,69 @@ public class UserDAO {
 
     // Add member vào Dept
     public boolean addMembersToDept(int[] userIds, int deptId) {
-        String sql = "UPDATE users SET department_id = ?, " +
-                "position_id = (SELECT id FROM positions WHERE name = 'Employee' LIMIT 1), " +
-                "active = 1 " +
-                "WHERE id = ?";
+        String getDeptNameSql = "SELECT name FROM departments WHERE id = ?";
+        String getPositionIdSql = "SELECT id FROM positions WHERE name = ?";
+        String sql = "UPDATE users SET department_id = ?, position_id = ?, role_id = ?, active = 1 WHERE id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+        try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
 
-            for (int userId : userIds) {
-                ps.setInt(1, deptId);
-                ps.setInt(2, userId);
-                ps.addBatch();
+            String deptName = null;
+            try (PreparedStatement psDept = conn.prepareStatement(getDeptNameSql)) {
+                psDept.setInt(1, deptId);
+                try (ResultSet rs = psDept.executeQuery()) {
+                    if (rs.next()) deptName = rs.getString("name");
+                }
             }
 
-            ps.executeBatch();
+            String defaultPositionName;
+            String roleName;
+            if ("Human Resources".equalsIgnoreCase(deptName)) {
+                defaultPositionName = "HR Staff";
+                roleName = "HR_STAFF";
+            } else if ("Finance".equalsIgnoreCase(deptName)) {
+                defaultPositionName = "Payroll Staff";
+                roleName = "PAYROLL_STAFF";
+            } else {
+                defaultPositionName = "Employee";
+                roleName = "EMPLOYEE";
+            }
+
+            int positionId = -1;
+            try (PreparedStatement psPos = conn.prepareStatement(getPositionIdSql)) {
+                psPos.setString(1, defaultPositionName);
+                try (ResultSet rs = psPos.executeQuery()) {
+                    if (rs.next()) positionId = rs.getInt("id");
+                }
+            }
+            if (positionId == -1) {
+                conn.rollback();
+                return false;
+            }
+
+            int roleId = getRoleIdByName(conn, roleName);
+            if (roleId == -1) {
+                conn.rollback();
+                return false;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (int userId : userIds) {
+                    ps.setInt(1, deptId);
+                    ps.setInt(2, positionId);
+                    ps.setInt(3, roleId);
+                    ps.setInt(4, userId);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
             conn.commit();
             return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-    }
-    public int countUsersByDepartment(int departmentId) {
-        String sql = "SELECT COUNT(*) FROM users WHERE department_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, departmentId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
     }
     public void clearDepartmentAndPosition(int userId) {
         String sql = "UPDATE users SET department_id = NULL, position_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
@@ -1263,7 +1325,19 @@ public class UserDAO {
         }
         return 0;
     }
-
+    public int countUsersByDepartment(int departmentId) {
+        String sql = "SELECT COUNT(*) FROM users WHERE department_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
     public boolean removeDepartmentFromUsers(int departmentId) {
         String sql = "UPDATE users SET department_id = NULL WHERE department_id = ?";
         try (Connection conn = DBConnection.getConnection();
