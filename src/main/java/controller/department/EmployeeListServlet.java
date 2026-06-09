@@ -41,6 +41,7 @@ public class EmployeeListServlet extends HttpServlet {
         String keyword = request.getParameter("keyword");
         if (keyword == null) keyword = request.getParameter("search");
         if (keyword == null) keyword = "";
+        keyword = keyword.trim().replaceAll("\\s+", " ");
 
         String status = request.getParameter("status");
         if (status == null || status.trim().isEmpty()) status = "all";
@@ -85,6 +86,7 @@ public class EmployeeListServlet extends HttpServlet {
         request.setAttribute("sort", sort);
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalEmployees", totalEmployees);
         request.setAttribute("pageSize", PAGE_SIZE);
         request.setAttribute("id", id);
 
