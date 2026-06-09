@@ -101,30 +101,41 @@ public class AssignManagerServlet extends HttpServlet {
         boolean isFI = "Finance".equalsIgnoreCase(department.getName());
 
         Integer oldManagerPositionId = null;
+        String oldRoleName = null;
         if (currentManagerId != null) {
             String oldPositionName = null;
             if (isHR) {
                 oldPositionName = "HR Staff";
+                oldRoleName = "HR_STAFF";
             } else if (isFI) {
                 oldPositionName = "Payroll Staff";
+                oldRoleName = "PAYROLL_STAFF";
             } else {
                 oldPositionName = "Employee";
+                oldRoleName = "EMPLOYEE";
             }
             Position oldPosition = positionDAO.findByName(oldPositionName);
             if (oldPosition != null && oldPosition.isActive()) {
                 oldManagerPositionId = oldPosition.getId();
+            } else {
+                oldManagerPositionId = null;
             }
         }
 
         String newPositionName;
+        String newRoleName;
         if (isHR) {
             newPositionName = "HR Manager";
+            newRoleName = "HR_MANAGER";
         } else if (isIT) {
             newPositionName = "System Administrator";
+            newRoleName = "SYSTEM ADMIN";
         } else if (isFI) {
             newPositionName = "Payroll Manager";
+            newRoleName = "PAYROLL_MANAGER";
         } else {
             newPositionName = "Department Manager";
+            newRoleName = "DEPARTMENT_MANAGER";
         }
         Position newPosition = positionDAO.findByName(newPositionName);
 
@@ -149,15 +160,18 @@ public class AssignManagerServlet extends HttpServlet {
         );
 
         if (assigned) {
-            String roleName = null;
-            if (isHR) roleName = "HR_MANAGER";
-            else if (isIT) roleName = "SYSTEM ADMIN";
-            else if (isFI) roleName = "PAYROLL_MANAGER";
-            else roleName = "DEPARTMENT_MANAGER";
+            // Cập nhật role cho manager mới
+            Role newRole = roleDAO.findByName(newRoleName);
+            if (newRole != null) {
+                userDAO.updateUserRole(newManagerId, newRole.getId());
+            }
 
-            Role role = roleDAO.findByName(roleName);
-            if (role != null) {
-                userDAO.updateUserRole(newManagerId, role.getId());
+            // Cập nhật role cho manager cũ
+            if (currentManagerId != null && oldRoleName != null) {
+                Role oldRole = roleDAO.findByName(oldRoleName);
+                if (oldRole != null) {
+                    userDAO.updateUserRole(currentManagerId, oldRole.getId());
+                }
             }
 
             session.setAttribute("successMessage", "Đã phân công trưởng phòng thành công!");

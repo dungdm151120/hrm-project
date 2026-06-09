@@ -60,13 +60,7 @@
                         </c:forEach>
                     </div>
 
-                    <div class="info-note">
-                        <strong>Note:</strong> If this is the <em>Human Resources</em> department,
-                        the selected employee will become <strong>HR Manager</strong>.
-                        For <em>Information Technology</em>, the position will be
-                        <strong>System Administrator</strong>. For other departments, the position will be
-                        <strong>Department Manager</strong>.
-                    </div>
+
 
                     <div class="form-actions">
                         <button type="submit" class="btn-save" onclick="return confirm('Assign this employee as department manager?')">Assign Manager</button>
