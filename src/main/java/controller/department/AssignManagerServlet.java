@@ -2,9 +2,11 @@ package controller.department;
 
 import dao.DepartmentDAO;
 import dao.PositionDAO;
+import dao.RoleDAO;
 import dao.UserDAO;
 import model.Department;
 import model.Position;
+import model.Role;
 import model.User;
 
 import jakarta.servlet.ServletException;
@@ -19,6 +21,7 @@ public class AssignManagerServlet extends HttpServlet {
     private final DepartmentDAO departmentDAO = new DepartmentDAO();
     private final UserDAO userDAO = new UserDAO();
     private final PositionDAO positionDAO = new PositionDAO();
+    private final RoleDAO roleDAO = new RoleDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -86,7 +89,6 @@ public class AssignManagerServlet extends HttpServlet {
             return;
         }
 
-
         Integer currentManagerId = department.getManagerUserId();
         if (currentManagerId != null && currentManagerId == newManagerId) {
             session.setAttribute("error", "Nhân viên này đã là trưởng phòng của phòng ban này.");
@@ -96,25 +98,23 @@ public class AssignManagerServlet extends HttpServlet {
 
         boolean isHR = "Human Resources".equalsIgnoreCase(department.getName());
         boolean isIT = "Information Technology".equalsIgnoreCase(department.getName());
-        boolean isFI =  "Finance".equalsIgnoreCase(department.getName());
-        // Xử lý trưởng phòng cũ
+        boolean isFI = "Finance".equalsIgnoreCase(department.getName());
+
         Integer oldManagerPositionId = null;
         if (currentManagerId != null) {
             String oldPositionName = null;
-            if(isHR){
+            if (isHR) {
                 oldPositionName = "HR Staff";
-            }else if(isFI){
+            } else if (isFI) {
                 oldPositionName = "Payroll Staff";
-            }else{
+            } else {
                 oldPositionName = "Employee";
             }
             Position oldPosition = positionDAO.findByName(oldPositionName);
-
             if (oldPosition != null && oldPosition.isActive()) {
                 oldManagerPositionId = oldPosition.getId();
             }
         }
-
 
         String newPositionName;
         if (isHR) {
@@ -140,7 +140,6 @@ public class AssignManagerServlet extends HttpServlet {
             return;
         }
 
-
         boolean assigned = departmentDAO.assignManager(
                 deptId,
                 newManagerId,
@@ -150,6 +149,17 @@ public class AssignManagerServlet extends HttpServlet {
         );
 
         if (assigned) {
+            String roleName = null;
+            if (isHR) roleName = "HR_MANAGER";
+            else if (isIT) roleName = "SYSTEM ADMIN";
+            else if (isFI) roleName = "PAYROLL_MANAGER";
+            else roleName = "DEPARTMENT_MANAGER";
+
+            Role role = roleDAO.findByName(roleName);
+            if (role != null) {
+                userDAO.updateUserRole(newManagerId, role.getId());
+            }
+
             session.setAttribute("successMessage", "Đã phân công trưởng phòng thành công!");
         } else {
             session.setAttribute("error", "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");

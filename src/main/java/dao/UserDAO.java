@@ -195,7 +195,31 @@ public class UserDAO {
 
         return users;
     }
-
+    public int countActiveUsersByDepartment(int departmentId) {
+        String sql = "SELECT COUNT(*) FROM users WHERE department_id = ? AND active = TRUE";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+    public boolean updateUserRole(int userId, int roleId) {
+        String sql = "UPDATE users SET role_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, roleId);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
     public List<User> searchEmployeesByKeyword(List<User> employees, String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return employees;
@@ -1030,17 +1054,18 @@ public class UserDAO {
                 ? "(u.department_id = ? OR u.department_id IS NULL)"
                 : "u.department_id = ?";
         String sql = """
-            SELECT u.id, u.full_name, u.email, u.phone, u.active,
-                   u.department_id, u.position_id,
-                   p.name AS position_name,
-                   d.name AS department_name
-            FROM users u
-            LEFT JOIN departments d ON d.id = u.department_id
-            LEFT JOIN positions p ON p.id = u.position_id
-            WHERE %s
-              AND u.active = TRUE
-            ORDER BY u.department_id IS NULL, u.full_name
-            """.formatted(departmentCondition);
+        SELECT u.id, u.full_name, u.email, u.phone, u.active,
+               u.department_id, u.position_id,
+               p.name AS position_name,
+               d.name AS department_name
+        FROM users u
+        LEFT JOIN departments d ON d.id = u.department_id
+        LEFT JOIN positions p ON p.id = u.position_id
+        WHERE %s
+          AND u.active = TRUE
+          AND u.role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')
+        ORDER BY u.department_id IS NULL, u.full_name
+        """.formatted(departmentCondition);
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, departmentId);

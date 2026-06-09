@@ -65,7 +65,9 @@
                     <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${id}" class="btn-reset">Clear</a>
                 </form>
 
-                <a href="${pageContext.request.contextPath}/add_member?deptId=${id}" class="employee-add-member">Add Member</a>
+                <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                    <a href="${pageContext.request.contextPath}/add_member?deptId=${id}" class="employee-add-member">Add Member</a>
+                </c:if>
             </div>
 
             <div class="table-wrapper">
@@ -79,7 +81,9 @@
                         <th>Position</th>
                         <th>Department</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                            <th>Action</th>
+                        </c:if>
                     </tr>
                     </thead>
                     <tbody>
@@ -124,45 +128,47 @@
                                     </c:otherwise>
                                 </c:choose>
                             </td>
-                            <td class="actions">
-                                <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}"
-                                   class="btn-secondary"
-                                   <c:if test="${user.manager}">
-                                       onclick="alert('Cannot move Manager!'); return false;"
-                                   </c:if>>
-                                    Move
-                                </a>
+                            <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                                <td class="actions">
+                                    <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}"
+                                       class="btn-secondary"
+                                       <c:if test="${user.manager}">
+                                           onclick="alert('Cannot move Manager!'); return false;"
+                                       </c:if>>
+                                        Move
+                                    </a>
 
-                                <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
-                                   class="btn-danger"
-                                   <c:if test="${user.manager}">
-                                       onclick="alert('Cannot remove Manager!'); return false;"
-                                   </c:if>
-                                   <c:if test="${not user.manager}">
-                                       onclick="return confirm('Remove this employee?')"
-                                   </c:if>>
-                                    Remove
-                                </a>
+                                    <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
+                                       class="btn-danger"
+                                       <c:if test="${user.manager}">
+                                           onclick="alert('Cannot remove Manager!'); return false;"
+                                       </c:if>
+                                       <c:if test="${not user.manager}">
+                                           onclick="return confirm('Remove this employee?')"
+                                       </c:if>>
+                                        Remove
+                                    </a>
 
-                                <c:if test="${user.manager}">
-                                    <form action="${pageContext.request.contextPath}/admin/departments/unassign-manager"
-                                          method="post"
-                                          class="inline-action-form">
-                                        <input type="hidden" name="departmentId" value="${id}">
-                                        <input type="hidden" name="userId" value="${user.id}">
-                                        <button type="submit"
-                                                class="btn btn-warning"
-                                                onclick="return confirm('Unassign this manager?')">
-                                            Unassign
-                                        </button>
-                                    </form>
-                                </c:if>
-                            </td>
+                                    <c:if test="${user.manager}">
+                                        <form action="${pageContext.request.contextPath}/admin/departments/unassign-manager"
+                                              method="post"
+                                              class="inline-action-form">
+                                            <input type="hidden" name="departmentId" value="${id}">
+                                            <input type="hidden" name="userId" value="${user.id}">
+                                            <button type="submit"
+                                                    class="btn btn-warning"
+                                                    onclick="return confirm('Unassign this manager?')">
+                                                Unassign
+                                            </button>
+                                        </form>
+                                    </c:if>
+                                </td>
+                            </c:if>
                         </tr>
                     </c:forEach>
                     <c:if test="${empty employees}">
                         <tr>
-                            <td colspan="8" class="empty-state">No employees found in this department.</td>
+                            <td colspan="${sessionScope.roleName != 'EMPLOYEE' ? 8 : 7}" class="empty-state">No employees found in this department.</td>
                         </tr>
                     </c:if>
                     </tbody>

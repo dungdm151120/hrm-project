@@ -6,10 +6,7 @@ import model.Department;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import model.User;
-
 import java.io.IOException;
-import java.util.List;
 
 @WebServlet("/admin/departments/toggle-status")
 public class DeptToggleStatusServlet extends HttpServlet {
@@ -47,10 +44,8 @@ public class DeptToggleStatusServlet extends HttpServlet {
 
         if (!newStatus) {
             int memberCount = userDAO.countUsersByDepartment(id);
-            Integer managerId = dept.getManagerUserId();
-
-            if (memberCount > 1 || (memberCount == 1 && (managerId == null || !isUserTheOnlyMember(id, managerId)))) {
-                response.sendRedirect(redirectURL + "?error=Cannot deactivate department. It must be empty or have only the department manager.");
+            if (memberCount > 0) {
+                response.sendRedirect(redirectURL + "?error=Cannot deactivate department with existing members. Please move or remove all employees first.");
                 return;
             }
         }
@@ -60,23 +55,18 @@ public class DeptToggleStatusServlet extends HttpServlet {
         if (updated) {
             if (!newStatus) {
                 Integer managerId = dept.getManagerUserId();
-                departmentDAO.removeManager(id);
                 if (managerId != null) {
+                    departmentDAO.removeManager(id);
                     userDAO.clearDepartmentAndPosition(managerId);
                 }
             }
             String msg = newStatus
                     ? "Department activated successfully"
-                    : "Department deactivated successfully. Manager cleared and removed from department.";
+                    : "Department deactivated successfully.";
             response.sendRedirect(redirectURL + "?success=" + java.net.URLEncoder.encode(msg, "UTF-8"));
         } else {
             response.sendRedirect(redirectURL + "?error=Toggle failed");
         }
-    }
-
-    private boolean isUserTheOnlyMember(int departmentId, int userId) {
-        List<User> users = userDAO.findUsersByDeptId(departmentId);
-        return users.size() == 1 && users.get(0).getId() == userId;
     }
 
     @Override
