@@ -62,13 +62,15 @@ public class EmployeeListServlet extends HttpServlet {
         }
 
         Department department = departmentDAO.getDepartmentById(id);
+        Integer managerUserId = department != null ? department.getManagerUserId() : null;
         int totalEmployees = userDAO.countEmployeesByDepartment(id, keyword, status);
         int totalPages = (int) Math.ceil((double) totalEmployees / PAGE_SIZE);
         if (totalPages > 0 && currentPage > totalPages) currentPage = totalPages;
 
-        List<User> employees = userDAO.getEmployeesByDepartment(id, keyword, status, sort, currentPage, PAGE_SIZE);
+        List<User> employees = userDAO.getEmployeesByDepartment(
+                id, keyword, status, sort, currentPage, PAGE_SIZE, managerUserId
+        );
 
-        Integer managerUserId = department != null ? department.getManagerUserId() : null;
         for (User u : employees) {
             boolean isDepartmentManager = managerUserId != null && managerUserId == u.getId();
             u.setManager(isDepartmentManager);

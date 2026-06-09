@@ -148,10 +148,15 @@ public class UserDAO {
     }
 
     public List<User> getEmployeesByDepartment(int departmentId, String keyword, String status, String sort, int page, int pageSize) {
+        return getEmployeesByDepartment(departmentId, keyword, status, sort, page, pageSize, null);
+    }
+
+    public List<User> getEmployeesByDepartment(int departmentId, String keyword, String status, String sort,
+                                               int page, int pageSize, Integer managerUserId) {
         List<User> employees = getAllEmployeesByDepartment(departmentId);
         employees = searchEmployeesByKeyword(employees, keyword);
         employees = filterEmployeesByStatus(employees, status);
-        employees = sortEmployeesByName(employees, sort);
+        employees = sortEmployeesByName(employees, sort, managerUserId);
         return pagingEmployees(employees, page, pageSize);
     }
 
@@ -224,16 +229,50 @@ public class UserDAO {
     }
 
     public List<User> sortEmployeesByName(List<User> employees, String sort) {
+        return sortEmployeesByName(employees, sort, null);
+    }
+
+    public List<User> sortEmployeesByName(List<User> employees, String sort, Integer managerUserId) {
         List<User> result = new ArrayList<>(employees);
-        Comparator<User> comparator = Comparator.comparing(
-                user -> user.getFullName() == null ? "" : user.getFullName(),
-                String.CASE_INSENSITIVE_ORDER
-        );
+        Comparator<User> nameComparator = (first, second) ->
+                compareNamesFromLastWord(first.getFullName(), second.getFullName());
         if ("name_desc".equals(sort)) {
-            comparator = comparator.reversed();
+            nameComparator = nameComparator.reversed();
         }
+
+        Comparator<User> comparator = Comparator
+                .comparing((User user) -> managerUserId == null || user.getId() != managerUserId)
+                .thenComparing(nameComparator);
         result.sort(comparator);
         return result;
+    }
+
+    private int compareNamesFromLastWord(String firstName, String secondName) {
+        String[] firstWords = splitName(firstName);
+        String[] secondWords = splitName(secondName);
+
+        int firstIndex = firstWords.length - 1;
+        int secondIndex = secondWords.length - 1;
+        while (firstIndex >= 0 && secondIndex >= 0) {
+            int comparison = String.CASE_INSENSITIVE_ORDER.compare(
+                    firstWords[firstIndex],
+                    secondWords[secondIndex]
+            );
+            if (comparison != 0) {
+                return comparison;
+            }
+            firstIndex--;
+            secondIndex--;
+        }
+
+        return Integer.compare(firstWords.length, secondWords.length);
+    }
+
+    private String[] splitName(String fullName) {
+        if (fullName == null || fullName.trim().isEmpty()) {
+            return new String[0];
+        }
+        return fullName.trim().split("\\s+");
     }
 
     public List<User> pagingEmployees(List<User> employees, int page, int pageSize) {
