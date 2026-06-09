@@ -60,13 +60,13 @@
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">Start Date</span>
-                    <span class="role-meta-value">${contract.startDate}</span>
+                    <span class="role-meta-value">${contract.startDateDisplay}</span>
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">End Date</span>
                     <span class="role-meta-value">
                         <c:choose>
-                            <c:when test="${not empty contract.endDate}">${contract.endDate}</c:when>
+                            <c:when test="${not empty contract.endDate}">${contract.endDateDisplay}</c:when>
                             <c:otherwise>Open-ended</c:otherwise>
                         </c:choose>
                     </span>
@@ -96,7 +96,7 @@
                 </div>
             </div>
 
-            <c:if test="${canTerminateContract && contract.status != 'TERMINATED'}">
+            <c:if test="${canTerminateContract && contract.status == 'ACTIVE'}">
                 <form action="${pageContext.request.contextPath}/contracts/terminate" method="post"
                       onsubmit="return confirm('Terminate this contract?')">
                     <input type="hidden" name="id" value="${contract.id}">

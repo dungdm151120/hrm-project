@@ -16,6 +16,7 @@ import java.util.List;
 public class LaborContractDAO {
     public List<LaborContract> search(Integer userId, String keyword, String contractType, String status,
                                       int offset, int limit) {
+        expireEndedActiveContracts();
         List<LaborContract> contracts = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         StringBuilder sql = new StringBuilder(baseSelect()).append(" WHERE 1=1");
@@ -40,6 +41,7 @@ public class LaborContractDAO {
     }
 
     public int count(Integer userId, String keyword, String contractType, String status) {
+        expireEndedActiveContracts();
         List<Object> params = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
                 SELECT COUNT(*) AS total
@@ -65,6 +67,7 @@ public class LaborContractDAO {
     }
 
     public LaborContract findById(int id) {
+        expireEndedActiveContracts();
         String sql = baseSelect() + " WHERE lc.id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -83,6 +86,7 @@ public class LaborContractDAO {
     }
 
     public boolean add(LaborContract contract) {
+        expireEndedActiveContracts();
         String sql = """
                 INSERT INTO labor_contracts (
                     user_id, contract_code, contract_type, start_date, end_date,
@@ -103,6 +107,7 @@ public class LaborContractDAO {
     }
 
     public boolean update(LaborContract contract) {
+        expireEndedActiveContracts();
         String sql = """
                 UPDATE labor_contracts
                 SET user_id = ?,
@@ -133,6 +138,7 @@ public class LaborContractDAO {
     }
 
     public boolean terminate(int id, String reason) {
+        expireEndedActiveContracts();
         LaborContract current = findById(id);
         if (current == null || !"ACTIVE".equals(current.getStatus())) {
             return false;
@@ -168,6 +174,7 @@ public class LaborContractDAO {
     }
 
     public boolean existsOverlappingActiveContract(int userId, LocalDate startDate, LocalDate endDate, Integer exceptId) {
+        expireEndedActiveContracts();
         String sql = """
                 SELECT id
                 FROM labor_contracts
@@ -237,6 +244,7 @@ public class LaborContractDAO {
     }
 
     public boolean canDeactivateUser(int userId) {
+        expireEndedActiveContracts();
         String sql = """
                 SELECT EXISTS (
                     SELECT 1
@@ -260,6 +268,26 @@ public class LaborContractDAO {
         }
 
         return false;
+    }
+
+    public int expireEndedActiveContracts() {
+        String sql = """
+                UPDATE labor_contracts
+                SET status = 'EXPIRED',
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE status = 'ACTIVE'
+                  AND end_date IS NOT NULL
+                  AND end_date < CURRENT_DATE
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            return ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
     }
 
     private String baseSelect() {

@@ -57,10 +57,10 @@
                         <tr>
                             <td><strong>${contract.contractCode}</strong></td>
                             <td>${contract.contractType}</td>
-                            <td>${contract.startDate}</td>
+                            <td>${contract.startDateDisplay}</td>
                             <td>
                                 <c:choose>
-                                    <c:when test="${not empty contract.endDate}">${contract.endDate}</c:when>
+                                    <c:when test="${not empty contract.endDate}">${contract.endDateDisplay}</c:when>
                                     <c:otherwise>Open-ended</c:otherwise>
                                 </c:choose>
                             </td>

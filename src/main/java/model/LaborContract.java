@@ -3,8 +3,11 @@ package model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class LaborContract {
+    private static final DateTimeFormatter DISPLAY_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     private int id;
     private int userId;
     private String employeeCode;
@@ -83,12 +86,20 @@ public class LaborContract {
         return startDate;
     }
 
+    public String getStartDateDisplay() {
+        return formatDate(startDate);
+    }
+
     public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
     }
 
     public LocalDate getEndDate() {
         return endDate;
+    }
+
+    public String getEndDateDisplay() {
+        return formatDate(endDate);
     }
 
     public void setEndDate(LocalDate endDate) {
@@ -157,5 +168,9 @@ public class LaborContract {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    private String formatDate(LocalDate date) {
+        return date == null ? "" : date.format(DISPLAY_DATE_FORMATTER);
     }
 }

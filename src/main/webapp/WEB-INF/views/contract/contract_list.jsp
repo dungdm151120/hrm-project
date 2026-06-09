@@ -76,10 +76,10 @@
                                 </c:if>
                             </td>
                             <td>${contract.contractType}</td>
-                            <td>${contract.startDate}</td>
+                            <td>${contract.startDateDisplay}</td>
                             <td>
                                 <c:choose>
-                                    <c:when test="${not empty contract.endDate}">${contract.endDate}</c:when>
+                                    <c:when test="${not empty contract.endDate}">${contract.endDateDisplay}</c:when>
                                     <c:otherwise>Open-ended</c:otherwise>
                                 </c:choose>
                             </td>
@@ -99,7 +99,7 @@
                             <td>
                                 <div class="actions">
                                     <a href="${pageContext.request.contextPath}/contracts/detail?id=${contract.id}">View Detail</a>
-                                    <c:if test="${canUpdateContract && contract.status != 'TERMINATED'}">
+                                    <c:if test="${canUpdateContract && contract.status == 'ACTIVE'}">
                                         <a href="${pageContext.request.contextPath}/contracts/update?id=${contract.id}">Update</a>
                                     </c:if>
                                 </div>
