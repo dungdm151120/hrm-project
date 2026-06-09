@@ -311,8 +311,15 @@ body {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
 }
 
-.employee-search-form input[type="text"] {
+.employee-search-form input[type="text"],
+.employee-search-form input[type="search"] {
     flex: 0 1 260px;
+}
+
+.employee-search-summary {
+    margin: -0.75rem 0 1rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
 .employee-add-member {

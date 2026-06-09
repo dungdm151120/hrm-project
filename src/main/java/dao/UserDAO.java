@@ -5,10 +5,12 @@ import util.DBConnection;
 import util.PasswordUtil;
 
 import java.sql.*;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public class UserDAO {
 
@@ -197,20 +199,66 @@ public class UserDAO {
     }
 
     public List<User> searchEmployeesByKeyword(List<User> employees, String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
+        boolean accentSensitive = containsVietnameseDiacritics(keyword);
+        String normalizedKeyword = normalizeSearchText(keyword, accentSensitive);
+        if (normalizedKeyword.isEmpty()) {
             return employees;
         }
 
-        String lowerKeyword = keyword.trim().toLowerCase();
+        String[] searchTerms = normalizedKeyword.split(" ");
         List<User> result = new ArrayList<>();
         for (User user : employees) {
-            String fullName = user.getFullName() == null ? "" : user.getFullName().toLowerCase();
-            String email = user.getEmail() == null ? "" : user.getEmail().toLowerCase();
-            if (fullName.contains(lowerKeyword) || email.contains(lowerKeyword)) {
+            String searchableText = normalizeSearchText(String.join(" ",
+                    valueOrEmpty(user.getFullName()),
+                    valueOrEmpty(user.getEmail()),
+                    valueOrEmpty(user.getPhone()),
+                    valueOrEmpty(user.getPositionName())
+            ), accentSensitive);
+
+            boolean matchesAllTerms = true;
+            for (String term : searchTerms) {
+                if (!searchableText.contains(term)) {
+                    matchesAllTerms = false;
+                    break;
+                }
+            }
+            if (matchesAllTerms) {
                 result.add(user);
             }
         }
         return result;
+    }
+
+    private String normalizeSearchText(String value, boolean preserveDiacritics) {
+        if (value == null || value.trim().isEmpty()) {
+            return "";
+        }
+
+        String normalized = value;
+        if (!preserveDiacritics) {
+            normalized = Normalizer.normalize(normalized, Normalizer.Form.NFD)
+                    .replaceAll("\\p{M}+", "")
+                    .replace('đ', 'd')
+                    .replace('Đ', 'D');
+        }
+        normalized = normalized.toLowerCase(Locale.ROOT);
+        return normalized.trim().replaceAll("\\s+", " ");
+    }
+
+    private boolean containsVietnameseDiacritics(String value) {
+        if (value == null || value.isEmpty()) {
+            return false;
+        }
+
+        String withoutDiacritics = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D');
+        return !value.equals(withoutDiacritics);
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     public List<User> filterEmployeesByStatus(List<User> employees, String status) {
