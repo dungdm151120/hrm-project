@@ -78,7 +78,7 @@ public class DeptListServlet extends HttpServlet {
 
         Map<Integer, Integer> memberCountMap = new HashMap<>();
         for (Department dept : departmentList) {
-            memberCountMap.put(dept.getId(), userDAO.countUsersByDepartment(dept.getId()));
+            memberCountMap.put(dept.getId(), userDAO.countActiveUsersByDepartment(dept.getId()));
         }
 
         request.setAttribute("departmentList", departmentList);

@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Set;
 
-
 @WebFilter("/*")
 public class PermissionFilter implements Filter {
 
@@ -23,15 +22,12 @@ public class PermissionFilter implements Filter {
         String path = req.getServletPath();
         String method = req.getMethod();
 
-
         String requiredPermission = resolveRequiredPermission(path, method);
-
 
         if (requiredPermission == null) {
             chain.doFilter(request, response);
             return;
         }
-
 
         HttpSession session = req.getSession(false);
         if (session == null) {
@@ -43,7 +39,6 @@ public class PermissionFilter implements Filter {
         Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
 
         if (userPermissions == null || !userPermissions.contains(requiredPermission)) {
-
             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
             req.setAttribute("permissionDenied", requiredPermission);
             req.getRequestDispatcher("/WEB-INF/views/common/403.jsp").forward(req, res);
@@ -52,7 +47,6 @@ public class PermissionFilter implements Filter {
 
         chain.doFilter(request, response);
     }
-
 
     private String resolveRequiredPermission(String path, String method) {
         // Public
@@ -80,7 +74,7 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/roles/update")) return "ROLE_UPDATE";
         if (path.equals("/admin/roles/toggle_status") && "POST".equals(method)) return "ROLE_TOGGLE_STATUS";
         if (path.equals("/admin/roles/edit_permissions")) return "ROLE_EDIT_PERMISSION";
-        if (path.equals("/admin/roles/add")) return "ROLE_CREATE";  // <-- mới thêm
+        if (path.equals("/admin/roles/add")) return "ROLE_CREATE";
 
         // Department
         if (path.equals("/admin/departments") && "GET".equals(method)) return "DEPARTMENT_VIEW_LIST";
@@ -89,11 +83,15 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/departments/update")) return "DEPARTMENT_UPDATE";
         if (path.equals("/admin/departments/toggle-status") && "POST".equals(method)) return "DEPARTMENT_TOGGLE_STATUS";
         if (path.equals("/add_member")) return "DEPARTMENT_ASSIGN_MANAGER";
+        if (path.equals("/remove_member")) return "DEPARTMENT_MOVE_MEMBER";
+        if (path.equals("/move_member")) return "DEPARTMENT_MOVE_MEMBER";
+        if (path.equals("/admin/departments/assign-manager")) return "DEPARTMENT_ASSIGN_MANAGER";
+        if (path.equals("/admin/departments/unassign-manager")) return "DEPARTMENT_ASSIGN_MANAGER";
+        if (path.equals("/admin/departments/assign-positions")) return "DEPARTMENT_ASSIGN_POSITION";
         if (path.equals("/admin/departments/employees")) return "DEPARTMENT_VIEW_EMPLOYEES";
 
         // Position
         if (path.equals("/position/list") && "GET".equals(method)) return "POSITION_VIEW_LIST";
-        // POSITION_VIEW_DETAIL: chưa có servlet tương ứng
         if (path.equals("/position/add")) return "POSITION_CREATE";
         if (path.equals("/position/update")) return "POSITION_UPDATE";
         if (path.equals("/position/toggle-status") && "POST".equals(method)) return "POSITION_TOGGLE_STATUS";
@@ -106,7 +104,6 @@ public class PermissionFilter implements Filter {
         if (path.equals("/contracts/add")) return "CONTRACT_CREATE";
         if (path.equals("/contracts/update")) return "CONTRACT_UPDATE";
         if (path.equals("/contracts/terminate")) return "CONTRACT_TERMINATE";
-        // CONTRACT_RENEW: chưa có servlet tương ứng
 
         // Attendance
         if (path.equals("/attendance/check-in") && "POST".equals(method)) return "ATTENDANCE_CHECK_IN";
@@ -126,7 +123,6 @@ public class PermissionFilter implements Filter {
         if (path.equals("/payroll/confirm")) return "PAYROLL_CONFIRM";
         if (path.equals("/payroll/export")) return "PAYROLL_EXPORT_REPORT";
 
-        // Mặc định không yêu cầu quyền
         return null;
     }
 }
