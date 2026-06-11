@@ -186,9 +186,12 @@
                                                             <c:if test="${record.overtimeHours > 0}">
                                                                 <span class="matrix-ot-badge">OT</span>
                                                             </c:if>
-                                                            <c:if test="${record.cssClass == 'status-edited'}">
+                                                            <!--
+                                                             <c:if test="${record.cssClass == 'status-edited'}">
                                                                 <span class="matrix-edited-badge">Edited</span>
-                                                            </c:if>
+                                                             </c:if>
+                                                             -->
+
                                                         </a>
                                                     </td>
                                                 </c:when>
