@@ -2,6 +2,7 @@ package dao;
 
 import model.AttendanceLog;
 import model.AttendanceRecord;
+import model.AttendanceRecordDTO;
 import model.AttendanceSummary;
 import model.User;
 import util.DBConnection;
@@ -11,10 +12,13 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AttendanceDAO {
+    private static final DateTimeFormatter MATRIX_TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     // Cấu hình giờ làm việc chuẩn
     private static final LocalTime STANDARD_CHECK_IN = LocalTime.of(8, 0);   // 8:00
@@ -212,6 +216,120 @@ public class AttendanceDAO {
         return list;
     }
 
+    public List<AttendanceRecordDTO> getAttendanceRecordsForMatrix(
+            int month,
+            int year,
+            Integer departmentId,
+            String keyword,
+            int page,
+            int pageSize
+    ) {
+        List<AttendanceRecordDTO> records = new ArrayList<>();
+        YearMonth period = YearMonth.of(year, month);
+        LocalDate startDate = period.atDay(1);
+        LocalDate endDate = period.atEndOfMonth();
+        int offset = Math.max(0, page - 1) * pageSize;
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+
+        StringBuilder employeeFilter = new StringBuilder(
+                " FROM users u " +
+                "JOIN attendance_records filter_ar ON filter_ar.user_id = u.id " +
+                "WHERE filter_ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
+        );
+        if (departmentId != null) {
+            employeeFilter.append(" AND u.department_id = ?");
+        }
+        if (!normalizedKeyword.isEmpty()) {
+            employeeFilter.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+        }
+
+        String sql =
+                "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
+                "u.full_name AS employee_name, d.name AS department_name, ar.work_date, " +
+                "ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
+                "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ar.updated_at " +
+                "FROM (" +
+                "SELECT DISTINCT u.id, u.full_name " + employeeFilter +
+                " ORDER BY u.full_name, u.id LIMIT ? OFFSET ?" +
+                ") page_users " +
+                "JOIN users u ON u.id = page_users.id " +
+                "LEFT JOIN departments d ON d.id = u.department_id " +
+                "JOIN attendance_records ar ON ar.user_id = u.id " +
+                "AND ar.work_date BETWEEN ? AND ? " +
+                "ORDER BY u.full_name, u.id, ar.work_date";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            int index = 1;
+            ps.setDate(index++, Date.valueOf(startDate));
+            ps.setDate(index++, Date.valueOf(endDate));
+            if (departmentId != null) {
+                ps.setInt(index++, departmentId);
+            }
+            if (!normalizedKeyword.isEmpty()) {
+                String likeKeyword = "%" + normalizedKeyword + "%";
+                ps.setString(index++, likeKeyword);
+                ps.setString(index++, likeKeyword);
+            }
+            ps.setInt(index++, pageSize);
+            ps.setInt(index++, offset);
+            ps.setDate(index++, Date.valueOf(startDate));
+            ps.setDate(index, Date.valueOf(endDate));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    records.add(mapAttendanceMatrixResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return records;
+    }
+
+    public int countEmployeesForAttendanceMatrix(
+            int month,
+            int year,
+            Integer departmentId,
+            String keyword
+    ) {
+        YearMonth period = YearMonth.of(year, month);
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(DISTINCT u.id) " +
+                "FROM users u " +
+                "JOIN attendance_records ar ON ar.user_id = u.id " +
+                "WHERE ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
+        );
+        if (departmentId != null) {
+            sql.append(" AND u.department_id = ?");
+        }
+        if (!normalizedKeyword.isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int index = 1;
+            ps.setDate(index++, Date.valueOf(period.atDay(1)));
+            ps.setDate(index++, Date.valueOf(period.atEndOfMonth()));
+            if (departmentId != null) {
+                ps.setInt(index++, departmentId);
+            }
+            if (!normalizedKeyword.isEmpty()) {
+                String likeKeyword = "%" + normalizedKeyword + "%";
+                ps.setString(index++, likeKeyword);
+                ps.setString(index, likeKeyword);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     public AttendanceSummary getSummaryByUser(int userId, LocalDate start, LocalDate end) {
         AttendanceSummary summary = new AttendanceSummary();
         String attendanceSql =
@@ -387,6 +505,62 @@ public class AttendanceDAO {
         record.setCreatedAt(getNullableLocalDateTime(rs, "created_at"));
         record.setUpdatedAt(getNullableLocalDateTime(rs, "updated_at"));
         return record;
+    }
+
+    private AttendanceRecordDTO mapAttendanceMatrixResultSet(ResultSet rs) throws SQLException {
+        AttendanceRecordDTO dto = new AttendanceRecordDTO();
+        LocalDateTime checkIn = getNullableLocalDateTime(rs, "check_in");
+        LocalDateTime checkOut = getNullableLocalDateTime(rs, "check_out");
+        double overtimeHours = rs.getDouble("overtime_hours");
+        String status = rs.getString("status");
+
+        dto.setAttendanceRecordId(rs.getInt("attendance_record_id"));
+        dto.setUserId(rs.getInt("user_id"));
+        dto.setEmployeeCode(rs.getString("employee_code"));
+        dto.setEmployeeName(rs.getString("employee_name"));
+        dto.setDepartmentName(rs.getString("department_name"));
+        dto.setWorkDate(rs.getDate("work_date").toLocalDate());
+        dto.setCheckIn(checkIn);
+        dto.setCheckOut(checkOut);
+        dto.setTotalWorkHours(getNullableDouble(rs, "total_work_hours"));
+        dto.setOvertimeHours(overtimeHours);
+        dto.setLateHours(getNullableDouble(rs, "late_hours"));
+        dto.setEarlyLeaveHours(getNullableDouble(rs, "early_leave_hours"));
+        dto.setStatus(status);
+        dto.setNote(rs.getString("note"));
+        dto.setCheckInText(checkIn == null ? "--" : checkIn.format(MATRIX_TIME_FORMAT));
+        dto.setCheckOutText(checkOut == null ? "--" : checkOut.format(MATRIX_TIME_FORMAT));
+        dto.setCssClass(resolveMatrixCssClass(
+                status,
+                overtimeHours,
+                rs.getTimestamp("updated_at") != null
+        ));
+        return dto;
+    }
+
+    private Double getNullableDouble(ResultSet rs, String column) throws SQLException {
+        Object value = rs.getObject(column);
+        return value == null ? null : rs.getDouble(column);
+    }
+
+    private String resolveMatrixCssClass(String status, double overtimeHours, boolean edited) {
+        if (overtimeHours > 0) {
+            return "status-ot";
+        }
+        if (edited) {
+            return "status-edited";
+        }
+        if (status == null) {
+            return "";
+        }
+        return switch (status) {
+            case "ON_TIME" -> "status-on-time";
+            case "LATE", "EARLY_LEAVE", "LATE_AND_EARLY", "LATE_AND_EARLY_LEAVE" -> "status-late";
+            case "ON_LEAVE" -> "status-leave";
+            case "ABSENT", "FORGOT_CHECKIN", "FORGOT_CHECKOUT",
+                 "FORGOT_CHECK_IN", "FORGOT_CHECK_OUT" -> "status-forgot";
+            default -> "";
+        };
     }
 
     private LocalDateTime getNullableLocalDateTime(ResultSet rs, String column) throws SQLException {

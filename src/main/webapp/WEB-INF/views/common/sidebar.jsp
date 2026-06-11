@@ -219,7 +219,7 @@
                     <a href="${ctx}/attendance/department" class="submenu-item ${currentPath == ctx.concat('/attendance/department') ? 'active' : ''}">Department Attendance</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_ALL')}">
-                    <a href="${ctx}/attendance/all" class="submenu-item ${currentPath == ctx.concat('/attendance/all') ? 'active' : ''}">All Attendance</a>
+                    <a href="${ctx}/attendance/records" class="submenu-item ${currentPath == ctx.concat('/attendance/records') ? 'active' : ''}">Attendance Records</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_UPDATE')}">
                     <a href="${ctx}/attendance/update" class="submenu-item ${currentPath == ctx.concat('/attendance/update') ? 'active' : ''}">Update Attendance</a>

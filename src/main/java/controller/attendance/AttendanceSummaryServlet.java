@@ -1,12 +1,12 @@
 package controller.attendance;
 
 import dao.AttendanceDAO;
+import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.AttendanceSummary;
 import model.User;
 
@@ -17,18 +17,24 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet("/attendance/my")
-public class MyAttendanceServlet extends HttpServlet {
+@WebServlet("/attendance/summary")
+public class AttendanceSummaryServlet extends HttpServlet {
     private static final double STANDARD_WORK_HOURS = 8.0;
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
-        if (currentUser == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
+        Integer userId = parsePositiveInteger(request.getParameter("userId"));
+        if (userId == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing employee ID");
+            return;
+        }
+
+        User employee = userDAO.findById(userId);
+        if (employee == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Employee not found");
             return;
         }
 
@@ -38,15 +44,16 @@ public class MyAttendanceServlet extends HttpServlet {
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);
 
         AttendanceSummary summary = attendanceDAO.getSummaryByUser(
-                currentUser.getId(),
+                employee.getId(),
                 selectedPeriod.atDay(1),
                 selectedPeriod.atEndOfMonth()
         );
         summary.setExpectedWorkHours(countWeekdays(selectedPeriod) * STANDARD_WORK_HOURS);
 
         request.setAttribute("summary", summary);
-        request.setAttribute("displayUser", currentUser);
-        request.setAttribute("summaryAction", request.getContextPath() + "/attendance/my");
+        request.setAttribute("displayUser", employee);
+        request.setAttribute("summaryAction", request.getContextPath() + "/attendance/summary");
+        request.setAttribute("summaryUserId", employee.getId());
         request.setAttribute("selectedYear", selectedYear);
         request.setAttribute("selectedMonth", selectedMonth);
         request.setAttribute("years", buildYearOptions(today.getYear(), selectedYear));
@@ -72,6 +79,15 @@ public class MyAttendanceServlet extends HttpServlet {
             years.add(year);
         }
         return years;
+    }
+
+    private Integer parsePositiveInteger(String value) {
+        try {
+            int parsed = Integer.parseInt(value);
+            return parsed > 0 ? parsed : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private int parseIntInRange(String value, int defaultValue, int min, int max) {

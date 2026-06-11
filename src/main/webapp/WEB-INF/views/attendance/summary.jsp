@@ -36,13 +36,16 @@
             <div class="attendance-summary-toolbar">
                 <div>
                     <h2>Attendance Summary</h2>
-                    <p>${sessionScope.currentUser.fullName}</p>
+                    <p>${displayUser.fullName}</p>
                 </div>
 
                 <form id="attendancePeriodForm"
                       class="attendance-period-form"
-                      action="${pageContext.request.contextPath}/attendance/my"
+                      action="${summaryAction}"
                       method="get">
+                    <c:if test="${not empty summaryUserId}">
+                        <input type="hidden" name="userId" value="${summaryUserId}">
+                    </c:if>
                     <select id="attendanceYear" name="year" aria-label="Chọn năm">
                         <c:forEach var="year" items="${years}">
                             <option value="${year}" ${year == selectedYear ? 'selected' : ''}>${year}</option>

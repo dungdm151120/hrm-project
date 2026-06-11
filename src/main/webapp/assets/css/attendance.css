@@ -1,0 +1,420 @@
+.attendance-records-page {
+    padding: 2rem;
+}
+
+.attendance-records-card {
+    width: 100%;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: var(--shadow);
+}
+
+.attendance-records-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.attendance-records-heading h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.attendance-records-heading p {
+    margin: 0.35rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.attendance-matrix-filters {
+    display: grid;
+    grid-template-columns: 140px 120px minmax(190px, 1fr) minmax(230px, 1.4fr) auto auto;
+    align-items: end;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.matrix-filter-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.matrix-filter-field label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.matrix-filter-field select,
+.matrix-filter-field input {
+    width: 100%;
+    height: 42px;
+    padding: 0 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text-primary);
+    font: 500 0.86rem 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.matrix-filter-field select:focus,
+.matrix-filter-field input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.matrix-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    padding: 0 1.25rem;
+    border: 0;
+    border-radius: 10px;
+    font: 700 0.86rem 'Inter', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.matrix-btn:hover {
+    transform: translateY(-1px);
+}
+
+.matrix-search-btn {
+    background: #111827;
+    color: #fff;
+}
+
+.matrix-export-btn {
+    border: 1px solid #d1d5db;
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.attendance-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    color: #4b5563;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.attendance-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.legend-dot,
+.matrix-status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1px solid rgba(17, 24, 39, 0.5);
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.legend-dot.status-on-time,
+.status-on-time .matrix-status-dot {
+    background: #22c55e;
+}
+
+.legend-dot.status-late,
+.status-late .matrix-status-dot {
+    background: #f59e0b;
+}
+
+.legend-dot.status-edited,
+.status-edited .matrix-status-dot {
+    background: #7c3aed;
+}
+
+.legend-dot.status-forgot,
+.status-forgot .matrix-status-dot {
+    background: #ef4444;
+}
+
+.legend-dot.status-leave,
+.status-leave .matrix-status-dot {
+    background: #facc15;
+}
+
+.legend-dot.status-ot,
+.status-ot .matrix-status-dot {
+    background: #d946ef;
+}
+
+.attendance-matrix-wrapper {
+    overflow-x: auto;
+    border: 1px solid #cfd4dc;
+    border-radius: 10px;
+}
+
+.attendance-matrix-table {
+    min-width: 1120px;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    white-space: normal;
+}
+
+.attendance-matrix-table th,
+.attendance-matrix-table td {
+    border-right: 1px solid #cfd4dc;
+    border-bottom: 1px solid #cfd4dc;
+}
+
+.attendance-matrix-table th:last-child,
+.attendance-matrix-table td:last-child {
+    border-right: 0;
+}
+
+.attendance-matrix-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.attendance-matrix-table thead {
+    background: #f8fafc;
+}
+
+.attendance-matrix-table th {
+    width: 128px;
+    height: 56px;
+    padding: 0.75rem;
+    color: #374151;
+    font-size: 0.78rem;
+    font-weight: 750;
+    text-align: center;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.attendance-matrix-table .matrix-employee-column {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    width: 220px;
+    min-width: 220px;
+    background: #fff;
+    text-align: left;
+}
+
+.attendance-matrix-table thead .matrix-employee-column {
+    z-index: 3;
+    background: #f8fafc;
+    font-size: 0.95rem;
+}
+
+.attendance-matrix-table tbody tr {
+    background: #fff;
+}
+
+.attendance-matrix-table tbody tr:nth-child(even) {
+    background: #fcfcfd;
+}
+
+.attendance-matrix-table tbody tr:hover {
+    background: #f8fbff;
+}
+
+.attendance-matrix-table td {
+    height: 82px;
+    padding: 0.65rem;
+    color: #374151;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.matrix-employee-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    color: #111827;
+    text-decoration: none;
+}
+
+.matrix-employee-link:hover strong {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.matrix-employee-link strong {
+    overflow: hidden;
+    font-size: 0.88rem;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.matrix-employee-link span {
+    overflow: hidden;
+    color: #6b7280;
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.matrix-attendance-cell {
+    position: relative;
+}
+
+.matrix-cell-link {
+    display: grid;
+    grid-template-columns: 10px 1fr;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 56px;
+    color: #374151;
+    text-decoration: none;
+}
+
+.matrix-cell-link:hover {
+    opacity: 0.78;
+}
+
+.matrix-time {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    color: #374151;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.matrix-time b {
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+.status-on-time .matrix-time {
+    color: #16a34a;
+}
+
+.status-late .matrix-time {
+    color: #ea580c;
+}
+
+.status-edited .matrix-time {
+    color: #7c3aed;
+}
+
+.status-forgot .matrix-time {
+    color: #dc2626;
+}
+
+.status-leave .matrix-time {
+    color: #a16207;
+}
+
+.status-ot .matrix-time {
+    color: #a21caf;
+}
+
+.matrix-ot-badge {
+    grid-column: 2;
+    justify-self: center;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    background: #fae8ff;
+    color: #a21caf;
+    font-size: 0.66rem;
+    font-weight: 800;
+}
+
+.matrix-no-record {
+    color: #c0c4cc !important;
+    font-size: 0.82rem;
+}
+
+.matrix-empty-state {
+    height: 150px !important;
+    color: #6b7280 !important;
+    font-size: 0.9rem;
+    text-align: center !important;
+}
+
+.matrix-pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
+.matrix-pagination-wrapper p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.82rem;
+}
+
+.matrix-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.matrix-page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 0.7rem;
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+    background: #fff;
+    color: #4b5563;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.matrix-page-link:hover,
+.matrix-page-link.active {
+    border-color: #111827;
+    background: #111827;
+    color: #fff;
+}
+
+@media (max-width: 1200px) {
+    .attendance-matrix-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .attendance-records-page {
+        padding: 1rem;
+    }
+
+    .attendance-records-card {
+        padding: 1.25rem;
+    }
+
+    .attendance-matrix-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .matrix-pagination-wrapper {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
