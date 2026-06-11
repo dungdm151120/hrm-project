@@ -2,6 +2,7 @@ package dao;
 
 import model.AttendanceLog;
 import model.AttendanceRecord;
+import model.AttendanceSummary;
 import model.User;
 import util.DBConnection;
 
@@ -18,7 +19,8 @@ public class AttendanceDAO {
     // Cấu hình giờ làm việc chuẩn
     private static final LocalTime STANDARD_CHECK_IN = LocalTime.of(8, 0);   // 8:00
     private static final LocalTime STANDARD_CHECK_OUT = LocalTime.of(17, 0); // 17:00
-    private static final double STANDARD_WORK_HOURS = 9.0;                   // 9 tiếng (8h-17h)
+    private static final double STANDARD_WORK_HOURS = 8.0;                   // 8 giờ công/ngày
+    private static final double HALF_DAY_WORK_HOURS = STANDARD_WORK_HOURS / 2;
     private static final int LATE_GRACE_MINUTES = 5;                         // grace cho đi muộn
     private static final int PENALTY_BLOCK_MINUTES = 30;                     // block phạt 30 phút
 
@@ -210,6 +212,60 @@ public class AttendanceDAO {
         return list;
     }
 
+    public AttendanceSummary getSummaryByUser(int userId, LocalDate start, LocalDate end) {
+        AttendanceSummary summary = new AttendanceSummary();
+        String attendanceSql =
+                "SELECT " +
+                "COALESCE(SUM(total_work_hours), 0) AS total_work_hours, " +
+                "COALESCE(SUM(overtime_hours), 0) AS overtime_hours, " +
+                "COALESCE(SUM(COALESCE(late_hours, 0) + COALESCE(early_leave_hours, 0)), 0) AS penalty_hours, " +
+                "COALESCE(SUM(CASE WHEN late_hours > 0 THEN 1 ELSE 0 END), 0) AS late_count, " +
+                "COALESCE(SUM(CASE WHEN early_leave_hours > 0 THEN 1 ELSE 0 END), 0) AS early_count, " +
+                "COALESCE(SUM(CASE WHEN (check_in IS NULL) <> (check_out IS NULL) THEN 1 ELSE 0 END), 0) AS forgot_count, " +
+                "COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS leave_days " +
+                "FROM attendance_records WHERE user_id = ? AND work_date BETWEEN ? AND ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(attendanceSql)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(start));
+            ps.setDate(3, Date.valueOf(end));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    summary.setTotalWorkHours(rs.getDouble("total_work_hours"));
+                    summary.setOvertimeHours(rs.getDouble("overtime_hours"));
+                    summary.setTotalLateAndEarlyHours(rs.getDouble("penalty_hours"));
+                    summary.setLateCount(rs.getInt("late_count"));
+                    summary.setEarlyLeaveCount(rs.getInt("early_count"));
+                    summary.setForgotCheckCount(rs.getInt("forgot_count"));
+                    summary.setLeaveDaysInMonth(rs.getDouble("leave_days"));
+                }
+            }
+
+            loadLeaveBalance(conn, userId, start.getYear(), summary);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return summary;
+    }
+
+    private void loadLeaveBalance(Connection conn, int userId, int year, AttendanceSummary summary)
+            throws SQLException {
+        String sql = "SELECT entitled_days, advanced_days, remaining_days " +
+                "FROM leave_balances WHERE user_id = ? AND year = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    summary.setEntitledLeaveDays(rs.getDouble("entitled_days"));
+                    summary.setAdvancedLeaveDays(rs.getDouble("advanced_days"));
+                    summary.setRemainingLeaveDays(rs.getDouble("remaining_days"));
+                }
+            }
+        }
+    }
+
     // ==================== TÍNH TOÁN THEO LUẬT MỚI ====================
 
     private void calculateWorkingHours(AttendanceRecord record) {
@@ -222,7 +278,13 @@ public class AttendanceDAO {
         record.setEarlyLeaveHours(0.0);
         record.setOvertimeHours(0.0); // OT do đơn xin, không tự tính
 
-        if (checkIn == null || checkOut == null) return;
+        if (checkIn == null && checkOut == null) return;
+
+        // Quên một trong hai mốc chấm công: chỉ tính nửa ngày công.
+        if (checkIn == null || checkOut == null) {
+            record.setTotalWorkHours(HALF_DAY_WORK_HOURS);
+            return;
+        }
 
         // Tính số phút đi muộn (sau 8:00)
         LocalTime checkInTime = checkIn.toLocalTime();
@@ -275,14 +337,14 @@ public class AttendanceDAO {
         if (!hasCheckIn && !hasCheckOut) {
             return "ABSENT"; // có thể là FORGOT_BOTH nếu nghi ngờ
         } else if (!hasCheckIn) {
-            return "FORGOT_CHECKIN";
+            return "FORGOT_CHECK_IN";
         } else if (!hasCheckOut) {
-            return "FORGOT_CHECKOUT";
+            return "FORGOT_CHECK_OUT";
         } else {
             double late = record.getLateHours() != null ? record.getLateHours() : 0.0;
             double early = record.getEarlyLeaveHours() != null ? record.getEarlyLeaveHours() : 0.0;
             if (late > 0 && early > 0) {
-                return "LATE_AND_EARLY";
+                return "LATE_AND_EARLY_LEAVE";
             } else if (late > 0) {
                 return "LATE";
             } else if (early > 0) {

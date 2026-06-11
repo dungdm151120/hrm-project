@@ -162,10 +162,41 @@ CREATE TABLE attendance_records (
     note TEXT NULL COMMENT 'Ghi chú (lý do OT, lý do đi muộn, nghỉ phép...)',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT fk_attendance_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT unique_attendance_record UNIQUE (user_id, work_date)
 );
+
+-- 3. LEAVE BALANCES
+-- Lưu số ngày phép của từng nhân viên theo từng năm
+CREATE TABLE leave_balances (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    user_id INT NOT NULL,
+    year INT NOT NULL,
+
+    entitled_days DECIMAL(5,2) DEFAULT 12.00
+    COMMENT 'Số ngày phép được cấp trong năm',
+
+    advanced_days DECIMAL(5,2) DEFAULT 0.00
+    COMMENT 'Số ngày phép được ứng thêm',
+
+    used_days DECIMAL(5,2) DEFAULT 0.00
+    COMMENT 'Số ngày phép đã sử dụng',
+
+    remaining_days DECIMAL(5,2) DEFAULT 12.00
+    COMMENT 'Số ngày phép còn lại',
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_leave_balances_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+
+    CONSTRAINT unique_leave_balance_user_year
+    UNIQUE (user_id, year)
+);
+
 INSERT INTO roles (name, description, active)
 VALUES
     ('SYSTEM ADMIN', 'System administrator: manages users, roles, and permissions', TRUE),
@@ -598,3 +629,47 @@ VALUES
      'HDLD-2024-017', 'FIXED_TERM', '2024-04-01', '2026-12-31',
      28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
      'Contract for Business Admin');
+
+-- Seed leave balances after users have been created.
+INSERT INTO leave_balances (
+    user_id,
+    year,
+    entitled_days,
+    advanced_days,
+    used_days,
+    remaining_days
+)
+SELECT
+    id,
+    2026,
+    12.00,
+    CASE
+        WHEN employee_code IN ('EMP002', 'EMP006', 'EMP014') THEN 1.00
+        WHEN employee_code IN ('EMP003', 'EMP010') THEN 2.00
+        ELSE 0.00
+    END AS advanced_days,
+    CASE
+        WHEN employee_code IN ('EMP002', 'EMP006') THEN 3.00
+        WHEN employee_code IN ('EMP003', 'EMP010') THEN 5.00
+        WHEN employee_code IN ('EMP014', 'EMP015') THEN 2.00
+        ELSE 0.00
+    END AS used_days,
+    12.00
+        + CASE
+              WHEN employee_code IN ('EMP002', 'EMP006', 'EMP014') THEN 1.00
+              WHEN employee_code IN ('EMP003', 'EMP010') THEN 2.00
+              ELSE 0.00
+          END
+        - CASE
+              WHEN employee_code IN ('EMP002', 'EMP006') THEN 3.00
+              WHEN employee_code IN ('EMP003', 'EMP010') THEN 5.00
+              WHEN employee_code IN ('EMP014', 'EMP015') THEN 2.00
+              ELSE 0.00
+          END AS remaining_days
+FROM users
+WHERE active = TRUE
+ON DUPLICATE KEY UPDATE
+    entitled_days = VALUES(entitled_days),
+    advanced_days = VALUES(advanced_days),
+    used_days = VALUES(used_days),
+    remaining_days = VALUES(remaining_days);
