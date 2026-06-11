@@ -3,136 +3,169 @@ CREATE DATABASE hrm_db;
 USE hrm_db;
 
 CREATE TABLE roles (
-                       id INT PRIMARY KEY AUTO_INCREMENT,
-                       name VARCHAR(50) NOT NULL UNIQUE,
-                       description VARCHAR(255),
-                       active BOOLEAN NOT NULL DEFAULT TRUE,
-                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       updated_at DATETIME
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME
 );
 
 CREATE TABLE departments (
-                             id INT PRIMARY KEY AUTO_INCREMENT,
-                             name VARCHAR(100) NOT NULL UNIQUE,
-                             description VARCHAR(255),
-                             manager_user_id INT,
-                             active BOOLEAN NOT NULL DEFAULT TRUE,
-                             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                             updated_at DATETIME
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    manager_user_id INT,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME
 );
 
 CREATE TABLE positions (
-                           id INT PRIMARY KEY AUTO_INCREMENT,
-                           name VARCHAR(100) NOT NULL UNIQUE,
-                           description VARCHAR(255),
-                           active BOOLEAN NOT NULL DEFAULT TRUE,
-                           created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                           updated_at DATETIME
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME
 );
 
 CREATE TABLE department_positions (
-                                      department_id INT NOT NULL,
-                                      position_id INT NOT NULL,
-                                      PRIMARY KEY (department_id, position_id),
-                                      CONSTRAINT fk_department_positions_department
-                                          FOREIGN KEY (department_id) REFERENCES departments(id)
-                                              ON DELETE CASCADE,
-                                      CONSTRAINT fk_department_positions_position
-                                          FOREIGN KEY (position_id) REFERENCES positions(id)
-                                              ON DELETE CASCADE
+    department_id INT NOT NULL,
+    position_id INT NOT NULL,
+    PRIMARY KEY (department_id, position_id),
+    CONSTRAINT fk_department_positions_department
+        FOREIGN KEY (department_id) REFERENCES departments(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_department_positions_position
+        FOREIGN KEY (position_id) REFERENCES positions(id)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE users (
-                       id INT PRIMARY KEY AUTO_INCREMENT,
-                       employee_code VARCHAR(50) UNIQUE,
-                       full_name VARCHAR(100) NOT NULL,
-                       email VARCHAR(100) NOT NULL UNIQUE,
-                       password VARCHAR(255) NOT NULL,
-                       phone VARCHAR(20),
-                       gender VARCHAR(10),
-                       date_of_birth DATETIME,
-                       address VARCHAR(255),
-                       avatar_url VARCHAR(255),
-                       role_id INT NOT NULL,
-                       department_id INT,
-                       position_id INT,
-                       hire_date DATE,
-                       employment_status VARCHAR(30) NOT NULL DEFAULT 'WORKING',
-                       active BOOLEAN NOT NULL DEFAULT TRUE,
-                       reset_token VARCHAR(255),
-                       reset_token_expired_at DATETIME,
-                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       updated_at DATETIME,
-                       CONSTRAINT fk_users_roles
-                           FOREIGN KEY (role_id) REFERENCES roles(id),
-                       CONSTRAINT fk_users_departments
-                           FOREIGN KEY (department_id) REFERENCES departments(id),
-                       CONSTRAINT fk_users_positions
-                           FOREIGN KEY (position_id) REFERENCES positions(id),
-                       CONSTRAINT fk_users_department_positions
-                           FOREIGN KEY (department_id, position_id)
-                               REFERENCES department_positions(department_id, position_id)
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_code VARCHAR(50) UNIQUE,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    gender VARCHAR(10),
+    date_of_birth DATETIME,
+    address VARCHAR(255),
+    avatar_url VARCHAR(255),
+    role_id INT NOT NULL,
+    department_id INT,
+    position_id INT,
+    hire_date DATE,
+    employment_status VARCHAR(30) NOT NULL DEFAULT 'WORKING',
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    reset_token VARCHAR(255),
+    reset_token_expired_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    CONSTRAINT fk_users_roles
+        FOREIGN KEY (role_id) REFERENCES roles(id),
+    CONSTRAINT fk_users_departments
+        FOREIGN KEY (department_id) REFERENCES departments(id),
+    CONSTRAINT fk_users_positions
+        FOREIGN KEY (position_id) REFERENCES positions(id),
+    CONSTRAINT fk_users_department_positions
+        FOREIGN KEY (department_id, position_id)
+        REFERENCES department_positions(department_id, position_id)
 );
 
 ALTER TABLE departments
-    ADD CONSTRAINT fk_departments_manager
-        FOREIGN KEY (manager_user_id) REFERENCES users(id);
+ADD CONSTRAINT fk_departments_manager
+    FOREIGN KEY (manager_user_id) REFERENCES users(id);
 
 CREATE TABLE permissions (
-                             id INT PRIMARY KEY AUTO_INCREMENT,
-                             code VARCHAR(100) NOT NULL UNIQUE,
-                             name VARCHAR(100) NOT NULL,
-                             description VARCHAR(255)
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255)
 );
 
 CREATE TABLE role_permissions (
-                                  role_id INT NOT NULL,
-                                  permission_id INT NOT NULL,
-                                  PRIMARY KEY (role_id, permission_id),
-                                  CONSTRAINT fk_role_permissions_roles
-                                      FOREIGN KEY (role_id) REFERENCES roles(id)
-                                          ON DELETE CASCADE,
-                                  CONSTRAINT fk_role_permissions_permissions
-                                      FOREIGN KEY (permission_id) REFERENCES permissions(id)
-                                          ON DELETE CASCADE
+    role_id INT NOT NULL,
+    permission_id INT NOT NULL,
+    PRIMARY KEY (role_id, permission_id),
+    CONSTRAINT fk_role_permissions_roles
+        FOREIGN KEY (role_id) REFERENCES roles(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_role_permissions_permissions
+        FOREIGN KEY (permission_id) REFERENCES permissions(id)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE password_reset_requests (
-                                         id INT PRIMARY KEY AUTO_INCREMENT,
-                                         user_id INT NOT NULL,
-                                         email VARCHAR(100) NOT NULL,
-                                         reason VARCHAR(255),
-                                         status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-                                         generated_password VARCHAR(100),
-                                         admin_note VARCHAR(255),
-                                         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                         handled_at DATETIME,
-                                         handled_by INT,
-                                         CONSTRAINT fk_password_reset_requests_user
-                                             FOREIGN KEY (user_id) REFERENCES users(id),
-                                         CONSTRAINT fk_password_reset_requests_admin
-                                             FOREIGN KEY (handled_by) REFERENCES users(id)
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    reason VARCHAR(255),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    generated_password VARCHAR(100),
+    admin_note VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    handled_at DATETIME,
+    handled_by INT,
+    CONSTRAINT fk_password_reset_requests_user
+        FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_password_reset_requests_admin
+        FOREIGN KEY (handled_by) REFERENCES users(id)
 );
 
 CREATE TABLE labor_contracts (
-                                 id INT PRIMARY KEY AUTO_INCREMENT,
-                                 user_id INT NOT NULL,
-                                 contract_code VARCHAR(50) NOT NULL UNIQUE,
-                                 contract_type VARCHAR(50) NOT NULL,
-                                 start_date DATE NOT NULL,
-                                 end_date DATE,
-                                 base_salary DECIMAL(15,2),
-                                 working_time VARCHAR(100),
-                                 work_location VARCHAR(255),
-                                 status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
-                                 file_url VARCHAR(255),
-                                 note TEXT,
-                                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                 updated_at DATETIME,
-                                 CONSTRAINT fk_labor_contracts_users
-                                     FOREIGN KEY (user_id) REFERENCES users(id)
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    contract_code VARCHAR(50) NOT NULL UNIQUE,
+    contract_type VARCHAR(50) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    base_salary DECIMAL(15,2),
+    working_time VARCHAR(100),
+    work_location VARCHAR(255),
+    status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+    file_url VARCHAR(255),
+    note TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    CONSTRAINT fk_labor_contracts_users
+        FOREIGN KEY (user_id) REFERENCES users(id)
+);
+-- 1. ATTENDANCE LOGS
+-- Lưu dữ liệu thô từ Excel / máy chấm công giả lập
+CREATE TABLE attendance_logs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    work_date DATE NOT NULL,
+    employee_id INT NOT NULL,
+    check_in DATETIME NULL,
+    check_out DATETIME NULL,
+
+    CONSTRAINT unique_attendance_log UNIQUE (employee_id, work_date),
+    CONSTRAINT fk_attendance_logs_employee
+        FOREIGN KEY (employee_id) REFERENCES users(id)
 );
 
+-- 2. ATTENDANCE RECORDS
+-- Bảng tổng hợp kết quả chấm công
+CREATE TABLE attendance_records (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    work_date DATE NOT NULL,
+    check_in DATETIME NULL,
+    check_out DATETIME NULL,
+    total_work_hours DECIMAL(5,2) NULL COMMENT 'Tổng số giờ làm việc thực tế trong ngày (có thể bao gồm OT nếu tính chung)',
+    overtime_hours DECIMAL(5,2) DEFAULT 0.00 COMMENT 'Số giờ làm thêm đã đăng ký / được duyệt',
+    late_hours DECIMAL(5,2) DEFAULT 0.00 COMMENT 'Số giờ đi muộn (vd: 0.5 = 30 phút)',
+    early_leave_hours DECIMAL(5,2) DEFAULT 0.00 COMMENT 'Số giờ về sớm (vd: 0.25 = 15 phút)',
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING' COMMENT 'Trạng thái chấm công: ON_TIME, LATE, EARLY_LEAVE, LATE_AND_EARLY, ABSENT, ON_LEAVE, FORGOT_CHECKIN, FORGOT_CHECKOUT...',
+    note TEXT NULL COMMENT 'Ghi chú (lý do OT, lý do đi muộn, nghỉ phép...)',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_attendance_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT unique_attendance_record UNIQUE (user_id, work_date)
+);
 INSERT INTO roles (name, description, active)
 VALUES
     ('SYSTEM ADMIN', 'System administrator: manages users, roles, and permissions', TRUE),
@@ -377,16 +410,16 @@ VALUES
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-         JOIN permissions p
+JOIN permissions p
 WHERE r.name = 'SYSTEM ADMIN'
   AND p.code IN (
-                 'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
-                 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                 'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
-                 'ROLE_VIEW_LIST', 'ROLE_VIEW_PERMISSION', 'ROLE_UPDATE', 'ROLE_TOGGLE_STATUS',
-                 'ROLE_EDIT_PERMISSION', 'ROLE_CREATE',
-                 'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
+    'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
+    'ROLE_VIEW_LIST', 'ROLE_VIEW_PERMISSION', 'ROLE_UPDATE', 'ROLE_TOGGLE_STATUS',
+    'ROLE_EDIT_PERMISSION', 'ROLE_CREATE',
+    'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION'
+);
 
 -- BUSINESS ADMIN (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
@@ -398,101 +431,101 @@ WHERE r.name = 'BUSINESS ADMIN';
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-         JOIN permissions p
+JOIN permissions p
 WHERE r.name = 'HR_MANAGER'
   AND p.code IN (
-                 'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
-                 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                 'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
-                 'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_CREATE', 'DEPARTMENT_UPDATE',
-                 'DEPARTMENT_TOGGLE_STATUS', 'DEPARTMENT_ASSIGN_MANAGER', 'DEPARTMENT_VIEW_EMPLOYEES',
-                 'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
-                 'POSITION_VIEW_LIST', 'POSITION_VIEW_DETAIL', 'POSITION_CREATE', 'POSITION_UPDATE',
-                 'POSITION_TOGGLE_STATUS',
-                 'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE',
-                 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE', 'CONTRACT_RENEW',
-                 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL',
-                 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
-                 'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
+    'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_CREATE', 'DEPARTMENT_UPDATE',
+    'DEPARTMENT_TOGGLE_STATUS', 'DEPARTMENT_ASSIGN_MANAGER', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
+    'POSITION_VIEW_LIST', 'POSITION_VIEW_DETAIL', 'POSITION_CREATE', 'POSITION_UPDATE',
+    'POSITION_TOGGLE_STATUS',
+    'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE',
+    'CONTRACT_UPDATE', 'CONTRACT_TERMINATE', 'CONTRACT_RENEW',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL',
+    'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT'
+);
 
 -- HR_STAFF (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-         JOIN permissions p
+JOIN permissions p
 WHERE r.name = 'HR_STAFF'
   AND p.code IN (
-                 'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
-                 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                 'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
-                 'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
-                 'POSITION_VIEW_LIST', 'POSITION_VIEW_DETAIL',
-                 'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE',
-                 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE',
-                 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL',
-                 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
-                 'PAYROLL_VIEW_OWN'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
+    'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'POSITION_VIEW_LIST', 'POSITION_VIEW_DETAIL',
+    'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE',
+    'CONTRACT_UPDATE', 'CONTRACT_TERMINATE',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL',
+    'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN'
+);
 
 -- PAYROLL_MANAGER (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-         JOIN permissions p
+JOIN permissions p
 WHERE r.name = 'PAYROLL_MANAGER'
   AND p.code IN (
-                 'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
-                 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                 'DEPARTMENT_VIEW_EMPLOYEES',
-                 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
-                 'CONTRACT_VIEW_OWN',
-                 'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
-                 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
+    'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'DEPARTMENT_VIEW_EMPLOYEES',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
+    'CONTRACT_VIEW_OWN',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
+    'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT'
+);
 
 -- PAYROLL_STAFF (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-         JOIN permissions p
+JOIN permissions p
 WHERE r.name = 'PAYROLL_STAFF'
   AND p.code IN (
-                 'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
-                 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_EXPORT_REPORT',
-                 'CONTRACT_VIEW_OWN',
-                 'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
-                 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
+    'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_EXPORT_REPORT',
+    'CONTRACT_VIEW_OWN',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
+    'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT'
+);
 
 -- DEPARTMENT_MANAGER (ĐÃ SỬA: bổ sung DEPARTMENT_VIEW_LIST, DEPARTMENT_VIEW_DETAIL)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-         JOIN permissions p
+JOIN permissions p
 WHERE r.name = 'DEPARTMENT_MANAGER'
   AND p.code IN (
-                 'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
-                 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                 'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
-                 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
-                 'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
+    'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
+    'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN'
+);
 
 -- EMPLOYEE (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
-         JOIN permissions p
+JOIN permissions p
 WHERE r.name = 'EMPLOYEE'
   AND p.code IN (
-                 'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
-                 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                 'ATTENDANCE_CHECK_IN', 'ATTENDANCE_CHECK_OUT', 'ATTENDANCE_VIEW_OWN',
-                 'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN',
-                 'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
+    'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'ATTENDANCE_CHECK_IN', 'ATTENDANCE_CHECK_OUT', 'ATTENDANCE_VIEW_OWN',
+    'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES'
+);
 
 INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, end_date,
                              base_salary, working_time, work_location, status, file_url, note)
