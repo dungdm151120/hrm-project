@@ -51,7 +51,7 @@ public class EditRolePermissionServlet extends HttpServlet {
         List<Integer> assignedPermissionIds = roleDAO.getPermissionIdsByRoleId(roleId);
 
         Map<String, List<Permission>> moduleMap = new LinkedHashMap<>();
-        String[] moduleOrder = {"HOMEPAGE","PROFILE","USER","ROLE","DEPARTMENT","POSITION","CONTRACT","ATTENDANCE","PAYROLL"};
+        String[] moduleOrder = {"HOMEPAGE","PROFILE","USER","ROLE","DEPARTMENT","POSITION","CONTRACT","ATTENDANCE","PAYROLL","ANNOUNCEMENT"};
         for (String mod : moduleOrder) {
             moduleMap.put(mod, new ArrayList<>());
         }

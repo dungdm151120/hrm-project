@@ -36,6 +36,21 @@ public class DepartmentDAO {
         }
         return departments;
     }
+
+    public List<Department> getActiveDepartments() {
+        List<Department> departments = new ArrayList<>();
+        String sql = "SELECT * FROM departments WHERE active = TRUE ORDER BY name";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                departments.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return departments;
+    }
     public boolean updateManager(int deptId, int managerUserId) {
         String sql = "UPDATE departments SET manager_user_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
