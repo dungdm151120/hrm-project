@@ -109,7 +109,7 @@ public class AttendanceDAO {
         record.setCheckIn(log.getCheckIn());
         record.setCheckOut(log.getCheckOut());
 
-        calculateWorkingHours(record);
+            calculateWorkingHours(record);
 
         String status = determineStatus(record);
         record.setStatus(status);
@@ -176,6 +176,22 @@ public class AttendanceDAO {
                 if (rs.next()) return mapRecordResultSet(rs);
             }
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public AttendanceRecord getAttendanceRecordById(int id) {
+        String sql = "SELECT * FROM attendance_records WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRecordResultSet(rs);
+                }
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
@@ -459,7 +475,7 @@ public class AttendanceDAO {
 
     // ==================== TÍNH TOÁN THEO LUẬT MỚI ====================
 
-    private void calculateWorkingHours(AttendanceRecord record) {
+    public void calculateWorkingHours(AttendanceRecord record) {
         LocalDateTime checkIn = record.getCheckIn();
         LocalDateTime checkOut = record.getCheckOut();
 
@@ -521,7 +537,7 @@ public class AttendanceDAO {
         return blocks * 0.5;
     }
 
-    private String determineStatus(AttendanceRecord record) {
+    public String determineStatus(AttendanceRecord record) {
         boolean hasCheckIn = record.getCheckIn() != null;
         boolean hasCheckOut = record.getCheckOut() != null;
 
