@@ -92,14 +92,10 @@
 
                     <div class="attendance-update-row">
                         <label for="status">Status</label>
-                        <select id="status" name="status" required>
-                            <c:forEach var="attendanceStatus" items="${attendanceStatuses}">
-                                <option value="${attendanceStatus}"
-                                        ${record.status == attendanceStatus ? 'selected' : ''}>
-                                    ${attendanceStatus}
-                                </option>
-                            </c:forEach>
-                        </select>
+                        <input id="status"
+                               type="text"
+                               value="${record.status}"
+                               readonly>
                     </div>
 
                     <div class="attendance-update-row attendance-note-row">
