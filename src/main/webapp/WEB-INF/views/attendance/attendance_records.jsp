@@ -120,10 +120,9 @@
                 <div class="attendance-legend" aria-label="Attendance status legend">
                     <span><i class="legend-dot status-on-time"></i>On time</span>
                     <span><i class="legend-dot status-late"></i>Late or early leave</span>
-                    <span><i class="legend-dot status-edited"></i>Edited</span>
+                    <span><i class="legend-dot status-absent"></i>Absent</span>
                     <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
                     <span><i class="legend-dot status-leave"></i>On leave</span>
-                    <span><i class="legend-dot status-ot"></i>Overtime</span>
                 </div>
 
                 <div class="attendance-matrix-wrapper">
@@ -186,11 +185,11 @@
                                                             <c:if test="${record.overtimeHours > 0}">
                                                                 <span class="matrix-ot-badge">OT</span>
                                                             </c:if>
-                                                            <!--
-                                                             <c:if test="${record.cssClass == 'status-edited'}">
-                                                                <span class="matrix-edited-badge">Edited</span>
+
+                                                             <c:if test="${record.edited}">
+                                                                 <span class="matrix-edited-badge">Edited</span>
                                                              </c:if>
-                                                             -->
+
 
                                                         </a>
                                                     </td>

@@ -139,24 +139,19 @@
     background: #f59e0b;
 }
 
-.legend-dot.status-edited,
-.status-edited .matrix-status-dot {
-    background: #7c3aed;
-}
-
 .legend-dot.status-forgot,
 .status-forgot .matrix-status-dot {
     background: #ef4444;
 }
 
+.legend-dot.status-absent,
+.status-absent .matrix-status-dot {
+    background: #6b7280;
+}
+
 .legend-dot.status-leave,
 .status-leave .matrix-status-dot {
     background: #facc15;
-}
-
-.legend-dot.status-ot,
-.status-ot .matrix-status-dot {
-    background: #d946ef;
 }
 
 .attendance-matrix-wrapper {
@@ -312,20 +307,16 @@
     color: #ea580c;
 }
 
-.status-edited .matrix-time {
-    color: #7c3aed;
-}
-
 .status-forgot .matrix-time {
     color: #dc2626;
 }
 
-.status-leave .matrix-time {
-    color: #a16207;
+.status-absent .matrix-time {
+    color: #4b5563;
 }
 
-.status-ot .matrix-time {
-    color: #a21caf;
+.status-leave .matrix-time {
+    color: #a16207;
 }
 
 .matrix-ot-badge {
