@@ -97,7 +97,7 @@
                         <strong>${summary.lateCount}</strong>
                     </div>
                     <div class="attendance-summary-row">
-                        <span>Number of Early Arrivals</span>
+                        <span>Number of Early Leaves</span>
                         <strong>${summary.earlyLeaveCount}</strong>
                     </div>
                     <div class="attendance-summary-row">
