@@ -21,6 +21,7 @@ public class AttendanceRecordDTO {
     private String checkInText;
     private String checkOutText;
     private String cssClass;
+    private boolean edited;
 
     public int getAttendanceRecordId() {
         return attendanceRecordId;
@@ -164,5 +165,13 @@ public class AttendanceRecordDTO {
 
     public void setCssClass(String cssClass) {
         this.cssClass = cssClass;
+    }
+
+    public boolean isEdited() {
+        return edited;
+    }
+
+    public void setEdited(boolean edited) {
+        this.edited = edited;
     }
 }
