@@ -2,6 +2,10 @@ DROP DATABASE IF EXISTS hrm_db;
 CREATE DATABASE hrm_db;
 USE hrm_db;
 
+
+
+-- 1. ROLES
+
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL UNIQUE,
@@ -190,12 +194,26 @@ CREATE TABLE leave_balances (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_leave_balances_user
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+-- Request (dang test)
+CREATE TABLE requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    department_id INT NULL,
+    type ENUM('LEAVE_REQUEST', 'LATE_EARLY_REQUEST', 'DEPT_MOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST') NOT NULL,
+    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CLOSED', 'CANCELLED') DEFAULT 'PENDING',
+    reason TEXT,
+    approver_id INT,
+    approver_comment TEXT NULL,
+    observer_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT unique_leave_balance_user_year
-    UNIQUE (user_id, year)
+    CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_request_dept FOREIGN KEY (department_id) REFERENCES departments(id),
+    CONSTRAINT fk_request_approver FOREIGN KEY (approver_id) REFERENCES users(id),
+    CONSTRAINT fk_request_observer FOREIGN KEY (observer_id) REFERENCES users(id)
 );
+
+-- 10. INSERT ROLES
 
 INSERT INTO roles (name, description, active)
 VALUES
@@ -435,7 +453,13 @@ VALUES
     ('PAYROLL_GENERATE', 'Generate payroll', 'Can generate monthly payroll'),
     ('PAYROLL_UPDATE_COMPONENT', 'Update salary component', 'Can update salary components'),
     ('PAYROLL_CONFIRM', 'Confirm payroll', 'Can confirm payroll'),
-    ('PAYROLL_EXPORT_REPORT', 'Export payroll report', 'Can export payroll report');
+    ('PAYROLL_EXPORT_REPORT', 'Export payroll report', 'Can export payroll report'),
+
+    ('VIEW_MY_REQUEST', 'View own request', 'Can view own request'),
+    ('VIEW_ALL_REQUESTS', 'View all request', 'Can view all request'),
+    ('VIEW_REQUEST_DETAIL', 'View request detail', 'Can view request detail info'),
+    ('PROCESS_REQUEST', 'Process request', 'Can process request'),
+    ('CREATE_REQUEST', 'Create request', 'Can create new request');
 
 -- SYSTEM ADMIN (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
@@ -555,7 +579,7 @@ WHERE r.name = 'EMPLOYEE'
     'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
     'ATTENDANCE_CHECK_IN', 'ATTENDANCE_CHECK_OUT', 'ATTENDANCE_VIEW_OWN',
     'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN',
-    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES'
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST'
 );
 
 INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, end_date,

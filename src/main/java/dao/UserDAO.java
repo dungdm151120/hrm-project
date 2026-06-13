@@ -1481,4 +1481,54 @@ public class UserDAO {
             ps.setTimestamp(parameterIndex, Timestamp.valueOf(value));
         }
     }
+
+    public List<User> getBusinessAdminsByRole(String roleName) {
+        List<User> list = new ArrayList<>();
+
+        String sql = "SELECT u.id, u.full_name FROM users u " +
+                "JOIN roles r ON u.role_id = r.id " +
+                "WHERE r.name = ? AND u.active = TRUE";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, roleName);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User u = new User();
+                    u.setId(rs.getInt("id"));
+                    u.setFullName(rs.getString("full_name"));
+                    list.add(u);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public User getDeptManagerByEmployeeId(int employeeId) {
+        String sql = "SELECT u.id, u.full_name FROM users u " +
+                "JOIN departments d ON u.id = d.manager_user_id " +
+                "WHERE d.id = (SELECT department_id FROM users WHERE id = ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, employeeId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    User manager = new User();
+                    manager.setId(rs.getInt("id"));
+                    manager.setFullName(rs.getString("full_name"));
+                    return manager;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Trả về null nếu phòng ban chưa có manager hoặc nhân viên chưa thuộc phòng ban
+    }
 }

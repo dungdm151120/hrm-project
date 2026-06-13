@@ -14,16 +14,37 @@
       <assistant-state connection-id="fca52f86-7c82-4e40-a25a-776e6b23bbd8" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
-      <assistant-state connection-id="9e6a3409-44a1-418d-aa74-167c4123ec61" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+      <assistant-state connection-id="c1d37e5e-263f-419b-9e5a-abc55366cd72" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
-      <assistant-state connection-id="dc8be692-3c22-4a3e-9be2-2ad18440c40d" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+      <assistant-state connection-id="9ffa7bf5-7840-4970-80b6-63c6e2c7ace7" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="9e6a3409-44a1-418d-aa74-167c4123ec61" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
       <assistant-state connection-id="dc8be692-3c22-4a3e-9be2-2ad18440c40d" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
+      <assistant-state connection-id="dc8be692-3c22-4a3e-9be2-2ad18440c40d" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="c6a6f0a4-6e91-4b49-865b-9dd74e11a3e6" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="4c49e893-4646-4779-8ef1-77d8e2b5027b" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="4c49e893-4646-4779-8ef1-77d8e2b5027b" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+        <tools />
+      </assistant-state>
       <assistant-state connection-id="f83ddd08-9e65-479c-aa85-961ceeff3abb" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="07af378e-dfd4-408f-8ecd-5f391a75e794" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="07af378e-dfd4-408f-8ecd-5f391a75e794" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
         <tools />
       </assistant-state>
     </assistants>
@@ -38,12 +59,8 @@
     <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="fca52f86-7c82-4e40-a25a-776e6b23bbd8">
-      <console name="Connection" type="STANDARD" schema="hrm_db" session="Main"><![CDATA[SELECT column_name, character_set_name, collation_name
-FROM information_schema.COLUMNS
-WHERE table_schema = 'hrm_db' 
-  AND table_name = 'users'
-  AND column_name = 'full_name';]]></console>
+    <connection id="c6a6f0a4-6e91-4b49-865b-9dd74e11a3e6">
+      <console name="Connection" type="STANDARD" schema="hrm_db" session="Main"><![CDATA[select * from requests]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">
@@ -56,7 +73,10 @@ WHERE table_schema = 'hrm_db'
     <prerequisites />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
-    <connection id="fca52f86-7c82-4e40-a25a-776e6b23bbd8" />
+    <connection id="c6a6f0a4-6e91-4b49-865b-9dd74e11a3e6" />
+  </component>
+  <component name="DBNavigator.Project.DatasetFilterManager">
+    <filter-actions connection-id="4c49e893-4646-4779-8ef1-77d8e2b5027b" dataset="hrm_db.requests" active-filter-id="" />
   </component>
   <component name="DBNavigator.Project.ExecutionManager">
     <retain-sticky-names value="false" />
@@ -75,7 +95,7 @@ WHERE table_schema = 'hrm_db'
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
-      <connection source-id="" id="fca52f86-7c82-4e40-a25a-776e6b23bbd8" active="true" signed="true">
+      <connection source-id="" id="c6a6f0a4-6e91-4b49-865b-9dd74e11a3e6" active="true" signed="true">
         <database>
           <name value="Connection" />
           <description value="" />
