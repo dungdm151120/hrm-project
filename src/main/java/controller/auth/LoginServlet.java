@@ -38,10 +38,12 @@ public class   LoginServlet extends HttpServlet {
         if (user != null) {
             HttpSession session = request.getSession();
 
-
             session.setAttribute("currentUser", user);
             session.setAttribute("userId", user.getId());
             session.setAttribute("roleName", user.getRoleName());
+            session.setAttribute("fullName", user.getFullName());
+            session.setAttribute("departmentId", user.getDepartmentId());
+            session.setAttribute("role", user.getRoleName());
 
 
             List<Permission> permissions = permissionDAO.getPermissionsByRoleId(user.getRoleId());
