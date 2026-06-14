@@ -130,6 +130,13 @@ public class PermissionFilter implements Filter {
         if (path.equals("/payroll/confirm")) return "PAYROLL_CONFIRM";
         if (path.equals("/payroll/export")) return "PAYROLL_EXPORT_REPORT";
 
+        // Announcement
+        if (path.equals("/announcements") && "GET".equals(method)) return "ANNOUNCEMENT_VIEW_LIST";
+        if (path.equals("/announcements/detail") && "GET".equals(method)) return "ANNOUNCEMENT_VIEW_DETAIL";
+        if (path.equals("/announcements/add")) return "ANNOUNCEMENT_CREATE";
+
+        return null;
+    }
         // Request
         if (path.equals("/view_my_request") && "GET".equals(method)) return "VIEW_MY_REQUEST";
         if (path.equals("/view_all_requests") && "GET".equals(method)) return "VIEW_ALL_REQUESTS";

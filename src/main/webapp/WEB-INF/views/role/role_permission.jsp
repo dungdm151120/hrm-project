@@ -72,6 +72,7 @@
                                     <c:when test="${entry.key eq 'CONTRACT'}">Contract</c:when>
                                     <c:when test="${entry.key eq 'ATTENDANCE'}">Attendance</c:when>
                                     <c:when test="${entry.key eq 'PAYROLL'}">Payroll</c:when>
+                                    <c:when test="${entry.key eq 'ANNOUNCEMENT'}">Announcement</c:when>
                                     <c:otherwise>Other</c:otherwise>
                                 </c:choose>
                             </div>

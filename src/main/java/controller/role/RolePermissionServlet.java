@@ -50,7 +50,7 @@ public class RolePermissionServlet extends HttpServlet {
 
         // Nhóm permissions theo module
         Map<String, List<Permission>> moduleMap = new LinkedHashMap<>();
-        String[] moduleOrder = {"HOMEPAGE","PROFILE","USER","ROLE","DEPARTMENT","POSITION","CONTRACT","ATTENDANCE","PAYROLL"};
+        String[] moduleOrder = {"HOMEPAGE","PROFILE","USER","ROLE","DEPARTMENT","POSITION","CONTRACT","ATTENDANCE","PAYROLL","ANNOUNCEMENT"};
         for (String mod : moduleOrder) {
             moduleMap.put(mod, new ArrayList<>());
         }
