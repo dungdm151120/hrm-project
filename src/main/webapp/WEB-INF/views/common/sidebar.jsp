@@ -213,7 +213,10 @@
             </button>
             <div class="submenu">
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_OWN')}">
-                    <a href="${ctx}/attendance/summary?userId=${currentUser.id}" class="submenu-item ${currentPath == ctx.concat('/attendance/summary') && param.userId == currentUser.id ? 'active' : ''}">My Attendance</a>
+                    <a href="${ctx}/attendance/my"
+                       class="submenu-item ${currentPath == ctx.concat('/attendance/my') ? 'active' : ''}">
+                       My Attendance
+                    </a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT')}">
                     <a href="${ctx}/attendance/department" class="submenu-item ${currentPath == ctx.concat('/attendance/department') ? 'active' : ''}">Department Attendance</a>

@@ -1,0 +1,258 @@
+/* ========== Layout ========== */
+.my-attendance-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.my-attendance-calendar-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.my-attendance-summary-card {
+    width: 340px;
+    flex-shrink: 0;
+    background: var(--surface, #fff);
+    border-radius: var(--radius-lg, 12px);
+    padding: 20px;
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1));
+    position: sticky;
+    top: 20px;
+}
+
+/* ========== Calendar Toolbar ========== */
+.calendar-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.calendar-toolbar h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.calendar-toolbar form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.calendar-toolbar select {
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--border-color, #d1d5db);
+    border-radius: 8px;
+    font: 500 0.85rem 'Inter', sans-serif;
+    background: #fff;
+    color: #111827;
+    outline: none;
+}
+
+.calendar-toolbar select:focus {
+    border-color: var(--primary, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ========== Calendar Grid ========== */
+.attendance-calendar {
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.calendar-header-cell {
+    padding: 12px 4px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-right: 1px solid #e5e7eb;
+}
+
+.calendar-header-cell:last-child {
+    border-right: 0;
+}
+
+.calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.calendar-week:last-child {
+    border-bottom: 0;
+}
+
+.calendar-day {
+    min-height: 100px;
+    padding: 8px;
+    border-right: 1px solid #e5e7eb;
+    background: #fff;
+    transition: background 0.15s;
+}
+
+.calendar-day:last-child {
+    border-right: 0;
+}
+
+.calendar-day:hover {
+    background: #f8fbff;
+}
+
+.calendar-day.other-month {
+    background: #f9fafb;
+    color: #c0c4cc;
+}
+
+.day-number {
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.calendar-day.today .day-number {
+    background: #111827;
+    color: #fff;
+}
+
+/* ========== Record Chips ========== */
+.day-record {
+    margin-top: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.record-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-decoration: none;
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    transition: all 0.15s;
+}
+
+.record-chip:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* Status colors */
+.status-on-time .chip-dot,
+.chip-on-time .chip-dot { background: #22c55e; }
+.status-late .chip-dot,
+.chip-late .chip-dot { background: #f59e0b; }
+.status-absent .chip-dot,
+.chip-absent .chip-dot { background: #6b7280; }
+.status-forgot .chip-dot,
+.chip-forgot .chip-dot { background: #ef4444; }
+.status-leave .chip-dot,
+.chip-leave .chip-dot { background: #facc15; }
+
+.chip-ot {
+    background: #fae8ff;
+    color: #a21caf;
+    border-color: #f0abfc;
+    margin-top: 2px;
+}
+
+.chip-edited {
+    background: #ede9fe;
+    color: #6d28d9;
+    border-color: #c4b5fd;
+    margin-top: 2px;
+}
+
+.no-record {
+    color: #c0c4cc;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-align: center;
+    padding: 4px 0;
+}
+
+
+.attendance-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin: 16px 0;
+    color: #4b5563;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.attendance-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(17, 24, 39, 0.5);
+}
+
+.legend-dot.status-on-time { background: #22c55e; }
+.legend-dot.status-late { background: #f59e0b; }
+.legend-dot.status-absent { background: #6b7280; }
+.legend-dot.status-forgot { background: #ef4444; }
+.legend-dot.status-leave { background: #facc15; }
+
+/* ========== Responsive ========== */
+@media (max-width: 900px) {
+    .my-attendance-layout {
+        flex-direction: column;
+    }
+    .my-attendance-summary-card {
+        width: 100%;
+        position: static;
+    }
+    .calendar-day {
+        min-height: 80px;
+        padding: 4px;
+    }
+    .record-chip {
+        font-size: 0.65rem;
+        padding: 1px 6px;
+    }
+}

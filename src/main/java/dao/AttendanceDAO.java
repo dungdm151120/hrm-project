@@ -473,49 +473,44 @@ public class AttendanceDAO {
         }
     }
 
-    // ==================== TÍNH TOÁN THEO LUẬT MỚI ====================
-
     public void calculateWorkingHours(AttendanceRecord record) {
         LocalDateTime checkIn = record.getCheckIn();
         LocalDateTime checkOut = record.getCheckOut();
 
-        // Mặc định
         record.setTotalWorkHours(0.0);
         record.setLateHours(0.0);
         record.setEarlyLeaveHours(0.0);
-        record.setOvertimeHours(0.0); // OT do đơn xin, không tự tính
+        record.setOvertimeHours(0.0);
+
+        if (checkIn != null && checkIn.toLocalTime().isAfter(STANDARD_CHECK_OUT)) {
+            return;
+        }
 
         if (checkIn == null && checkOut == null) return;
 
-        // Quên một trong hai mốc chấm công: chỉ tính nửa ngày công.
         if (checkIn == null || checkOut == null) {
             record.setTotalWorkHours(HALF_DAY_WORK_HOURS);
             return;
         }
 
-        // Tính số phút đi muộn (sau 8:00)
         LocalTime checkInTime = checkIn.toLocalTime();
         long lateMinutes = Duration.between(STANDARD_CHECK_IN, checkInTime).toMinutes();
-        if (lateMinutes < 0) lateMinutes = 0; // đến sớm không tính muộn
+        if (lateMinutes < 0) lateMinutes = 0;
 
-        // Tính số phút về sớm (trước 17:00)
         LocalTime checkOutTime = checkOut.toLocalTime();
         long earlyMinutes = Duration.between(checkOutTime, STANDARD_CHECK_OUT).toMinutes();
-        if (earlyMinutes < 0) earlyMinutes = 0; // về muộn không tính sớm
+        if (earlyMinutes < 0) earlyMinutes = 0;
 
-        // Lưu số giờ thực tế đi muộn / về sớm (để báo cáo)
-        // Up to 5 minutes late is within the grace period and remains ON_TIME.
         long countedLateMinutes = lateMinutes > LATE_GRACE_MINUTES ? lateMinutes : 0;
         record.setLateHours(roundToTwoDecimals(countedLateMinutes / 60.0));
         record.setEarlyLeaveHours(roundToTwoDecimals(earlyMinutes / 60.0));
 
-        // Tính phạt:
         double latePenalty = calculateLatePenalty(lateMinutes);
         double earlyPenalty = calculateEarlyPenalty(earlyMinutes);
 
         double totalWork = STANDARD_WORK_HOURS - latePenalty - earlyPenalty;
         if (totalWork < 0) totalWork = 0;
-        if (totalWork > STANDARD_WORK_HOURS) totalWork = STANDARD_WORK_HOURS; // tối đa 9h
+        if (totalWork > STANDARD_WORK_HOURS) totalWork = STANDARD_WORK_HOURS;
 
         record.setTotalWorkHours(roundToTwoDecimals(totalWork));
     }
@@ -541,11 +536,15 @@ public class AttendanceDAO {
     }
 
     public String determineStatus(AttendanceRecord record) {
+        if (record.getCheckIn() != null && record.getCheckIn().toLocalTime().isAfter(STANDARD_CHECK_OUT)) {
+            return "ABSENT";
+        }
+
         boolean hasCheckIn = record.getCheckIn() != null;
         boolean hasCheckOut = record.getCheckOut() != null;
 
         if (!hasCheckIn && !hasCheckOut) {
-            return "ABSENT"; // có thể là FORGOT_BOTH nếu nghi ngờ
+            return "ABSENT";
         } else if (!hasCheckIn) {
             return "FORGOT_CHECK_IN";
         } else if (!hasCheckOut) {

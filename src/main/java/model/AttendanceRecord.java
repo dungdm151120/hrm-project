@@ -20,7 +20,6 @@ public class AttendanceRecord {
 
     public AttendanceRecord() {}
 
-    // Constructor đầy đủ nếu cần
     public AttendanceRecord(int id, int userId, LocalDate workDate,
                             LocalDateTime checkIn, LocalDateTime checkOut,
                             Double totalWorkHours, Double overtimeHours,
