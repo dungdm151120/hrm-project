@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.User;
 
 import java.io.IOException;
 import java.util.Set;
@@ -38,7 +39,12 @@ public class PermissionFilter implements Filter {
         @SuppressWarnings("unchecked")
         Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
 
-        if (userPermissions == null || !userPermissions.contains(requiredPermission)) {
+        boolean permitted = userPermissions != null
+                && ("ATTENDANCE_VIEW_SUMMARY".equals(requiredPermission)
+                ? canViewAttendanceSummary(req, session, userPermissions)
+                : userPermissions.contains(requiredPermission));
+
+        if (!permitted) {
             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
             req.setAttribute("permissionDenied", requiredPermission);
             req.getRequestDispatcher("/WEB-INF/views/common/403.jsp").forward(req, res);
@@ -108,7 +114,8 @@ public class PermissionFilter implements Filter {
         // Attendance
         if (path.equals("/attendance/check-in") && "POST".equals(method)) return "ATTENDANCE_CHECK_IN";
         if (path.equals("/attendance/check-out") && "POST".equals(method)) return "ATTENDANCE_CHECK_OUT";
-        if (path.equals("/attendance/my") && "GET".equals(method)) return "ATTENDANCE_VIEW_OWN";
+        if (path.equals("/attendance/summary") && "GET".equals(method)) return "ATTENDANCE_VIEW_SUMMARY";
+        if (path.equals("/attendance/records") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/department") && "GET".equals(method)) return "ATTENDANCE_VIEW_DEPARTMENT";
         if (path.equals("/attendance/all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/update")) return "ATTENDANCE_UPDATE";
@@ -123,6 +130,38 @@ public class PermissionFilter implements Filter {
         if (path.equals("/payroll/confirm")) return "PAYROLL_CONFIRM";
         if (path.equals("/payroll/export")) return "PAYROLL_EXPORT_REPORT";
 
+        // Request
+        if (path.equals("/view_my_request") && "GET".equals(method)) return "VIEW_MY_REQUEST";
+        if (path.equals("/view_all_requests") && "GET".equals(method)) return "VIEW_ALL_REQUESTS";
+        if (path.equals("/request_detail") && "GET".equals(method)) return "VIEW_REQUEST_DETAIL";
+        if (path.equals("/process_request") && "POST".equals(method)) return "PROCESS_REQUEST";
+        if (path.equals("/create_request")) return "CREATE_REQUEST";
         return null;
+    }
+
+    private boolean canViewAttendanceSummary(
+            HttpServletRequest request,
+            HttpSession session,
+            Set<String> userPermissions
+    ) {
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null) {
+            return false;
+        }
+
+        String userIdParameter = request.getParameter("userId");
+        if (userIdParameter == null || userIdParameter.isBlank()) {
+            return userPermissions.contains("ATTENDANCE_VIEW_OWN");
+        }
+
+        try {
+            int requestedUserId = Integer.parseInt(userIdParameter);
+            if (requestedUserId == currentUser.getId()) {
+                return userPermissions.contains("ATTENDANCE_VIEW_OWN");
+            }
+            return userPermissions.contains("ATTENDANCE_VIEW_ALL");
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }

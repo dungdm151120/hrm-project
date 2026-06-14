@@ -97,13 +97,12 @@ public class AssignManagerServlet extends HttpServlet {
         }
 
         boolean isHR = "Human Resources".equalsIgnoreCase(department.getName());
-        boolean isIT = "Information Technology".equalsIgnoreCase(department.getName());
         boolean isFI = "Finance".equalsIgnoreCase(department.getName());
 
         Integer oldManagerPositionId = null;
         String oldRoleName = null;
         if (currentManagerId != null) {
-            String oldPositionName = null;
+            String oldPositionName;
             if (isHR) {
                 oldPositionName = "HR Staff";
                 oldRoleName = "HR_STAFF";
@@ -127,9 +126,6 @@ public class AssignManagerServlet extends HttpServlet {
         if (isHR) {
             newPositionName = "HR Manager";
             newRoleName = "HR_MANAGER";
-        } else if (isIT) {
-            newPositionName = "System Administrator";
-            newRoleName = "SYSTEM ADMIN";
         } else if (isFI) {
             newPositionName = "Payroll Manager";
             newRoleName = "PAYROLL_MANAGER";
@@ -160,13 +156,11 @@ public class AssignManagerServlet extends HttpServlet {
         );
 
         if (assigned) {
-            // Cập nhật role cho manager mới
             Role newRole = roleDAO.findByName(newRoleName);
             if (newRole != null) {
                 userDAO.updateUserRole(newManagerId, newRole.getId());
             }
 
-            // Cập nhật role cho manager cũ
             if (currentManagerId != null && oldRoleName != null) {
                 Role oldRole = roleDAO.findByName(oldRoleName);
                 if (oldRole != null) {

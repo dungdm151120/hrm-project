@@ -2,6 +2,8 @@ DROP DATABASE IF EXISTS hrm_db;
 CREATE DATABASE hrm_db;
 USE hrm_db;
 
+
+
 -- 1. ROLES
 
 CREATE TABLE roles (
@@ -13,8 +15,6 @@ CREATE TABLE roles (
     updated_at DATETIME
 );
 
--- 2. DEPARTMENTS
-
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL UNIQUE,
@@ -25,8 +25,6 @@ CREATE TABLE departments (
     updated_at DATETIME
 );
 
--- 3. POSITIONS
-
 CREATE TABLE positions (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL UNIQUE,
@@ -35,8 +33,6 @@ CREATE TABLE positions (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME
 );
-
--- 4. DEPARTMENT_POSITIONS
 
 CREATE TABLE department_positions (
     department_id INT NOT NULL,
@@ -49,8 +45,6 @@ CREATE TABLE department_positions (
         FOREIGN KEY (position_id) REFERENCES positions(id)
         ON DELETE CASCADE
 );
-
--- 5. USERS
 
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -88,16 +82,12 @@ ALTER TABLE departments
 ADD CONSTRAINT fk_departments_manager
     FOREIGN KEY (manager_user_id) REFERENCES users(id);
 
--- 6. PERMISSIONS
-
 CREATE TABLE permissions (
     id INT PRIMARY KEY AUTO_INCREMENT,
     code VARCHAR(100) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(255)
 );
-
--- 7. ROLE_PERMISSIONS
 
 CREATE TABLE role_permissions (
     role_id INT NOT NULL,
@@ -110,8 +100,6 @@ CREATE TABLE role_permissions (
         FOREIGN KEY (permission_id) REFERENCES permissions(id)
         ON DELETE CASCADE
 );
-
--- 8. PASSWORD RESET REQUESTS
 
 CREATE TABLE password_reset_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -129,8 +117,6 @@ CREATE TABLE password_reset_requests (
     CONSTRAINT fk_password_reset_requests_admin
         FOREIGN KEY (handled_by) REFERENCES users(id)
 );
-
--- 9. LABOR CONTRACTS
 
 CREATE TABLE labor_contracts (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -150,6 +136,82 @@ CREATE TABLE labor_contracts (
     CONSTRAINT fk_labor_contracts_users
         FOREIGN KEY (user_id) REFERENCES users(id)
 );
+-- 1. ATTENDANCE LOGS
+-- Lưu dữ liệu thô từ Excel / máy chấm công giả lập
+CREATE TABLE attendance_logs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    work_date DATE NOT NULL,
+    employee_id INT NOT NULL,
+    check_in DATETIME NULL,
+    check_out DATETIME NULL,
+
+    CONSTRAINT unique_attendance_log UNIQUE (employee_id, work_date),
+    CONSTRAINT fk_attendance_logs_employee
+        FOREIGN KEY (employee_id) REFERENCES users(id)
+);
+
+-- 2. ATTENDANCE RECORDS
+-- Bảng tổng hợp kết quả chấm công
+CREATE TABLE attendance_records (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    work_date DATE NOT NULL,
+    check_in DATETIME NULL,
+    check_out DATETIME NULL,
+    total_work_hours DECIMAL(5,2) NULL COMMENT 'Tổng số giờ làm việc thực tế trong ngày (có thể bao gồm OT nếu tính chung)',
+    overtime_hours DECIMAL(5,2) DEFAULT 0.00 COMMENT 'Số giờ làm thêm đã đăng ký / được duyệt',
+    late_hours DECIMAL(5,2) DEFAULT 0.00 COMMENT 'Số giờ đi muộn (vd: 0.5 = 30 phút)',
+    early_leave_hours DECIMAL(5,2) DEFAULT 0.00 COMMENT 'Số giờ về sớm (vd: 0.25 = 15 phút)',
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING' COMMENT 'Trạng thái chấm công: ON_TIME, LATE, EARLY_LEAVE, LATE_AND_EARLY, ABSENT, ON_LEAVE, FORGOT_CHECKIN, FORGOT_CHECKOUT...',
+    note TEXT NULL COMMENT 'Ghi chú (lý do OT, lý do đi muộn, nghỉ phép...)',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_attendance_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT unique_attendance_record UNIQUE (user_id, work_date)
+);
+
+-- 3. LEAVE BALANCES
+-- Lưu số ngày phép của từng nhân viên theo từng năm
+CREATE TABLE leave_balances (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    user_id INT NOT NULL,
+    year INT NOT NULL,
+
+    entitled_days DECIMAL(5,2) DEFAULT 12.00
+    COMMENT 'Số ngày phép được cấp trong năm',
+
+    advanced_days DECIMAL(5,2) DEFAULT 0.00
+    COMMENT 'Số ngày phép được ứng thêm',
+
+    used_days DECIMAL(5,2) DEFAULT 0.00
+    COMMENT 'Số ngày phép đã sử dụng',
+
+    remaining_days DECIMAL(5,2) DEFAULT 12.00
+    COMMENT 'Số ngày phép còn lại',
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+
+-- Request (dang test)
+CREATE TABLE requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    department_id INT NULL,
+    type ENUM('LEAVE_REQUEST', 'LATE_EARLY_REQUEST', 'DEPT_MOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST') NOT NULL,
+    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CLOSED', 'CANCELLED') DEFAULT 'PENDING',
+    reason TEXT,
+    approver_id INT,
+    approver_comment TEXT NULL,
+    observer_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_request_dept FOREIGN KEY (department_id) REFERENCES departments(id),
+    CONSTRAINT fk_request_approver FOREIGN KEY (approver_id) REFERENCES users(id),
+    CONSTRAINT fk_request_observer FOREIGN KEY (observer_id) REFERENCES users(id)
+);
 
 -- 10. INSERT ROLES
 
@@ -164,16 +226,12 @@ VALUES
     ('DEPARTMENT_MANAGER', 'Manages employees within their own department', TRUE),
     ('EMPLOYEE', 'Normal employee with self-service functions', TRUE);
 
--- 11. INSERT DEPARTMENTS
-
 INSERT INTO departments (name, description, active)
 VALUES
     ('Human Resources', 'Human resource department', TRUE),
     ('Information Technology', 'Information technology department', TRUE),
     ('Finance', 'Finance department (Payroll)', TRUE),
     ('Sales', 'Sales department', TRUE);
-
--- 12. INSERT POSITIONS
 
 INSERT INTO positions (name, description, active)
 VALUES
@@ -185,31 +243,24 @@ VALUES
     ('Department Manager', 'Responsible for managing a department', TRUE),
     ('Employee', 'Normal employee position', TRUE);
 
--- 13. INSERT DEPARTMENT_POSITIONS
-
 INSERT INTO department_positions (department_id, position_id)
 VALUES
     ((SELECT id FROM departments WHERE name = 'Human Resources'),
      (SELECT id FROM positions WHERE name = 'HR Manager')),
     ((SELECT id FROM departments WHERE name = 'Human Resources'),
      (SELECT id FROM positions WHERE name = 'HR Staff')),
-
     ((SELECT id FROM departments WHERE name = 'Information Technology'),
-     (SELECT id FROM positions WHERE name = 'System Administrator')),
+     (SELECT id FROM positions WHERE name = 'Department Manager')),
     ((SELECT id FROM departments WHERE name = 'Information Technology'),
      (SELECT id FROM positions WHERE name = 'Employee')),
-
     ((SELECT id FROM departments WHERE name = 'Finance'),
      (SELECT id FROM positions WHERE name = 'Payroll Manager')),
     ((SELECT id FROM departments WHERE name = 'Finance'),
      (SELECT id FROM positions WHERE name = 'Payroll Staff')),
-
     ((SELECT id FROM departments WHERE name = 'Sales'),
      (SELECT id FROM positions WHERE name = 'Department Manager')),
     ((SELECT id FROM departments WHERE name = 'Sales'),
      (SELECT id FROM positions WHERE name = 'Employee'));
-
--- 14. INSERT USERS
 
 INSERT INTO users (
     employee_code, full_name, email, password, phone, gender,
@@ -217,127 +268,106 @@ INSERT INTO users (
     hire_date, employment_status, active
 )
 VALUES
-    -- SYSTEM ADMIN (IT Manager)
-    ('EMP001', 'Nguyễn Minh Quân', 'admin@company.com', '123456',
-     '0900000001', 'Male', '1998-01-10 00:00:00', 'Hà Nội', NULL,
+    (NULL, 'System Administrator', 'admin@company.com', '123456',
+     NULL, NULL, NULL, NULL, NULL,
      (SELECT id FROM roles WHERE name = 'SYSTEM ADMIN'),
+     NULL, NULL,
+     NULL, 'WORKING', TRUE),
+    ('EMP018', 'Nguyễn Minh Quân', 'itmanager@company.com', '123456',
+     '0900000018', 'Male', '1998-01-10 00:00:00', 'Hà Nội', NULL,
+     (SELECT id FROM roles WHERE name = 'DEPARTMENT_MANAGER'),
      (SELECT id FROM departments WHERE name = 'Information Technology'),
-     (SELECT id FROM positions WHERE name = 'System Administrator'),
+     (SELECT id FROM positions WHERE name = 'Department Manager'),
      '2024-01-01', 'WORKING', TRUE),
-
-    -- EMPLOYEES IT
     ('EMP002', 'Trần Đức Anh', 'ducanh.it@company.com', '123456',
      '0900000002', 'Male', '2000-03-15 00:00:00', 'Đà Nẵng', NULL,
      (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
      (SELECT id FROM departments WHERE name = 'Information Technology'),
      (SELECT id FROM positions WHERE name = 'Employee'),
      '2024-01-10', 'WORKING', TRUE),
-
     ('EMP003', 'Phạm Gia Huy', 'giahuy.it@company.com', '123456',
      '0900000003', 'Male', '2001-07-20 00:00:00', 'Hồ Chí Minh', NULL,
      (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
      (SELECT id FROM departments WHERE name = 'Information Technology'),
      (SELECT id FROM positions WHERE name = 'Employee'),
      '2024-02-01', 'WORKING', TRUE),
-
     ('EMP004', 'Lê Hoàng Nam', 'hoangnam.it@company.com', '123456',
      '0900000004', 'Male', '1999-11-05 00:00:00', 'Hà Nội', NULL,
      (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
      (SELECT id FROM departments WHERE name = 'Information Technology'),
      (SELECT id FROM positions WHERE name = 'Employee'),
      '2024-02-15', 'WORKING', TRUE),
-
-    -- HR MANAGER
     ('EMP005', 'Nguyễn Thu Hà', 'hrmanager@company.com', '123456',
      '0900000005', 'Female', '1995-02-12 00:00:00', 'Hà Nội', NULL,
      (SELECT id FROM roles WHERE name = 'HR_MANAGER'),
      (SELECT id FROM departments WHERE name = 'Human Resources'),
      (SELECT id FROM positions WHERE name = 'HR Manager'),
      '2024-01-15', 'WORKING', TRUE),
-
-    -- HR STAFF
     ('EMP006', 'Trần Mai Anh', 'maianh.hr@company.com', '123456',
      '0900000006', 'Female', '1999-04-18 00:00:00', 'Hà Nội', NULL,
      (SELECT id FROM roles WHERE name = 'HR_STAFF'),
      (SELECT id FROM departments WHERE name = 'Human Resources'),
      (SELECT id FROM positions WHERE name = 'HR Staff'),
      '2024-02-01', 'WORKING', TRUE),
-
     ('EMP007', 'Phạm Ngọc Linh', 'ngoclinh.hr@company.com', '123456',
      '0900000007', 'Female', '2000-08-25 00:00:00', 'Hồ Chí Minh', NULL,
      (SELECT id FROM roles WHERE name = 'HR_STAFF'),
      (SELECT id FROM departments WHERE name = 'Human Resources'),
      (SELECT id FROM positions WHERE name = 'HR Staff'),
      '2024-02-20', 'WORKING', TRUE),
-
     ('EMP008', 'Vũ Hải Yến', 'haiyen.hr@company.com', '123456',
      '0900000008', 'Female', '2001-12-03 00:00:00', 'Đà Nẵng', NULL,
      (SELECT id FROM roles WHERE name = 'HR_STAFF'),
      (SELECT id FROM departments WHERE name = 'Human Resources'),
      (SELECT id FROM positions WHERE name = 'HR Staff'),
      '2024-03-01', 'WORKING', TRUE),
-
-    -- PAYROLL MANAGER (Finance Manager)
     ('EMP009', 'Đỗ Quang Huy', 'payrollmanager@company.com', '123456',
      '0900000009', 'Male', '1994-06-09 00:00:00', 'Hồ Chí Minh', NULL,
      (SELECT id FROM roles WHERE name = 'PAYROLL_MANAGER'),
      (SELECT id FROM departments WHERE name = 'Finance'),
      (SELECT id FROM positions WHERE name = 'Payroll Manager'),
      '2024-01-20', 'WORKING', TRUE),
-
-    -- PAYROLL STAFF (Finance)
     ('EMP010', 'Nguyễn Thảo Vy', 'thaovy.payroll@company.com', '123456',
      '0900000010', 'Female', '2000-09-14 00:00:00', 'Hồ Chí Minh', NULL,
      (SELECT id FROM roles WHERE name = 'PAYROLL_STAFF'),
      (SELECT id FROM departments WHERE name = 'Finance'),
      (SELECT id FROM positions WHERE name = 'Payroll Staff'),
      '2024-02-10', 'WORKING', TRUE),
-
     ('EMP011', 'Bùi Minh Khang', 'minhkhang.payroll@company.com', '123456',
      '0900000011', 'Male', '1998-10-22 00:00:00', 'Hà Nội', NULL,
      (SELECT id FROM roles WHERE name = 'PAYROLL_STAFF'),
      (SELECT id FROM departments WHERE name = 'Finance'),
      (SELECT id FROM positions WHERE name = 'Payroll Staff'),
      '2024-03-05', 'WORKING', TRUE),
-
     ('EMP012', 'Lê Phương Anh', 'phuonganh.payroll@company.com', '123456',
      '0900000012', 'Female', '2001-05-17 00:00:00', 'Đà Nẵng', NULL,
      (SELECT id FROM roles WHERE name = 'PAYROLL_STAFF'),
      (SELECT id FROM departments WHERE name = 'Finance'),
      (SELECT id FROM positions WHERE name = 'Payroll Staff'),
      '2024-03-18', 'WORKING', TRUE),
-
-    -- DEPARTMENT_MANAGER Sales
     ('EMP013', 'Hoàng Minh Đức', 'salesmanager@company.com', '123456',
      '0900000013', 'Male', '1993-03-30 00:00:00', 'Hà Nội', NULL,
      (SELECT id FROM roles WHERE name = 'DEPARTMENT_MANAGER'),
      (SELECT id FROM departments WHERE name = 'Sales'),
      (SELECT id FROM positions WHERE name = 'Department Manager'),
      '2024-01-25', 'WORKING', TRUE),
-
-    -- EMPLOYEES Sales
     ('EMP014', 'Nguyễn Khánh Ly', 'khanhly.sales@company.com', '123456',
      '0900000014', 'Female', '2000-07-11 00:00:00', 'Hồ Chí Minh', NULL,
      (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
      (SELECT id FROM departments WHERE name = 'Sales'),
      (SELECT id FROM positions WHERE name = 'Employee'),
      '2024-02-12', 'WORKING', TRUE),
-
     ('EMP015', 'Trần Quốc Bảo', 'quocbao.sales@company.com', '123456',
      '0900000015', 'Male', '1999-01-28 00:00:00', 'Đà Nẵng', NULL,
      (SELECT id FROM roles WHERE name = 'EMPLOYEE'),
      (SELECT id FROM departments WHERE name = 'Sales'),
      (SELECT id FROM positions WHERE name = 'Employee'),
      '2024-03-08', 'WORKING', TRUE),
-
-    -- BUSINESS ADMIN (không thuộc phòng ban, không có chức vụ)
     ('EMP016', 'Phan Bảo Long', 'businessadmin@company.com', '123456',
      '0900000016', 'Male', '1996-08-22 00:00:00', 'Hà Nội', NULL,
      (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN'),
      NULL, NULL,
      '2024-04-01', 'WORKING', TRUE),
-
-    -- PAYROLL_STAFF (additional)
     ('EMP017', 'Đặng Thanh Hương', 'payroll@company.com', '123456',
      '0900000017', 'Female', '1997-05-14 00:00:00', 'Hồ Chí Minh', NULL,
      (SELECT id FROM roles WHERE name = 'PAYROLL_STAFF'),
@@ -345,10 +375,8 @@ VALUES
      (SELECT id FROM positions WHERE name = 'Payroll Staff'),
      '2024-04-10', 'WORKING', TRUE);
 
--- 15. ASSIGN DEPARTMENT MANAGERS
-
 UPDATE departments
-SET manager_user_id = (SELECT id FROM users WHERE email = 'admin@company.com')
+SET manager_user_id = (SELECT id FROM users WHERE email = 'itmanager@company.com')
 WHERE name = 'Information Technology';
 
 UPDATE departments
@@ -362,8 +390,6 @@ WHERE name = 'Finance';
 UPDATE departments
 SET manager_user_id = (SELECT id FROM users WHERE email = 'salesmanager@company.com')
 WHERE name = 'Sales';
-
--- 16. INSERT PERMISSIONS (thêm DEPARTMENT_MOVE_MEMBER, DEPARTMENT_ASSIGN_POSITION)
 
 INSERT INTO permissions (code, name, description)
 VALUES
@@ -427,11 +453,15 @@ VALUES
     ('PAYROLL_GENERATE', 'Generate payroll', 'Can generate monthly payroll'),
     ('PAYROLL_UPDATE_COMPONENT', 'Update salary component', 'Can update salary components'),
     ('PAYROLL_CONFIRM', 'Confirm payroll', 'Can confirm payroll'),
-    ('PAYROLL_EXPORT_REPORT', 'Export payroll report', 'Can export payroll report');
+    ('PAYROLL_EXPORT_REPORT', 'Export payroll report', 'Can export payroll report'),
 
--- 17. ROLE PERMISSIONS (cập nhật DEPARTMENT_MOVE_MEMBER, DEPARTMENT_ASSIGN_POSITION)
+    ('VIEW_MY_REQUEST', 'View own request', 'Can view own request'),
+    ('VIEW_ALL_REQUESTS', 'View all request', 'Can view all request'),
+    ('VIEW_REQUEST_DETAIL', 'View request detail', 'Can view request detail info'),
+    ('PROCESS_REQUEST', 'Process request', 'Can process request'),
+    ('CREATE_REQUEST', 'Create request', 'Can create new request');
 
--- SYSTEM ADMIN
+-- SYSTEM ADMIN (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -446,13 +476,13 @@ WHERE r.name = 'SYSTEM ADMIN'
     'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION'
 );
 
--- BUSINESS ADMIN (tất cả permissions, không thay đổi)
+-- BUSINESS ADMIN (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r, permissions p
 WHERE r.name = 'BUSINESS ADMIN';
 
--- HR_MANAGER (thêm DEPARTMENT_MOVE_MEMBER, DEPARTMENT_ASSIGN_POSITION)
+-- HR_MANAGER (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -474,7 +504,7 @@ WHERE r.name = 'HR_MANAGER'
     'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT'
 );
 
--- HR_STAFF (không thay đổi)
+-- HR_STAFF (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -493,7 +523,7 @@ WHERE r.name = 'HR_STAFF'
     'PAYROLL_VIEW_OWN'
 );
 
--- PAYROLL_MANAGER
+-- PAYROLL_MANAGER (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -509,7 +539,7 @@ WHERE r.name = 'PAYROLL_MANAGER'
     'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT'
 );
 
--- PAYROLL_STAFF
+-- PAYROLL_STAFF (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -524,7 +554,7 @@ WHERE r.name = 'PAYROLL_STAFF'
     'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT'
 );
 
--- DEPARTMENT_MANAGER
+-- DEPARTMENT_MANAGER (ĐÃ SỬA: bổ sung DEPARTMENT_VIEW_LIST, DEPARTMENT_VIEW_DETAIL)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -533,12 +563,12 @@ WHERE r.name = 'DEPARTMENT_MANAGER'
   AND p.code IN (
     'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
     'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-    'DEPARTMENT_VIEW_EMPLOYEES',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
     'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
     'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN'
 );
 
--- EMPLOYEE
+-- EMPLOYEE (giữ nguyên)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
@@ -548,109 +578,122 @@ WHERE r.name = 'EMPLOYEE'
     'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD',
     'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
     'ATTENDANCE_CHECK_IN', 'ATTENDANCE_CHECK_OUT', 'ATTENDANCE_VIEW_OWN',
-    'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN'
+    'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST'
 );
-
--- 18. SAMPLE LABOR CONTRACTS
 
 INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, end_date,
                              base_salary, working_time, work_location, status, file_url, note)
 VALUES
-    ((SELECT id FROM users WHERE email = 'admin@company.com'),
-     'HDLD-2024-001', 'FIXED_TERM', '2024-01-01', '2025-01-01',
+    ((SELECT id FROM users WHERE email = 'itmanager@company.com'),
+     'HDLD-2024-018', 'FIXED_TERM', '2024-01-01', '2026-12-31',
      30000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
-     'Contract for System Admin'),
+     'Contract for IT Manager'),
     ((SELECT id FROM users WHERE email = 'hrmanager@company.com'),
-     'HDLD-2024-002', 'FIXED_TERM', '2024-01-15', '2025-01-15',
+     'HDLD-2024-002', 'FIXED_TERM', '2024-01-15', '2026-12-31',
      25000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
      'Contract for HR Manager'),
     ((SELECT id FROM users WHERE email = 'maianh.hr@company.com'),
-     'HDLD-2024-003', 'FIXED_TERM', '2024-02-01', '2025-02-01',
+     'HDLD-2024-003', 'FIXED_TERM', '2024-02-01', '2026-12-31',
      15000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
      'Contract for HR Staff'),
     ((SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'),
-     'HDLD-2024-004', 'FIXED_TERM', '2024-02-20', '2025-02-20',
+     'HDLD-2024-004', 'FIXED_TERM', '2024-02-20', '2026-12-31',
      15000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
      'Contract for HR Staff'),
     ((SELECT id FROM users WHERE email = 'haiyen.hr@company.com'),
-     'HDLD-2024-005', 'FIXED_TERM', '2024-03-01', '2025-03-01',
+     'HDLD-2024-005', 'FIXED_TERM', '2024-03-01', '2026-12-31',
      15000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', NULL,
      'Contract for HR Staff'),
     ((SELECT id FROM users WHERE email = 'ducanh.it@company.com'),
-     'HDLD-2024-006', 'FIXED_TERM', '2024-01-10', '2025-01-10',
+     'HDLD-2024-006', 'FIXED_TERM', '2024-01-10', '2026-12-31',
      12000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', NULL,
      'Contract for IT Employee'),
     ((SELECT id FROM users WHERE email = 'giahuy.it@company.com'),
-     'HDLD-2024-007', 'FIXED_TERM', '2024-02-01', '2025-02-01',
+     'HDLD-2024-007', 'FIXED_TERM', '2024-02-01', '2026-12-31',
      12000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
      'Contract for IT Employee'),
     ((SELECT id FROM users WHERE email = 'hoangnam.it@company.com'),
-     'HDLD-2024-008', 'FIXED_TERM', '2024-02-15', '2025-02-15',
+     'HDLD-2024-008', 'FIXED_TERM', '2024-02-15', '2026-12-31',
      12000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
      'Contract for IT Employee'),
     ((SELECT id FROM users WHERE email = 'payrollmanager@company.com'),
-     'HDLD-2024-009', 'FIXED_TERM', '2024-01-20', '2025-01-20',
+     'HDLD-2024-009', 'FIXED_TERM', '2024-01-20', '2026-12-31',
      22000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
      'Contract for Payroll Manager'),
     ((SELECT id FROM users WHERE email = 'thaovy.payroll@company.com'),
-     'HDLD-2024-010', 'FIXED_TERM', '2024-02-10', '2025-02-10',
+     'HDLD-2024-010', 'FIXED_TERM', '2024-02-10', '2026-12-31',
      11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
      'Contract for Payroll Staff'),
     ((SELECT id FROM users WHERE email = 'minhkhang.payroll@company.com'),
-     'HDLD-2024-011', 'FIXED_TERM', '2024-03-05', '2025-03-05',
+     'HDLD-2024-011', 'FIXED_TERM', '2024-03-05', '2026-12-31',
      11000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
      'Contract for Payroll Staff'),
     ((SELECT id FROM users WHERE email = 'phuonganh.payroll@company.com'),
-     'HDLD-2024-012', 'FIXED_TERM', '2024-03-18', '2025-03-18',
+     'HDLD-2024-012', 'FIXED_TERM', '2024-03-18', '2026-12-31',
      11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', NULL,
      'Contract for Payroll Staff'),
     ((SELECT id FROM users WHERE email = 'payroll@company.com'),
-     'HDLD-2024-013', 'FIXED_TERM', '2024-04-10', '2025-04-10',
+     'HDLD-2024-013', 'FIXED_TERM', '2024-04-10', '2026-12-31',
      16000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
      'Contract for Payroll Staff'),
     ((SELECT id FROM users WHERE email = 'salesmanager@company.com'),
-     'HDLD-2024-014', 'FIXED_TERM', '2024-01-25', '2025-01-25',
+     'HDLD-2024-014', 'FIXED_TERM', '2024-01-25', '2026-12-31',
      20000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
      'Contract for Sales Manager'),
     ((SELECT id FROM users WHERE email = 'khanhly.sales@company.com'),
-     'HDLD-2024-015', 'FIXED_TERM', '2024-02-12', '2025-02-12',
+     'HDLD-2024-015', 'FIXED_TERM', '2024-02-12', '2026-12-31',
      11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', NULL,
      'Contract for Sales Employee'),
     ((SELECT id FROM users WHERE email = 'quocbao.sales@company.com'),
-     'HDLD-2024-016', 'FIXED_TERM', '2024-03-08', '2025-03-08',
+     'HDLD-2024-016', 'FIXED_TERM', '2024-03-08', '2026-12-31',
      11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', NULL,
      'Contract for Sales Employee'),
     ((SELECT id FROM users WHERE email = 'businessadmin@company.com'),
-     'HDLD-2024-017', 'FIXED_TERM', '2024-04-01', '2025-04-01',
+     'HDLD-2024-017', 'FIXED_TERM', '2024-04-01', '2026-12-31',
      28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL,
      'Contract for Business Admin');
 
--- 19. TEST ACCOUNTS
-
--- SYSTEM ADMIN (IT Manager):
--- Email: admin@company.com / Password: 123456
-
--- BUSINESS ADMIN (không phòng ban, không chức vụ):
--- Email: businessadmin@company.com / Password: 123456
-
--- HR_MANAGER (HR Manager):
--- Email: hrmanager@company.com / Password: 123456
-
--- HR_STAFF:
--- Email: maianh.hr@company.com / ngoclinh.hr@company.com / haiyen.hr@company.com
--- Password: 123456
-
--- PAYROLL_MANAGER (Finance Manager):
--- Email: payrollmanager@company.com / Password: 123456
-
--- PAYROLL_STAFF:
--- Email: thaovy.payroll@company.com / minhkhang.payroll@company.com / phuonganh.payroll@company.com / payroll@company.com
--- Password: 123456
-
--- DEPARTMENT_MANAGER (Sales Manager):
--- Email: salesmanager@company.com / Password: 123456
-
--- EMPLOYEE:
--- IT: ducanh.it@company.com / giahuy.it@company.com / hoangnam.it@company.com
--- Sales: khanhly.sales@company.com / quocbao.sales@company.com
--- Password: 123456
+-- Seed leave balances after users have been created.
+INSERT INTO leave_balances (
+    user_id,
+    year,
+    entitled_days,
+    advanced_days,
+    used_days,
+    remaining_days
+)
+SELECT
+    id,
+    2026,
+    12.00,
+    CASE
+        WHEN employee_code IN ('EMP002', 'EMP006', 'EMP014') THEN 1.00
+        WHEN employee_code IN ('EMP003', 'EMP010') THEN 2.00
+        ELSE 0.00
+    END AS advanced_days,
+    CASE
+        WHEN employee_code IN ('EMP002', 'EMP006') THEN 3.00
+        WHEN employee_code IN ('EMP003', 'EMP010') THEN 5.00
+        WHEN employee_code IN ('EMP014', 'EMP015') THEN 2.00
+        ELSE 0.00
+    END AS used_days,
+    12.00
+        + CASE
+              WHEN employee_code IN ('EMP002', 'EMP006', 'EMP014') THEN 1.00
+              WHEN employee_code IN ('EMP003', 'EMP010') THEN 2.00
+              ELSE 0.00
+          END
+        - CASE
+              WHEN employee_code IN ('EMP002', 'EMP006') THEN 3.00
+              WHEN employee_code IN ('EMP003', 'EMP010') THEN 5.00
+              WHEN employee_code IN ('EMP014', 'EMP015') THEN 2.00
+              ELSE 0.00
+          END AS remaining_days
+FROM users
+WHERE active = TRUE
+ON DUPLICATE KEY UPDATE
+    entitled_days = VALUES(entitled_days),
+    advanced_days = VALUES(advanced_days),
+    used_days = VALUES(used_days),
+    remaining_days = VALUES(remaining_days);

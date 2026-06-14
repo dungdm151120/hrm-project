@@ -397,66 +397,54 @@ public class UserDAO {
 
     public List<User> findAllUsers() {
         List<User> users = new ArrayList<>();
-
         String sql = """
-                SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
-                FROM users u
-                JOIN roles r ON u.role_id = r.id
-                LEFT JOIN departments d ON u.department_id = d.id
-                OIN positions p ON u.position_id = p.id
-                ORDER BY u.id ASC
-                """;
-
+            SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            ORDER BY u.id ASC
+            """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) {
                 users.add(mapResultSetToUser(rs));
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return users;
     }
 
-
     public List<User> searchUsers(String keyword) {
         List<User> users = new ArrayList<>();
-
         String sql = """
-                SELECT u.*, r.name AS role_name
-                FROM users u
-                JOIN roles r ON u.role_id = r.id
-                WHERE u.full_name LIKE ?
-                   OR u.email LIKE ?
-                   OR u.phone LIKE ?
-                   OR r.name LIKE ?
-                ORDER BY u.id ASC
-                """;
-
+        SELECT u.*, r.name AS role_name
+        FROM users u
+        JOIN roles r ON u.role_id = r.id
+        WHERE (u.full_name LIKE ?
+               OR u.email LIKE ?
+               OR u.phone LIKE ?
+               OR r.name LIKE ?)
+          AND r.name NOT IN ('SYSTEM ADMIN', 'BUSINESS ADMIN')
+        ORDER BY u.id ASC
+        """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             String searchKeyword = "%" + keyword + "%";
-
             ps.setString(1, searchKeyword);
             ps.setString(2, searchKeyword);
             ps.setString(3, searchKeyword);
             ps.setString(4, searchKeyword);
-
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     users.add(mapResultSetToUser(rs));
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return users;
     }
 
@@ -607,7 +595,9 @@ public class UserDAO {
 
     public List<User> getAllActiveUsers() {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT id, full_name, email, active FROM users WHERE active = 1 ORDER BY full_name";
+        String sql = "SELECT id, full_name, email, active FROM users WHERE active = 1 " +
+                "AND role_id NOT IN (SELECT id FROM roles WHERE name IN ('SYSTEM ADMIN','BUSINESS ADMIN')) " +
+                "ORDER BY full_name";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -937,36 +927,32 @@ public class UserDAO {
     public List<User> findUnassignedUsers() {
         List<User> users = new ArrayList<>();
         String sql = """
-            SELECT u.id,
-                   u.full_name,
-                   u.email,
-                   u.phone,
-                   u.active,
-                   u.department_id,
-                   u.position_id,
-                   p.name AS position_name,
-                   d.name AS department_name
-            FROM users u
-            LEFT JOIN departments d ON d.id = u.department_id
-            LEFT JOIN positions p ON p.id = u.position_id
-            WHERE u.department_id IS NULL
-              AND u.active = TRUE
-              AND u.role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')
-            ORDER BY u.full_name
-            """;
-
+        SELECT u.id,
+               u.full_name,
+               u.email,
+               u.phone,
+               u.active,
+               u.department_id,
+               u.position_id,
+               p.name AS position_name,
+               d.name AS department_name
+        FROM users u
+        LEFT JOIN departments d ON d.id = u.department_id
+        LEFT JOIN positions p ON p.id = u.position_id
+        WHERE u.department_id IS NULL
+          AND u.active = TRUE
+          AND u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN','SYSTEM ADMIN'))
+        ORDER BY u.full_name
+        """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) {
                 users.add(mapEmployeeResultSetToUser(rs));
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return users;
     }
     private User mapResultSetToUser(ResultSet rs) throws Exception {
@@ -1139,18 +1125,18 @@ public class UserDAO {
                 ? "(u.department_id = ? OR u.department_id IS NULL)"
                 : "u.department_id = ?";
         String sql = """
-        SELECT u.id, u.full_name, u.email, u.phone, u.active,
-               u.department_id, u.position_id,
-               p.name AS position_name,
-               d.name AS department_name
-        FROM users u
-        LEFT JOIN departments d ON d.id = u.department_id
-        LEFT JOIN positions p ON p.id = u.position_id
-        WHERE %s
-          AND u.active = TRUE
-          AND u.role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')
-        ORDER BY u.department_id IS NULL, u.full_name
-        """.formatted(departmentCondition);
+    SELECT u.id, u.full_name, u.email, u.phone, u.active,
+           u.department_id, u.position_id,
+           p.name AS position_name,
+           d.name AS department_name
+    FROM users u
+    LEFT JOIN departments d ON d.id = u.department_id
+    LEFT JOIN positions p ON p.id = u.position_id
+    WHERE %s
+      AND u.active = TRUE
+      AND u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN','SYSTEM ADMIN'))
+    ORDER BY u.department_id IS NULL, u.full_name
+    """.formatted(departmentCondition);
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, departmentId);
@@ -1222,7 +1208,7 @@ public class UserDAO {
         String sql = "SELECT id, full_name FROM users " +
                 "WHERE (department_id IS NULL OR department_id = 0) " +
                 "AND active = 1 " +
-                "AND role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')";
+                "AND role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN','SYSTEM ADMIN'))";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -1384,22 +1370,19 @@ public class UserDAO {
 
     public List<User> getUsersWithPaging(String keyword, Boolean active, String sortBy, String sortOrder, int offset, int limit) {
         List<User> list = new ArrayList<>();
-
-        // 1. SQL lấy dữ liệu
         StringBuilder sql = new StringBuilder(
                 "SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name " +
                         "FROM users u " +
                         "JOIN roles r ON u.role_id = r.id " +
                         "LEFT JOIN departments d ON u.department_id = d.id " +
                         "LEFT JOIN positions p ON u.position_id = p.id " +
-                        "WHERE u.role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')");
+                        "WHERE u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN','SYSTEM ADMIN'))");
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND u.full_name LIKE ?");
         }
         if (active != null) sql.append(" AND u.active = ?");
 
-        // Sort theo tên (từ cuối cùng)
         if ("name".equals(sortBy)) {
             sql.append(" ORDER BY SUBSTRING_INDEX(TRIM(u.full_name), ' ', -1) ").append("asc".equalsIgnoreCase(sortOrder) ? "ASC" : "DESC");
         } else {
@@ -1407,10 +1390,8 @@ public class UserDAO {
         }
         sql.append(" LIMIT ? OFFSET ?");
 
-        // 2. Thực thi truy vấn
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
             int idx = 1;
             if (keyword != null && !keyword.trim().isEmpty()) ps.setString(idx++, "%" + keyword.trim() + "%");
             if (active != null) ps.setBoolean(idx++, active);
@@ -1424,11 +1405,8 @@ public class UserDAO {
             e.printStackTrace();
         }
 
-        // 3. Bộ lọc tinh
         if (keyword != null && !keyword.trim().isEmpty()) {
             String k = keyword.trim().toLowerCase();
-
-            // Bảng quy đổi dấu
             String[][] map = {{"á", "a"}, {"à", "a"}, {"ả", "a"}, {"ã", "a"}, {"ạ", "a"}, {"ă", "a"}, {"ắ", "a"}, {"ằ", "a"}, {"ẳ", "a"}, {"ẵ", "a"}, {"ặ", "a"}, {"â", "a"}, {"ấ", "a"}, {"ầ", "a"}, {"ẩ", "a"}, {"ẫ", "a"}, {"ậ", "a"},
                     {"é", "e"}, {"è", "e"}, {"ẻ", "e"}, {"ẽ", "e"}, {"ẹ", "e"}, {"ê", "e"}, {"ế", "e"}, {"ề", "e"}, {"ể", "e"}, {"ễ", "e"}, {"ệ", "e"},
                     {"í", "i"}, {"ì", "i"}, {"ỉ", "i"}, {"ĩ", "i"}, {"ị", "i"},
@@ -1438,17 +1416,12 @@ public class UserDAO {
 
             list = list.stream().filter(u -> {
                 String fullName = u.getFullName().toLowerCase();
-
-                // Nếu keyword có dấu, so sánh chính xác để phân biệt (vd: 'u'/'ư', 'o'/'ơ')
                 if (k.matches(".*[áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ].*")) {
                     return fullName.contains(k);
                 }
-
-                // Nếu keyword không dấu, quy đổi tên trong DB về không dấu để so sánh
                 String nameNormalized = fullName;
                 for (String[] pair : map) nameNormalized = nameNormalized.replace(pair[0], pair[1]);
                 return nameNormalized.contains(k);
-
             }).collect(java.util.stream.Collectors.toList());
         }
         return list;
@@ -1507,5 +1480,55 @@ public class UserDAO {
         } else {
             ps.setTimestamp(parameterIndex, Timestamp.valueOf(value));
         }
+    }
+
+    public List<User> getBusinessAdminsByRole(String roleName) {
+        List<User> list = new ArrayList<>();
+
+        String sql = "SELECT u.id, u.full_name FROM users u " +
+                "JOIN roles r ON u.role_id = r.id " +
+                "WHERE r.name = ? AND u.active = TRUE";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, roleName);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User u = new User();
+                    u.setId(rs.getInt("id"));
+                    u.setFullName(rs.getString("full_name"));
+                    list.add(u);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public User getDeptManagerByEmployeeId(int employeeId) {
+        String sql = "SELECT u.id, u.full_name FROM users u " +
+                "JOIN departments d ON u.id = d.manager_user_id " +
+                "WHERE d.id = (SELECT department_id FROM users WHERE id = ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, employeeId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    User manager = new User();
+                    manager.setId(rs.getInt("id"));
+                    manager.setFullName(rs.getString("full_name"));
+                    return manager;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Trả về null nếu phòng ban chưa có manager hoặc nhân viên chưa thuộc phòng ban
     }
 }
