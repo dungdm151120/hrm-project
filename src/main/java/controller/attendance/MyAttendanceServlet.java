@@ -72,7 +72,7 @@ public class MyAttendanceServlet extends HttpServlet {
             return;
         }
 
-        // Lấy employeeCode trực tiếp từ DB
+
         String empCode = getEmployeeCode(employee.getId());
         request.setAttribute("employeeCode", empCode != null ? empCode : "--");
 
@@ -148,7 +148,7 @@ public class MyAttendanceServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/attendance/my_attendance.jsp").forward(request, response);
     }
 
-    // Phương thức lấy employee_code trực tiếp từ DB
+
     private String getEmployeeCode(int userId) {
         String sql = "SELECT employee_code FROM users WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -165,7 +165,7 @@ public class MyAttendanceServlet extends HttpServlet {
         return null;
     }
 
-    // ... các phương thức còn lại giữ nguyên (canView, countWeekdays, resolveCssClass, vietnameseDayOfWeek, buildYearOptions, parsePositiveInteger, parseIntInRange)
+
     private boolean canView(HttpSession session, int currentUserId, int targetUserId) {
         @SuppressWarnings("unchecked")
         Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
