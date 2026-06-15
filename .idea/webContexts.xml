@@ -5,6 +5,7 @@
       <map>
         <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/index.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF" />
         <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/common/homepage.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/common" />
+        <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/common/sidebar.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/common" />
         <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/profile/change-password.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/profile" />
         <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/request/create_request.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/request" />
         <entry key="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/request/view_my_request.jsp" value="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/views/request" />

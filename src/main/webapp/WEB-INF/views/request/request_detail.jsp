@@ -48,10 +48,21 @@
             <span class="detail-value">${request.approverName}</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Observer:</span>
+            <span class="detail-label">Observer(s):</span>
             <span class="detail-value">
-                ${not empty request.observerName ? request.observerName : 'N/A'}
-            </span>
+        <c:choose>
+            <c:when test="${not empty request.observer}">
+                <ul>
+                    <c:forEach items="${request.observer}" var="obs">
+                        <li>${obs.fullName}</li>
+                    </c:forEach>
+                </ul>
+            </c:when>
+            <c:otherwise>
+                N/A
+            </c:otherwise>
+        </c:choose>
+    </span>
         </div>
     </div>
 </div>
@@ -83,7 +94,7 @@
 <div class="form-actions">
     <c:choose>
         <c:when test="${from == 'all'}">
-            <a href="view_all_requests">Back to list</a>
+            <a href="view_all_request">Back to list</a>
         </c:when>
         <c:otherwise>
             <a href="view_my_request">Back to list</a>

@@ -1,9 +1,7 @@
 package model;
 
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Request {
     private int id;
@@ -17,11 +15,11 @@ public class Request {
     private int approverId;
     private String approverName;
     private String approverComment;
-    private int observerId;
-    private String observerName;
+    private List<User> observer;
     private Timestamp createdAt;
 
     public Request() {
+        this.observer = new ArrayList<>();
     }
 
     public int getUserId() {
@@ -112,20 +110,12 @@ public class Request {
         this.approverComment = approverComment;
     }
 
-    public int getObserverId() {
-        return observerId;
+    public List<User> getObserver() {
+        return observer;
     }
 
-    public void setObserverId(int observerId) {
-        this.observerId = observerId;
-    }
-
-    public String getObserverName() {
-        return observerName;
-    }
-
-    public void setObserverName(String observerName) {
-        this.observerName = observerName;
+    public void setObserver(List<User> observer) {
+        this.observer = observer;
     }
 
     public Timestamp getCreatedAt() {
@@ -150,7 +140,7 @@ public class Request {
         }
     }
 
-    // Dung cho create
+    // Dung cho create, filter
     public static Map<String, String> getAllType() {
         Map<String, String> type = new LinkedHashMap<>();
         type.put("LEAVE_REQUEST", "Leave request");

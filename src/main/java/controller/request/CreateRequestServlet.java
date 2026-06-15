@@ -3,12 +3,14 @@ package controller.request;
 import dao.RequestDAO;
 import dao.UserDAO;
 import model.Request;
-import model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import model.User;
+
 import java.io.IOException;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.*;
 
 @WebServlet("/create_request")
 public class CreateRequestServlet extends HttpServlet {
@@ -18,19 +20,55 @@ public class CreateRequestServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        User user = (User) session.getAttribute("currentUser");
+
+        if (user == null) {
             response.sendRedirect("login.jsp");
             return;
         }
 
-        int currentUserId = (int) session.getAttribute("userId");
+        int deptId = user.getDepartmentId();
+        String position = user.getPositionName();
 
-        List<User> businessAdminList = userDAO.getBusinessAdminsByRole("Business Admin");
-        User deptManager = userDAO.getDeptManagerByEmployeeId(currentUserId);
+        List<User> deptEmployees = userDAO.getAllEmployeesByDepartment(deptId);
+        List<User> deptEmployeesFiltered = new ArrayList<>();
+        for (User emp : deptEmployees) {
+            if (emp.getId() != user.getId()) {
+                deptEmployeesFiltered.add(emp);
+            }
+        }
 
-        request.setAttribute("requestType", model.Request.getAllType());
-        request.setAttribute("businessAdminList", businessAdminList);
-        request.setAttribute("deptManager", deptManager);
+        Map<String, String> allTypes = Request.getAllType();
+        Map<String, String> filteredTypes = new LinkedHashMap<>();
+
+        for (var entry : allTypes.entrySet()) {
+            if ("POSITION_HANDOVER".equals(entry.getKey())) {
+                boolean isManager = (position != null && position.contains("Manager"));
+                boolean isSysAdmin = "System Administrator".equals(position);
+
+                if (isManager || isSysAdmin) {
+                    filteredTypes.put(entry.getKey(), entry.getValue());
+                }
+            } else {
+                filteredTypes.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        List<User> sysAdmins = userDAO.getUserByPosition("System Administrator");
+        List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
+        List<User> payrollManagers = userDAO.getUserByPosition("Payroll Manager");
+        List<User> deptManagers = userDAO.getAllDeptManager();
+
+        List<User> allObservers = new ArrayList<>();
+        if (sysAdmins != null) allObservers.addAll(sysAdmins);
+        if (hrManagers != null) allObservers.addAll(hrManagers);
+        if (payrollManagers != null) allObservers.addAll(payrollManagers);
+        if (deptManagers != null) allObservers.addAll(deptManagers);
+
+        request.setAttribute("deptEmployees", deptEmployeesFiltered);
+        request.setAttribute("allObservers", allObservers);
+        request.setAttribute("requestType", filteredTypes);
+        request.setAttribute("businessAdminList", userDAO.getUserByRole("BUSINESS ADMIN"));
 
         request.getRequestDispatcher("WEB-INF/views/request/create_request.jsp").forward(request, response);
     }
@@ -38,34 +76,37 @@ public class CreateRequestServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        Integer userId = (Integer) session.getAttribute("userId");
+
+        if (userId == null) {
             response.sendRedirect("login.jsp");
             return;
         }
 
-        try {
-            Integer userId = (Integer) session.getAttribute("userId");
-            Integer deptId = (Integer) session.getAttribute("departmentId");
+        String type = request.getParameter("type");
+        String[] observerIds = request.getParameterValues("observerIds");
 
+        List<Integer> obsIds = new ArrayList<>();
+        if (observerIds != null) {
+            for (String id : observerIds) {
+                if (id != null && !id.isEmpty()) {
+                    obsIds.add(Integer.parseInt(id));
+                }
+            }
+        }
+
+        try {
             Request req = new Request();
             req.setUserId(userId);
-            req.setDepartmentId(deptId);
+            req.setDepartmentId((Integer) session.getAttribute("departmentId"));
             req.setType(request.getParameter("type"));
             req.setReason(request.getParameter("reason"));
             req.setApproverId(Integer.parseInt(request.getParameter("approverId")));
 
-            String obsIdStr = request.getParameter("observerId");
-            if (obsIdStr != null && !obsIdStr.isEmpty()) {
-                req.setObserverId(Integer.parseInt(obsIdStr));
-            }
-
-            requestDAO.createRequest(req);
-
-            session.setAttribute("message", "Request created successfully.");
+            requestDAO.createRequest(req, obsIds);
             response.sendRedirect("view_my_request");
         } catch (Exception e) {
-            e.printStackTrace();
-            session.setAttribute("error", "Failed to create request: " + e.getMessage());
+            session.setAttribute("error", "Lỗi: " + e.getMessage());
             response.sendRedirect("create_request");
         }
     }

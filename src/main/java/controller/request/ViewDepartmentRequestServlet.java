@@ -8,27 +8,36 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.Request;
+import model.User;
 
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/view_all_request")
-public class ViewAllRequestsServlet extends HttpServlet {
+@WebServlet("/view_department_request")
+public class ViewDepartmentRequestServlet extends HttpServlet {
     private final RequestDAO dao = new RequestDAO();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
-        Object roleObj = session.getAttribute("role");
-        String role = (roleObj != null) ? roleObj.toString() : "";
+        User user = (User) session.getAttribute("currentUser");
 
-        // Kiểm tra đăng nhập
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId == null) {
-            response.sendRedirect("login.jsp");
+        if (user == null) {
+            response.sendRedirect("login");
             return;
+        }
+
+        // Xác định phòng ban cần hiển thị dữ liệu
+        String deptParam = request.getParameter("deptId");
+        int targetDeptId;
+        try {
+            if ("BUSINESS ADMIN".equals(user.getRoleName()) && deptParam != null && !deptParam.isEmpty()) {
+                targetDeptId = Integer.parseInt(deptParam);
+            } else {
+                targetDeptId = user.getDepartmentId();
+            }
+        } catch (NumberFormatException e) {
+            targetDeptId = user.getDepartmentId();
         }
 
         // 1. Đọc các tham số filter, sort từ URL request
@@ -50,9 +59,9 @@ public class ViewAllRequestsServlet extends HttpServlet {
         int limit = 10;
         int offset = (page - 1) * limit;
 
-        // 3. Gọi hàm DAO mới để lấy danh sách dữ liệu và đếm tổng số dòng cho All Requests
-        List<Request> allRequests = dao.getAllRequest(status, type, sort, offset, limit);
-        int totalRecords = dao.countAllRequest(status, type);
+        // 3. Gọi hàm DAO mới để lấy danh sách dữ liệu và đếm tổng số dòng cho Department Requests
+        List<Request> list = dao.getRequestByDepartment(targetDeptId, status, type, sort, offset, limit);
+        int totalRecords = dao.countRequestByDepartment(targetDeptId, status, type);
 
         int totalPages = (int) Math.ceil((double) totalRecords / limit);
         if (totalPages == 0) {
@@ -60,15 +69,16 @@ public class ViewAllRequestsServlet extends HttpServlet {
         }
 
         // 4. Đẩy dữ liệu ra thuộc tính của request để tệp JSP sử dụng
-        request.setAttribute("requestList", allRequests);
+        request.setAttribute("requestList", list);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
+        request.setAttribute("selectedDeptId", targetDeptId);
 
+        // Gửi ngược lại các bộ lọc hiện tại để JSP hiển thị trạng thái "selected" trên UI
         request.setAttribute("selectedStatus", status);
         request.setAttribute("selectedType", type);
         request.setAttribute("selectedSort", sort);
 
-        request.getRequestDispatcher("/WEB-INF/views/request/view_all_request.jsp")
-                .forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/request/view_department_request.jsp").forward(request, response);
     }
 }
