@@ -421,16 +421,19 @@ public class AttendanceDAO {
 
     public AttendanceSummary getSummaryByUser(int userId, LocalDate start, LocalDate end) {
         AttendanceSummary summary = new AttendanceSummary();
+
+        // SQL tính các chỉ số chấm công trong tháng (start..end)
         String attendanceSql =
                 "SELECT " +
-                "COALESCE(SUM(total_work_hours), 0) AS total_work_hours, " +
-                "COALESCE(SUM(overtime_hours), 0) AS overtime_hours, " +
-                "COALESCE(SUM(COALESCE(late_hours, 0) + COALESCE(early_leave_hours, 0)), 0) AS penalty_hours, " +
-                "COALESCE(SUM(CASE WHEN late_hours > 0 THEN 1 ELSE 0 END), 0) AS late_count, " +
-                "COALESCE(SUM(CASE WHEN early_leave_hours > 0 THEN 1 ELSE 0 END), 0) AS early_count, " +
-                "COALESCE(SUM(CASE WHEN (check_in IS NULL) <> (check_out IS NULL) THEN 1 ELSE 0 END), 0) AS forgot_count, " +
-                "COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS leave_days " +
-                "FROM attendance_records WHERE user_id = ? AND work_date BETWEEN ? AND ?";
+                        "COALESCE(SUM(total_work_hours), 0) AS total_work_hours, " +
+                        "COALESCE(SUM(overtime_hours), 0) AS overtime_hours, " +
+                        "COALESCE(SUM(COALESCE(late_hours, 0) + COALESCE(early_leave_hours, 0)), 0) AS penalty_hours, " +
+                        "COALESCE(SUM(CASE WHEN late_hours > 0 THEN 1 ELSE 0 END), 0) AS late_count, " +
+                        "COALESCE(SUM(CASE WHEN early_leave_hours > 0 THEN 1 ELSE 0 END), 0) AS early_count, " +
+                        "COALESCE(SUM(CASE WHEN (check_in IS NULL) <> (check_out IS NULL) THEN 1 ELSE 0 END), 0) AS forgot_count, " +
+                        "COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS leave_days, " +
+                        "COALESCE(SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END), 0) AS absent_days " +
+                        "FROM attendance_records WHERE user_id = ? AND work_date BETWEEN ? AND ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(attendanceSql)) {
@@ -446,31 +449,47 @@ public class AttendanceDAO {
                     summary.setEarlyLeaveCount(rs.getInt("early_count"));
                     summary.setForgotCheckCount(rs.getInt("forgot_count"));
                     summary.setLeaveDaysInMonth(rs.getDouble("leave_days"));
+                    summary.setAbsentDaysInMonth(rs.getDouble("absent_days")); // thêm absent
                 }
             }
 
-            loadLeaveBalance(conn, userId, start.getYear(), summary);
+            // Tính lại Leave Balance theo quy tắc mới
+            calculateLeaveBalance(conn, userId, end.getYear(), end.getMonthValue(), summary);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
         return summary;
     }
 
-    private void loadLeaveBalance(Connection conn, int userId, int year, AttendanceSummary summary)
-            throws SQLException {
-        String sql = "SELECT entitled_days, advanced_days, remaining_days " +
-                "FROM leave_balances WHERE user_id = ? AND year = ?";
+    private void calculateLeaveBalance(Connection conn, int userId, int year, int month,
+                                       AttendanceSummary summary) throws SQLException {
+        // month là tháng hiện tại (1-12)
+        // Tổng số ngày phép được hưởng tính đến hết tháng này = month
+        double entitled = month;
+
+        // Đếm tổng số ngày nghỉ phép (ON_LEAVE) từ đầu năm đến hết tháng này
+        String sql = "SELECT COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS used_days " +
+                "FROM attendance_records WHERE user_id = ? " +
+                "AND work_date BETWEEN ? AND ?";
+        LocalDate startOfYear = LocalDate.of(year, 1, 1);
+        LocalDate endOfMonth = LocalDate.of(year, month, YearMonth.of(year, month).lengthOfMonth());
+        double used = 0;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            ps.setInt(2, year);
+            ps.setDate(2, Date.valueOf(startOfYear));
+            ps.setDate(3, Date.valueOf(endOfMonth));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    summary.setEntitledLeaveDays(rs.getDouble("entitled_days"));
-                    summary.setAdvancedLeaveDays(rs.getDouble("advanced_days"));
-                    summary.setRemainingLeaveDays(rs.getDouble("remaining_days"));
+                    used = rs.getDouble("used_days");
                 }
             }
         }
+
+        double remaining = entitled - used;
+        summary.setEntitledLeaveDays(entitled);
+        summary.setAdvancedLeaveDays(0.0);       // Không dùng advanced nữa
+        summary.setRemainingLeaveDays(remaining);
     }
 
     public void calculateWorkingHours(AttendanceRecord record) {
