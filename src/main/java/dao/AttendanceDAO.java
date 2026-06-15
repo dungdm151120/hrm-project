@@ -473,6 +473,123 @@ public class AttendanceDAO {
         }
     }
 
+    public List<AttendanceRecordDTO> getAttendanceDetailByUserAndMonth(int userId, int month, int year) {
+        List<AttendanceRecordDTO> list = new ArrayList<>();
+        YearMonth ym = YearMonth.of(year, month);
+        String sql = "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
+                "u.full_name AS employee_name, d.name AS department_name, p.name AS position_name, " +
+                "ar.work_date, ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
+                "ar.late_hours, ar.early_leave_hours, ar.status, ar.note " +
+                "FROM attendance_records ar " +
+                "JOIN users u ON u.id = ar.user_id " +
+                "LEFT JOIN departments d ON d.id = u.department_id " +
+                "LEFT JOIN positions p ON p.id = u.position_id " +
+                "WHERE ar.user_id = ? AND MONTH(ar.work_date) = ? AND YEAR(ar.work_date) = ? " +
+                "ORDER BY ar.work_date";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, month);
+            ps.setInt(3, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AttendanceRecordDTO dto = new AttendanceRecordDTO();
+                    LocalDateTime checkIn = getNullableLocalDateTime(rs, "check_in");
+                    LocalDateTime checkOut = getNullableLocalDateTime(rs, "check_out");
+                    dto.setAttendanceRecordId(rs.getInt("attendance_record_id"));
+                    dto.setUserId(rs.getInt("user_id"));
+                    dto.setEmployeeCode(rs.getString("employee_code"));
+                    dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartmentName(rs.getString("department_name"));
+                    dto.setPositionName(rs.getString("position_name"));
+                    dto.setWorkDate(rs.getDate("work_date").toLocalDate());
+                    dto.setCheckIn(checkIn);
+                    dto.setCheckOut(checkOut);
+                    dto.setTotalWorkHours(getNullableDouble(rs, "total_work_hours"));
+                    dto.setOvertimeHours(getNullableDouble(rs, "overtime_hours"));
+                    dto.setLateHours(getNullableDouble(rs, "late_hours"));
+                    dto.setEarlyLeaveHours(getNullableDouble(rs, "early_leave_hours"));
+                    dto.setStatus(rs.getString("status"));
+                    dto.setNote(rs.getString("note"));
+                    dto.setCheckInText(checkIn == null ? "" : checkIn.format(MATRIX_TIME_FORMAT));
+                    dto.setCheckOutText(checkOut == null ? "" : checkOut.format(MATRIX_TIME_FORMAT));
+                    list.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    public List<AttendanceRecordDTO> getAllAttendanceRecordsForExport(int month, int year, Integer departmentId, String keyword) {
+        List<AttendanceRecordDTO> records = new ArrayList<>();
+        YearMonth period = YearMonth.of(year, month);
+        LocalDate startDate = period.atDay(1);
+        LocalDate endDate = period.atEndOfMonth();
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
+                        "u.full_name AS employee_name, d.name AS department_name, p.name AS position_name, " +
+                        "ar.work_date, ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
+                        "ar.late_hours, ar.early_leave_hours, ar.status, ar.note " +
+                        "FROM attendance_records ar " +
+                        "JOIN users u ON u.id = ar.user_id " +
+                        "LEFT JOIN departments d ON d.id = u.department_id " +
+                        "LEFT JOIN positions p ON p.id = u.position_id " +
+                        "WHERE ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
+        );
+        if (departmentId != null) {
+            sql.append(" AND u.department_id = ?");
+        }
+        if (!normalizedKeyword.isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+        }
+        sql.append(" ORDER BY u.full_name, u.id, ar.work_date");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            ps.setDate(idx++, Date.valueOf(startDate));
+            ps.setDate(idx++, Date.valueOf(endDate));
+            if (departmentId != null) {
+                ps.setInt(idx++, departmentId);
+            }
+            if (!normalizedKeyword.isEmpty()) {
+                String likeKeyword = "%" + normalizedKeyword + "%";
+                ps.setString(idx++, likeKeyword);
+                ps.setString(idx++, likeKeyword);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AttendanceRecordDTO dto = new AttendanceRecordDTO();
+                    LocalDateTime checkIn = getNullableLocalDateTime(rs, "check_in");
+                    LocalDateTime checkOut = getNullableLocalDateTime(rs, "check_out");
+                    dto.setAttendanceRecordId(rs.getInt("attendance_record_id"));
+                    dto.setUserId(rs.getInt("user_id"));
+                    dto.setEmployeeCode(rs.getString("employee_code"));
+                    dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartmentName(rs.getString("department_name"));
+                    dto.setPositionName(rs.getString("position_name"));
+                    dto.setWorkDate(rs.getDate("work_date").toLocalDate());
+                    dto.setCheckIn(checkIn);
+                    dto.setCheckOut(checkOut);
+                    dto.setTotalWorkHours(getNullableDouble(rs, "total_work_hours"));
+                    dto.setOvertimeHours(getNullableDouble(rs, "overtime_hours"));
+                    dto.setLateHours(getNullableDouble(rs, "late_hours"));
+                    dto.setEarlyLeaveHours(getNullableDouble(rs, "early_leave_hours"));
+                    dto.setStatus(rs.getString("status"));
+                    dto.setNote(rs.getString("note"));
+                    dto.setCheckInText(checkIn == null ? "" : checkIn.format(MATRIX_TIME_FORMAT));
+                    dto.setCheckOutText(checkOut == null ? "" : checkOut.format(MATRIX_TIME_FORMAT));
+                    records.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return records;
+    }
     public void calculateWorkingHours(AttendanceRecord record) {
         LocalDateTime checkIn = record.getCheckIn();
         LocalDateTime checkOut = record.getCheckOut();
@@ -515,18 +632,18 @@ public class AttendanceDAO {
         record.setTotalWorkHours(roundToTwoDecimals(totalWork));
     }
 
-    // Phạt đi muộn: grace 5 phút, sau đó block 30 phút
+
     private double calculateLatePenalty(long lateMinutes) {
         if (lateMinutes <= LATE_GRACE_MINUTES) {
             return 0.0;
         }
 
-        // Grace only waives 08:01-08:05; block boundaries still start from 08:00.
+
         long blocks = (lateMinutes + PENALTY_BLOCK_MINUTES - 1) / PENALTY_BLOCK_MINUTES;
         return blocks * 0.5;
     }
 
-    // Phạt về sớm: không grace, block 30 phút làm tròn lên
+
     private double calculateEarlyPenalty(long earlyMinutes) {
         if (earlyMinutes <= 0) {
             return 0.0;
@@ -568,7 +685,7 @@ public class AttendanceDAO {
         return Math.round(value * 100.0) / 100.0;
     }
 
-    // ==================== MAPPING ====================
+
 
     private AttendanceLog mapLogResultSet(ResultSet rs) throws SQLException {
         AttendanceLog log = new AttendanceLog();
