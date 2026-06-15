@@ -42,7 +42,7 @@ public class ProcessRequestServlet extends HttpServlet {
             boolean success = false;
             // Xác định trang đích để quay về sau khi xử lý
             String returnUrl = "view_all_request";
-            if ("my".equals(from)) returnUrl = "my_requests";
+            if ("my".equals(from)) returnUrl = "view_my_request";
             else if ("dept".equals(from)) returnUrl = "view_department_request";
 
             switch (action) {
@@ -68,7 +68,7 @@ public class ProcessRequestServlet extends HttpServlet {
                     // Chỉ chủ sở hữu mới được Cancel
                     if (req.getUserId() == userId && "PENDING".equals(req.getStatus())) {
                         success = dao.updateRequestStatus(requestId, "CANCELLED", null);
-                        returnUrl = "my_requests";
+                        returnUrl = "view_my_request";
                     }
                     break;
             }

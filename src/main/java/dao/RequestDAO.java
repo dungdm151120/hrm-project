@@ -138,9 +138,6 @@ public class RequestDAO {
                     List<User> obs = getObserversByRequestId(id);
                     req.setObserver(obs);
 
-                    // DEBUG: Thêm dòng này để kiểm tra
-                    System.out.println("DEBUG - ID Request: " + id + " | Số lượng observer nạp được: " + obs.size());
-
                     return req;
                 }
             }

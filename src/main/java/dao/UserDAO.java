@@ -48,10 +48,9 @@ public class UserDAO {
 
     public User findActiveUserByEmail(String email) {
         String sql = """
-                SELECT u.*, r.name AS role_name, p.name AS position_name
+                SELECT u.*, r.name AS role_name
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
-                JOIN positions p ON u.position_id = p.id
                 WHERE u.email = ?
                   AND u.active = TRUE
                   AND r.active = TRUE
@@ -1561,5 +1560,23 @@ public class UserDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public String getPositionNameByUserId(int userId) {
+        String sql = "SELECT p.name FROM positions p " +
+                "JOIN users u ON u.position_id = p.id " +
+                "WHERE u.id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("name");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

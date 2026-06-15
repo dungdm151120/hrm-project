@@ -7,7 +7,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>My Requests | HRM</title>
+    <title>Observed Requests | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body class="dashboard-body">
@@ -18,24 +18,23 @@
     <div class="dashboard-main">
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">My Requests</h1>
+                <h1 class="header-title">Observed Requests</h1>
             </div>
             <div class="header-right">
-                <a href="${pageContext.request.contextPath}/view_observed_request" class="btn-primary">View Observed Requests</a>
-                <a href="${pageContext.request.contextPath}/create_request" class="btn-primary">Create New Request</a>
+                <a href="${pageContext.request.contextPath}/view_my_request" class="btn-primary">View My Requests</a>
             </div>
         </div>
 
         <div class="dashboard-content">
             <div class="search-filter">
-                <form action="${pageContext.request.contextPath}/view_my_request" method="GET">
+                <form action="${pageContext.request.contextPath}/view_observed_request" method="GET">
                     <select name="status" onchange="this.form.submit()">
                         <option value="" ${empty selectedStatus ? 'selected' : ''}>All Status</option>
                         <option value="PENDING" ${selectedStatus == 'PENDING' ? 'selected' : ''}>Pending</option>
                         <option value="APPROVED" ${selectedStatus == 'APPROVED' ? 'selected' : ''}>Approved</option>
                         <option value="REJECTED" ${selectedStatus == 'REJECTED' ? 'selected' : ''}>Rejected</option>
-                        <option value="CLOSED" ${selectedStatus == 'REJECTED' ? 'selected' : ''}>Closed</option>
-                        <option value="CANCELLED" ${selectedStatus == 'REJECTED' ? 'selected' : ''}>Cancelled</option>
+                        <option value="CLOSED" ${selectedStatus == 'CLOSED' ? 'selected' : ''}>Closed</option>
+                        <option value="CANCELLED" ${selectedStatus == 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
                     </select>
 
                     <select name="type" onchange="this.form.submit()">
@@ -49,7 +48,7 @@
                         <option value="newest" ${selectedSort == 'newest' ? 'selected' : ''}>Newest</option>
                         <option value="oldest" ${selectedSort == 'oldest' ? 'selected' : ''}>Oldest</option>
                     </select>
-                    <a href="${pageContext.request.contextPath}/view_my_request" class="btn-reset">Clear</a>
+                    <a href="${pageContext.request.contextPath}/view_observed_request" class="btn-reset">Clear</a>
                 </form>
             </div>
 
@@ -66,7 +65,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <c:forEach items="${myRequests}" var="req">
+                    <c:forEach items="${obsRequests}" var="req">
                         <tr>
                             <td>${req.id}</td>
                             <td>${req.proposerName}</td>
@@ -75,22 +74,15 @@
                             <td><fmt:formatDate value="${req.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                             <td>
                                 <div class="actions">
-                                    <a href="request_detail?id=${req.id}&from=my" class="btn-secondary">View Details</a>
-                                    <c:if test="${req.status == 'PENDING'}">
-                                        <form action="process_request" method="POST" onsubmit="return confirm('Cancel this request?');" style="display:inline;">
-                                            <input type="hidden" name="requestId" value="${req.id}">
-                                            <input type="hidden" name="action" value="CANCEL">
-                                            <button type="submit" class="btn btn-danger">Cancel</button>
-                                        </form>
-                                    </c:if>
+                                    <a href="request_detail?id=${req.id}&from=obs" class="btn-secondary">View Detail</a>
                                 </div>
                             </td>
                         </tr>
                     </c:forEach>
-                    <c:if test="${empty myRequests}">
-                    <tr>
-                        <td colspan="6" style="text-align: center; color: #666; font-style: italic; padding: 15px;">No requests found.</td>
-                    </tr>
+                    <c:if test="${empty obsRequests}">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #666; font-style: italic; padding: 15px;">No requests found.</td>
+                        </tr>
                     </c:if>
                     </tbody>
                 </table>
@@ -98,7 +90,7 @@
 
             <div class="pagination employee-pagination">
                 <c:forEach begin="1" end="${totalPages}" var="i">
-                    <a href="view_my_request?page=${i}&status=${selectedStatus}&type=${selectedType}&sort=${selectedSort}"
+                    <a href="view_observed_request?page=${i}&status=${selectedStatus}&type=${selectedType}&sort=${selectedSort}"
                        class="page-link ${currentPage == i ? 'active' : ''}">${i}</a>
                 </c:forEach>
             </div>

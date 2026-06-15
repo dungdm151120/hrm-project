@@ -27,8 +27,9 @@ public class CreateRequestServlet extends HttpServlet {
             return;
         }
 
-        int deptId = user.getDepartmentId();
-        String position = user.getPositionName();
+        String position = userDAO.getPositionNameByUserId(user.getId());
+        Integer deptIdObj = user.getDepartmentId();
+        int deptId = (deptIdObj != null) ? deptIdObj : 0;
 
         List<User> deptEmployees = userDAO.getAllEmployeesByDepartment(deptId);
         List<User> deptEmployeesFiltered = new ArrayList<>();
@@ -44,7 +45,7 @@ public class CreateRequestServlet extends HttpServlet {
         for (var entry : allTypes.entrySet()) {
             if ("POSITION_HANDOVER".equals(entry.getKey())) {
                 boolean isManager = (position != null && position.contains("Manager"));
-                boolean isSysAdmin = "System Administrator".equals(position);
+                boolean isSysAdmin = (position != null && position.contains("Admin"));
 
                 if (isManager || isSysAdmin) {
                     filteredTypes.put(entry.getKey(), entry.getValue());
@@ -98,7 +99,8 @@ public class CreateRequestServlet extends HttpServlet {
         try {
             Request req = new Request();
             req.setUserId(userId);
-            req.setDepartmentId((Integer) session.getAttribute("departmentId"));
+            Integer deptId = (Integer) session.getAttribute("departmentId");
+            req.setDepartmentId(deptId != null ? deptId : 0);
             req.setType(request.getParameter("type"));
             req.setReason(request.getParameter("reason"));
             req.setApproverId(Integer.parseInt(request.getParameter("approverId")));
