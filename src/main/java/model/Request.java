@@ -16,7 +16,10 @@ public class Request {
     private String approverName;
     private String approverComment;
     private List<User> observer;
+    private int handlerId;
+    private String handlerName;
     private Timestamp createdAt;
+    private Timestamp processedAt;
 
     public Request() {
         this.observer = new ArrayList<>();
@@ -118,6 +121,22 @@ public class Request {
         this.observer = observer;
     }
 
+    public int getHandlerId() {
+        return handlerId;
+    }
+
+    public void setHandlerId(int handlerId) {
+        this.handlerId = handlerId;
+    }
+
+    public String getHandlerName() {
+        return handlerName;
+    }
+
+    public void setHandlerName(String handlerName) {
+        this.handlerName = handlerName;
+    }
+
     public Timestamp getCreatedAt() {
         return createdAt;
     }
@@ -126,13 +145,21 @@ public class Request {
         this.createdAt = createdAt;
     }
 
+    public Timestamp getProcessedAt() {
+        return processedAt;
+    }
+
+    public void setProcessedAt(Timestamp processedAt) {
+        this.processedAt = processedAt;
+    }
+
     // Dung cho list va detail
     public String getReadableType() {
         if (this.type == null) return "N/A";
         switch (this.type) {
             case "LEAVE_REQUEST": return "Leave request";
             case "LATE_EARLY_REQUEST": return "Late arrival/Early departure";
-            case "DEPT_MOVE": return "Move department";
+            case "EMP_MOVE_REMOVE": return "Move/Remove employee";
             case "POSITION_HANDOVER": return "Position handover";
             case "OVERTIME":return "Overtime";
             case "ATTENDANCE_ADJUST": return "Attendance adjust";
@@ -145,7 +172,7 @@ public class Request {
         Map<String, String> type = new LinkedHashMap<>();
         type.put("LEAVE_REQUEST", "Leave request");
         type.put("LATE_EARLY_REQUEST", "Late arrival/Early departure");
-        type.put("DEPT_MOVE", "Move department");
+        type.put("EMP_MOVE_REMOVE", "Move/Remove employee");
         type.put("POSITION_HANDOVER", "Position handover");
         type.put("OVERTIME", "Overtime");
         type.put("ATTENDANCE_ADJUST", "Attendance adjust");

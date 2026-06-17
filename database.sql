@@ -192,27 +192,69 @@ CREATE TABLE requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     department_id INT NULL,
-    type ENUM('LEAVE_REQUEST', 'LATE_EARLY_REQUEST', 'DEPT_MOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST') NOT NULL,
-    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CLOSED', 'CANCELLED') DEFAULT 'PENDING',
+    type ENUM('LEAVE_REQUEST', 'LATE_EARLY_REQUEST', 'EMP_MOVE_REMOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST') NOT NULL,
+    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED') DEFAULT 'PENDING',
     reason TEXT,
     approver_id INT,
     approver_comment TEXT NULL,
     observer_id INT,
+    handler_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP NULL,
     CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_request_dept FOREIGN KEY (department_id) REFERENCES departments(id),
     CONSTRAINT fk_request_approver FOREIGN KEY (approver_id) REFERENCES users(id),
-    CONSTRAINT fk_request_observer FOREIGN KEY (observer_id) REFERENCES users(id)
+    CONSTRAINT fk_request_observer FOREIGN KEY (observer_id) REFERENCES users(id),
+    CONSTRAINT fk_request_handler FOREIGN KEY (handler_id) REFERENCES users(id)
 );
 
 CREATE TABLE request_observers (
-    request_id INT NOT NULL,
-    observer_id INT NOT NULL,
-    PRIMARY KEY (request_id, observer_id),
-    FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
-    FOREIGN KEY (observer_id) REFERENCES users(id) ON DELETE CASCADE
+request_id INT NOT NULL,
+observer_id INT NOT NULL,
+PRIMARY KEY (request_id, observer_id),
+FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
+FOREIGN KEY (observer_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- ==========================================
+-- 4. ANNOUNCEMENT TABLES
+-- ==========================================
+
+CREATE TABLE announcements (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    target_scope ENUM('ALL', 'DEPARTMENT') NOT NULL DEFAULT 'ALL',
+    department_id INT,
+    publish_date DATETIME NOT NULL,
+    created_by INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    CONSTRAINT fk_announcements_departments
+        FOREIGN KEY (department_id) REFERENCES departments(id),
+    CONSTRAINT fk_announcements_created_by
+        FOREIGN KEY (created_by) REFERENCES users(id),
+    CONSTRAINT ck_announcements_department_scope
+        CHECK (
+            (target_scope = 'ALL' AND department_id IS NULL)
+            OR (target_scope = 'DEPARTMENT' AND department_id IS NOT NULL)
+        )
+);
+
+CREATE TABLE announcement_recipients (
+    announcement_id INT NOT NULL,
+    user_id INT NOT NULL,
+    read_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (announcement_id, user_id),
+    CONSTRAINT fk_announcement_recipients_announcements
+        FOREIGN KEY (announcement_id) REFERENCES announcements(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_announcement_recipients_users
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE,
+    INDEX idx_announcement_recipients_user (user_id, read_at)
+);
 -- ==========================================
 -- 4. INSERT DATA
 -- ==========================================
@@ -276,6 +318,18 @@ INSERT INTO users (
     ('EMP016', 'Phan Bảo Long', 'businessadmin@company.com', '123456', '0900000016', 'Male', '1996-08-22 00:00:00', 'Hà Nội', NULL, (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN'), NULL, NULL, '2024-04-01', 'WORKING', TRUE),
     ('EMP017', 'Đặng Thanh Hương', 'payroll@company.com', '123456', '0900000017', 'Female', '1997-05-14 00:00:00', 'Hồ Chí Minh', NULL, (SELECT id FROM roles WHERE name = 'PAYROLL_STAFF'), (SELECT id FROM departments WHERE name = 'Finance'), (SELECT id FROM positions WHERE name = 'Payroll Staff'), '2024-04-10', 'WORKING', TRUE);
 
+SET SQL_SAFE_UPDATES = 0;
+
+UPDATE users
+SET avatar_url = CONCAT(
+    'https://api.dicebear.com/9.x/avataaars/svg?seed=',
+    employee_code,
+    '&size=200'
+)
+WHERE active = TRUE
+  AND id > 0;
+
+SET SQL_SAFE_UPDATES = 1;
 UPDATE departments SET manager_user_id = (SELECT id FROM users WHERE email = 'admin@company.com') WHERE name = 'Information Technology';
 UPDATE departments SET manager_user_id = (SELECT id FROM users WHERE email = 'hrmanager@company.com') WHERE name = 'Human Resources';
 UPDATE departments SET manager_user_id = (SELECT id FROM users WHERE email = 'payrollmanager@company.com') WHERE name = 'Finance';
@@ -339,10 +393,13 @@ INSERT INTO permissions (code, name, description) VALUES
     -- Yêu cầu bổ sung từ DB2
     ('VIEW_MY_REQUEST', 'View own request', 'Can view own request'),
     ('VIEW_ALL_REQUEST', 'View all request', 'Can view all request'),
-    ('VIEW_DEPARTMENT_REQUEST','View department request', 'Can view all request of a department'),
     ('VIEW_REQUEST_DETAIL', 'View request detail', 'Can view request detail info'),
     ('PROCESS_REQUEST', 'Process request', 'Can process request'),
-    ('CREATE_REQUEST', 'Create request', 'Can create new request');
+    ('CREATE_REQUEST', 'Create request', 'Can create new request'),
+    ('VIEW_DEPARTMENT_REQUEST', 'View department request', 'Can view department request'),
+    ('ANNOUNCEMENT_VIEW_LIST', 'View announcements', 'Can view announcements available to the user'),
+    ('ANNOUNCEMENT_VIEW_DETAIL', 'View announcement detail', 'Can view announcement detail'),
+    ('ANNOUNCEMENT_CREATE', 'Create announcement', 'Can create and send announcements');
 
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'SYSTEM ADMIN' AND p.code IN (
@@ -350,7 +407,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'SYSTEM ADMIN' 
     'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS', 'ROLE_VIEW_LIST',
     'ROLE_VIEW_PERMISSION', 'ROLE_UPDATE', 'ROLE_TOGGLE_STATUS', 'ROLE_EDIT_PERMISSION', 'ROLE_CREATE',
     'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
-    'VIEW_MY_REQUEST', 'VIEW_DEPARTMENT_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST'
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST', 'VIEW_DEPARTMENT_REQUEST'
 );
 
 INSERT INTO role_permissions (role_id, permission_id)
@@ -366,7 +424,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AN
     'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE',
     'CONTRACT_TERMINATE', 'CONTRACT_RENEW', 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL',
     'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT', 'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
-    'VIEW_MY_REQUEST', 'VIEW_ALL_REQUEST', 'VIEW_DEPARTMENT_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST'
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST', 'VIEW_DEPARTMENT_REQUEST'
 );
 
 INSERT INTO role_permissions (role_id, permission_id)
@@ -376,6 +435,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_STAFF' AND 
     'POSITION_VIEW_LIST', 'POSITION_VIEW_DETAIL', 'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN',
     'CONTRACT_CREATE', 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE', 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
     'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT', 'PAYROLL_VIEW_OWN',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
     'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST'
 );
 
@@ -385,7 +445,9 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_MANAGE
     'DEPARTMENT_VIEW_EMPLOYEES', 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'CONTRACT_VIEW_OWN',
     'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT',
     'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
-    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'VIEW_DEPARTMENT_REQUEST', 'CREATE_REQUEST', 'PROCESS_REQUEST'
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST', 'VIEW_DEPARTMENT_REQUEST'
+
 );
 
 INSERT INTO role_permissions (role_id, permission_id)
@@ -393,6 +455,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_STAFF'
     'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
     'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_EXPORT_REPORT', 'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST',
     'PAYROLL_VIEW_DETAIL', 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
     'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST'
 );
 
@@ -401,7 +464,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'DEPARTMENT_MAN
     'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
     'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES', 'ATTENDANCE_VIEW_OWN',
     'ATTENDANCE_VIEW_DEPARTMENT', 'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN',
-    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'VIEW_DEPARTMENT_REQUEST', 'CREATE_REQUEST', 'PROCESS_REQUEST'
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST', 'VIEW_DEPARTMENT_REQUEST'
 );
 
 -- Cập nhật quyền Request cho EMPLOYEE từ DB2
@@ -410,9 +474,9 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'EMPLOYEE' AND 
     'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
     'ATTENDANCE_CHECK_IN', 'ATTENDANCE_CHECK_OUT', 'ATTENDANCE_VIEW_OWN', 'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN',
     'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
-    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST'
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL'
 );
-
 INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, end_date, base_salary, working_time, work_location, status, file_url, note) VALUES
     ((SELECT id FROM users WHERE email = 'admin@company.com'), 'HDLD-2024-001', 'FIXED_TERM', '2024-01-01', '2025-01-01', 30000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL, 'Contract for System Admin'),
     ((SELECT id FROM users WHERE email = 'hrmanager@company.com'), 'HDLD-2024-002', 'FIXED_TERM', '2024-01-15', '2025-01-15', 25000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', NULL, 'Contract for HR Manager'),

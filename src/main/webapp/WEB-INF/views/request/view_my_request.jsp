@@ -22,6 +22,7 @@
             </div>
             <div class="header-right">
                 <a href="${pageContext.request.contextPath}/view_observed_request" class="btn-primary">View Observed Requests</a>
+                <a href="${pageContext.request.contextPath}/view_handled_request" class="btn-primary">View Handled Requests</a>
                 <a href="${pageContext.request.contextPath}/create_request" class="btn-primary">Create New Request</a>
             </div>
         </div>
@@ -57,25 +58,43 @@
                 <table>
                     <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Proposer</th>
+                        <th>No.</th>
                         <th>Type</th>
+                        <th>Proposer</th>
                         <th>Status</th>
                         <th>Created At</th>
+                        <th>Handler</th>
+                        <th>Processed At</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <c:forEach items="${myRequests}" var="req">
+                    <c:forEach items="${myRequests}" var="req" varStatus="r">
                         <tr>
-                            <td>${req.id}</td>
-                            <td>${req.proposerName}</td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${not empty currentPage and currentPage > 1}">
+                                        ${r.index + 1 + (currentPage - 1) * 5}
+                                    </c:when>
+                                    <c:otherwise>
+                                        ${r.index + 1}
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
                             <td>${req.readableType}</td>
+                            <td>${req.proposerName}</td>
                             <td><span class="badge badge-${fn:toLowerCase(req.status)}">${req.status}</span></td>
                             <td><fmt:formatDate value="${req.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
+                            <td>${req.handlerName}</td>
+                            <td>
+                                <c:if test="${not empty req.processedAt}">
+                                    <fmt:formatDate value="${req.processedAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                </c:if>
+                                <c:if test="${empty req.processedAt}">-</c:if>
+                            </td>
                             <td>
                                 <div class="actions">
-                                    <a href="request_detail?id=${req.id}&from=my" class="btn-secondary">View Details</a>
+                                    <a href="request_detail?id=${req.id}" class="btn-secondary">View Details</a>
                                     <c:if test="${req.status == 'PENDING'}">
                                         <form action="process_request" method="POST" onsubmit="return confirm('Cancel this request?');" style="display:inline;">
                                             <input type="hidden" name="requestId" value="${req.id}">

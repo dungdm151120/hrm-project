@@ -45,7 +45,6 @@ public class   LoginServlet extends HttpServlet {
             session.setAttribute("departmentId", user.getDepartmentId());
             session.setAttribute("role", user.getRoleName());
 
-
             List<Permission> permissions = permissionDAO.getPermissionsByRoleId(user.getRoleId());
             Set<String> permissionCodes = new HashSet<>();
             for (Permission p : permissions) {

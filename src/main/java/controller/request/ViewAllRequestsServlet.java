@@ -50,7 +50,7 @@ public class ViewAllRequestsServlet extends HttpServlet {
         int limit = 10;
         int offset = (page - 1) * limit;
 
-        // 3. Gọi hàm DAO mới để lấy danh sách dữ liệu và đếm tổng số dòng cho All Requests
+        // 3. Lấy danh sách dữ liệu và đếm tổng số dòng cho All Requests
         List<Request> allRequests = dao.getAllRequest(status, type, sort, offset, limit);
         int totalRecords = dao.countAllRequest(status, type);
 
@@ -59,7 +59,7 @@ public class ViewAllRequestsServlet extends HttpServlet {
             totalPages = 1;
         }
 
-        // 4. Đẩy dữ liệu ra thuộc tính của request để tệp JSP sử dụng
+        // 4. Đẩy dữ liệu ra thuộc tính của request để JSP sử dụng
         request.setAttribute("requestList", allRequests);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);

@@ -24,7 +24,7 @@
 
         <div class="dashboard-content">
             <div class="search-filter">
-                <form action="${pageContext.request.contextPath}/view_all_requests" method="GET">
+                <form action="${pageContext.request.contextPath}/view_all_request" method="GET">
                     <select name="status" onchange="this.form.submit()">
                         <option value="" ${empty selectedStatus ? 'selected' : ''}>All Status</option>
                         <option value="PENDING" ${selectedStatus == 'PENDING' ? 'selected' : ''}>Pending</option>
@@ -46,7 +46,7 @@
                     </select>
 
                     <button type="submit" class="btn-primary">Filter</button>
-                    <a href="${pageContext.request.contextPath}/view_all_requests" class="btn-reset">Clear</a>
+                    <a href="${pageContext.request.contextPath}/view_all_request" class="btn-reset">Clear</a>
                 </form>
             </div>
 
@@ -55,10 +55,12 @@
                     <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Proposer</th>
                         <th>Type</th>
+                        <th>Proposer</th>
                         <th>Status</th>
                         <th>Created At</th>
+                        <th>Handler</th>
+                        <th>Processed At</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -66,20 +68,24 @@
                     <c:forEach var="req" items="${requestList}">
                         <tr>
                             <td>${req.id}</td>
-                            <td>${req.proposerName}</td>
                             <td>${req.readableType}</td>
+                            <td>${req.proposerName}</td>
                             <td><span class="badge badge-${fn:toLowerCase(req.status)}">${req.status}</span></td>
                             <td><fmt:formatDate value="${req.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
+                            <td>${req.handlerName}</td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${req.status != 'PENDING' and not empty req.processedAt}">
+                                        <fmt:formatDate value="${req.processedAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span>-</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
                             <td>
                                 <div class="actions">
-                                    <a href="request_detail?id=${req.id}&from=all" class="btn-secondary">View Detail</a>
-                                    <c:if test="${req.status == 'APPROVED' || req.status == 'REJECTED'}">
-                                        <form action="process_request" method="POST" onsubmit="return confirm('Close this request?');" style="display:inline;">
-                                            <input type="hidden" name="requestId" value="${req.id}">
-                                            <input type="hidden" name="action" value="CLOSE">
-                                            <button type="submit" class="btn-danger">Close</button>
-                                        </form>
-                                    </c:if>
+                                    <a href="request_detail?id=${req.id}" class="btn-secondary">View Detail</a>
                                 </div>
                             </td>
                         </tr>
@@ -95,7 +101,7 @@
 
             <div class="pagination employee-pagination">
                 <c:forEach begin="1" end="${totalPages}" var="i">
-                    <a href="view_all_requests?page=${i}&status=${selectedStatus}&type=${selectedType}&sort=${selectedSort}"
+                    <a href="view_all_request?page=${i}&status=${selectedStatus}&type=${selectedType}&sort=${selectedSort}"
                        class="page-link ${currentPage == i ? 'active' : ''}">${i}</a>
                 </c:forEach>
             </div>

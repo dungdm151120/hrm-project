@@ -7,7 +7,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Department Requests | HRM</title>
+    <title>Handled Requests | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body class="dashboard-body">
@@ -18,25 +18,22 @@
     <div class="dashboard-main">
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Department Requests</h1>
+                <h1 class="header-title">Handled Requests</h1>
             </div>
             <div class="header-right">
+                <a href="${pageContext.request.contextPath}/view_my_request" class="btn-primary">View My Requests</a>
+                <a href="${pageContext.request.contextPath}/view_observed_request" class="btn-primary">View Observed Requests</a>
             </div>
         </div>
 
         <div class="dashboard-content">
             <div class="search-filter">
-                <form action="${pageContext.request.contextPath}/view_department_request" method="GET">
-                    <c:if test="${not empty selectedDeptId}">
-                        <input type="hidden" name="deptId" value="${selectedDeptId}">
-                    </c:if>
-
+                <form action="${pageContext.request.contextPath}/view_handled_request" method="GET">
                     <select name="status" onchange="this.form.submit()">
                         <option value="" ${empty selectedStatus ? 'selected' : ''}>All Status</option>
                         <option value="PENDING" ${selectedStatus == 'PENDING' ? 'selected' : ''}>Pending</option>
                         <option value="APPROVED" ${selectedStatus == 'APPROVED' ? 'selected' : ''}>Approved</option>
                         <option value="REJECTED" ${selectedStatus == 'REJECTED' ? 'selected' : ''}>Rejected</option>
-                        <option value="CANCELLED" ${selectedStatus == 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
                         <option value="CLOSED" ${selectedStatus == 'CLOSED' ? 'selected' : ''}>Closed</option>
                     </select>
 
@@ -51,8 +48,7 @@
                         <option value="newest" ${selectedSort == 'newest' ? 'selected' : ''}>Newest</option>
                         <option value="oldest" ${selectedSort == 'oldest' ? 'selected' : ''}>Oldest</option>
                     </select>
-
-                    <a href="${pageContext.request.contextPath}/view_department_request${not empty selectedDeptId ? '?deptId='.concat(selectedDeptId) : ''}" class="btn-reset">Clear</a>
+                    <a href="${pageContext.request.contextPath}/view_handled_request" class="btn-reset">Clear</a>
                 </form>
             </div>
 
@@ -65,12 +61,12 @@
                         <th>Proposer</th>
                         <th>Status</th>
                         <th>Created At</th>
-                        <th>Handler</th>
-                        <th>Action</th>
+                        <th>Processed At</th>
+                        <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <c:forEach items="${requestList}" var="req" varStatus="r">
+                    <c:forEach items="${handledRequests}" var="req" varStatus="r">
                         <tr>
                             <td>
                                 <c:choose>
@@ -86,17 +82,26 @@
                             <td>${req.proposerName}</td>
                             <td><span class="badge badge-${fn:toLowerCase(req.status)}">${req.status}</span></td>
                             <td><fmt:formatDate value="${req.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
-                            <td>${req.handlerName}</td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${req.status != 'PENDING' and not empty req.processedAt}">
+                                        <fmt:formatDate value="${req.processedAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span>-</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
                             <td>
                                 <div class="actions">
-                                    <a href="request_detail?id=${req.id}&from=dept&deptId=${selectedDeptId}" class="btn-secondary">View Detail</a>
+                                    <a href="request_detail?id=${req.id}" class="btn-secondary">View Detail</a>
                                 </div>
                             </td>
                         </tr>
                     </c:forEach>
-                    <c:if test="${empty requestList}">
+                    <c:if test="${empty handledRequests}">
                         <tr>
-                            <td colspan="6" style="text-align: center; color: #666; font-style: italic; padding: 15px;">No requests found for this department.</td>
+                            <td colspan="6" style="text-align: center; color: #666; font-style: italic; padding: 15px;">No requests assigned to you.</td>
                         </tr>
                     </c:if>
                     </tbody>
@@ -105,7 +110,7 @@
 
             <div class="pagination employee-pagination">
                 <c:forEach begin="1" end="${totalPages}" var="i">
-                    <a href="view_department_request?deptId=${selectedDeptId}&page=${i}&status=${selectedStatus}&type=${selectedType}&sort=${selectedSort}"
+                    <a href="view_handled_request?page=${i}&status=${selectedStatus}&type=${selectedType}&sort=${selectedSort}"
                        class="page-link ${currentPage == i ? 'active' : ''}">${i}</a>
                 </c:forEach>
             </div>

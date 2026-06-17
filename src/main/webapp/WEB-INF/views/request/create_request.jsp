@@ -23,9 +23,10 @@
     <div class="dashboard-content">
       <div class="detail-card">
         <form action="create_request" method="POST">
+
           <div class="form-group">
             <label>Proposer:</label>
-            <input type="text" class="form-control" value="${sessionScope.fullName}" readonly>
+            <input type="text" class="form-control" value="${sessionScope.currentUser.fullName}" readonly>
           </div>
 
           <div class="form-group">
@@ -35,49 +36,15 @@
 
           <div class="form-group">
             <label>Request Type: *</label>
-            <select name="type" id="typeSelect" class="form-control" onchange="toggleObserver()" required>
-              <option value="" disabled selected>-- Select --</option>
-              <c:forEach var="entry" items="${requestType}">
+            <select name="type" id="typeSelect" class="form-control" required>
+              <option value="" disabled selected>-- Select Type --</option>
+              <c:forEach var="entry" items="${requestTypes}">
                 <option value="${entry.key}">${entry.value}</option>
               </c:forEach>
             </select>
           </div>
 
-          <div class="form-group">
-            <label>Approver: *</label>
-            <select name="approverId" class="form-control" required>
-              <option value="" disabled selected>-- Select --</option>
-              <c:forEach items="${businessAdminList}" var="admin">
-                <option value="${admin.id}">${admin.fullName}</option>
-              </c:forEach>
-            </select>
-          </div>
-
-          <div id="moveObserverSection" class="observer-box form-group" style="display: none;">
-            <label>Observer(s):</label>
-            <select class="select2-observers form-control" name="observerIds" multiple="multiple">
-              <c:forEach items="${allObservers}" var="user">
-                <option value="${user.id}">${user.fullName} - ${user.positionName}</option>
-              </c:forEach>
-            </select>
-          </div>
-
-          <div id="handoverObserverSection" class="observer-box form-group" style="display: none;">
-            <label>Observer(s):</label>
-            <select class="select2-observers form-control" name="observerIds" multiple="multiple">
-              <c:forEach items="${hrManagers}" var="hr">
-                <option value="${hr.id}">${hr.fullName} - ${hr.positionName}</option>
-              </c:forEach>
-              <c:forEach items="${deptEmployees}" var="emp">
-                <option value="${emp.id}">${emp.fullName} - ${emp.positionName}</option>
-              </c:forEach>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Reason: *</label>
-            <textarea name="reason" class="form-control" rows="5" required></textarea>
-          </div>
+          <div id="dynamicFormContainer"></div>
 
           <div class="form-actions" style="margin-top: 20px;">
             <button type="submit" class="btn-primary">Send Request</button>
@@ -91,28 +58,35 @@
 
 <script>
   $(document).ready(function() {
-    $('.select2-observers').select2({
-      placeholder: "Select observers...",
-      allowClear: true,
-      width: '100%'
-    });
+    // Lắng nghe sự kiện thay đổi của Dropdown Request Type
+    $('#typeSelect').change(function() {
+      var selectedType = $(this).val();
+      if(selectedType) {
+        // Gọi AJAX lấy cấu trúc JSP con tương ứng
+        $.ajax({
+          url: '${pageContext.request.contextPath}/load_sub_form',
+          type: 'GET',
+          data: { type: selectedType },
+          success: function(htmlResult) {
+            // Đổ HTML nhận được vào vùng chứa
+            $('#dynamicFormContainer').html(htmlResult);
 
-    $('.select2-observers').on('change', function() {
-      $(this).trigger('select2:resize');
+            // Re-init lại Select2 cho các element mới được load động vào DOM
+            $('.select2-dynamic').select2({
+              placeholder: "Select options...",
+              allowClear: true,
+              width: '100%'
+            });
+          },
+          error: function() {
+            $('#dynamicFormContainer').html('<p style="color:red;">Error loading specific form options.</p>');
+          }
+        });
+      } else {
+        $('#dynamicFormContainer').empty();
+      }
     });
   });
-
-  function toggleObserver() {
-    var type = document.getElementById("typeSelect").value;
-    document.querySelectorAll('.observer-box').forEach(div => div.style.display = 'none');
-    if (type === 'DEPT_MOVE') {
-      document.getElementById('moveObserverSection').style.display = 'block';
-    } else if (type === 'POSITION_HANDOVER') {
-      document.getElementById('handoverObserverSection').style.display = 'block';
-    }
-
-    $('.select2-observers').trigger('change');
-  }
 </script>
 
 </body>
