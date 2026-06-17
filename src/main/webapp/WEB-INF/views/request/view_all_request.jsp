@@ -54,7 +54,6 @@
                 <table>
                     <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Type</th>
                         <th>Proposer</th>
                         <th>Status</th>
@@ -67,7 +66,6 @@
                     <tbody>
                     <c:forEach var="req" items="${requestList}">
                         <tr>
-                            <td>${req.id}</td>
                             <td>${req.readableType}</td>
                             <td>${req.proposerName}</td>
                             <td><span class="badge badge-${fn:toLowerCase(req.status)}">${req.status}</span></td>
