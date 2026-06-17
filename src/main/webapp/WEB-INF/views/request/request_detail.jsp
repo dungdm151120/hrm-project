@@ -23,10 +23,6 @@
             <div class="detail-card">
                 <div class="detail-info">
                     <div class="detail-row">
-                        <span class="detail-label">ID:</span>
-                        <span class="detail-value">${request.id}</span>
-                    </div>
-                    <div class="detail-row">
                         <span class="detail-label">Proposer:</span>
                         <span class="detail-value">${request.proposerName}</span>
                     </div>
