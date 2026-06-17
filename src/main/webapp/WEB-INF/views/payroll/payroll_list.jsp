@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,42 +17,79 @@
     <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
 
     <div class="dashboard-main">
-
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Payroll Statements</h1>
+                <h1 class="header-title">${isMyPayroll ? 'My Payroll' : 'Payroll List'}</h1>
             </div>
-
-            <c:if test="${currentUserRole == 'PAYROLL_STAFF' || currentUserRole == 'PAYROLL_MANAGER' || currentUserRole == 'HR_MANAGER' || currentUserRole == 'BUSINESSADMIN' || currentUserRole == 'ADMIN'}">
-                <div class="header-right">
-                    <a href="${pageContext.request.contextPath}/payroll/confirm?type=all&month=6&year=2026" class="btn-save" style="text-decoration: none;" onclick="return confirm('Confirm all current draft payroll sheets?');">
-                        Confirm Draft Payrolls
-                    </a>
-                </div>
-            </c:if>
         </div>
 
         <div class="dashboard-content">
-
-            <c:if test="${not empty error}">
-                <div class="alert alert-error">${error}</div>
+            <c:if test="${not empty sessionScope.message}">
+                <div class="alert alert-success">
+                    ${sessionScope.message}
+                </div>
+                <% session.removeAttribute("message"); %>
+            </c:if>
+            <c:if test="${not empty sessionScope.error}">
+                <div class="alert alert-error">
+                    ${sessionScope.error}
+                </div>
+                <% session.removeAttribute("error"); %>
             </c:if>
 
-            <c:if test="${not empty success}">
-                <div class="alert alert-success">${success}</div>
-            </c:if>
+            <div class="search-filter">
+                <form action="${pageContext.request.contextPath}${isMyPayroll ? '/payroll/my' : '/payroll/list'}" method="GET">
+
+                    <c:choose>
+                        <c:when test="${isMyPayroll}">
+                            <input type="hidden" name="status" value="confirmed">
+                        </c:when>
+                        <c:otherwise>
+                            <input type="text" name="search" placeholder="Search name" value="${keyword}">
+
+                            <select name="status" onchange="this.form.submit()">
+                                <option value="all" ${status == 'all' || empty status ? 'selected' : ''}>All status</option>
+                                <option value="draft" ${status == 'draft' ? 'selected' : ''}>Draft</option>
+                                <option value="confirmed" ${status == 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            </select>
+                        </c:otherwise>
+                    </c:choose>
+
+                    <select name="month" onchange="this.form.submit()">
+                        <option value="" ${empty month ? 'selected' : ''}>All months</option>
+                        <c:forEach var="m" begin="1" end="12">
+                            <option value="${m}" ${month == m ? 'selected' : ''}>Month ${m}</option>
+                        </c:forEach>
+                    </select>
+
+                    <select name="year" onchange="this.form.submit()">
+                        <option value="" ${empty year ? 'selected' : ''}>All years</option>
+                        <c:forEach var="y" begin="${currentYear - 5}" end="${currentYear + 1}">
+                            <option value="${y}" ${year == y ? 'selected' : ''}>${y}</option>
+                        </c:forEach>
+                    </select>
+
+                    <select name="sort" onchange="this.form.submit()">
+                        <option value="name_asc" ${sort == 'name_asc' ? 'selected' : ''}>Name A-Z</option>
+                        <option value="name_desc" ${sort == 'name_desc' ? 'selected' : ''}>Name Z-A</option>
+                    </select>
+
+                    <button type="submit" class="search-btn">Search</button>
+
+                    <c:if test="${not empty keyword || (!isMyPayroll && not empty status && status != 'all') || not empty month || not empty year || not empty sort}">
+                        <a href="${pageContext.request.contextPath}${isMyPayroll ? '/payroll/my' : '/payroll/list'}" class="btn-reset" style="text-decoration: none; padding: 8px 12px; margin-left: 5px;">Clear</a>
+                    </c:if>
+                </form>
+            </div>
 
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <c:if test="${currentUserRole != 'EMPLOYEE'}">
-                                <th>Employee ID</th>
-                                <th>Full Name</th>
-                                <th>Department</th>
-                                <th>Position</th>
-                            </c:if>
                             <th>Pay Period</th>
+                            <th>Full Name</th>
+                            <th>Department</th>
+                            <th>Position</th>
                             <th style="text-align: right;">Basic Salary</th>
                             <th style="text-align: right;">Gross Income</th>
                             <th style="text-align: right;">Net Pay Amount</th>
@@ -60,26 +98,23 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <c:forEach var="p" items="${payrollList}">
+                        <c:forEach var="p" items="${payrollList}" varStatus="s">
                             <tr>
-                                <c:if test="${currentUserRole != 'EMPLOYEE'}">
-                                    <td><strong>User #${p.userId}</strong></td>
-                                    <td><c:out value="${p.employeeName}" default="N/A" /></td>
-                                    <td>
-                                        <c:choose>
-                                            <c:when test="${not empty p.departmentName}">
-                                                <span class="badge-dept">${p.departmentName}</span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="text-muted">N/A</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                    <td><c:out value="${p.positionName}" default="N/A" /></td>
-                                </c:if>
                                 <td>
                                     <strong>Month ${p.month} / ${p.year}</strong>
                                 </td>
+                                <td><c:out value="${p.employeeName}" default="N/A" /></td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${not empty p.departmentName}">
+                                            <span class="badge-dept">${p.departmentName}</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="text-muted">N/A</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td><c:out value="${p.positionName}" default="N/A" /></td>
                                 <td style="text-align: right;">
                                     <fmt:formatNumber value="${p.basicSalary}" type="number" maxFractionDigits="0"/> VND
                                 </td>
@@ -90,13 +125,20 @@
                                     <fmt:formatNumber value="${p.netPay}" type="number" maxFractionDigits="0"/> VND
                                 </td>
                                 <td style="text-align: center;">
-                                    <span class="status-badge ${p.status == 'CONFIRMED' || p.status == 'Approved' ? 'status-active' : 'status-pending'}">
-                                        ${p.status}
+                                    <c:set var="statusLower" value="${fn:toLowerCase(not empty p.status ? p.status : 'draft')}" />
+                                    <span class="badge ${statusLower == 'confirmed' ? 'badge-active' : 'badge-inactive'}">
+                                        <c:out value="${statusLower == 'confirmed' ? 'CONFIRMED' : 'DRAFT'}" />
                                     </span>
                                 </td>
                                 <td style="text-align: center;">
                                     <div class="actions">
-                                        <a href="${pageContext.request.contextPath}/payroll/detail?id=${p.id}" class="btn-save" style="padding: 5px 12px; font-size: 0.85rem; text-decoration: none;">
+                                        <c:url var="detailUrl" value="/payroll/detail">
+                                            <c:param name="id" value="${p.id}" />
+                                            <c:if test="${isMyPayroll}">
+                                                <c:param name="from" value="my" />
+                                            </c:if>
+                                        </c:url>
+                                        <a href="${detailUrl}" class="btn-save" style="padding: 5px 12px; font-size: 0.85rem; text-decoration: none;">
                                             View Details
                                         </a>
                                     </div>
@@ -105,7 +147,7 @@
                         </c:forEach>
                         <c:if test="${empty payrollList}">
                             <tr>
-                                <td colspan="${currentUserRole != 'EMPLOYEE' ? 10 : 6}" class="empty-state" style="text-align: center; padding: 30px;">
+                                <td colspan="11" class="empty-state" style="text-align: center; padding: 30px;">
                                     No payroll records found.
                                 </td>
                             </tr>
@@ -117,13 +159,23 @@
             <c:if test="${totalPage > 1}">
                 <div class="pagination" style="margin-top: 20px; display: flex; gap: 5px; justify-content: center;">
 
-                    <c:url var="firstPageUrl" value="/payroll/list">
+                    <c:url var="firstPageUrl" value="${isMyPayroll ? '/payroll/my' : '/payroll/list'}">
                         <c:param name="page" value="1" />
+                        <c:if test="${not empty keyword}"><c:param name="search" value="${keyword}" /></c:if>
+                        <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                        <c:if test="${not empty month}"><c:param name="month" value="${month}" /></c:if>
+                        <c:if test="${not empty year}"><c:param name="year" value="${year}" /></c:if>
+                        <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
                     </c:url>
                     <a href="${firstPageUrl}" class="page-link ${currentPage == 1 ? 'disabled' : ''}">First</a>
 
-                    <c:url var="prevPageUrl" value="/payroll/list">
+                    <c:url var="prevPageUrl" value="${isMyPayroll ? '/payroll/my' : '/payroll/list'}">
                         <c:param name="page" value="${currentPage - 1}" />
+                        <c:if test="${not empty keyword}"><c:param name="search" value="${keyword}" /></c:if>
+                        <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                        <c:if test="${not empty month}"><c:param name="month" value="${month}" /></c:if>
+                        <c:if test="${not empty year}"><c:param name="year" value="${year}" /></c:if>
+                        <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
                     </c:url>
                     <a href="${prevPageUrl}" class="page-link ${currentPage <= 1 ? 'disabled' : ''}">Previous</a>
 
@@ -131,21 +183,27 @@
                         ${currentPage} / ${totalPage}
                     </span>
 
-                    <c:url var="nextPageUrl" value="/payroll/list">
+                    <c:url var="nextPageUrl" value="${isMyPayroll ? '/payroll/my' : '/payroll/list'}">
                         <c:param name="page" value="${currentPage + 1}" />
+                        <c:if test="${not empty keyword}"><c:param name="search" value="${keyword}" /></c:if>
+                        <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                        <c:if test="${not empty month}"><c:param name="month" value="${month}" /></c:if>
+                        <c:if test="${not empty year}"><c:param name="year" value="${year}" /></c:if>
+                        <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
                     </c:url>
                     <a href="${nextPageUrl}" class="page-link ${currentPage >= totalPage ? 'disabled' : ''}">Next</a>
 
-                    <c:url var="lastPageUrl" value="/payroll/list">
+                    <c:url var="lastPageUrl" value="${isMyPayroll ? '/payroll/my' : '/payroll/list'}">
                         <c:param name="page" value="${totalPage}" />
+                        <c:if test="${not empty keyword}"><c:param name="search" value="${keyword}" /></c:if>
+                        <c:if test="${not empty status}"><c:param name="status" value="${status}" /></c:if>
+                        <c:if test="${not empty month}"><c:param name="month" value="${month}" /></c:if>
+                        <c:if test="${not empty year}"><c:param name="year" value="${year}" /></c:if>
+                        <c:if test="${not empty sort}"><c:param name="sort" value="${sort}" /></c:if>
                     </c:url>
                     <a href="${lastPageUrl}" class="page-link ${currentPage == totalPage ? 'disabled' : ''}">Last</a>
                 </div>
             </c:if>
-
         </div>
     </div>
 </div>
-
-</body>
-</html>

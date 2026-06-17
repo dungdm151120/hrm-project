@@ -1,5 +1,6 @@
 package controller.payroll;
 
+import dao.PayrollDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,99 +9,44 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.Payroll;
 import model.User;
-import model.Role; // Import lớp Role của bạn
-import dao.PayrollDAO;
-import dao.UserDAO;
-import dao.RoleDAO; // Khởi tạo RoleDAO riêng của bạn
 
 import java.io.IOException;
+import java.time.Year;
 import java.util.List;
 
-@WebServlet({"/payroll/list", "/payroll/detail", "/payroll/confirm"})
+@WebServlet({"/payroll/list", "/payroll/my"})
 public class PayrollListServlet extends HttpServlet {
-
-    private final PayrollDAO payrollDAO = new PayrollDAO();
-    private final UserDAO userDAO = new UserDAO();
-    private final RoleDAO roleDAO = new RoleDAO(); // Khai báo RoleDAO
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String servletPath = request.getServletPath();
-        HttpSession session = request.getSession();
-        User currentUser = (User) session.getAttribute("currentUser");
+        String keyword = request.getParameter("search");
+        String statusParam = request.getParameter("status");
+        String monthParam = request.getParameter("month");
+        String yearParam = request.getParameter("year");
+        String sort = request.getParameter("sort");
+        String pageParam = request.getParameter("page");
+        boolean isMyPayroll = "/payroll/my".equals(request.getServletPath());
+        Integer userId = null;
+        Integer month = parseIntegerInRange(monthParam, 1, 12);
+        Integer year = parseIntegerInRange(yearParam, 1900, 9999);
 
-        if (currentUser == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-
-        // Lấy thông tin Role Name từ DB dựa trên roleId của User hiện tại
-        Role userRole = roleDAO.getRoleById(currentUser.getRoleId());
-        String roleName = (userRole != null) ? userRole.getName() : "EMPLOYEE";
-
-        // Đẩy thẳng tên Role sang JSP để check điều kiện ẩn hiện nút bấm
-        request.setAttribute("currentUserRole", roleName);
-
-        // ---- 1. VIEW PAYROLL DETAIL ----
-        if ("/payroll/detail".equals(servletPath)) {
-            int payrollId = Integer.parseInt(request.getParameter("id"));
-            Payroll payroll = payrollDAO.findById(payrollId);
-
-            // Nếu bảng lương không tồn tại trong DB, quay về danh sách và báo lỗi
-            if (payroll == null) {
-                request.setAttribute("error", "Error: Payroll record not found.");
-                // Lưu ý: Dùng forward thay vì sendRedirect để hiển thị được thanh báo lỗi ${error} trên giao diện list
-                request.getRequestDispatcher("/payroll/list").forward(request, response);
+        if (isMyPayroll) {
+            HttpSession session = request.getSession(false);
+            User currentUser = session == null ? null : (User) session.getAttribute("currentUser");
+            if (currentUser == null) {
+                response.sendRedirect(request.getContextPath() + "/login");
                 return;
             }
-
-            User employeeInfo = userDAO.findById(payroll.getUserId());
-
-            // Kiểm tra an toàn bảo vệ giao diện nếu không tìm thấy User tương ứng trong Database
-            if (employeeInfo == null) {
-                employeeInfo = new User();
-                employeeInfo.setId(payroll.getUserId());
-                employeeInfo.setFullName("Unknown Employee");
-                employeeInfo.setDepartmentName("N/A");
-                employeeInfo.setPositionName("N/A");
-            }
-
-            request.setAttribute("payroll", payroll);
-            request.setAttribute("employee", employeeInfo);
-            request.getRequestDispatcher("/WEB-INF/views/payroll/payroll_detail.jsp").forward(request, response);
-            return;
+            userId = currentUser.getId();
+            statusParam = "confirmed";
+        } else if (statusParam == null || statusParam.trim().isEmpty()) {
+            statusParam = "all";
         }
 
-        // ---- 2. CONFIRM PAYROLL ACTIONS (SINGLE OR ALL) ----
-        if ("/payroll/confirm".equals(servletPath)) {
-            String type = request.getParameter("type");
-
-            if ("single".equals(type)) {
-                int payrollId = Integer.parseInt(request.getParameter("id"));
-                payrollDAO.updateStatus(payrollId, "CONFIRMED");
-                response.sendRedirect(request.getContextPath() + "/payroll/detail?id=" + payrollId);
-            } else if ("all".equals(type)) {
-                int m = Integer.parseInt(request.getParameter("month"));
-                int y = Integer.parseInt(request.getParameter("year"));
-
-                List<Payroll> all = payrollDAO.findAllPayrolls();
-                for (Payroll p : all) {
-                    if (p.getMonth() == m && p.getYear() == y && "DRAFT".equals(p.getStatus())) {
-                        payrollDAO.updateStatus(p.getId(), "CONFIRMED");
-                    }
-                }
-                response.sendRedirect(request.getContextPath() + "/payroll/list");
-            }
-            return;
-        }
-
-        // ---- 3. VIEW PAYROLL LIST (DEFAULT WITH PAGING) ----
         int currentPage = 1;
-        int pageSize = 10; // Đặt cố định 10 bản ghi một trang theo yêu cầu của bạn
-
-        String pageParam = request.getParameter("page");
+        int pageSize = 10;
         if (pageParam != null && !pageParam.isEmpty()) {
             try {
                 currentPage = Integer.parseInt(pageParam);
@@ -108,8 +54,9 @@ public class PayrollListServlet extends HttpServlet {
             } catch (NumberFormatException ignored) {}
         }
 
-// Đếm tổng số dòng dữ liệu để tính số lượng trang
-        int totalRows = payrollDAO.countPayrolls(roleName, currentUser.getId());
+        PayrollDAO payrollDAO = new PayrollDAO();
+
+        int totalRows = payrollDAO.countPayrolls(keyword, statusParam, userId, month, year);
         int totalPages = (int) Math.ceil((double) totalRows / pageSize);
 
         if (currentPage > totalPages && totalPages > 0) {
@@ -118,13 +65,19 @@ public class PayrollListServlet extends HttpServlet {
 
         int offset = (currentPage - 1) * pageSize;
 
-        // Lấy danh sách phân trang phối hợp đầy đủ thông tin Tên, Phòng ban, Chức vụ
-        List<Payroll> payrollList = payrollDAO.findPayrollsWithPaging(roleName, currentUser.getId(), offset, pageSize);
+        List<Payroll> payrollList = payrollDAO.findPayrollsAdvanced(keyword, statusParam, sort, offset, pageSize, userId, month, year);
 
-        // Đẩy dữ liệu tính toán phân trang sang trang JSP hiển thị
         request.setAttribute("payrollList", payrollList);
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPage", totalPages);
+
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("status", statusParam);
+        request.setAttribute("month", month);
+        request.setAttribute("year", year);
+        request.setAttribute("currentYear", Year.now().getValue());
+        request.setAttribute("sort", sort);
+        request.setAttribute("isMyPayroll", isMyPayroll);
 
         request.getRequestDispatcher("/WEB-INF/views/payroll/payroll_list.jsp").forward(request, response);
     }
@@ -133,5 +86,18 @@ public class PayrollListServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doGet(request, response);
+    }
+
+    private Integer parseIntegerInRange(String value, int min, int max) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return parsed >= min && parsed <= max ? parsed : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

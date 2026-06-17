@@ -103,6 +103,43 @@ public class UserDAO {
         return null;
     }
 
+    public User findByIdWithEmployeeCode(int id) {
+        String sql = """
+            SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.id = ?
+            """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setFullName(rs.getString("full_name"));
+                    user.setEmail(rs.getString("email"));
+
+                    user.setEmployeeCode(rs.getString("employee_code"));
+
+                    user.setRoleName(rs.getString("role_name"));
+                    user.setDepartmentName(rs.getString("department_name"));
+                    user.setPositionName(rs.getString("position_name"));
+
+                    return user;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public User findProfileById(int id) {
         String sql = """
                 SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name

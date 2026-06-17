@@ -13,7 +13,10 @@ public class Payroll {
     private double expectedHours;
     private double actualHours;
     private double basicSalary;
+    private double rateMultiplier;
     private double totalIncome;
+    private double bonus;
+    private String description;
     private double socialInsurance;
     private double healthInsurance;
     private double unemploymentInsurance;
@@ -89,8 +92,20 @@ public class Payroll {
         return basicSalary;
     }
 
+    public double getRateMultiplier() {
+        return rateMultiplier;
+    }
+
     public double getTotalIncome() {
         return totalIncome;
+    }
+
+    public double getBonus() {
+        return bonus;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public double getSocialInsurance() {
@@ -169,8 +184,20 @@ public class Payroll {
         this.basicSalary = basicSalary;
     }
 
+    public void setRateMultiplier(double rateMultiplier) {
+        this.rateMultiplier = rateMultiplier;
+    }
+
     public void setTotalIncome(double totalIncome) {
         this.totalIncome = totalIncome;
+    }
+
+    public void setBonus(double bonus) {
+        this.bonus = bonus;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public void setSocialInsurance(double socialInsurance) {

@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,29 +22,44 @@
             <div class="header-left">
                 <h1 class="header-title">Employee Payslip</h1>
             </div>
-            <div class="header-right">
-                <span class="status-badge ${payroll.status == 'CONFIRMED' || payroll.status == 'Approved' ? 'status-active' : 'status-pending'}">
-                    <c:out value="${payroll.status}" default="DRAFT" />
-                </span>
-            </div>
         </div>
 
-        <div class="dashboard-content">
-            <a class="back-link" href="${pageContext.request.contextPath}/payroll/list">Return to payroll list</a>
-
-            <div class="form-row" style="display: flex; gap: 20px; margin-top: 20px; margin-bottom: 24px;">
-                <div class="form-group" style="flex: 1;">
-                    <label>Employee ID</label>
-                    <input type="text" value="User #<c:out value='${employee.id}' default='N/A'/>" readonly />
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Full Name</label>
-                    <input type="text" value="<c:out value='${employee.fullName}' default='Unknown'/>" readonly />
-                </div>
+        <c:if test="${not empty sessionScope.message}">
+            <div class="alert alert-success">
+                ${sessionScope.message}
             </div>
+            <% session.removeAttribute("message"); %>
+        </c:if>
 
-            <div class="form-row" style="display: flex; gap: 20px; margin-bottom: 24px;">
-                <div class="form-row" style="display: flex; gap: 20px; margin-bottom: 24px; width: 100%;">
+        <form action="${pageContext.request.contextPath}/payroll/confirm" method="post" style="display: inline;">
+            <div class="dashboard-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px;">
+
+                     <a class="back-link" href="${pageContext.request.contextPath}/payroll/${isMyPayroll ? 'my' : 'list'}" style="margin: 0;">
+                         Return to payroll list
+                     </a>
+
+                     <div>
+                         <c:set var="statusLower" value="${fn:toLowerCase(not empty payroll.status ? payroll.status : 'draft')}" />
+
+                         <span class="badge ${statusLower == 'confirmed' ? 'badge-active' : 'badge-inactive'}">
+                             <c:out value="${statusLower == 'confirmed' ? 'CONFIRMED' : 'DRAFT'}" />
+                         </span>
+                     </div>
+                 </div>
+
+                <div class="form-row" style="display: flex; gap: 20px; ">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Employee Code</label>
+                        <input type="text" value="<c:out value='${employee.employeeCode}' default='N/A'/>" readonly />
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Full Name</label>
+                        <input type="text" value="<c:out value='${employee.fullName}' default='Unknown'/>" readonly />
+                    </div>
+                </div>
+
+                <div class="form-row" style="display: flex; gap: 20px; ">
                     <div class="form-group" style="flex: 1;">
                         <label>Department Unit</label>
                         <input type="text" value="<c:out value='${employee.departmentName}' default='N/A'/>" readonly />
@@ -53,69 +69,108 @@
                         <input type="text" value="<c:out value='${employee.positionName}' default='N/A'/>" readonly />
                     </div>
                 </div>
-            </div>
 
-            <div class="form-row" style="display: flex; gap: 40px; margin-bottom: 24px;">
+                <div class="form-row" style="display: flex; gap: 40px; margin-bottom: 24px;">
 
-                <div style="flex: 1;">
-                    <h3 style="border-bottom: 2px solid #3B82F6; padding-bottom: 8px; margin-bottom: 16px;">Earnings & Hours</h3>
-                    <div class="form-group">
-                        <label>Expected Working Hours</label>
-                        <input type="text" value="<c:out value='${payroll.expectedHours}' default='0'/> hrs" readonly />
+                    <div style="flex: 1;">
+                        <h3 style="border-bottom: 2px solid #3B82F6; padding-bottom: 8px; margin-bottom: 16px;">Earnings & Hours</h3>
+                        <div class="form-group">
+                            <label>Expected Working Hours</label>
+                            <input type="text" value="<c:out value='${payroll.expectedHours}' default='0'/> hrs" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Actual Working Hours</label>
+                            <input type="text" value="<c:out value='${payroll.actualHours}' default='0'/> hrs" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Basic Salary (Contract)</label>
+                            <input type="text" value="<fmt:formatNumber value='${payroll.basicSalary}' type='number' maxFractionDigits='0'/> VND" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Rate Multiplier</label>
+                            <input type="text" value="${payroll.rateMultiplier}" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Gross Income</label>
+                            <input type="text" value="<fmt:formatNumber value='${payroll.totalIncome}' type='number' maxFractionDigits='0'/> VND" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Income Before Tax</label>
+                            <input type="text" value="<fmt:formatNumber value='${payroll.incomeBeforeTax}' type='number' maxFractionDigits='0'/> VND" readonly />
+                        </div>
+                        <form action="${pageContext.request.contextPath}/payroll/confirm" method="post" style="display: inline;">
+                            <input type="hidden" name="id" value="${payroll.id}">
+
+                            <div class="form-group" style="flex: 1;">
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label>Bonus (VND):</label>
+                                    <c:choose>
+                                        <c:when test="${(payroll.status == 'DRAFT')}">
+                                            <input type="number" name="bonus" class="form-control" value="${payroll.bonus}" <c:if test="${payroll.status == 'CONFIRMED'}">readonly</c:if>>
+                                        </c:when>
+
+                                        <c:otherwise>
+                                            <input type="text" name="bonus" value="<fmt:formatNumber value='${payroll.bonus}' type='number' maxFractionDigits='0'/> VND" readonly>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label>Bonus Description (Optional):</label>
+                                    <c:choose>
+                                        <c:when test="${(payroll.status == 'DRAFT')}">
+                                            <textarea name="description" class="form-control" rows="3" placeholder="Reason for bonus (e.g., Overtime, KPI)..."></textarea>
+                                        </c:when>
+
+                                        <c:otherwise>
+                                            <input type="text" name="description" value="${payroll.description}" readonly>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <label>Actual Working Hours</label>
-                        <input type="text" value="<c:out value='${payroll.actualHours}' default='0'/> hrs" readonly />
-                    </div>
-                    <div class="form-group">
-                        <label>Basic Salary (Contract)</label>
-                        <input type="text" value="<fmt:formatNumber value='${payroll.basicSalary}' type='number' maxFractionDigits='0'/> VND" readonly />
-                    </div>
-                    <div class="form-group">
-                        <label>Gross Total Income</label>
-                        <input type="text" value="<fmt:formatNumber value='${payroll.totalIncome}' type='number' maxFractionDigits='0'/> VND" readonly />
+
+                    <div style="flex: 1;">
+                        <h3 style="border-bottom: 2px solid #EF4444; padding-bottom: 8px; margin-bottom: 16px;">Statutory Deductions</h3>
+                        <div class="form-group">
+                            <label>Social Insurance (8%)</label>
+                            <input type="text" value="- <fmt:formatNumber value='${payroll.socialInsurance}' type='number' maxFractionDigits='0'/> VND" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Health Insurance (1.5%)</label>
+                            <input type="text" value="- <fmt:formatNumber value='${payroll.healthInsurance}' type='number' maxFractionDigits='0'/> VND" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Unemployment Ins. (1%)</label>
+                            <input type="text" value="- <fmt:formatNumber value='${payroll.unemploymentInsurance}' type='number' maxFractionDigits='0'/> VND" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Personal Income Tax (PIT)</label>
+                            <input type="text" value="- <fmt:formatNumber value='${payroll.incomeTax}' type='number' maxFractionDigits='0'/> VND" readonly />
+                        </div>
                     </div>
                 </div>
 
-                <div style="flex: 1;">
-                    <h3 style="border-bottom: 2px solid #EF4444; padding-bottom: 8px; margin-bottom: 16px;">Statutory Deductions</h3>
-                    <div class="form-group">
-                        <label>Social Insurance (8%)</label>
-                        <input type="text" value="- <fmt:formatNumber value='${payroll.socialInsurance}' type='number' maxFractionDigits='0'/> VND" readonly />
-                    </div>
-                    <div class="form-group">
-                        <label>Health Insurance (1.5%)</label>
-                        <input type="text" value="- <fmt:formatNumber value='${payroll.healthInsurance}' type='number' maxFractionDigits='0'/> VND" readonly />
-                    </div>
-                    <div class="form-group">
-                        <label>Unemployment Ins. (1%)</label>
-                        <input type="text" value="- <fmt:formatNumber value='${payroll.unemploymentInsurance}' type='number' maxFractionDigits='0'/> VND" readonly />
-                    </div>
-                    <div class="form-group">
-                        <label>Personal Income Tax (PIT)</label>
-                        <input type="text" value="- <fmt:formatNumber value='${payroll.incomeTax}' type='number' maxFractionDigits='0'/> VND" readonly />
-                    </div>
+                <div class="form-group" style="margin-bottom: 32px;">
+                    <label style="font-weight: bold; font-size: 1.1rem;">Net Take-Home Pay (Total Remuneration)</label>
+                    <input type="text" value="<fmt:formatNumber value='${payroll.netPay}' type='number' maxFractionDigits='0'/> VND" readonly style="font-size: 1.5rem; font-weight: bold; color: #2563EB;" />
                 </div>
-            </div>
 
-            <div class="form-group" style="margin-bottom: 32px;">
-                <label style="font-weight: bold; font-size: 1.1rem;">Net Take-Home Pay (Total Remuneration)</label>
-                <input type="text" value="<fmt:formatNumber value='${payroll.netPay}' type='number' maxFractionDigits='0'/> VND" readonly style="font-size: 1.5rem; font-weight: bold; color: #2563EB;" />
-            </div>
-
-            <div class="form-actions">
-                <a href="${pageContext.request.contextPath}/payroll/list" class="btn-cancel" style="text-decoration: none; display: inline-block; text-align: center;">
-                    Cancel
-                </a>
-
-                <c:if test="${payroll.status == 'DRAFT' && (currentUserRole == 'PAYROLL_STAFF' || currentUserRole == 'PAYROLL_MANAGER' || currentUserRole == 'HR_MANAGER' || currentUserRole == 'BUSINESSADMIN' || currentUserRole == 'ADMIN')}">
-                    <a href="${pageContext.request.contextPath}/payroll/confirm?type=single&id=${payroll.id}" class="btn-save" style="text-decoration: none; display: inline-block; text-align: center;">
-                        Confirm This Payroll
+                <div class="form-actions">
+                    <a href="${pageContext.request.contextPath}/payroll/list" class="btn-cancel" style="text-decoration: none; display: inline-block; text-align: center;">
+                        Cancel
                     </a>
-                </c:if>
-            </div>
 
-        </div>
+                    <c:if test="${(payroll.status == 'DRAFT') && sessionScope.userPermissions.contains('PAYROLL_CONFIRM')}">
+                            <input type="hidden" name="id" value="${payroll.id}">
+                            <button type="submit" class="btn-save" style="display: inline-block; text-align: center;">
+                                Confirm This Payroll
+                            </button>
+                    </c:if>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
