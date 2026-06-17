@@ -229,7 +229,45 @@ CREATE TABLE announcements (
                                            OR (target_scope = 'DEPARTMENT' AND department_id IS NOT NULL)
                                        )
 );
+-- ==========================================
+-- CHAT FEATURE TABLES
+-- ==========================================
 
+CREATE TABLE conversations (
+                               id INT PRIMARY KEY AUTO_INCREMENT,
+                               is_group BOOLEAN NOT NULL DEFAULT FALSE,
+                               name VARCHAR(100) NULL COMMENT 'Tên nhóm chat (chỉ dùng khi is_group = TRUE)',
+                               created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE conversation_participants (
+                                           conversation_id INT NOT NULL,
+                                           user_id INT NOT NULL,
+                                           joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                           PRIMARY KEY (conversation_id, user_id),
+                                           CONSTRAINT fk_cp_conversation
+                                               FOREIGN KEY (conversation_id) REFERENCES conversations(id)
+                                                   ON DELETE CASCADE,
+                                           CONSTRAINT fk_cp_user
+                                               FOREIGN KEY (user_id) REFERENCES users(id)
+                                                   ON DELETE CASCADE
+);
+
+CREATE TABLE messages (
+                          id INT PRIMARY KEY AUTO_INCREMENT,
+                          conversation_id INT NOT NULL,
+                          sender_id INT NOT NULL,
+                          content TEXT NOT NULL,
+                          sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          is_read BOOLEAN NOT NULL DEFAULT FALSE,
+                          CONSTRAINT fk_messages_conversation
+                              FOREIGN KEY (conversation_id) REFERENCES conversations(id)
+                                  ON DELETE CASCADE,
+                          CONSTRAINT fk_messages_sender
+                              FOREIGN KEY (sender_id) REFERENCES users(id)
+                                  ON DELETE CASCADE,
+                          INDEX idx_messages_conversation_time (conversation_id, sent_at)
+);
 CREATE TABLE announcement_recipients (
                                          announcement_id INT NOT NULL,
                                          user_id INT NOT NULL,

@@ -13,6 +13,7 @@ let currentUserId = (window.CURRENT_USER && window.CURRENT_USER.id) || null;
 let currentUserName = (window.CURRENT_USER && window.CURRENT_USER.fullName) || null;
 let pollingInterval = null;
 let lastMessageId = 0;
+let isLoadingMore = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     initChat();
@@ -72,6 +73,11 @@ async function openConversation(conversationId, name, avatar) {
     document.getElementById('chatArea').classList.remove('hidden');
     document.getElementById('chatName').textContent = name;
     document.getElementById('chatAvatar').textContent = avatar;
+
+    // Scroll to top and load messages
+    const messagesContainer = document.getElementById('chatMessages');
+    messagesContainer.scrollTop = 0;
+
     await loadMessages(conversationId);
     await markAsRead(conversationId);
     loadConversations();
@@ -162,6 +168,13 @@ function createMessageHTML(msg, showAvatar = true) {
 
 async function sendMessage(content) {
     if (!currentConversationId || !content.trim()) return;
+
+    const input = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('messageForm').querySelector('.chat-send-btn');
+
+    // Disable button while sending
+    sendBtn.disabled = true;
+
     try {
         const response = await fetch(API.send, {
             method: 'POST',
@@ -171,9 +184,14 @@ async function sendMessage(content) {
         if (!response.ok) throw new Error('Failed to send message');
         const msg = await response.json();
         appendMessage(msg);
+        input.value = '';
         loadConversations();
     } catch (error) {
         console.error('Error sending message:', error);
+        alert('Failed to send message. Please try again.');
+    } finally {
+        sendBtn.disabled = false;
+        input.focus();
     }
 }
 
@@ -218,7 +236,7 @@ async function searchUsers(keyword) {
 function renderSearchResults(users) {
     const dropdown = document.getElementById('searchResults');
     if (users.length === 0) {
-        dropdown.innerHTML = '<div style="padding: 0.75rem 1rem; color: var(--text-muted); font-size: 0.85rem;">No users found</div>';
+        dropdown.innerHTML = '<div style="padding: 0.75rem 1rem; color: #90949c; font-size: 0.85rem;">No users found</div>';
         dropdown.classList.remove('hidden');
         return;
     }
@@ -274,23 +292,29 @@ async function pollNewMessages() {
 }
 
 function setupEventListeners() {
+    // Message form submit
     document.getElementById('messageForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const input = document.getElementById('messageInput');
         sendMessage(input.value);
-        input.value = '';
     });
 
+    // New chat button
     document.getElementById('newChatBtn').addEventListener('click', () => {
-        document.getElementById('searchUserInput').focus();
+        const searchInput = document.getElementById('searchUserInput');
+        searchInput.focus();
+        searchInput.value = '';
+        document.getElementById('searchResults').classList.add('hidden');
     });
 
+    // Search with debounce
     let searchTimeout;
     document.getElementById('searchUserInput').addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => searchUsers(e.target.value), 300);
     });
 
+    // Close search dropdown when clicking outside
     document.addEventListener('click', (e) => {
         const dropdown = document.getElementById('searchResults');
         const searchInput = document.getElementById('searchUserInput');
@@ -298,11 +322,28 @@ function setupEventListeners() {
             dropdown.classList.add('hidden');
         }
     });
+
+    // Load more messages on scroll to top
+    const messagesContainer = document.getElementById('chatMessages');
+    messagesContainer.addEventListener('scroll', () => {
+        if (messagesContainer.scrollTop === 0 && !isLoadingMore && currentConversationId) {
+            isLoadingMore = true;
+            const messageWrappers = messagesContainer.querySelectorAll('.message-wrapper');
+            if (messageWrappers.length > 0) {
+                const offset = messageWrappers.length;
+                loadMessages(currentConversationId, offset).finally(() => {
+                    isLoadingMore = false;
+                });
+            }
+        }
+    });
 }
 
 function scrollToBottom() {
     const container = document.getElementById('chatMessages');
-    container.scrollTop = container.scrollHeight;
+    setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+    }, 0);
 }
 
 function formatTime(dateString) {
@@ -324,7 +365,7 @@ function formatDateDivider(dateString) {
 
     if (date.toDateString() === now.toDateString()) return 'Today';
     if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-    return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 function escapeHtml(text) {
