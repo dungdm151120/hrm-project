@@ -31,7 +31,7 @@
 
 .calendar-toolbar h2 {
     margin: 0;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     font-weight: 800;
     color: #111827;
 }
@@ -43,11 +43,11 @@
 }
 
 .calendar-toolbar select {
-    height: 38px;
-    padding: 0 12px;
+    height: 42px;
+    padding: 0 14px;
     border: 1px solid var(--border-color, #d1d5db);
     border-radius: 8px;
-    font: 500 0.85rem 'Inter', sans-serif;
+    font: 600 0.9rem 'Inter', sans-serif;
     background: #fff;
     color: #111827;
     outline: none;
@@ -75,10 +75,10 @@
 }
 
 .calendar-header-cell {
-    padding: 12px 4px;
+    padding: 16px 4px;
     text-align: center;
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #374151;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -100,8 +100,8 @@
 }
 
 .calendar-day {
-    min-height: 100px;
-    padding: 8px;
+    min-height: 120px;
+    padding: 10px;
     border-right: 1px solid #e5e7eb;
     background: #fff;
     transition: background 0.15s;
@@ -122,15 +122,15 @@
 
 .day-number {
     display: inline-block;
-    width: 26px;
-    height: 26px;
-    line-height: 26px;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
     text-align: center;
     border-radius: 50%;
     font-weight: 700;
-    font-size: 0.82rem;
+    font-size: 0.95rem;
     color: #374151;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .calendar-day.today .day-number {
@@ -143,16 +143,16 @@
     margin-top: 2px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .record-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
+    gap: 5px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 600;
     text-decoration: none;
     background: #f3f4f6;
@@ -167,8 +167,8 @@
 }
 
 .chip-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 2px;
     flex-shrink: 0;
 }
@@ -190,6 +190,8 @@
     color: #a21caf;
     border-color: #f0abfc;
     margin-top: 2px;
+    font-size: 0.75rem;
+    padding: 2px 8px;
 }
 
 .chip-edited {
@@ -197,17 +199,19 @@
     color: #6d28d9;
     border-color: #c4b5fd;
     margin-top: 2px;
+    font-size: 0.75rem;
+    padding: 2px 8px;
 }
 
 .no-record {
     color: #c0c4cc;
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     font-weight: 500;
     text-align: center;
-    padding: 4px 0;
+    padding: 8px 0;
 }
 
-
+/* ========== Legend ========== */
 .attendance-legend {
     display: flex;
     align-items: center;
@@ -215,7 +219,7 @@
     gap: 0.75rem 1.25rem;
     margin: 16px 0;
     color: #4b5563;
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     font-weight: 600;
 }
 
@@ -226,8 +230,8 @@
 }
 
 .legend-dot {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 2px;
     border: 1px solid rgba(17, 24, 39, 0.5);
 }
@@ -249,10 +253,10 @@
     }
     .calendar-day {
         min-height: 80px;
-        padding: 4px;
+        padding: 6px;
     }
     .record-chip {
-        font-size: 0.65rem;
-        padding: 1px 6px;
+        font-size: 0.7rem;
+        padding: 2px 6px;
     }
 }

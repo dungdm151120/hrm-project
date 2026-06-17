@@ -1519,12 +1519,17 @@ public class UserDAO {
         }
     }
 
-    public List<User> getBusinessAdminsByRole(String roleName) {
+    public List<User> getUserByRole(String roleName) {
         List<User> list = new ArrayList<>();
 
-        String sql = "SELECT u.id, u.full_name FROM users u " +
-                "JOIN roles r ON u.role_id = r.id " +
-                "WHERE r.name = ? AND u.active = TRUE";
+        String sql = """
+                        SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
+                        FROM users u
+                        LEFT JOIN roles r ON u.role_id = r.id
+                        LEFT JOIN departments d ON u.department_id = d.id
+                        LEFT JOIN positions p ON u.position_id = p.id
+                        WHERE r.name = ? AND u.active = TRUE
+                    """;
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -1545,27 +1550,70 @@ public class UserDAO {
         return list;
     }
 
-    public User getDeptManagerByEmployeeId(int employeeId) {
-        String sql = "SELECT u.id, u.full_name FROM users u " +
-                "JOIN departments d ON u.id = d.manager_user_id " +
-                "WHERE d.id = (SELECT department_id FROM users WHERE id = ?)";
+    public List<User> getAllDeptManager() {
+        List<User> list = new ArrayList<>();
+        String sql = """
+                SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
+                FROM users u
+                LEFT JOIN roles r ON u.role_id = r.id
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE r.name = 'DEPARTMENT_MANAGER' AND u.active = TRUE
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(mapResultSetToUser(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<User> getUserByPosition(String positionName) {
+        List<User> list = new ArrayList<>();
+
+        String sql = "SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name " +
+                "from users u " +
+                "JOIN roles r ON u.role_id = r.id\n" +
+                "LEFT JOIN departments d ON u.department_id = d.id\n" +
+                "LEFT JOIN positions p ON u.position_id = p.id " +
+                "WHERE p.name = ? AND u.active = 1";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, employeeId);
-
+            ps.setString(1, positionName);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    User manager = new User();
-                    manager.setId(rs.getInt("id"));
-                    manager.setFullName(rs.getString("full_name"));
-                    return manager;
+                while (rs.next()) {
+                    list.add(mapResultSetToUser(rs));
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return null; // Trả về null nếu phòng ban chưa có manager hoặc nhân viên chưa thuộc phòng ban
+        return list;
+    }
+
+    public String getPositionNameByUserId(int userId) {
+        String sql = "SELECT p.name FROM positions p " +
+                "JOIN users u ON u.position_id = p.id " +
+                "WHERE u.id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("name");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

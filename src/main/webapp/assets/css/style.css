@@ -3122,6 +3122,7 @@ body.dashboard-body {
 }
 
 .attendance-summary-row span {
+    min-width: 0;
     color: #272a30;
     font-size: 0.9rem;
     font-weight: 450;
@@ -3129,6 +3130,7 @@ body.dashboard-body {
 }
 
 .attendance-summary-row strong {
+    justify-self: end;
     min-width: 58px;
     color: #17191d;
     font-size: 0.9rem;
@@ -3162,6 +3164,7 @@ body.dashboard-body {
         gap: 0.75rem;
     }
 }
+
 /* ============================================
    ENHANCED QUOTE SIDE (LOGIN PAGE)
    ============================================ */
@@ -3343,4 +3346,59 @@ body.dashboard-body {
     .dashboard-content {
         padding: 1rem;
     }
+}
+     /* 1. Cố định chiều rộng toàn phần của Select2 */
+ .select2-container {
+     width: 100% !important;
+ }
+
+/* 2. Thiết lập khung bao (Container) */
+.select2-container--default .select2-selection--multiple {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-content: flex-start;      /* Căn nội dung bắt đầu từ góc trên bên trái */
+    padding: 2px 5px !important;    /* Khoảng cách viền trong */
+
+    min-height: 40px;               /* Chiều cao tối thiểu */
+    max-height: 100px;              /* NGƯỠNG TỐI ĐA */
+    overflow-y: auto !important;    /* Tự động cuộn khi vượt quá 100px */
+
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+/* 3. Căn nội dung render bên trong */
+.select2-selection__rendered {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: flex-start;    /* Căn trái */
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100%;
+}
+
+/* 4. Style các thẻ tag */
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    display: flex !important;       /* Căn chỉnh icon và chữ */
+    align-items: center;
+    margin: 3px !important;         /* Khoảng cách giữa các tag */
+    padding: 2px 8px !important;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    float: none !important;         /* Quan trọng: loại bỏ float cũ */
+}
+
+/* 5. Nút xóa (X) */
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    margin-right: 6px !important;
+    color: #999;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 6. Ô nhập tìm kiếm (khi chưa chọn hoặc đang gõ) */
+.select2-search--inline {
+    margin: 3px !important;
 }

@@ -22,6 +22,16 @@ public class AttendanceRecordDTO {
     private String checkOutText;
     private String cssClass;
     private boolean edited;
+    // Thêm vào model AttendanceRecordDTO
+    private String positionName;
+
+    public String getPositionName() {
+        return positionName;
+    }
+
+    public void setPositionName(String positionName) {
+        this.positionName = positionName;
+    }
 
     public int getAttendanceRecordId() {
         return attendanceRecordId;

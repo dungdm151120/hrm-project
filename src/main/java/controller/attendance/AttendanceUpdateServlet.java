@@ -125,7 +125,8 @@ public class AttendanceUpdateServlet extends HttpServlet {
 
         response.sendRedirect(
                 request.getContextPath()
-                        + "/attendance/records?month=" + record.getWorkDate().getMonthValue()
+                        + "/attendance/my?userId=" + record.getUserId()
+                        + "&month=" + record.getWorkDate().getMonthValue()
                         + "&year=" + record.getWorkDate().getYear()
                         + "&message=updated"
         );

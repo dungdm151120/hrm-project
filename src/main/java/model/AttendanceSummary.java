@@ -12,6 +12,7 @@ public class AttendanceSummary {
     private double advancedLeaveDays;
     private double overtimeHours;
     private double leaveDaysInMonth;
+    private double absentDaysInMonth;
 
     public double getTotalWorkHours() {
         return totalWorkHours;
@@ -100,4 +101,8 @@ public class AttendanceSummary {
     public void setLeaveDaysInMonth(double leaveDaysInMonth) {
         this.leaveDaysInMonth = leaveDaysInMonth;
     }
+
+    public double getAbsentDaysInMonth() { return absentDaysInMonth; }
+
+    public void setAbsentDaysInMonth(double absentDaysInMonth) { this.absentDaysInMonth = absentDaysInMonth; }
 }

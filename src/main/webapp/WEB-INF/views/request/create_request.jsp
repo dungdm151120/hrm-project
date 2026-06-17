@@ -1,50 +1,93 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<html>
-<body>
-<h2>Create New Request</h2>
-<form action="create_request" method="POST">
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Create New Request | HRM</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+</head>
+<body class="dashboard-body">
 
-  <p>Proposer:<br>
-    <input type="text" value="${sessionScope.fullName}" readonly>
-  </p>
+<div class="dashboard-wrapper">
+  <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
 
-  <p>Request Date:<br>
-    <input type="text" value="<%= java.time.LocalDate.now() %>" readonly>
-  </p>
+  <div class="dashboard-main">
+    <div class="dashboard-header">
+      <h1 class="header-title">Create New Request</h1>
+    </div>
 
-  <p>Request Type: *<br>
-    <select name="type" required>
-      <option value="" disabled selected>-- Select --</option>
+    <div class="dashboard-content">
+      <div class="detail-card">
+        <form action="create_request" method="POST">
 
-      <c:forEach var="entry" items="${requestType}">
-        <option value="${entry.key}">${entry.value}</option>
-      </c:forEach>
-    </select>
-  </p>
+          <div class="form-group">
+            <label>Proposer:</label>
+            <input type="text" class="form-control" value="${sessionScope.currentUser.fullName}" readonly>
+          </div>
 
-  <p>Approver: *<br>
-    <select name="approverId" required>
-      <option value="" disabled selected>-- Select --</option>
-      <c:forEach items="${businessAdminList}" var="admin">
-        <option value="${admin.id}">${admin.fullName}</option>
-      </c:forEach>
-    </select>
-  </p>
+          <div class="form-group">
+            <label>Request Date:</label>
+            <input type="text" class="form-control" value="<%= java.time.LocalDate.now() %>" readonly>
+          </div>
 
-  <p>Observer<br>
-    <select name="observerId">
-      <option value="" disabled selected>-- Select --</option>
-      <option value="${deptManager.id}">${deptManager.fullName}</option>
-    </select>
-  </p>
+          <div class="form-group">
+            <label>Request Type: *</label>
+            <select name="type" id="typeSelect" class="form-control" required>
+              <option value="" disabled selected>-- Select Type --</option>
+              <c:forEach var="entry" items="${requestTypes}">
+                <option value="${entry.key}">${entry.value}</option>
+              </c:forEach>
+            </select>
+          </div>
 
-  <p>Reason *<br>
-    <textarea name="reason" rows="5" required></textarea>
-  </p>
+          <div id="dynamicFormContainer"></div>
 
-  <button type="submit">Send Request</button>
-  <a href="${pageContext.request.contextPath}/view_my_request" class="btn-cancel">Cancel</a>
-</form>
+          <div class="form-actions" style="margin-top: 20px;">
+            <button type="submit" class="btn-primary">Send Request</button>
+            <a href="${pageContext.request.contextPath}/view_my_request" class="btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    // Lắng nghe sự kiện thay đổi của Dropdown Request Type
+    $('#typeSelect').change(function() {
+      var selectedType = $(this).val();
+      if(selectedType) {
+        // Gọi AJAX lấy cấu trúc JSP con tương ứng
+        $.ajax({
+          url: '${pageContext.request.contextPath}/load_sub_form',
+          type: 'GET',
+          data: { type: selectedType },
+          success: function(htmlResult) {
+            // Đổ HTML nhận được vào vùng chứa
+            $('#dynamicFormContainer').html(htmlResult);
+
+            // Re-init lại Select2 cho các element mới được load động vào DOM
+            $('.select2-dynamic').select2({
+              placeholder: "Select options...",
+              allowClear: true,
+              width: '100%'
+            });
+          },
+          error: function() {
+            $('#dynamicFormContainer').html('<p style="color:red;">Error loading specific form options.</p>');
+          }
+        });
+      } else {
+        $('#dynamicFormContainer').empty();
+      }
+    });
+  });
+</script>
+
 </body>
 </html>
