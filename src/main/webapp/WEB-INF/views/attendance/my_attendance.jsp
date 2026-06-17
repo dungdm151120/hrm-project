@@ -30,7 +30,7 @@
     <main class="dashboard-main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">${summaryUserId != null ? 'Attendance Detail' : 'My Attendance'}</h1>
+               <h1 class="header-title">My Attendance</h1>
             </div>
         </header>
 

@@ -35,6 +35,7 @@
 <c:set var="showContracts"   value="${userPermissions.contains('CONTRACT_VIEW_LIST') or userPermissions.contains('CONTRACT_VIEW_OWN') or userPermissions.contains('CONTRACT_CREATE')}" />
 <c:set var="showAttendance"  value="${userPermissions.contains('ATTENDANCE_VIEW_OWN') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_UPDATE') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}" />
 <c:set var="showTasks"       value="${userPermissions.contains('TASK_VIEW')}" />
+<c:set var="showRequests"    value="${userPermissions.contains('VIEW_MY_REQUEST') or (userPermissions.contains('VIEW_DEPARTMENT_REQUEST') and not empty currentUser.departmentId) or userPermissions.contains('VIEW_ALL_REQUEST') or userPermissions.contains('CREATE_REQUEST')}" />
 <c:set var="showPayroll"     value="${userPermissions.contains('PAYROLL_VIEW_OWN') or userPermissions.contains('PAYROLL_VIEW_LIST') or userPermissions.contains('PAYROLL_GENERATE') or userPermissions.contains('PAYROLL_EXPORT_REPORT')}" />
 <c:set var="showAnnouncements" value="${userPermissions.contains('ANNOUNCEMENT_VIEW_LIST') or userPermissions.contains('ANNOUNCEMENT_CREATE')}" />
 
@@ -326,7 +327,7 @@
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_OWN')}">
                     <a href="${ctx}/attendance/my"
                        class="submenu-item ${currentPath == ctx.concat('/attendance/my') ? 'active' : ''}">
-                       Attendance Detail
+                       My Attendance
                     </a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT')}">
@@ -344,6 +345,45 @@
                 </c:if>
             </div>
         </div>
+        </c:if>
+
+        <!-- Request Group -->
+        <c:if test="${showRequests}">
+            <c:set var="reqActive" value="${currentPath.startsWith(ctx.concat('/view_my_request')) ||
+                                    currentPath.startsWith(ctx.concat('/view_department_request')) ||
+                                    currentPath.startsWith(ctx.concat('/view_all_request')) ||
+                                    currentPath.startsWith(ctx.concat('/create_request')) ||
+                                    currentPath.startsWith(ctx.concat('/request_detail'))}" />
+
+            <div class="nav-group">
+                <button class="nav-item nav-toggle ${reqActive ? 'open' : ''}">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span>Requests</span>
+                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </button>
+                <div class="submenu" style="${reqActive ? 'display: flex !important;' : ''}">
+                    <c:if test="${userPermissions.contains('VIEW_MY_REQUEST')}">
+                        <a href="${ctx}/view_my_request" class="submenu-item ${currentPath == ctx.concat('/view_my_request') ? 'active' : ''}">View my requests</a>
+                    </c:if>
+                    <c:if test="${userPermissions.contains('VIEW_DEPARTMENT_REQUEST') and not empty currentUser.departmentId}">
+                        <a href="${ctx}/view_department_request" class="submenu-item ${currentPath == ctx.concat('/view_department_request') ? 'active' : ''}">View department requests</a>
+                    </c:if>
+                    <c:if test="${userPermissions.contains('VIEW_ALL_REQUEST')}">
+                        <a href="${ctx}/view_all_request" class="submenu-item ${currentPath == ctx.concat('/view_all_request') ? 'active' : ''}">View all requests</a>
+                    </c:if>
+                    <c:if test="${userPermissions.contains('CREATE_REQUEST')}">
+                        <a href="${ctx}/create_request" class="submenu-item ${currentPath == ctx.concat('/create_request') ? 'active' : ''}">Create request</a>
+                    </c:if>
+                </div>
+            </div>
         </c:if>
 
         <!-- Payroll Group -->
@@ -399,6 +439,14 @@
             </div>
         </div>
         </c:if>
+        <!-- Chat  -->
+        <a href="${ctx}/chat"
+           class="nav-item ${currentPath == ctx.concat('/chat') ? 'active' : ''}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-1.76 5.18 8.5 8.5 0 0 1-9.3 3.76 8.38 8.38 0 0 1-5.18-1.76L2 21l3.3-3.3A8.5 8.5 0 0 1 12.5 3a8.38 8.38 0 0 1 5.18 1.76A8.5 8.5 0 0 1 21 11.5z"/>
+            </svg>
+            <span>Messages</span>
+        </a>
         <!-- Announcements Group -->
         <c:if test="${showAnnouncements}">
         <c:set var="announcementActive" value="${currentPath.startsWith(ctx.concat('/announcements'))}" />

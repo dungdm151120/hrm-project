@@ -3,12 +3,13 @@ package controller.request;
 import dao.RequestDAO;
 import dao.UserDAO;
 import model.Request;
-import model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import model.User;
+
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 @WebServlet("/create_request")
 public class CreateRequestServlet extends HttpServlet {
@@ -18,55 +19,91 @@ public class CreateRequestServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (session == null || session.getAttribute("currentUser") == null) {
             response.sendRedirect("login.jsp");
             return;
         }
 
-        int currentUserId = (int) session.getAttribute("userId");
+        User user = (User) session.getAttribute("currentUser");
 
-        List<User> businessAdminList = userDAO.getBusinessAdminsByRole("Business Admin");
-        User deptManager = userDAO.getDeptManagerByEmployeeId(currentUserId);
+        // Lấy chức vụ chính xác của user từ DB
+        String position = userDAO.getPositionNameByUserId(user.getId());
+        boolean isManager = (position != null && position.contains("Manager"));
+        boolean isSysAdmin = (position != null && position.contains("Admin"));
 
-        request.setAttribute("requestType", model.Request.getAllType());
-        request.setAttribute("businessAdminList", businessAdminList);
-        request.setAttribute("deptManager", deptManager);
+        // Lấy toàn bộ danh sách loại request từ Model
+        Map<String, String> allTypes = Request.getAllType();
+        Map<String, String> filteredTypes = new LinkedHashMap<>();
 
+        for (var entry : allTypes.entrySet()) {
+            if ("POSITION_HANDOVER".equals(entry.getKey())) {
+                if (isManager || isSysAdmin) {
+                    filteredTypes.put(entry.getKey(), entry.getValue());
+                }
+            } else {
+                filteredTypes.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        // Truyền danh sách đã lọc xuống trang JSP chính
+        request.setAttribute("requestTypes", filteredTypes);
+
+        // --- Các logic chuẩn bị dữ liệu bên dưới giữ nguyên ---
+        int deptId = (user.getDepartmentId() != null) ? user.getDepartmentId() : 0;
+        request.setAttribute("deptEmployees", userDAO.getAllEmployeesByDepartment(deptId));
+        request.setAttribute("businessAdminList", userDAO.getUserByRole("BUSINESS ADMIN"));
+        // ...
         request.getRequestDispatcher("WEB-INF/views/request/create_request.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (session == null || session.getAttribute("currentUser") == null) {
             response.sendRedirect("login.jsp");
             return;
         }
 
-        try {
-            Integer userId = (Integer) session.getAttribute("userId");
-            Integer deptId = (Integer) session.getAttribute("departmentId");
+        User currentUser = (User) session.getAttribute("currentUser");
 
+        try {
             Request req = new Request();
-            req.setUserId(userId);
-            req.setDepartmentId(deptId);
+            req.setUserId(currentUser.getId());
+            req.setDepartmentId(currentUser.getDepartmentId());
+
             req.setType(request.getParameter("type"));
             req.setReason(request.getParameter("reason"));
-            req.setApproverId(Integer.parseInt(request.getParameter("approverId")));
 
-            String obsIdStr = request.getParameter("observerId");
-            if (obsIdStr != null && !obsIdStr.isEmpty()) {
-                req.setObserverId(Integer.parseInt(obsIdStr));
+            // Kiểm tra an toàn cho trường approverId
+            String approverIdParam = request.getParameter("approverId");
+            if (approverIdParam == null || approverIdParam.trim().isEmpty()) {
+                response.sendRedirect("create_request?error=missing_approver");
+                return;
+            }
+            req.setApproverId(Integer.parseInt(approverIdParam));
+
+            // Kiểm tra an toàn cho trường handlerId
+            String handlerIdParam = request.getParameter("handlerId");
+            if (handlerIdParam != null && !handlerIdParam.trim().isEmpty()) {
+                req.setHandlerId(Integer.parseInt(handlerIdParam));
             }
 
-            requestDAO.createRequest(req);
+            // Xử lý mảng Observers
+            String[] observerIds = request.getParameterValues("observerIds");
+            Set<Integer> uniqueObsIds = new LinkedHashSet<>();
+            if (observerIds != null) {
+                for (String id : observerIds) {
+                    if (id != null && !id.trim().isEmpty()) {
+                        uniqueObsIds.add(Integer.parseInt(id));
+                    }
+                }
+            }
 
-            session.setAttribute("message", "Request created successfully.");
-            response.sendRedirect("view_my_request");
+            requestDAO.createRequest(req, new ArrayList<>(uniqueObsIds));
+            response.sendRedirect("view_my_request?success=true");
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("error", "Failed to create request: " + e.getMessage());
-            response.sendRedirect("create_request");
+            response.sendRedirect("create_request?error=system_error");
         }
     }
 }

@@ -158,7 +158,7 @@
                                 <c:forEach var="employee" items="${employees}">
                                     <tr>
                                         <td class="matrix-employee-column">
-                                            <c:url var="employeeDetailUrl" value="/attendance/my">
+                                            <c:url var="employeeDetailUrl" value="/attendance/employee">
                                                 <c:param name="userId" value="${employee.userId}"/>
                                                 <c:param name="month" value="${selectedMonth}"/>
                                                 <c:param name="year" value="${selectedYear}"/>
