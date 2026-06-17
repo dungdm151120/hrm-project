@@ -129,22 +129,12 @@
                     <input type="date" name="deadline" value="${task.deadline}" required>
                 </div>
 
-                <div class="form-row">
-                    <label>Status</label>
-                    <select name="status">
-                        <option value="TODO" ${task.status == 'TODO' ? 'selected' : ''}>To do</option>
-                        <option value="IN_PROGRESS" ${task.status == 'IN_PROGRESS' ? 'selected' : ''}>In progress</option>
-                        <option value="COMPLETED" ${task.status == 'COMPLETED' ? 'selected' : ''}>Completed</option>
-                        <option value="PAUSED" ${task.status == 'PAUSED' ? 'selected' : ''}>Paused</option>
-                    </select>
-                </div>
-
                 <label class="inline-checkbox">
                     <input type="checkbox" name="allowParticipantsCompleteChecklist" value="true" ${task.allowParticipantsCompleteChecklist ? 'checked' : ''}>
                     Allow participants to complete checklist
                 </label>
 
-                <c:if test="${canManageChecklist}">
+                <c:if test="${canManageChecklist and task.status != 'PAUSED'}">
                     <div class="form-row">
                         <label>Work items</label>
                         <div id="checklistContainer">
@@ -154,12 +144,15 @@
                                     <input type="text" name="checklistContent" value="${item.content}" placeholder="Work item content">
                                     <select name="checklistAssignedTo">
                                         <option value="">No specific assignee</option>
-                                        <c:forEach items="${departmentUsers}" var="user">
-                                            <option value="${user.id}" ${item.assignedTo == user.id ? 'selected' : ''}>${user.fullName}</option>
+                                        <c:forEach items="${task.participants}" var="participant">
+                                            <option value="${participant.userId}" ${item.assignedTo == participant.userId ? 'selected' : ''}>${participant.userName}</option>
                                         </c:forEach>
                                     </select>
-                                    <a class="btn-reset" href="${pageContext.request.contextPath}/tasks?action=deleteChecklist&itemId=${item.id}&taskId=${task.id}"
-                                       onclick="return confirm('Delete this work item?')">Delete</a>
+                                    <button type="submit" class="btn-reset"
+                                            formaction="${pageContext.request.contextPath}/tasks?action=deleteChecklist&itemId=${item.id}&taskId=${task.id}"
+                                            formmethod="post"
+                                            formnovalidate
+                                            onclick="return confirm('Delete this work item?')">Delete</button>
                                 </div>
                             </c:forEach>
                             <c:if test="${empty task.checklistItems}">
@@ -168,8 +161,8 @@
                                     <input type="text" name="checklistContent" placeholder="Work item content">
                                     <select name="checklistAssignedTo">
                                         <option value="">No specific assignee</option>
-                                        <c:forEach items="${departmentUsers}" var="user">
-                                            <option value="${user.id}">${user.fullName}</option>
+                                        <c:forEach items="${task.participants}" var="participant">
+                                            <option value="${participant.userId}">${participant.userName}</option>
                                         </c:forEach>
                                     </select>
                                     <button type="button" class="btn-reset" onclick="removeChecklistRow(this)">Delete</button>
@@ -196,8 +189,8 @@
         clone.querySelector('input[name="checklistId"]').value = '';
         clone.querySelector('input[name="checklistContent"]').value = '';
         clone.querySelector('select').value = '';
-        const action = clone.querySelector('a, button');
-        if (action.tagName.toLowerCase() === 'a') {
+        const action = clone.querySelector('button');
+        if (action.type === 'submit') {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'btn-reset';
@@ -224,6 +217,11 @@
             const text = (item.dataset.search || item.textContent).toLowerCase();
             item.style.display = text.includes(keyword) ? 'flex' : 'none';
         });
+    }
+    const deadlineInput = document.querySelector('input[name="deadline"]');
+    if (deadlineInput) {
+        const today = new Date().toISOString().split('T')[0];
+        deadlineInput.min = deadlineInput.value && deadlineInput.value < today ? deadlineInput.value : today;
     }
 </script>
 </body>

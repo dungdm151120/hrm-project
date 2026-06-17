@@ -161,16 +161,6 @@ public class TaskDAO {
         }
     }
 
-    public void updateTaskProgress(long taskId, int progress) throws SQLException {
-        String sql = "UPDATE tasks SET progress = ? WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, progress);
-            ps.setLong(2, taskId);
-            ps.executeUpdate();
-        }
-    }
-
     public void replaceTaskRelations(Task task, List<Long> participantIds, List<Long> observerIds) throws SQLException {
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -196,21 +186,45 @@ public class TaskDAO {
         return completed * 100 / total;
     }
 
+    public String calculateStatusFromChecklist(long taskId) {
+        int total = checklistItemDAO.countChecklistItems(taskId);
+        if (total == 0) {
+            return "TODO";
+        }
+        int completed = checklistItemDAO.countCompletedChecklistItems(taskId);
+        if (completed == 0) {
+            return "TODO";
+        }
+        return completed == total ? "COMPLETED" : "IN_PROGRESS";
+    }
+
     public void refreshProgressAndAutoComplete(long taskId) throws SQLException {
         int progress = calculateProgress(taskId);
+        String calculatedStatus = calculateStatusFromChecklist(taskId);
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement("""
                      UPDATE tasks
                      SET progress = ?,
                          status = CASE
-                             WHEN ? = 100 THEN 'COMPLETED'
-                             WHEN status = 'COMPLETED' THEN 'IN_PROGRESS'
-                             ELSE status
+                             WHEN status = 'PAUSED' THEN 'PAUSED'
+                             ELSE ?
                          END
                      WHERE id = ?
                      """)) {
             ps.setInt(1, progress);
-            ps.setInt(2, progress);
+            ps.setString(2, calculatedStatus);
+            ps.setLong(3, taskId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void resumeTask(long taskId) throws SQLException {
+        int progress = calculateProgress(taskId);
+        String calculatedStatus = calculateStatusFromChecklist(taskId);
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE tasks SET progress = ?, status = ? WHERE id = ?")) {
+            ps.setInt(1, progress);
+            ps.setString(2, calculatedStatus);
             ps.setLong(3, taskId);
             ps.executeUpdate();
         }

@@ -159,9 +159,7 @@ public class PermissionFilter implements Filter {
             return switch (action) {
                 case "create" -> "TASK_CREATE";
                 case "edit" -> "TASK_UPDATE";
-                case "delete" -> "TASK_DELETE";
                 case "toggleChecklist" -> "TASK_VIEW";
-                case "deleteChecklist" -> "TASK_MANAGE_CHECKLIST";
                 case "list", "detail" -> "TASK_VIEW";
                 default -> "TASK_VIEW";
             };
@@ -171,7 +169,9 @@ public class PermissionFilter implements Filter {
             return switch (action) {
                 case "insert" -> "TASK_CREATE";
                 case "update" -> "TASK_UPDATE";
-                case "addChecklist" -> "TASK_MANAGE_CHECKLIST";
+                case "delete" -> "TASK_DELETE";
+                case "addChecklist", "assignChecklist" -> "TASK_MANAGE_CHECKLIST";
+                case "deleteChecklist" -> "TASK_MANAGE_CHECKLIST";
                 case "addComment" -> "TASK_VIEW";
                 case "updateStatus" -> "TASK_UPDATE_STATUS";
                 case "toggleChecklist" -> "TASK_VIEW";
