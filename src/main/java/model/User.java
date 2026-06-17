@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public class User {
     private int id;
+    private String employeeCode;
     private String fullName;
     private String email;
     private String password;
@@ -29,6 +30,7 @@ public class User {
         this.id = id;
         this.fullName = fullName;
     }
+
     // Getter/Setter cho departmentId
     public Integer getDepartmentId() {
         return departmentId;
@@ -66,6 +68,14 @@ public class User {
     // --- Các getter/setter còn lại giữ nguyên ---
     public int getId() {
         return id;
+    }
+
+    public String getEmployeeCode() {
+        return employeeCode;
+    }
+
+    public void setEmployeeCode(String employeeCode) {
+        this.employeeCode = employeeCode;
     }
 
     public void setId(int id) {

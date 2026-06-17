@@ -151,6 +151,7 @@ public class PositionDAO {
         }
         return list;
     }
+
     public int countPositions(String keyword, Boolean active) {
         int totalRows = 0;
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM positions WHERE 1=1 ");
@@ -158,7 +159,7 @@ public class PositionDAO {
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append("AND name LIKE ? ");
         }
-        if (active != null) { // Code ngắn gọn, không cần check trống chuỗi nữa
+        if (active != null) {
             sql.append("AND active = ? ");
         }
 
@@ -325,6 +326,7 @@ public class PositionDAO {
     public List<Position> findAllPositions() {
         return getAllPositions(); // tận dụng phương thức đã có
     }
+
     public boolean updatePositionStatus(int postId, boolean status) {
         String sql = """
                     UPDATE positions

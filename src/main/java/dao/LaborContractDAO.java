@@ -388,4 +388,22 @@ public class LaborContractDAO {
             ps.setDate(parameterIndex, Date.valueOf(value));
         }
     }
+
+    public java.math.BigDecimal findActiveSalaryByUserId(int userId) {
+        expireEndedActiveContracts();
+        String sql = "SELECT base_salary FROM labor_contracts WHERE user_id = ? AND status = 'ACTIVE' LIMIT 1";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBigDecimal("base_salary");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return java.math.BigDecimal.ZERO;
+    }
 }

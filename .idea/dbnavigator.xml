@@ -11,40 +11,73 @@
   </component>
   <component name="DBNavigator.Project.DatabaseAssistantManager">
     <assistants>
+      <assistant-state connection-id="f3ead764-fb50-4189-94c0-c5826a93ce7f" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="f3ead764-fb50-4189-94c0-c5826a93ce7f" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="59be91d2-cca0-4a31-a0a1-83c067129aec" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="59be91d2-cca0-4a31-a0a1-83c067129aec" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
       <assistant-state connection-id="fca52f86-7c82-4e40-a25a-776e6b23bbd8" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
       <assistant-state connection-id="c1d37e5e-263f-419b-9e5a-abc55366cd72" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
-      <assistant-state connection-id="9ffa7bf5-7840-4970-80b6-63c6e2c7ace7" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
-        <tools />
-      </assistant-state>
       <assistant-state connection-id="9e6a3409-44a1-418d-aa74-167c4123ec61" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
-        <tools />
-      </assistant-state>
-      <assistant-state connection-id="dc8be692-3c22-4a3e-9be2-2ad18440c40d" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
       <assistant-state connection-id="dc8be692-3c22-4a3e-9be2-2ad18440c40d" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
         <tools />
       </assistant-state>
-      <assistant-state connection-id="c6a6f0a4-6e91-4b49-865b-9dd74e11a3e6" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
+      <assistant-state connection-id="dc8be692-3c22-4a3e-9be2-2ad18440c40d" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
-      <assistant-state connection-id="4c49e893-4646-4779-8ef1-77d8e2b5027b" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+      <assistant-state connection-id="a7450200-1cc9-436e-8cb2-b79b2b7dbc76" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
         <tools />
       </assistant-state>
-      <assistant-state connection-id="4c49e893-4646-4779-8ef1-77d8e2b5027b" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+      <assistant-state connection-id="a7450200-1cc9-436e-8cb2-b79b2b7dbc76" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="461da494-2af7-4a3e-b047-19e7d07e0f8a" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="165941e6-be50-4f89-bad3-98e572b2b091" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
       <assistant-state connection-id="f83ddd08-9e65-479c-aa85-961ceeff3abb" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
-      <assistant-state connection-id="07af378e-dfd4-408f-8ecd-5f391a75e794" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+      <assistant-state connection-id="1e7e39a6-8138-42ee-be26-b482532f378b" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="9ffa7bf5-7840-4970-80b6-63c6e2c7ace7" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="c6a6f0a4-6e91-4b49-865b-9dd74e11a3e6" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="d80e605d-f1d9-4dd4-bfd2-7973ea854ce6" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="4c49e893-4646-4779-8ef1-77d8e2b5027b" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="4c49e893-4646-4779-8ef1-77d8e2b5027b" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="b9a2932f-fcb5-4a61-b0f2-d0d2d1043d21" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
       <assistant-state connection-id="07af378e-dfd4-408f-8ecd-5f391a75e794" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+        <tools />
+      </assistant-state>
+      <assistant-state connection-id="07af378e-dfd4-408f-8ecd-5f391a75e794" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
       </assistant-state>
     </assistants>
@@ -58,22 +91,19 @@
     <show-object-properties value="false" />
     <loaded-nodes />
   </component>
-  <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="c6a6f0a4-6e91-4b49-865b-9dd74e11a3e6">
-      <console name="Connection" type="STANDARD" schema="hrm_db" session="Main"><![CDATA[select * from requests]]></console>
-    </connection>
-  </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
-    <open-files />
+    <open-files>
+      <object connection-id="a7450200-1cc9-436e-8cb2-b79b2b7dbc76" object-ref="consoles/Connection" />
+    </open-files>
   </component>
   <component name="DBNavigator.Project.DatabasePrerequisiteManager">
     <prerequisites />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
-    <connection id="c6a6f0a4-6e91-4b49-865b-9dd74e11a3e6" />
+    <connection id="a7450200-1cc9-436e-8cb2-b79b2b7dbc76" />
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
     <filter-actions connection-id="4c49e893-4646-4779-8ef1-77d8e2b5027b" dataset="hrm_db.requests" active-filter-id="" />
@@ -94,129 +124,7 @@
     <filters />
   </component>
   <component name="DBNavigator.Project.Settings">
-    <connections>
-      <connection source-id="" id="c6a6f0a4-6e91-4b49-865b-9dd74e11a3e6" active="true" signed="true">
-        <database>
-          <name value="Connection" />
-          <description value="" />
-          <database-type value="MYSQL" />
-          <config-type value="BASIC" />
-          <database-version value="9.7" />
-          <driver-source value="BUNDLED" />
-          <driver-library value="" />
-          <driver value="" />
-          <url-type value="DATABASE" />
-          <host value="localhost" />
-          <port value="3306" />
-          <database value="mysql" />
-          <tns-folder value="" />
-          <tns-profile value="" />
-          <server-type value="" />
-          <protocol value="" />
-          <url-parameters />
-          <type value="USER_PASSWORD" />
-          <user value="root" />
-          <token-type value="" />
-          <token-config-file value="" />
-          <token-profile value="" />
-          <adb-compartment-ocid value="" />
-          <adb-database-ocid value="" />
-          <azure-token-database-id-uri value="" />
-          <azure-token-tenant-id value="" />
-          <azure-token-client-id value="" />
-          <azure-token-client-certificate-file value="" />
-          <session-user value="root@localhost" />
-        </database>
-        <properties>
-          <auto-commit value="false" />
-        </properties>
-        <ssh-settings>
-          <active value="false" />
-          <proxy-host value="" />
-          <proxy-port value="22" />
-          <proxy-user value="" />
-          <auth-type value="PASSWORD" />
-          <key-file value="" />
-        </ssh-settings>
-        <ssl-settings>
-          <active value="false" />
-          <certificate-authority-file value="" />
-          <client-certificate-file value="" />
-          <client-key-file value="" />
-        </ssl-settings>
-        <details>
-          <charset value="UTF-8" />
-          <session-management value="true" />
-          <ddl-file-binding value="true" />
-          <database-logging value="true" />
-          <connect-automatically value="true" />
-          <restore-workspace value="true" />
-          <restore-workspace-deep value="false" />
-          <environment-type value="default" />
-          <connectivity-timeout value="30" />
-          <idle-time-to-disconnect value="30" />
-          <idle-time-to-disconnect-pool value="5" />
-          <credential-expiry-time value="10" />
-          <max-connection-pool-size value="7" />
-          <alternative-statement-delimiter value="" />
-        </details>
-        <debugger>
-          <compile-dependencies value="true" />
-          <tcp-host-address value="" />
-          <tcp-port-from value="4000" />
-          <tcp-port-to value="4999" />
-          <jdwp-tunnel-type value="NONE" />
-          <debugger-type value="ASK" />
-          <reverse-ssh-tunnel>
-            <host value="" />
-            <port value="22" />
-            <bind-host value="127.0.0.1" />
-            <bind-port value="0" />
-            <auth-type value="PASSWORD" />
-            <user value="" />
-            <key-file value="" />
-          </reverse-ssh-tunnel>
-        </debugger>
-        <object-filters hide-empty-schemas="false" hide-pseudo-columns="false" hide-audit-columns="false">
-          <object-filters />
-          <object-type-filter use-master-settings="true">
-            <object-type name="SCHEMA" enabled="true" />
-            <object-type name="USER" enabled="true" />
-            <object-type name="ROLE" enabled="true" />
-            <object-type name="PRIVILEGE" enabled="true" />
-            <object-type name="CHARSET" enabled="true" />
-            <object-type name="TABLE" enabled="true" />
-            <object-type name="VIEW" enabled="true" />
-            <object-type name="JSON_VIEW" enabled="true" />
-            <object-type name="MATERIALIZED_VIEW" enabled="true" />
-            <object-type name="NESTED_TABLE" enabled="true" />
-            <object-type name="COLUMN" enabled="true" />
-            <object-type name="INDEX" enabled="true" />
-            <object-type name="CONSTRAINT" enabled="true" />
-            <object-type name="DATASET_TRIGGER" enabled="true" />
-            <object-type name="DATABASE_TRIGGER" enabled="true" />
-            <object-type name="SYNONYM" enabled="true" />
-            <object-type name="SEQUENCE" enabled="true" />
-            <object-type name="PROCEDURE" enabled="true" />
-            <object-type name="FUNCTION" enabled="true" />
-            <object-type name="PACKAGE" enabled="true" />
-            <object-type name="TYPE" enabled="true" />
-            <object-type name="TYPE_ATTRIBUTE" enabled="true" />
-            <object-type name="ARGUMENT" enabled="true" />
-            <object-type name="JAVA_CLASS" enabled="true" />
-            <object-type name="JAVA_FIELD" enabled="true" />
-            <object-type name="JAVA_METHOD" enabled="true" />
-            <object-type name="JAVA_RESOURCE" enabled="true" />
-            <object-type name="DIMENSION" enabled="true" />
-            <object-type name="CLUSTER" enabled="true" />
-            <object-type name="DBLINK" enabled="true" />
-            <object-type name="CREDENTIAL" enabled="true" />
-            <object-type name="AI_PROFILE" enabled="true" />
-            <object-type name="AI_MODEL" enabled="true" />
-          </object-type-filter>
-        </object-filters>
-      </connection>
-    </connections>
+    <connections />
     <browser-settings>
       <general>
         <display-mode value="TABBED" />
@@ -360,19 +268,13 @@
           <content-type name="DTD" enabled="true" />
           <content-type name="HTML" enabled="true" />
           <content-type name="XHTML" enabled="true" />
-          <content-type name="CSS" enabled="true" />
           <content-type name="Java" enabled="true" />
           <content-type name="SQL" enabled="true" />
           <content-type name="PL/SQL" enabled="true" />
           <content-type name="JPA QL" enabled="true" />
-          <content-type name="JavaScript" enabled="true" />
           <content-type name="JSON" enabled="true" />
           <content-type name="JSON5" enabled="true" />
-          <content-type name="JSP" enabled="true" />
-          <content-type name="JSPx" enabled="true" />
           <content-type name="Groovy" enabled="true" />
-          <content-type name="FTL" enabled="true" />
-          <content-type name="VTL" enabled="true" />
           <content-type name="YAML" enabled="true" />
           <content-type name="Manifest" enabled="true" />
         </content-types>

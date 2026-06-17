@@ -25,7 +25,7 @@ public class PermissionFilter implements Filter {
         String path = req.getServletPath();
         String method = req.getMethod();
 
-        String requiredPermission = resolveRequiredPermission(path, method);
+        String requiredPermission = resolveRequiredPermission(req, path, method);
 
         if (requiredPermission == null) {
             chain.doFilter(request, response);
@@ -56,7 +56,7 @@ public class PermissionFilter implements Filter {
         chain.doFilter(request, response);
     }
 
-    private String resolveRequiredPermission(String path, String method) {
+    private String resolveRequiredPermission(HttpServletRequest request, String path, String method) {
         // Public
         if (path.equals("/login") || path.equals("/logout") || path.equals("/forgot-password") || path.equals("/reset-password")) {
             return null;
@@ -139,11 +139,47 @@ public class PermissionFilter implements Filter {
 
         // Request
         if (path.equals("/view_my_request") && "GET".equals(method)) return "VIEW_MY_REQUEST";
-        if (path.equals("/view_all_requests") && "GET".equals(method)) return "VIEW_ALL_REQUESTS";
+        if (path.equals("/view_all_request") && "GET".equals(method)) return "VIEW_ALL_REQUEST";
+        if (path.equals("/view_department_request") && "GET".equals(method)) return "VIEW_DEPARTMENT_REQUEST";
         if (path.equals("/request_detail") && "GET".equals(method)) return "VIEW_REQUEST_DETAIL";
         if (path.equals("/process_request") && "POST".equals(method)) return "PROCESS_REQUEST";
         if (path.equals("/create_request")) return "CREATE_REQUEST";
+        // Task
+        if (path.equals("/tasks")) return resolveTaskPermission(request, method);
         return null;
+    }
+
+    private String resolveTaskPermission(HttpServletRequest request, String method) {
+        String action = request.getParameter("action");
+        if (action == null || action.isBlank()) {
+            action = "list";
+        }
+
+        if ("GET".equals(method)) {
+            return switch (action) {
+                case "create" -> "TASK_CREATE";
+                case "edit" -> "TASK_UPDATE";
+                case "delete" -> "TASK_DELETE";
+                case "toggleChecklist" -> "TASK_VIEW";
+                case "deleteChecklist" -> "TASK_MANAGE_CHECKLIST";
+                case "list", "detail" -> "TASK_VIEW";
+                default -> "TASK_VIEW";
+            };
+        }
+
+        if ("POST".equals(method)) {
+            return switch (action) {
+                case "insert" -> "TASK_CREATE";
+                case "update" -> "TASK_UPDATE";
+                case "addChecklist" -> "TASK_MANAGE_CHECKLIST";
+                case "addComment" -> "TASK_VIEW";
+                case "updateStatus" -> "TASK_UPDATE_STATUS";
+                case "toggleChecklist" -> "TASK_VIEW";
+                default -> "TASK_VIEW";
+            };
+        }
+
+        return "TASK_VIEW";
     }
 
     private boolean canViewAttendanceSummary(
