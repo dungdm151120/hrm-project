@@ -57,7 +57,6 @@
                 <table>
                     <thead>
                     <tr>
-                        <th>No.</th>
                         <th>Type</th>
                         <th>Proposer</th>
                         <th>Status</th>
@@ -70,16 +69,6 @@
                     <tbody>
                     <c:forEach items="${obsRequests}" var="req" varStatus="r">
                         <tr>
-                            <td>
-                                <c:choose>
-                                    <c:when test="${not empty currentPage and currentPage > 1}">
-                                        ${r.index + 1 + (currentPage - 1) * 5}
-                                    </c:when>
-                                    <c:otherwise>
-                                        ${r.index + 1}
-                                    </c:otherwise>
-                                </c:choose>
-                            </td>
                             <td>${req.readableType}</td>
                             <td>${req.proposerName}</td>
                             <td><span class="badge badge-${fn:toLowerCase(req.status)}">${req.status}</span></td>
