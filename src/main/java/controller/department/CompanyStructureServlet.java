@@ -48,7 +48,7 @@ public class CompanyStructureServlet extends HttpServlet {
         OrganizationNode root = new OrganizationNode(0, "HRM", "company");
 
         // Gán avatar và title của Business Admin cho node gốc
-        List<User> businessAdmins = userDAO.getBusinessAdminsByRole("BUSINESS ADMIN");
+        List<User> businessAdmins = userDAO.getUserByRole("BUSINESS ADMIN");
         if (!businessAdmins.isEmpty()) {
             User businessAdmin = businessAdmins.get(0);
             root.setAvatarUrl(getAvatarUrl(businessAdmin.getId()));
