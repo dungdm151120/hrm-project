@@ -34,10 +34,15 @@
 
 .attendance-matrix-filters {
     display: grid;
-    grid-template-columns: 140px 120px minmax(190px, 1fr) minmax(230px, 1.4fr) auto auto;
+    grid-template-columns: 140px 120px minmax(190px, 1fr) minmax(230px, 1.4fr) auto auto auto;
     align-items: end;
     gap: 0.75rem;
     margin-bottom: 1.25rem;
+}
+
+.attendance-matrix-filters.department-attendance-filters {
+    grid-template-columns: 140px 120px 320px 86px 76px;
+    justify-content: start;
 }
 
 .matrix-filter-field {
@@ -92,8 +97,18 @@
 }
 
 .matrix-search-btn {
+    width: 86px;
+    padding: 0 0.85rem;
     background: #111827;
     color: #fff;
+}
+
+.matrix-clear-btn {
+    width: 76px;
+    padding: 0 0.8rem;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #374151;
 }
 
 .matrix-export-btn {

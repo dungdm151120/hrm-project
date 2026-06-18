@@ -48,6 +48,7 @@
 
                 <div class="department-actions">
                     <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${department.id}" class="btn-primary">View employee list</a>
+                    <a href="${pageContext.request.contextPath}/view_department_request?deptId=${department.id}" class="btn-primary">View department requests</a>
                     <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
                         <a href="${pageContext.request.contextPath}/admin/departments/assign-manager?id=${department.id}" class="btn-primary">Assign Manager</a>
                         <a href="${pageContext.request.contextPath}/admin/departments/assign-positions?id=${department.id}" class="btn-primary">Assign Positions</a>

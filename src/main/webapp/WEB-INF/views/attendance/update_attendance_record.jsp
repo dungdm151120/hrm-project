@@ -110,7 +110,8 @@
                     <div class="attendance-update-actions">
                         <button type="submit" class="attendance-update-submit">Update</button>
 
-                        <c:url var="cancelUrl" value="/attendance/records">
+                        <c:url var="cancelUrl" value="/attendance/my">
+                            <c:param name="userId" value="${record.userId}"/>
                             <c:param name="month" value="${record.workDate.monthValue}"/>
                             <c:param name="year" value="${record.workDate.year}"/>
                         </c:url>

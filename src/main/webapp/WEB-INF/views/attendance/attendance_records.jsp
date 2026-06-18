@@ -28,7 +28,7 @@
                 <div class="attendance-records-heading">
                     <div>
                         <h2>Attendance records</h2>
-                        <p>Showing the first 7 days of the selected month.</p>
+                        <p>Showing all days of ${selectedMonth}/${selectedYear}.</p>
                     </div>
                 </div>
 
@@ -103,6 +103,8 @@
                     </div>
 
                     <button type="submit" class="matrix-btn matrix-search-btn">Search</button>
+                    <a href="${pageContext.request.contextPath}/attendance/records"
+                       class="matrix-btn matrix-clear-btn">Clear</a>
 
                     <c:url var="exportUrl" value="/attendance/export">
                         <c:param name="month" value="${selectedMonth}"/>
@@ -114,7 +116,15 @@
                             <c:param name="keyword" value="${keyword}"/>
                         </c:if>
                     </c:url>
-                    <a href="${exportUrl}" class="matrix-btn matrix-export-btn">Export</a>
+                    <a href="${exportUrl}"
+                       style="display: inline-flex; align-items: center; gap: 6px; background: #4361ee; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                       Export
+                    </a>
                 </form>
 
                 <div class="attendance-legend" aria-label="Attendance status legend">
@@ -139,7 +149,7 @@
                         <c:choose>
                             <c:when test="${empty employees}">
                                 <tr>
-                                    <td colspan="8" class="matrix-empty-state">
+                                    <td colspan="${daysInMonth.size() + 1}" class="matrix-empty-state">
                                         No attendance records found for the selected filters.
                                     </td>
                                 </tr>
@@ -148,7 +158,7 @@
                                 <c:forEach var="employee" items="${employees}">
                                     <tr>
                                         <td class="matrix-employee-column">
-                                            <c:url var="employeeDetailUrl" value="/attendance/my">
+                                            <c:url var="employeeDetailUrl" value="/attendance/employee">
                                                 <c:param name="userId" value="${employee.userId}"/>
                                                 <c:param name="month" value="${selectedMonth}"/>
                                                 <c:param name="year" value="${selectedYear}"/>

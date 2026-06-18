@@ -59,7 +59,7 @@ public class MyAttendanceServlet extends HttpServlet {
         }
 
         int targetUserId = requestedUserId != null ? requestedUserId : currentUser.getId();
-        if (!canView(session, currentUser.getId(), targetUserId)) {
+        if (!canView(session, currentUser, targetUserId)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
@@ -72,7 +72,6 @@ public class MyAttendanceServlet extends HttpServlet {
             return;
         }
 
-        // Lấy employeeCode trực tiếp từ DB
         String empCode = getEmployeeCode(employee.getId());
         request.setAttribute("employeeCode", empCode != null ? empCode : "--");
 
@@ -148,7 +147,6 @@ public class MyAttendanceServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/attendance/my_attendance.jsp").forward(request, response);
     }
 
-    // Phương thức lấy employee_code trực tiếp từ DB
     private String getEmployeeCode(int userId) {
         String sql = "SELECT employee_code FROM users WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -165,15 +163,25 @@ public class MyAttendanceServlet extends HttpServlet {
         return null;
     }
 
-    // ... các phương thức còn lại giữ nguyên (canView, countWeekdays, resolveCssClass, vietnameseDayOfWeek, buildYearOptions, parsePositiveInteger, parseIntInRange)
-    private boolean canView(HttpSession session, int currentUserId, int targetUserId) {
+    private boolean canView(HttpSession session, User currentUser, int targetUserId) {
         @SuppressWarnings("unchecked")
         Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
         if (permissions == null) return false;
-        if (targetUserId == currentUserId) {
+        if (targetUserId == currentUser.getId()) {
             return permissions.contains("ATTENDANCE_VIEW_OWN");
         }
-        return permissions.contains("ATTENDANCE_VIEW_ALL");
+        if (permissions.contains("ATTENDANCE_VIEW_ALL")) {
+            return true;
+        }
+        if (!permissions.contains("ATTENDANCE_VIEW_DEPARTMENT")
+                || currentUser.getDepartmentId() == null) {
+            return false;
+        }
+
+        User targetUser = userDAO.findById(targetUserId);
+        return targetUser != null
+                && targetUser.getDepartmentId() != null
+                && targetUser.getDepartmentId().equals(currentUser.getDepartmentId());
     }
 
     private int countWeekdays(YearMonth period) {

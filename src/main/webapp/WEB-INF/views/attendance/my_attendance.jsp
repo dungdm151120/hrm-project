@@ -30,7 +30,7 @@
     <main class="dashboard-main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">${summaryUserId != null ? 'Attendance Detail' : 'My Attendance'}</h1>
+               <h1 class="header-title">My Attendance</h1>
             </div>
         </header>
 
@@ -63,9 +63,14 @@
                                 </c:forEach>
                             </select>
                         </form>
+                        <a href="${pageContext.request.contextPath}/admin/attendance/exportPersonal?userId=${displayUser.id}&month=${selectedMonth}&year=${selectedYear}"
+                           class="btn-export"
+                           style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: #4361ee; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Export
+                        </a>
                     </div>
 
-                    <!-- Legend moved here, above calendar -->
                     <div class="attendance-legend">
                         <span><i class="legend-dot status-on-time"></i>On time</span>
                         <span><i class="legend-dot status-late"></i>Late or early leave</span>
@@ -107,12 +112,11 @@
                                                     <c:set var="record" value="${attendanceMap[recordKey]}" />
                                                     <c:choose>
                                                         <c:when test="${not empty record}">
-                                                            <a href="${pageContext.request.contextPath}/attendance/update?id=${record.attendanceRecordId}"
-                                                               class="record-chip ${record.cssClass}"
-                                                               title="${record.status}">
+                                                            <span class="record-chip ${record.cssClass}"
+                                                                  title="${record.status}">
                                                                 <span class="chip-dot"></span>
                                                                 ${record.checkInText} - ${record.checkOutText}
-                                                            </a>
+                                                            </span>
                                                             <c:if test="${record.overtimeHours > 0}">
                                                                 <span class="record-chip chip-ot">OT</span>
                                                             </c:if>
@@ -135,7 +139,6 @@
                     </div>
                 </div>
 
-                <!-- Summary Card bên phải -->
                 <div class="my-attendance-summary-card">
                     <div class="attendance-work-card">
                         <div class="attendance-work-icon">
@@ -157,6 +160,10 @@
                         <div class="attendance-summary-row">
                             <span>Number of leaves this month</span>
                             <strong><fmt:formatNumber value="${summary.leaveDaysInMonth}" maxFractionDigits="2"/></strong>
+                        </div>
+                        <div class="attendance-summary-row">
+                            <span>Number of absent this month</span>
+                            <strong><fmt:formatNumber value="${summary.absentDaysInMonth}" maxFractionDigits="2"/></strong>
                         </div>
                         <div class="attendance-summary-row">
                             <span>Number of Late Arrivals</span>

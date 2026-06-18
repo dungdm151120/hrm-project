@@ -22,7 +22,6 @@ import java.util.Map;
 @WebServlet("/attendance/records")
 public class AttendanceRecordServlet extends HttpServlet {
     private static final int PAGE_SIZE = 5;
-    private static final int MATRIX_DAY_COUNT = 7;
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM");
 
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();
@@ -78,8 +77,8 @@ public class AttendanceRecordServlet extends HttpServlet {
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);
         List<LocalDate> daysInMonth = new ArrayList<>();
         List<String> dayLabels = new ArrayList<>();
-        int visibleDays = Math.min(MATRIX_DAY_COUNT, selectedPeriod.lengthOfMonth());
-        for (int day = 1; day <= visibleDays; day++) {
+        // Hiển thị tất cả các ngày trong tháng
+        for (int day = 1; day <= selectedPeriod.lengthOfMonth(); day++) {
             LocalDate date = selectedPeriod.atDay(day);
             daysInMonth.add(date);
             dayLabels.add(formatDayLabel(date));
@@ -108,18 +107,18 @@ public class AttendanceRecordServlet extends HttpServlet {
     }
 
     private String formatDayLabel(LocalDate date) {
-        return vietnameseDayOfWeek(date.getDayOfWeek()) + " - " + date.format(DAY_FORMAT);
+        return englishDayOfWeek(date.getDayOfWeek()) + " - " + date.format(DAY_FORMAT);
     }
 
-    private String vietnameseDayOfWeek(DayOfWeek dayOfWeek) {
+    private String englishDayOfWeek(DayOfWeek dayOfWeek) {
         return switch (dayOfWeek) {
-            case MONDAY -> "T2";
-            case TUESDAY -> "T3";
-            case WEDNESDAY -> "T4";
-            case THURSDAY -> "T5";
-            case FRIDAY -> "T6";
-            case SATURDAY -> "T7";
-            case SUNDAY -> "CN";
+            case MONDAY    -> "Mon";
+            case TUESDAY   -> "Tue";
+            case WEDNESDAY -> "Wed";
+            case THURSDAY  -> "Thu";
+            case FRIDAY    -> "Fri";
+            case SATURDAY  -> "Sat";
+            case SUNDAY    -> "Sun";
         };
     }
 
