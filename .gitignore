@@ -5,6 +5,7 @@ target/
 .kotlin
 
 ### IntelliJ IDEA ###
+.idea
 .idea/encoding.xml
 .idea/inspectionProfiles
 .idea/modules.xml

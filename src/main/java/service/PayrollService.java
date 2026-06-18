@@ -19,7 +19,7 @@ public class PayrollService {
     private PayrollCalculator calculator = new PayrollCalculator();
     private AttendanceDAO attendanceDAO = new AttendanceDAO();
     private PayrollDAO payrollDAO = new PayrollDAO();
-    private PositionDAO positionDAO = new PositionDAO();
+    private UserDAO userDAO = new UserDAO();
 
     public Payroll generateMonthlyPayroll(User user, int month, int year, double basicSalary, double expectedHours) {
 
@@ -33,9 +33,11 @@ public class PayrollService {
 
         double rateMultiplier = 1.0;
         double bonus = 0.0;
-        if (positionName.contains("manager")) {
+        String description = null;
+        if (positionName.contains("manager") || positionName.equals("System Administrator")) {
             rateMultiplier = 2.0;
-            bonus = 5000000.0;
+            bonus = 2000000;
+            description = "Lương thưởng cho Manager";
         } else if (positionName.contains("staff")) {
             rateMultiplier = 1.5;
         }
@@ -74,7 +76,7 @@ public class PayrollService {
         payroll.setRateMultiplier(rateMultiplier);
         payroll.setTotalIncome(totalIncome);
         payroll.setBonus(bonus);
-        payroll.setDescription(null);
+        payroll.setDescription(description);
         payroll.setSocialInsurance(socialInsurance);
         payroll.setHealthInsurance(healthInsurance);
         payroll.setUnemploymentInsurance(unemploymentInsurance);
@@ -88,38 +90,21 @@ public class PayrollService {
         return isSaved ? payroll : null;
     }
 
-    public boolean recalculateAndConfirmPayroll(int payrollId, double newBonus, String description) {
-        Payroll payroll = payrollDAO.findById(payrollId);
-        if (payroll == null || !"DRAFT".equalsIgnoreCase(payroll.getStatus())) {
-            return false;
-        }
-
-        payroll.setBonus(newBonus);
-        payroll.setDescription(description);
-        payroll.setStatus("CONFIRMED");
-
-        double totalIncome = payroll.getTotalIncome();
-        double totalInsurance = payroll.getSocialInsurance() + payroll.getHealthInsurance() + payroll.getUnemploymentInsurance();
-        double incomeBeforeTax = totalIncome - totalInsurance;
-
-        double incomeTax = payroll.getIncomeTax();
-
-        double newNetPay = incomeBeforeTax - incomeTax + newBonus;
-        payroll.setNetPay(newNetPay);
-
-        return payrollDAO.updatePayrollValuesAndStatus(payroll);
-    }
-
     public int generateBulkPayroll(List<User> users, int month, int year, double expectedHours) {
         int successCount = 0;
 
         for (User user : users) {
             int userId = user.getId();
 
+            User detailedUser = userDAO.findByIdWithEmployeeCode(userId);
+            if (detailedUser == null) {
+                continue;
+            }
+
             BigDecimal activeSalary = laborContractDAO.findActiveSalaryByUserId(userId);
             double basicSalary = activeSalary.doubleValue();
 
-            Payroll payroll = this.generateMonthlyPayroll(user, month, year, basicSalary, expectedHours);
+            Payroll payroll = this.generateMonthlyPayroll(detailedUser, month, year, basicSalary, expectedHours);
             if (payroll != null) {
                 successCount++;
             }

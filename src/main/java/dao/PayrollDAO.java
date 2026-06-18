@@ -126,7 +126,7 @@ public class PayrollDAO {
             """);
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND BINARY u.full_name LIKE ? ");
+            sql.append(" AND u.full_name COLLATE utf8mb4_vietnamese_ci LIKE ? ");
         }
 
         if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status)) {
@@ -203,14 +203,12 @@ public class PayrollDAO {
         return list;
     }
 
-    public boolean updateStatus(int payrollId, String status, double bonus, String description) {
-        String sql = "UPDATE payrolls SET status = ?, bonus = ?, description = ? WHERE id = ? AND LOWER(status) = 'draft'";
+    public boolean updateStatus(int payrollId, String status) {
+        String sql = "UPDATE payrolls SET status = ? WHERE id = ? AND LOWER(status) = 'draft'";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status);
-            ps.setDouble(2, bonus);
-            ps.setString(3, description);
-            ps.setInt(4, payrollId);
+            ps.setInt(2, payrollId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();

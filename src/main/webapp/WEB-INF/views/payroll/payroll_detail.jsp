@@ -103,29 +103,13 @@
 
                             <div class="form-group" style="flex: 1;">
                                 <div class="form-group" style="margin-bottom: 15px;">
-                                    <label>Bonus (VND):</label>
-                                    <c:choose>
-                                        <c:when test="${(payroll.status == 'DRAFT')}">
-                                            <input type="number" name="bonus" class="form-control" value="${payroll.bonus}" <c:if test="${payroll.status == 'CONFIRMED'}">readonly</c:if>>
-                                        </c:when>
-
-                                        <c:otherwise>
-                                            <input type="text" name="bonus" value="<fmt:formatNumber value='${payroll.bonus}' type='number' maxFractionDigits='0'/> VND" readonly>
-                                        </c:otherwise>
-                                    </c:choose>
+                                    <label>Bonus</label>
+                                    <input type="text" name="bonus" value="<fmt:formatNumber value='${payroll.bonus}' type='number' maxFractionDigits='0'/> VND" readonly>
                                 </div>
 
                                 <div class="form-group" style="margin-bottom: 15px;">
-                                    <label>Bonus Description (Optional):</label>
-                                    <c:choose>
-                                        <c:when test="${(payroll.status == 'DRAFT')}">
-                                            <textarea name="description" class="form-control" rows="3" placeholder="Reason for bonus (e.g., Overtime, KPI)..."></textarea>
-                                        </c:when>
-
-                                        <c:otherwise>
-                                            <input type="text" name="description" value="${payroll.description}" readonly>
-                                        </c:otherwise>
-                                    </c:choose>
+                                    <label>Bonus Description:</label>
+                                    <input type="text" name="description" value="${payroll.description}" readonly>
                                 </div>
                             </div>
                         </form>

@@ -410,9 +410,6 @@
                 <c:if test="${userPermissions.contains('PAYROLL_GENERATE')}">
                     <a href="${ctx}/payroll/generate" class="submenu-item ${currentPath == ctx.concat('/payroll/generate') ? 'active' : ''}">Generate Payroll</a>
                 </c:if>
-                <c:if test="${userPermissions.contains('PAYROLL_EXPORT_REPORT')}">
-                    <a href="${ctx}/payroll/export" class="submenu-item ${currentPath == ctx.concat('/payroll/export') ? 'active' : ''}">Export Report</a>
-                </c:if>
             </div>
         </div>
         </c:if>

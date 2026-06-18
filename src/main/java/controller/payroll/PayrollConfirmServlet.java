@@ -21,8 +21,6 @@ public class PayrollConfirmServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String idParam = request.getParameter("id");
-        double bonus = Double.parseDouble(request.getParameter("bonus"));
-        String description = request.getParameter("description");
 
         if (idParam == null || idParam.trim().isEmpty()) {
             request.getSession().setAttribute("error", "Invalid payroll request id.");
@@ -32,8 +30,7 @@ public class PayrollConfirmServlet extends HttpServlet {
 
         try {
             int payrollId = Integer.parseInt(idParam);
-            PayrollService payrollService = new PayrollService();
-            boolean updated = payrollService.recalculateAndConfirmPayroll(payrollId, bonus, description);
+            boolean updated = payrollDAO.updateStatus(payrollId, "CONFIRMED");
 
             if (updated) {
                 Payroll payroll = payrollDAO.findById(payrollId);
