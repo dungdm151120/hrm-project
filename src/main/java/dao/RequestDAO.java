@@ -68,7 +68,65 @@ public class RequestDAO {
             if (conn != null) conn.close();
         }
     }
+    public int createRequestAndGetId(Request req, List<Integer> observerIds) throws SQLException {
+        String sqlRequest = "INSERT INTO requests (user_id, department_id, type, reason, approver_id, created_at, status, handler_id) VALUES (?, ?, ?, ?, ?, NOW(), 'PENDING', ?)";
+        String sqlObserver = "INSERT INTO request_observers (request_id, observer_id) VALUES (?, ?)";
 
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            int requestId = -1;
+            try (PreparedStatement ps = conn.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setInt(1, req.getUserId());
+
+                if (req.getDepartmentId() != null) {
+                    ps.setInt(2, req.getDepartmentId());
+                } else {
+                    ps.setNull(2, java.sql.Types.INTEGER);
+                }
+
+                ps.setString(3, req.getType());
+                ps.setString(4, req.getReason());
+                ps.setInt(5, req.getApproverId());
+
+                if (req.getHandlerId() > 0) {
+                    ps.setInt(6, req.getHandlerId());
+                } else {
+                    ps.setNull(6, java.sql.Types.INTEGER);
+                }
+
+                ps.executeUpdate();
+
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        requestId = rs.getInt(1);
+                    }
+                }
+            }
+
+            if (requestId != -1 && observerIds != null && !observerIds.isEmpty()) {
+                try (PreparedStatement psObs = conn.prepareStatement(sqlObserver)) {
+                    for (Integer observerId : observerIds) {
+                        psObs.setInt(1, requestId);
+                        psObs.setInt(2, observerId);
+                        psObs.addBatch();
+                    }
+                    psObs.executeBatch();
+                }
+            }
+
+            conn.commit();
+            return requestId;
+        } catch (SQLException e) {
+            if (conn != null) conn.rollback();
+            e.printStackTrace();
+            throw e;
+        } finally {
+            if (conn != null) conn.close();
+        }
+    }
     public List<Request> getRequestByUserId(int userId, String status, String type, String sort, int offset, int limit) {
         List<Request> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -377,13 +435,13 @@ public class RequestDAO {
         return 0;
     }
 
-    // Lấy danh sách các đơn được phân công xử lý (Handled Requests)
     public List<Request> getHandledRequests(int handlerId, String status, String type, String sort, int offset, int limit) {
         List<Request> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT r.*, u.full_name as proposer_name, h.full_name as handler_name FROM requests r " +
                         "JOIN users u ON r.user_id = u.id " +
-                        "LEFT JOIN users h ON r.handler_id = h.id WHERE r.handler_id = ?"
+                        "LEFT JOIN users h ON r.handler_id = h.id " +
+                        "WHERE r.handler_id = ? AND r.status != 'CANCELLED' "
         );
 
         if (status != null && !status.isEmpty()) sql.append(" AND r.status = ?");
@@ -420,10 +478,8 @@ public class RequestDAO {
         }
         return list;
     }
-
-    // Đếm số lượng đơn được phân công xử lý
     public int countHandledRequests(int handlerId, String status, String type) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM requests WHERE handler_id = ?");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM requests WHERE handler_id = ? AND status != 'CANCELLED'");
 
         if (status != null && !status.isEmpty()) sql.append(" AND status = ?");
         if (type != null && !type.isEmpty()) sql.append(" AND type = ?");

@@ -21,6 +21,27 @@
     </div>
 
     <div class="dashboard-content">
+
+      <!-- Hiển thị thông báo lỗi nếu có -->
+      <c:if test="${not empty param.error}">
+        <div style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">⚠️</span>
+          <span>
+            <c:choose>
+              <c:when test="${param.error == 'missing_leave_date'}">Please select a leave date.</c:when>
+              <c:when test="${param.error == 'leave_date_past'}">Leave date cannot be in the past.</c:when>
+              <c:when test="${param.error == 'leave_date_weekend'}">Weekends are not allowed for leave requests.</c:when>
+              <c:when test="${param.error == 'leave_date_already_on_leave'}">You already have an approved leave on this date.</c:when>
+              <c:when test="${param.error == 'leave_date_duplicate_request'}">A leave request for this date already exists (pending or approved).</c:when>
+              <c:when test="${param.error == 'leave_balance_exhausted'}">You have no remaining leave balance. Cannot submit request.</c:when>
+              <c:when test="${param.error == 'missing_approver'}">Please select an approver.</c:when>
+              <c:when test="${param.error == 'system_error'}">A system error occurred. Please try again later.</c:when>
+              <c:otherwise>${param.error}</c:otherwise>
+            </c:choose>
+          </span>
+        </div>
+      </c:if>
+
       <div class="detail-card">
         <form action="create_request" method="POST">
 

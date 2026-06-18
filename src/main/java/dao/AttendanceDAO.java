@@ -92,14 +92,29 @@ public class AttendanceDAO {
         }
         return list;
     }
-
+    private void deleteAttendanceLog(int employeeId, LocalDate date) {
+        String sql = "DELETE FROM attendance_logs WHERE employee_id = ? AND work_date = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            ps.setDate(2, Date.valueOf(date));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     // ==================== ATTENDANCE RECORDS ====================
 
     public void calculateAndSaveRecord(int employeeId, LocalDate workDate) {
+        // Nếu đã có record với status ON_LEAVE thì không ghi đè
+        AttendanceRecord existing = getRecordByUserAndDate(employeeId, workDate);
+        if (existing != null && "ON_LEAVE".equals(existing.getStatus())) {
+            return;
+        }
+
         AttendanceLog log = getLogByEmployeeAndDate(employeeId, workDate);
         if (log == null) return;
 
-        // Có thể kiểm tra user nếu cần (nghỉ phép...)
         UserDAO userDAO = new UserDAO();
         User user = userDAO.findById(employeeId);
 
@@ -109,7 +124,7 @@ public class AttendanceDAO {
         record.setCheckIn(log.getCheckIn());
         record.setCheckOut(log.getCheckOut());
 
-            calculateWorkingHours(record);
+        calculateWorkingHours(record);
 
         String status = determineStatus(record);
         record.setStatus(status);
@@ -794,7 +809,22 @@ public class AttendanceDAO {
             ps.setTimestamp(index, Timestamp.valueOf(value));
         }
     }
+    public void markOnLeave(int userId, LocalDate date) {
 
+        deleteAttendanceLog(userId, date);
+
+        AttendanceRecord record = new AttendanceRecord();
+        record.setUserId(userId);
+        record.setWorkDate(date);
+        record.setCheckIn(null);
+        record.setCheckOut(null);
+        record.setTotalWorkHours(8.0);
+        record.setLateHours(0.0);
+        record.setEarlyLeaveHours(0.0);
+        record.setStatus("ON_LEAVE");
+        record.setNote("Leave request approved");
+        saveAttendanceRecord(record);
+    }
     private AttendanceLog getLogByEmployeeAndDate(int employeeId, LocalDate date) {
         String sql = "SELECT id, work_date, employee_id, check_in, check_out FROM attendance_logs " +
                 "WHERE employee_id = ? AND work_date = ?";

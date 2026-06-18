@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.User;
 
 import java.io.IOException;
 
@@ -17,12 +18,14 @@ public class ViewHandledRequestServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        Integer userId = (session != null) ? (Integer) session.getAttribute("userId") : null;
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
 
-        if (userId == null) {
+        if (currentUser == null) {
             response.sendRedirect("login.jsp");
             return;
         }
+
+        int userId = currentUser.getId();
 
         int limit = 5;
         String status = request.getParameter("status");

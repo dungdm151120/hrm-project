@@ -111,7 +111,7 @@ public class MyAttendanceServlet extends HttpServlet {
             dto.setStatus(record.getStatus());
             dto.setNote(record.getNote());
             dto.setCssClass(resolveCssClass(record.getStatus()));
-            dto.setEdited(record.getUpdatedAt() != null);
+            dto.setEdited(record.getUpdatedAt() != null && !"ON_LEAVE".equals(record.getStatus()));
             attendanceMap.put(key, dto);
         }
 

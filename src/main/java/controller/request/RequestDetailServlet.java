@@ -1,6 +1,8 @@
 package controller.request;
 
+import dao.LeaveRequestDAO;
 import dao.RequestDAO;
+import model.LeaveRequest;
 import model.Request;
 import model.User;
 import jakarta.servlet.ServletException;
@@ -28,8 +30,13 @@ public class RequestDetailServlet extends HttpServlet {
 
         if (req != null) {
             List<User> observers = dao.getObserversByRequestId(id);
-
             req.setObserver(observers);
+
+            if ("LEAVE_REQUEST".equals(req.getType())) {
+                LeaveRequestDAO leaveRequestDAO = new LeaveRequestDAO();
+                LeaveRequest lr = leaveRequestDAO.getByRequestId(id);
+                request.setAttribute("leaveRequest", lr);
+            }
 
             request.setAttribute("request", req);
             request.getRequestDispatcher("/WEB-INF/views/request/request_detail.jsp").forward(request, response);
