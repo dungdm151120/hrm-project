@@ -13,6 +13,7 @@
         .task-detail-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
         .task-detail-title { margin: 0; font-size: 24px; line-height: 1.35; color: #111827; }
         .task-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .task-actions form { margin: 0; }
         .task-detail-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
         .task-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
         .task-panel h2, .task-panel h3 { margin-top: 0; color: #111827; }
@@ -23,6 +24,9 @@
         .checklist-item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
         .checklist-title { color: #111827; }
         .checklist-assignee { color: #6b7280; font-size: 13px; }
+        .checklist-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+        .assign-subtask-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .assign-subtask-form select { min-width: 180px; padding: 7px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
         .inline-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .inline-form input[type="text"], .inline-form textarea, .inline-form select { padding: 9px 10px; border: 1px solid #d1d5db; border-radius: 6px; }
         .inline-form input[type="text"] { min-width: 260px; flex: 1; }
@@ -73,9 +77,11 @@
                         <a href="${pageContext.request.contextPath}/tasks?action=edit&id=${task.id}" class="btn-primary">Edit</a>
                     </c:if>
                     <c:if test="${canDeleteTask}">
-                        <a href="${pageContext.request.contextPath}/tasks?action=delete&id=${task.id}"
-                           class="btn-reset"
-                           onclick="return confirm('Delete this task?')">Delete</a>
+                        <form action="${pageContext.request.contextPath}/tasks?action=delete" method="post"
+                              onsubmit="return confirm('Delete this task?')">
+                            <input type="hidden" name="id" value="${task.id}">
+                            <button type="submit" class="btn-reset">Delete</button>
+                        </form>
                     </c:if>
                     <a href="${pageContext.request.contextPath}/tasks?action=list" class="btn-cancel">Back to list</a>
                 </div>
@@ -124,10 +130,27 @@
                                             </c:choose>
                                         </div>
                                     </div>
-                                    <div>
-                                        <c:if test="${canManageChecklist}">
-                                            <a href="${pageContext.request.contextPath}/tasks?action=deleteChecklist&itemId=${item.id}&taskId=${task.id}"
-                                               onclick="return confirm('Delete this subtask?')">Delete</a>
+                                    <div class="checklist-actions">
+                                        <c:if test="${canManageChecklist and task.status != 'PAUSED'}">
+                                            <form class="assign-subtask-form" action="${pageContext.request.contextPath}/tasks?action=assignChecklist" method="post">
+                                                <input type="hidden" name="taskId" value="${task.id}">
+                                                <input type="hidden" name="itemId" value="${item.id}">
+                                                <select name="assignedTo">
+                                                    <option value="">No specific assignee</option>
+                                                    <c:forEach items="${participants}" var="participant">
+                                                        <option value="${participant.userId}" ${item.assignedTo == participant.userId ? 'selected' : ''}>
+                                                            <c:out value="${participant.userName}"/>
+                                                        </option>
+                                                    </c:forEach>
+                                                </select>
+                                                <button type="submit" class="btn-secondary">Assign</button>
+                                            </form>
+                                            <form action="${pageContext.request.contextPath}/tasks?action=deleteChecklist" method="post"
+                                                  onsubmit="return confirm('Delete this subtask?')">
+                                                <input type="hidden" name="itemId" value="${item.id}">
+                                                <input type="hidden" name="taskId" value="${task.id}">
+                                                <button type="submit" class="btn-reset">Delete</button>
+                                            </form>
                                         </c:if>
                                     </div>
                                 </div>
@@ -138,7 +161,7 @@
                         </div>
                     </section>
 
-                    <c:if test="${canManageChecklist}">
+                    <c:if test="${canManageChecklist and task.status != 'PAUSED'}">
                         <section class="task-panel">
                             <h3>Add subtask</h3>
                             <form class="inline-form" action="${pageContext.request.contextPath}/tasks?action=addChecklist" method="post">
@@ -146,8 +169,8 @@
                                 <input type="text" name="content" placeholder="Subtask content" required>
                                 <select name="assignedTo">
                                     <option value="">No specific assignee</option>
-                                    <c:forEach items="${departmentUsers}" var="user">
-                                        <option value="${user.id}"><c:out value="${user.fullName}"/></option>
+                                    <c:forEach items="${participants}" var="participant">
+                                        <option value="${participant.userId}"><c:out value="${participant.userName}"/></option>
                                     </c:forEach>
                                 </select>
                                 <button type="submit" class="btn-secondary">Add</button>
@@ -157,16 +180,19 @@
 
                     <section class="task-panel">
                         <div class="button-row">
-                            <c:if test="${canUpdateTaskStatus}">
+                            <c:if test="${canUpdateTaskStatus and task.status != 'COMPLETED'}">
                                 <form class="inline-form" action="${pageContext.request.contextPath}/tasks?action=updateStatus" method="post">
                                     <input type="hidden" name="taskId" value="${task.id}">
-                                    <select name="status">
-                                        <option value="TODO" ${task.status == 'TODO' ? 'selected' : ''}>To do</option>
-                                        <option value="IN_PROGRESS" ${task.status == 'IN_PROGRESS' ? 'selected' : ''}>In progress</option>
-                                        <option value="COMPLETED" ${task.status == 'COMPLETED' ? 'selected' : ''}>Completed</option>
-                                        <option value="PAUSED" ${task.status == 'PAUSED' ? 'selected' : ''}>Paused</option>
-                                    </select>
-                                    <button type="submit" class="btn-secondary">Update status</button>
+                                    <c:choose>
+                                        <c:when test="${task.status == 'PAUSED'}">
+                                            <input type="hidden" name="status" value="RESUME">
+                                            <button type="submit" class="btn-secondary">Resume</button>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <input type="hidden" name="status" value="PAUSED">
+                                            <button type="submit" class="btn-secondary">Pause</button>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </form>
                             </c:if>
                             <a href="${pageContext.request.contextPath}/tasks?action=list" class="btn-cancel">Back to list</a>

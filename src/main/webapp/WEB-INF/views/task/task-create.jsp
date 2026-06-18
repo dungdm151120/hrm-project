@@ -21,7 +21,7 @@
         .user-picker-meta { color: #6b7280; font-size: 13px; margin-top: 2px; display: block; }
         .inline-checkbox { display: flex; align-items: center; gap: 8px; width: fit-content; cursor: pointer; }
         .inline-checkbox input { width: auto; padding: 0; border: 0; margin: 0; }
-        .checklist-row { display: grid; grid-template-columns: 1fr 260px auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .checklist-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
         .form-actions { display: flex; gap: 10px; }
     </style>
 </head>
@@ -118,12 +118,6 @@
                     <div id="checklistContainer">
                         <div class="checklist-row">
                             <input type="text" name="checklistContent" placeholder="Work item content">
-                            <select name="checklistAssignedTo">
-                                <option value="">No specific assignee</option>
-                                <c:forEach items="${departmentUsers}" var="user">
-                                    <option value="${user.id}">${user.fullName}</option>
-                                </c:forEach>
-                            </select>
                             <button type="button" class="btn-reset" onclick="removeChecklistRow(this)">Delete</button>
                         </div>
                     </div>
@@ -143,7 +137,6 @@
         const firstRow = document.querySelector('.checklist-row');
         const clone = firstRow.cloneNode(true);
         clone.querySelector('input').value = '';
-        clone.querySelector('select').value = '';
         document.getElementById('checklistContainer').appendChild(clone);
     }
     function removeChecklistRow(button) {
@@ -152,7 +145,6 @@
             button.closest('.checklist-row').remove();
         } else {
             button.closest('.checklist-row').querySelector('input').value = '';
-            button.closest('.checklist-row').querySelector('select').value = '';
         }
     }
     function filterUserPicker(input) {
@@ -162,6 +154,10 @@
             const text = (item.dataset.search || item.textContent).toLowerCase();
             item.style.display = text.includes(keyword) ? 'flex' : 'none';
         });
+    }
+    const deadlineInput = document.querySelector('input[name="deadline"]');
+    if (deadlineInput) {
+        deadlineInput.min = new Date().toISOString().split('T')[0];
     }
 </script>
 </body>
