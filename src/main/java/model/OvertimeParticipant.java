@@ -14,6 +14,7 @@ public class OvertimeParticipant {
     // Transient fields for display
     private String userFullName;
     private String employeeCode;
+    private String positionName;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -34,4 +35,6 @@ public class OvertimeParticipant {
     public void setUserFullName(String userFullName) { this.userFullName = userFullName; }
     public String getEmployeeCode() { return employeeCode; }
     public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
+    public String getPositionName() { return positionName; }
+    public void setPositionName(String positionName) { this.positionName = positionName; }
 }

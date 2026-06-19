@@ -133,4 +133,8 @@ public class OvertimeService {
         }
         return hasUpdates;
     }
+
+    public model.OvertimeDetail getOvertimeDetailByUserAndDate(int userId, LocalDate date) {
+        return overtimeRequestDAO.getOvertimeDetailByUserAndDate(userId, date);
+    }
 }

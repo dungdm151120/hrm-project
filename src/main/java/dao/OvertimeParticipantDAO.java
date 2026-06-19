@@ -33,9 +33,10 @@ public class OvertimeParticipantDAO {
 
     public List<OvertimeParticipant> getByOvertimeRequestId(int overtimeRequestId) {
         List<OvertimeParticipant> list = new ArrayList<>();
-        String sql = "SELECT op.*, u.full_name, u.employee_code " +
+        String sql = "SELECT op.*, u.full_name, u.employee_code, pos.name AS position_name " +
                      "FROM overtime_participants op " +
                      "JOIN users u ON op.user_id = u.id " +
+                     "LEFT JOIN positions pos ON u.position_id = pos.id " +
                      "WHERE op.overtime_request_id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -55,6 +56,7 @@ public class OvertimeParticipantDAO {
                     
                     p.setUserFullName(rs.getString("full_name"));
                     p.setEmployeeCode(rs.getString("employee_code"));
+                    p.setPositionName(rs.getString("position_name"));
                     list.add(p);
                 }
             }

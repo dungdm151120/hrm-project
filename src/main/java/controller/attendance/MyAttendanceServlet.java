@@ -87,31 +87,16 @@ public class MyAttendanceServlet extends HttpServlet {
         );
         summary.setExpectedWorkHours(countWeekdays(selectedPeriod) * STANDARD_WORK_HOURS);
 
-        List<AttendanceRecord> recordList = attendanceDAO.getRecordsByUser(
+        List<AttendanceRecordDTO> recordList = attendanceDAO.getAttendanceDetailByUserAndMonth(
                 employee.getId(),
-                selectedPeriod.atDay(1),
-                selectedPeriod.atEndOfMonth()
+                selectedMonth,
+                selectedYear
         );
 
         Map<String, AttendanceRecordDTO> attendanceMap = new LinkedHashMap<>();
-        for (AttendanceRecord record : recordList) {
-            String key = record.getUserId() + "_" + record.getWorkDate();
-            AttendanceRecordDTO dto = new AttendanceRecordDTO();
-            dto.setAttendanceRecordId(record.getId());
-            dto.setUserId(record.getUserId());
-            dto.setWorkDate(record.getWorkDate());
-            dto.setCheckIn(record.getCheckIn());
-            dto.setCheckOut(record.getCheckOut());
-            dto.setCheckInText(record.getCheckIn() != null ? record.getCheckIn().format(TIME_FORMAT) : "--");
-            dto.setCheckOutText(record.getCheckOut() != null ? record.getCheckOut().format(TIME_FORMAT) : "--");
-            dto.setTotalWorkHours(record.getTotalWorkHours());
-            dto.setOvertimeHours(record.getOvertimeHours() != null ? record.getOvertimeHours() : 0.0);
-            dto.setLateHours(record.getLateHours());
-            dto.setEarlyLeaveHours(record.getEarlyLeaveHours());
-            dto.setStatus(record.getStatus());
-            dto.setNote(record.getNote());
-            dto.setCssClass(resolveCssClass(record.getStatus()));
-            dto.setEdited(record.getUpdatedAt() != null && !"ON_LEAVE".equals(record.getStatus()));
+        for (AttendanceRecordDTO dto : recordList) {
+            String key = dto.getUserId() + "_" + dto.getWorkDate();
+            dto.setCssClass(resolveCssClass(dto.getStatus()));
             attendanceMap.put(key, dto);
         }
 

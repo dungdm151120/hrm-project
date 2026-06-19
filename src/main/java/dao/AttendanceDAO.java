@@ -286,7 +286,7 @@ public class AttendanceDAO {
     }
 
     public boolean updateOvertimeHours(int recordId, double overtimeHours) {
-        String sql = "UPDATE attendance_records SET overtime_hours = ? WHERE id = ?";
+        String sql = "UPDATE attendance_records SET overtime_hours = ?, updated_at = updated_at WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDouble(1, overtimeHours);
@@ -364,7 +364,8 @@ public class AttendanceDAO {
                 "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
                 "u.full_name AS employee_name, d.name AS department_name, ar.work_date, " +
                 "ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
-                "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ar.updated_at " +
+                "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ar.updated_at, " +
+                "ot.status AS ot_status " +
                 "FROM (" +
                 "SELECT DISTINCT u.id, u.full_name " + employeeFilter +
                 " ORDER BY u.full_name, u.id LIMIT ? OFFSET ?" +
@@ -373,6 +374,8 @@ public class AttendanceDAO {
                 "LEFT JOIN departments d ON d.id = u.department_id " +
                 "JOIN attendance_records ar ON ar.user_id = u.id " +
                 "AND ar.work_date BETWEEN ? AND ? " +
+                "LEFT JOIN (SELECT op1.user_id, op1.status, oreq1.overtime_date FROM overtime_participants op1 JOIN overtime_requests oreq1 ON op1.overtime_request_id = oreq1.id) ot " +
+                "ON ot.user_id = ar.user_id AND ot.overtime_date = ar.work_date " +
                 "ORDER BY u.full_name, u.id, ar.work_date";
 
         try (Connection conn = DBConnection.getConnection();
@@ -526,11 +529,13 @@ public class AttendanceDAO {
         String sql = "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
                 "u.full_name AS employee_name, d.name AS department_name, p.name AS position_name, " +
                 "ar.work_date, ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
-                "ar.late_hours, ar.early_leave_hours, ar.status, ar.note " +
+                "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ar.updated_at, ot.status AS ot_status " +
                 "FROM attendance_records ar " +
                 "JOIN users u ON u.id = ar.user_id " +
                 "LEFT JOIN departments d ON d.id = u.department_id " +
                 "LEFT JOIN positions p ON p.id = u.position_id " +
+                "LEFT JOIN (SELECT op1.user_id, op1.status, oreq1.overtime_date FROM overtime_participants op1 JOIN overtime_requests oreq1 ON op1.overtime_request_id = oreq1.id) ot " +
+                "ON ot.user_id = ar.user_id AND ot.overtime_date = ar.work_date " +
                 "WHERE ar.user_id = ? AND MONTH(ar.work_date) = ? AND YEAR(ar.work_date) = ? " +
                 "ORDER BY ar.work_date";
         try (Connection conn = DBConnection.getConnection();
@@ -560,6 +565,8 @@ public class AttendanceDAO {
                     dto.setNote(rs.getString("note"));
                     dto.setCheckInText(checkIn == null ? "" : checkIn.format(MATRIX_TIME_FORMAT));
                     dto.setCheckOutText(checkOut == null ? "" : checkOut.format(MATRIX_TIME_FORMAT));
+                    dto.setEdited(rs.getTimestamp("updated_at") != null && !"ON_LEAVE".equals(dto.getStatus()));
+                    dto.setOtStatus(rs.getString("ot_status"));
                     list.add(dto);
                 }
             }
@@ -579,11 +586,13 @@ public class AttendanceDAO {
                 "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
                         "u.full_name AS employee_name, d.name AS department_name, p.name AS position_name, " +
                         "ar.work_date, ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
-                        "ar.late_hours, ar.early_leave_hours, ar.status, ar.note " +
+                        "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ot.status AS ot_status " +
                         "FROM attendance_records ar " +
                         "JOIN users u ON u.id = ar.user_id " +
                         "LEFT JOIN departments d ON d.id = u.department_id " +
                         "LEFT JOIN positions p ON p.id = u.position_id " +
+                        "LEFT JOIN (SELECT op1.user_id, op1.status, oreq1.overtime_date FROM overtime_participants op1 JOIN overtime_requests oreq1 ON op1.overtime_request_id = oreq1.id) ot " +
+                        "ON ot.user_id = ar.user_id AND ot.overtime_date = ar.work_date " +
                         "WHERE ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
         );
         if (departmentId != null) {
@@ -629,6 +638,7 @@ public class AttendanceDAO {
                     dto.setNote(rs.getString("note"));
                     dto.setCheckInText(checkIn == null ? "" : checkIn.format(MATRIX_TIME_FORMAT));
                     dto.setCheckOutText(checkOut == null ? "" : checkOut.format(MATRIX_TIME_FORMAT));
+                    dto.setOtStatus(rs.getString("ot_status"));
                     records.add(dto);
                 }
             }
@@ -787,6 +797,7 @@ public class AttendanceDAO {
         dto.setCheckOutText(checkOut == null ? "--" : checkOut.format(MATRIX_TIME_FORMAT));
         dto.setEdited(rs.getTimestamp("updated_at") != null);
         dto.setCssClass(resolveMatrixCssClass(status));
+        dto.setOtStatus(rs.getString("ot_status"));
         return dto;
     }
 
