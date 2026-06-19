@@ -125,8 +125,16 @@ public class PayrollDAO {
             WHERE 1=1
             """);
 
+        boolean hasAccent = false;
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND u.full_name COLLATE utf8mb4_vietnamese_ci LIKE ? ");
+            String k = keyword.trim();
+            hasAccent = k.matches(".*[áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴĐ].*");
+
+            if (hasAccent) {
+                sql.append(" AND LOWER(u.full_name) COLLATE utf8mb4_bin LIKE LOWER(?) ");
+            } else {
+                sql.append(" AND u.full_name COLLATE utf8mb4_general_ci LIKE ? ");
+            }
         }
 
         if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status)) {

@@ -27,6 +27,11 @@
             <div class="header-left">
                 <h1 class="header-title">${isMyPayroll ? 'My Payroll' : 'Payroll List'}</h1>
             </div>
+            <div class="header-right">
+                <c:if test="${userPermissions.contains('PAYROLL_EXPORT_REPORT')}">
+                    <a href="${pageContext.request.contextPath}/payroll/export" class="btn-save">Export Report</a>
+                </c:if>
+            </div>
         </div>
 
         <div class="dashboard-content">
@@ -42,8 +47,6 @@
                 </div>
                 <% session.removeAttribute("error"); %>
             </c:if>
-
-
 
             <div class="search-filter">
                 <form action="${pageContext.request.contextPath}${isMyPayroll ? '/payroll/my' : '/payroll/list'}" method="GET">
@@ -88,10 +91,6 @@
                         <a href="${pageContext.request.contextPath}${isMyPayroll ? '/payroll/my' : '/payroll/list'}" class="btn-reset" style="text-decoration: none; padding: 8px 12px; margin-left: 5px;">Clear</a>
                     </c:if>
                 </form>
-
-                <c:if test="${userPermissions.contains('PAYROLL_EXPORT_REPORT')}">
-                    <a href="${pageContext.request.contextPath}/payroll/export" class="btn-save">Export Report</a>
-                </c:if>
             </div>
 
             <div class="table-wrapper">
