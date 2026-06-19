@@ -714,7 +714,7 @@ CREATE TABLE IF NOT EXISTS overtime_participants (
     id INT AUTO_INCREMENT PRIMARY KEY,
     overtime_request_id INT NOT NULL,
     user_id INT NOT NULL,
-    status ENUM('REGISTERED', 'COMPLETED', 'PARTIAL', 'ABSENT', 'REJECTED', 'CANCELLED') DEFAULT 'REGISTERED',
+    status ENUM('PENDING', 'REGISTERED', 'COMPLETED', 'PARTIAL', 'ABSENT', 'REJECTED', 'CANCELLED') DEFAULT 'PENDING',
     hours_actual DECIMAL(4,1) DEFAULT 0.0,
     confirmed_at DATETIME,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -722,6 +722,10 @@ CREATE TABLE IF NOT EXISTS overtime_participants (
     CONSTRAINT fk_overtime_participants_user FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE KEY uk_ot_participant (overtime_request_id, user_id)
 );
+
+ALTER TABLE requests 
+MODIFY COLUMN status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'CONFIRMED') 
+DEFAULT 'PENDING';
 
 -- Index để tăng hiệu suất truy vấn
 CREATE INDEX idx_overtime_participants_user ON overtime_participants(user_id);

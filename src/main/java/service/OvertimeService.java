@@ -131,6 +131,12 @@ public class OvertimeService {
             overtimeParticipantDAO.updateParticipantStatusAndHours(p.getId(), pStatus, pHours);
             hasUpdates = true;
         }
+
+        if (hasUpdates) {
+            dao.RequestDAO requestDAO = new dao.RequestDAO();
+            requestDAO.updateRequestStatusOnly(requestId, "CONFIRMED");
+        }
+
         return hasUpdates;
     }
 

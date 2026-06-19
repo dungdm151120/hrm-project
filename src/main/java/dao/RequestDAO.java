@@ -323,6 +323,19 @@ public class RequestDAO {
         }
     }
 
+    public boolean updateRequestStatusOnly(int requestId, String status) {
+        String sql = "UPDATE requests SET status = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, requestId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean updateRequestStatusAndHandler(int requestId, String status, String comment, int handlerId) {
         String sql = "UPDATE requests SET status = ?, processed_at = NOW(), approver_comment = ?, handler_id = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();

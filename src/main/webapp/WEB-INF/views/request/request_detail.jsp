@@ -96,6 +96,12 @@
                                         <button type="submit" class="btn btn-success" onclick="return confirm('Bạn có chắc chắn muốn xác nhận tính giờ OT cho request này?');">Xác nhận OT (Confirm Overtime)</button>
                                     </form>
                                 </c:if>
+                                <c:if test="${request.status == 'CONFIRMED'}">
+                                    <div style="margin-top: 15px; padding: 10px; background-color: #f3e8ff; color: #6b21a8; border-radius: 8px; border: 1px solid #d8b4fe;">
+                                        <strong><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> OT Confirmed!</strong><br/>
+                                        The OT hours for this request have been successfully calculated and synced with the attendance records.
+                                    </div>
+                                </c:if>
                             </div>
                         </div>
                     </c:if>
