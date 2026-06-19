@@ -51,12 +51,20 @@ public class EditRolePermissionServlet extends HttpServlet {
         List<Integer> assignedPermissionIds = roleDAO.getPermissionIdsByRoleId(roleId);
 
         Map<String, List<Permission>> moduleMap = new LinkedHashMap<>();
-        String[] moduleOrder = {"HOMEPAGE","PROFILE","USER","ROLE","DEPARTMENT","POSITION","CONTRACT","ATTENDANCE","PAYROLL","ANNOUNCEMENT"};
+        String[] moduleOrder = {
+                "HOMEPAGE", "PROFILE", "AUTH", "USER", "ROLE", "DEPARTMENT", "POSITION",
+                "CONTRACT", "ATTENDANCE", "PAYROLL", "ANNOUNCEMENT", "REQUEST", "TASK"
+        };
         for (String mod : moduleOrder) {
             moduleMap.put(mod, new ArrayList<>());
         }
+
         for (Permission p : allPermissions) {
             String code = p.getCode();
+            if (code.contains("REQUEST")) {
+                moduleMap.get("REQUEST").add(p);
+                continue;
+            }
             int idx = code.indexOf('_');
             if (idx > 0) {
                 String prefix = code.substring(0, idx);

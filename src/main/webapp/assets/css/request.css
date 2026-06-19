@@ -1,0 +1,322 @@
+:root {
+    --primary: #3B82F6;
+    --primary-dark: #2563EB;
+    --primary-light: #EFF6FF;
+    --secondary: #FF8C42;
+    --secondary-light: #FFF3ED;
+    --warning: #F59E0B;
+    --warning-light: #FFF7ED;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --sidebar-bg: #050505;
+    --navbar-bg: #0A0A0A;
+    --bg: #F5F5F5;
+    --card-bg: #FFFFFF;
+    --white: #FFFFFF;
+    --text-primary: #111111;
+    --text-secondary: #6B6B6B;
+    --text-muted: #9A9A9A;
+    --border-color: #E8E8E8;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.08);
+    --radius: 20px;
+    --radius-sm: 14px;
+    --radius-pill: 50px;
+}
+
+.request-form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.request-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 2rem 2.5rem;
+}
+
+.request-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem 3rem;
+    align-items: start;
+}
+
+.request-group {
+    margin-bottom: 1.5rem;
+}
+
+.request-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.02em;
+}
+
+.request-group label .required-star {
+    color: var(--danger);
+    margin-left: 0.25rem;
+}
+
+.request-input,
+.request-select,
+.request-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    outline: none;
+}
+
+.request-input:focus,
+.request-select:focus,
+.request-textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    background-color: #FFFFFF;
+}
+
+.request-input:read-only,
+.request-input[readonly] {
+    background-color: #F7F7F7;
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+.request-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%236B6B6B' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+}
+
+.request-textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.request-info-box {
+    background: var(--bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.request-info-box strong {
+    color: var(--text-primary);
+}
+
+.request-info-box ul {
+    margin: 0.5rem 0 0 1.25rem;
+    padding: 0;
+}
+
+.request-info-box ul li {
+    margin-bottom: 0.3rem;
+}
+
+.balance-text-italic-red {
+    font-style: italic;
+    color: var(--danger);
+    font-weight: 600;
+    margin-top: 0.25rem;
+    line-height: 1.6;
+}
+
+.balance-text-italic-red span {
+    font-weight: 700;
+}
+
+.ck-editor__editable_inline {
+    min-height: 120px !important;
+    border-color: var(--border-color) !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+.ck.ck-editor__main .ck-editor__editable {
+    background-color: var(--card-bg) !important;
+}
+
+.select2-container--default .select2-selection--multiple {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-sm) !important;
+    min-height: 42px !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: var(--primary-light) !important;
+    border: 1px solid var(--primary) !important;
+    color: #1E40AF !important;
+    font-weight: 600;
+    border-radius: var(--radius-pill) !important;
+    padding: 0.15rem 0.6rem !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #1E40AF !important;
+}
+
+.request-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.btn-submit-request {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 2rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-submit-request:hover {
+    background: linear-gradient(135deg, var(--primary-dark), #1D4ED8);
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+}
+
+.btn-cancel-request {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 2rem;
+    background-color: var(--card-bg);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-cancel-request:hover {
+    background-color: var(--bg);
+    border-color: #ccc;
+    color: var(--text-primary);
+}
+/* Drawer Overlay làm mờ nền */
+.drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Panel trượt từ phải */
+.drawer-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 75vw;          /* Chiếm 3/4 màn hình */
+    max-width: 1300px;    /* Giới hạn tối đa cho màn hình siêu rộng */
+    height: 100vh;
+    background: var(--card-bg);
+    z-index: 10000;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;     /* Cho phép cuộn nội dung dài */
+    display: flex;
+    flex-direction: column;
+}
+
+.drawer-overlay.open .drawer-panel {
+    transform: translateX(0);
+}
+
+/* Header của Drawer */
+.drawer-header {
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background: #FAFAFA;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.drawer-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.drawer-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+    padding: 0.25rem 0.5rem;
+}
+
+.drawer-close-btn:hover {
+    color: var(--danger);
+}
+
+/* Body chứa form */
+.drawer-body {
+    padding: 2rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .request-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .request-card {
+        padding: 1.5rem;
+    }
+
+    .request-actions {
+        flex-direction: column;
+    }
+
+    .btn-submit-request,
+    .btn-cancel-request {
+        width: 100%;
+        justify-content: center;
+    }
+}

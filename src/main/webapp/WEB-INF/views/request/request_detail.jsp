@@ -52,6 +52,12 @@
                         <span class="detail-label">Reason:</span>
                         <span class="detail-value">${request.reason}</span>
                     </div>
+                    <c:if test="${request.type == 'LEAVE_REQUEST' && not empty leaveRequest}">
+                        <div class="detail-row">
+                            <span class="detail-label">Leave Date:</span>
+                            <span class="detail-value"><strong>${leaveRequest.leaveDate}</strong></span>
+                        </div>
+                    </c:if>
                     <div class="detail-row">
                         <span class="detail-label">Approver:</span>
                         <span class="detail-value">${request.approverName}</span>
@@ -88,7 +94,7 @@
                         <span class="detail-label">Approver Comment *:</span>
                         <span class="detail-value">
                         <c:choose>
-                            <c:when test="${request.status == 'PENDING' and sessionScope.currentUser.id eq request.approverId}">
+                            <c:when test="${request.status == 'PENDING' && sessionScope.currentUser.id eq request.approverId}">
                                 <form action="process_request" method="POST">
                                     <input type="hidden" name="requestId" value="${request.id}">
                                     <textarea name="comment" class="form-control" required placeholder="Enter approver comment..."></textarea>

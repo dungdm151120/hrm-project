@@ -1,17 +1,27 @@
 package controller.request;
 
+import dao.AttendanceDAO;
+import dao.DepartmentDAO;
 import dao.UserDAO;
+import model.AttendanceSummary;
+import model.Department;
 import model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/load_sub_form")
 public class LoadSubFormServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
+    private final DepartmentDAO departmentDAO = new DepartmentDAO();
+    private final AttendanceDAO attendanceDAO = new AttendanceDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -30,46 +40,94 @@ public class LoadSubFormServlet extends HttpServlet {
             boolean isManager = (position != null && position.contains("Manager"));
             boolean isSysAdmin = (position != null && position.contains("Admin"));
 
-            // Nếu không phải Manager/Admin thì chặn
             if (!isManager && !isSysAdmin) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền tạo loại đơn này.");
                 return;
             }
         }
 
-        // --- ĐỔ DỮ LIỆU VÀO REQUEST SCOPE CHO FORM CON SỬ DỤNG ---
+        if ("LEAVE_REQUEST".equals(type)) {
+            User currentUser = userDAO.findById(user.getId());
+            int deptId = currentUser.getDepartmentId() != null ? currentUser.getDepartmentId() : 0;
 
-        // 1. Danh sách Business Admin (Cho Approver)
-        request.setAttribute("businessAdminList", userDAO.getUserByRole("BUSINESS ADMIN"));
-
-        // 2. Danh sách HR Manager (Cho Handler / Observer)
-        List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
-        request.setAttribute("hrManagers", hrManagers);
-
-        // 3. Danh sách nhân viên trong phòng ban (Cho Handover Observer)
-        int deptId = (user.getDepartmentId() != null) ? user.getDepartmentId() : 0;
-        List<User> deptEmployees = userDAO.getAllEmployeesByDepartment(deptId);
-        List<User> deptEmployeesFiltered = new ArrayList<>();
-        if (deptEmployees != null) {
-            for (User emp : deptEmployees) {
-                if (emp.getId() != user.getId()) {
-                    deptEmployeesFiltered.add(emp);
+            if (deptId > 0) {
+                Department dept = departmentDAO.getDepartmentById(deptId);
+                if (dept != null && dept.getManagerUserId() != null) {
+                    User approver = userDAO.findById(dept.getManagerUserId());
+                    request.setAttribute("approver", approver);
                 }
             }
+
+            List<User> observers = new ArrayList<>();
+            List<User> allDeptManagers = userDAO.getAllDeptManager();
+            User approver = (User) request.getAttribute("approver");
+            for (User mgr : allDeptManagers) {
+                if (approver == null || mgr.getId() != approver.getId()) {
+                    observers.add(mgr);
+                }
+            }
+            List<User> businessAdmins = userDAO.getUserByRole("BUSINESS ADMIN");
+            for (User ba : businessAdmins) {
+                if (!observers.contains(ba)) {
+                    observers.add(ba);
+                }
+            }
+            // Thêm HR Manager và Payroll Manager
+            List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
+            for (User hr : hrManagers) {
+                if (!observers.contains(hr)) {
+                    observers.add(hr);
+                }
+            }
+            List<User> payrollManagers = userDAO.getUserByPosition("Payroll Manager");
+            for (User pm : payrollManagers) {
+                if (!observers.contains(pm)) {
+                    observers.add(pm);
+                }
+            }
+            request.setAttribute("observerList", observers);
+
+            LocalDate today = LocalDate.now();
+            AttendanceSummary summary = attendanceDAO.getSummaryByUser(
+                    currentUser.getId(),
+                    LocalDate.of(today.getYear(), 1, 1),
+                    today
+            );
+            request.setAttribute("remainingLeave", summary.getRemainingLeaveDays());
+
+            request.setAttribute("proposer", currentUser);
+            request.setAttribute("today", today.toString());
+            request.setAttribute("now", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+
+            jspPath = "/WEB-INF/views/request/subforms/leave_request.jsp";
+        } else {
+            request.setAttribute("businessAdminList", userDAO.getUserByRole("BUSINESS ADMIN"));
+
+            List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
+            request.setAttribute("hrManagers", hrManagers);
+
+            int deptId = (user.getDepartmentId() != null) ? user.getDepartmentId() : 0;
+            List<User> deptEmployees = userDAO.getAllEmployeesByDepartment(deptId);
+            List<User> deptEmployeesFiltered = new ArrayList<>();
+            if (deptEmployees != null) {
+                for (User emp : deptEmployees) {
+                    if (emp.getId() != user.getId()) {
+                        deptEmployeesFiltered.add(emp);
+                    }
+                }
+            }
+            request.setAttribute("deptEmployees", deptEmployeesFiltered);
+
+            List<User> allObservers = new ArrayList<>();
+            List<User> sysAdmins = userDAO.getUserByPosition("System Administrator");
+            List<User> payrollManagers = userDAO.getUserByPosition("Payroll Manager");
+            List<User> deptManagers = userDAO.getAllDeptManager();
+            if (sysAdmins != null) allObservers.addAll(sysAdmins);
+            if (hrManagers != null) allObservers.addAll(hrManagers);
+            if (payrollManagers != null) allObservers.addAll(payrollManagers);
+            if (deptManagers != null) allObservers.addAll(deptManagers);
+            request.setAttribute("allObservers", allObservers);
         }
-        request.setAttribute("deptEmployees", deptEmployeesFiltered);
-
-        // 4. Danh sách tất cả Observers tổng hợp (Cho Move/Remove Observer)
-        List<User> allObservers = new ArrayList<>();
-        List<User> sysAdmins = userDAO.getUserByPosition("System Administrator");
-        List<User> payrollManagers = userDAO.getUserByPosition("Payroll Manager");
-        List<User> deptManagers = userDAO.getAllDeptManager();
-        if (sysAdmins != null) allObservers.addAll(sysAdmins);
-        if (hrManagers != null) allObservers.addAll(hrManagers);
-        if (payrollManagers != null) allObservers.addAll(payrollManagers);
-        if (deptManagers != null) allObservers.addAll(deptManagers);
-        request.setAttribute("allObservers", allObservers);
-
 
         if ("POSITION_HANDOVER".equals(type)) {
             jspPath = "/WEB-INF/views/request/subforms/position_handover.jsp";

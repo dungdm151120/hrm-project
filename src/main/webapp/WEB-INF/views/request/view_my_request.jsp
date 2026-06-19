@@ -35,8 +35,8 @@
                         <option value="PENDING" ${selectedStatus == 'PENDING' ? 'selected' : ''}>Pending</option>
                         <option value="APPROVED" ${selectedStatus == 'APPROVED' ? 'selected' : ''}>Approved</option>
                         <option value="REJECTED" ${selectedStatus == 'REJECTED' ? 'selected' : ''}>Rejected</option>
-                        <option value="CLOSED" ${selectedStatus == 'REJECTED' ? 'selected' : ''}>Closed</option>
-                        <option value="CANCELLED" ${selectedStatus == 'REJECTED' ? 'selected' : ''}>Cancelled</option>
+                        <option value="CLOSED" ${selectedStatus == 'CLOSED' ? 'selected' : ''}>Closed</option>
+                        <option value="CANCELLED" ${selectedStatus == 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
                     </select>
 
                     <select name="type" onchange="this.form.submit()">
@@ -85,9 +85,13 @@
                                 <div class="actions">
                                     <a href="request_detail?id=${req.id}" class="btn-secondary">View Details</a>
                                     <c:if test="${req.status == 'PENDING'}">
-                                        <form action="process_request" method="POST" onsubmit="return confirm('Cancel this request?');" style="display:inline;">
+                                        <form action="${pageContext.request.contextPath}/process_request" method="POST" onsubmit="return confirm('Cancel this request?');" style="display:inline;">
                                             <input type="hidden" name="requestId" value="${req.id}">
                                             <input type="hidden" name="action" value="CANCEL">
+                                            <input type="hidden" name="status" value="${selectedStatus}">
+                                            <input type="hidden" name="type" value="${selectedType}">
+                                            <input type="hidden" name="sort" value="${selectedSort}">
+                                            <input type="hidden" name="page" value="${currentPage}">
                                             <button type="submit" class="btn btn-danger">Cancel</button>
                                         </form>
                                     </c:if>
@@ -97,7 +101,7 @@
                     </c:forEach>
                     <c:if test="${empty myRequests}">
                     <tr>
-                        <td colspan="6" style="text-align: center; color: #666; font-style: italic; padding: 15px;">No requests found.</td>
+                        <td colspan="7" style="text-align: center; color: #666; font-style: italic; padding: 15px;">No requests found.</td>
                     </tr>
                     </c:if>
                     </tbody>

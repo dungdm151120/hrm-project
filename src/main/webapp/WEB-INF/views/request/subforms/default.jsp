@@ -1,4 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<div style="padding: 15px; background-color: #f9f9f9; border: 1px dashed #ccc; border-radius: 4px; color: #666; text-align: center;">
-    <p>Please select a Request Type above to display specific fields.</p>
+<div class="request-group" style="grid-column: 1 / -1; text-align: center; padding: 2rem 0;">
+    <div class="request-info-box" style="border-style: dashed; background: transparent;">
+        <p style="margin:0; color: var(--text-muted);">Please select a Request Type above to display specific fields.</p>
+    </div>
 </div>

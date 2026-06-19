@@ -120,7 +120,7 @@
                                 <c:forEach var="employee" items="${employees}">
                                     <tr>
                                         <td class="matrix-employee-column">
-                                            <c:url var="employeeDetailUrl" value="/attendance/my">
+                                            <c:url var="employeeDetailUrl" value="/attendance/employee">
                                                 <c:param name="userId" value="${employee.userId}"/>
                                                 <c:param name="month" value="${selectedMonth}"/>
                                                 <c:param name="year" value="${selectedYear}"/>
@@ -152,9 +152,12 @@
                                                                    title="${record.status}">
                                                                     <span class="matrix-status-dot"></span>
                                                                     <span class="matrix-time">
-                                                                        ${record.checkInText}
-                                                                        <b>-</b>
-                                                                        ${record.checkOutText}
+                                                                        <c:choose>
+                                                                            <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
+                                                                            <c:otherwise>
+                                                                                ${record.checkInText} <b>-</b> ${record.checkOutText}
+                                                                            </c:otherwise>
+                                                                        </c:choose>
                                                                     </span>
                                                                     <c:if test="${record.overtimeHours > 0}">
                                                                         <span class="matrix-ot-badge">OT</span>
@@ -168,9 +171,12 @@
                                                                 <div class="matrix-cell-link" title="${record.status}">
                                                                     <span class="matrix-status-dot"></span>
                                                                     <span class="matrix-time">
-                                                                        ${record.checkInText}
-                                                                        <b>-</b>
-                                                                        ${record.checkOutText}
+                                                                        <c:choose>
+                                                                            <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
+                                                                            <c:otherwise>
+                                                                                ${record.checkInText} <b>-</b> ${record.checkOutText}
+                                                                            </c:otherwise>
+                                                                        </c:choose>
                                                                     </span>
                                                                     <c:if test="${record.overtimeHours > 0}">
                                                                         <span class="matrix-ot-badge">OT</span>

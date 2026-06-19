@@ -115,7 +115,10 @@
                                                             <span class="record-chip ${record.cssClass}"
                                                                   title="${record.status}">
                                                                 <span class="chip-dot"></span>
-                                                                ${record.checkInText} - ${record.checkOutText}
+                                                                <c:choose>
+                                                                    <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
+                                                                    <c:otherwise>${record.checkInText} - ${record.checkOutText}</c:otherwise>
+                                                                </c:choose>
                                                             </span>
                                                             <c:if test="${record.overtimeHours > 0}">
                                                                 <span class="record-chip chip-ot">OT</span>

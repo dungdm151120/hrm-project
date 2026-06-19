@@ -21,6 +21,7 @@ public class ExportPersonalAttendanceServlet extends HttpServlet {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter MONTH_YEAR_FMT = DateTimeFormatter.ofPattern("MM/yyyy");
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -47,10 +48,16 @@ public class ExportPersonalAttendanceServlet extends HttpServlet {
             String department = first.getDepartmentName() != null ? first.getDepartmentName() : "";
 
             Workbook workbook = new XSSFWorkbook();
-            createAttendanceLogsSheet(workbook, records);
-            createDetailSheet(workbook, first, position);
-            createRuleSheet(workbook);
-            createSummarySheet(workbook, first, records, month, year);
+            // Tạo style chung
+            CellStyle companyStyle = createCompanyStyle(workbook);
+            CellStyle reportTitleStyle = createReportTitleStyle(workbook);
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle dataStyle = createDataStyle(workbook);
+
+            createAttendanceLogsSheet(workbook, records, month, year, companyStyle, reportTitleStyle, headerStyle, dataStyle);
+            createDetailSheet(workbook, first, position, companyStyle, headerStyle, dataStyle);
+            createRuleSheet(workbook, companyStyle, headerStyle, dataStyle);
+            createSummarySheet(workbook, first, records, month, year, companyStyle, headerStyle, dataStyle);
 
             resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             String filename = "attendance_" + employeeCode + "_" + year + "_" + month + ".xlsx";
@@ -63,60 +70,197 @@ public class ExportPersonalAttendanceServlet extends HttpServlet {
         }
     }
 
-    private void createAttendanceLogsSheet(Workbook workbook, List<AttendanceRecordDTO> records) {
-        Sheet sheet = workbook.createSheet("ATTENDANCE_LOGS");
-        Row headerRow = sheet.createRow(0);
-        headerRow.createCell(0).setCellValue("employee_id");
-        headerRow.createCell(1).setCellValue("employee_name");
-        headerRow.createCell(2).setCellValue("work_date");
-        headerRow.createCell(3).setCellValue("check_in");
-        headerRow.createCell(4).setCellValue("check_out");
-        headerRow.createCell(5).setCellValue("status");
+    // ====== Các phương thức tạo style ======
+    private CellStyle createCompanyStyle(Workbook workbook) {
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 18);
+        font.setColor(IndexedColors.DARK_BLUE.getIndex());
+        CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        return style;
+    }
 
-        int rowIdx = 1;
+    private CellStyle createReportTitleStyle(Workbook workbook) {
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 14);
+        font.setColor(IndexedColors.DARK_BLUE.getIndex());
+        CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        return style;
+    }
+
+    private CellStyle createHeaderStyle(Workbook workbook) {
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 11);
+        CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
+        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        return style;
+    }
+
+    private CellStyle createDataStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        return style;
+    }
+
+    // ====== Sheet ATTENDANCE_LOGS (chỉ còn 4 cột) ======
+    private void createAttendanceLogsSheet(Workbook workbook, List<AttendanceRecordDTO> records,
+                                           int month, int year,
+                                           CellStyle companyStyle, CellStyle reportTitleStyle,
+                                           CellStyle headerStyle, CellStyle dataStyle) {
+        Sheet sheet = workbook.createSheet("ATTENDANCE_LOGS");
+        int colCount = 4; // work_date, check_in, check_out, status
+        int rowIdx = 0;
+
+        // Dòng 1: Tên công ty
+        Row companyRow = sheet.createRow(rowIdx++);
+        companyRow.setHeight((short) 500);
+        Cell companyCell = companyRow.createCell(0);
+        companyCell.setCellValue("CÔNG TY QUẢN LÍ NHÂN SỰ HRM");
+        companyCell.setCellStyle(companyStyle);
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
+
+        // Dòng 2: Tiêu đề báo cáo
+        Row titleRow = sheet.createRow(rowIdx++);
+        titleRow.setHeight((short) 400);
+        Cell titleCell = titleRow.createCell(0);
+        titleCell.setCellValue("BÁO CÁO CHẤM CÔNG THÁNG " + month + "/" + year);
+        titleCell.setCellStyle(reportTitleStyle);
+        sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, colCount - 1));
+
+        // Dòng 3: Để trống một dòng
+        rowIdx++;
+
+        // Dòng 4: Header
+        Row headerRow = sheet.createRow(rowIdx++);
+        String[] headers = {"work_date", "check_in", "check_out", "status"};
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Dữ liệu
         for (AttendanceRecordDTO r : records) {
             Row row = sheet.createRow(rowIdx++);
-            row.createCell(0).setCellValue(r.getUserId());
-            row.createCell(1).setCellValue(r.getEmployeeName());
-            row.createCell(2).setCellValue(r.getWorkDate().format(DATE_FMT));
+            Cell cell0 = row.createCell(0);
+            cell0.setCellValue(r.getWorkDate().format(DATE_FMT));
+            cell0.setCellStyle(dataStyle);
+
+            Cell cell1 = row.createCell(1);
             if (r.getCheckIn() != null) {
-                row.createCell(3).setCellValue(r.getCheckIn().format(DATETIME_FMT));
+                cell1.setCellValue(r.getCheckIn().format(DATETIME_FMT));
             }
+            cell1.setCellStyle(dataStyle);
+
+            Cell cell2 = row.createCell(2);
             if (r.getCheckOut() != null) {
-                row.createCell(4).setCellValue(r.getCheckOut().format(DATETIME_FMT));
+                cell2.setCellValue(r.getCheckOut().format(DATETIME_FMT));
             }
-            row.createCell(5).setCellValue(r.getStatus() != null ? r.getStatus() : "");
+            cell2.setCellStyle(dataStyle);
+
+            Cell cell3 = row.createCell(3);
+            cell3.setCellValue(r.getStatus() != null ? r.getStatus() : "");
+            cell3.setCellStyle(dataStyle);
         }
-        for (int i = 0; i < 6; i++) sheet.autoSizeColumn(i);
+
+        // Auto size cột
+        for (int i = 0; i < colCount; i++) {
+            sheet.autoSizeColumn(i);
+        }
     }
 
-    private void createDetailSheet(Workbook workbook, AttendanceRecordDTO first, String position) {
+    // ====== Sheet CHI TIẾT NHÂN VIÊN (thêm dòng công ty) ======
+    private void createDetailSheet(Workbook workbook, AttendanceRecordDTO first, String position,
+                                   CellStyle companyStyle, CellStyle headerStyle, CellStyle dataStyle) {
         Sheet sheet = workbook.createSheet("CHI TIẾT NHÂN VIÊN");
-        Row headerRow = sheet.createRow(0);
-        headerRow.createCell(0).setCellValue("employee_id");
-        headerRow.createCell(1).setCellValue("employee_code");
-        headerRow.createCell(2).setCellValue("full_name");
-        headerRow.createCell(3).setCellValue("position");
+        int colCount = 4; // employee_id, employee_code, full_name, position
+        int rowIdx = 0;
 
-        Row row = sheet.createRow(1);
-        row.createCell(0).setCellValue(first.getUserId());
-        row.createCell(1).setCellValue(first.getEmployeeCode());
-        row.createCell(2).setCellValue(first.getEmployeeName());
-        row.createCell(3).setCellValue(position);
+        // Dòng công ty
+        Row companyRow = sheet.createRow(rowIdx++);
+        companyRow.setHeight((short) 500);
+        Cell companyCell = companyRow.createCell(0);
+        companyCell.setCellValue("CÔNG TY QUẢN LÍ NHÂN SỰ HRM");
+        companyCell.setCellStyle(companyStyle);
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
 
-        for (int i = 0; i < 4; i++) sheet.autoSizeColumn(i);
+        rowIdx++; // cách 1 dòng
+
+        // Header
+        Row headerRow = sheet.createRow(rowIdx++);
+        String[] headers = {"employee_id", "employee_code", "full_name", "position"};
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Data
+        Row dataRow = sheet.createRow(rowIdx++);
+        Cell cell0 = dataRow.createCell(0);
+        cell0.setCellValue(first.getUserId());
+        cell0.setCellStyle(dataStyle);
+
+        Cell cell1 = dataRow.createCell(1);
+        cell1.setCellValue(first.getEmployeeCode());
+        cell1.setCellStyle(dataStyle);
+
+        Cell cell2 = dataRow.createCell(2);
+        cell2.setCellValue(first.getEmployeeName());
+        cell2.setCellStyle(dataStyle);
+
+        Cell cell3 = dataRow.createCell(3);
+        cell3.setCellValue(position);
+        cell3.setCellStyle(dataStyle);
+
+        for (int i = 0; i < colCount; i++) sheet.autoSizeColumn(i);
     }
 
-    private void createRuleSheet(Workbook workbook) {
+    // ====== Sheet CHÚ THÍCH (thêm dòng công ty) ======
+    private void createRuleSheet(Workbook workbook, CellStyle companyStyle, CellStyle headerStyle, CellStyle dataStyle) {
         Sheet sheet = workbook.createSheet("CHÚ THÍCH");
-        Row titleRow = sheet.createRow(0);
-        titleRow.createCell(0).setCellValue("QUY TẮC ĐÁNH GIÁ CHẤM CÔNG");
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 2));
+        int colCount = 3; // Rule, Mô tả, Trạng thái
+        int rowIdx = 0;
 
-        Row headerRow = sheet.createRow(2);
-        headerRow.createCell(0).setCellValue("Rule");
-        headerRow.createCell(1).setCellValue("Mô tả");
-        headerRow.createCell(2).setCellValue("Trạng thái");
+        // Dòng công ty
+        Row companyRow = sheet.createRow(rowIdx++);
+        companyRow.setHeight((short) 500);
+        Cell companyCell = companyRow.createCell(0);
+        companyCell.setCellValue("CÔNG TY QUẢN LÍ NHÂN SỰ HRM");
+        companyCell.setCellStyle(companyStyle);
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
+
+        rowIdx++; // cách dòng
+
+        // Header
+        Row headerRow = sheet.createRow(rowIdx++);
+        String[] headers = {"Rule", "Mô tả", "Trạng thái"};
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
 
         String[][] rules = {
                 {"1", "Check-in <= 08:05", "ON_TIME"},
@@ -127,33 +271,57 @@ public class ExportPersonalAttendanceServlet extends HttpServlet {
                 {"6", "Check-in IS NULL AND Check-out IS NOT NULL", "FORGOT_CHECK_IN"},
                 {"7", "Check-in IS NOT NULL AND Check-out IS NULL", "FORGOT_CHECK_OUT"}
         };
-        int rowIdx = 3;
         for (String[] rule : rules) {
             Row row = sheet.createRow(rowIdx++);
-            row.createCell(0).setCellValue(rule[0]);
-            row.createCell(1).setCellValue(rule[1]);
-            row.createCell(2).setCellValue(rule[2]);
+            for (int i = 0; i < rule.length; i++) {
+                Cell cell = row.createCell(i);
+                cell.setCellValue(rule[i]);
+                cell.setCellStyle(dataStyle);
+            }
         }
-        sheet.autoSizeColumn(0);
-        sheet.autoSizeColumn(1);
-        sheet.autoSizeColumn(2);
+
+        for (int i = 0; i < colCount; i++) sheet.autoSizeColumn(i);
     }
 
+    // ====== Sheet TỔNG HỢP (thêm dòng công ty) ======
     private void createSummarySheet(Workbook workbook, AttendanceRecordDTO first,
-                                    List<AttendanceRecordDTO> records, int month, int year) {
+                                    List<AttendanceRecordDTO> records, int month, int year,
+                                    CellStyle companyStyle, CellStyle headerStyle, CellStyle dataStyle) {
         Sheet sheet = workbook.createSheet("TỔNG HỢP");
+        int colCount = 2;
+        int rowIdx = 0;
 
-        Row titleRow = sheet.createRow(0);
-        titleRow.createCell(0).setCellValue("BÁO CÁO CHẤM CÔNG CÁ NHÂN");
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 2));
+        // Tiêu đề chính
+        Row mainTitleRow = sheet.createRow(rowIdx++);
+        mainTitleRow.setHeight((short) 500);
+        Cell mainTitleCell = mainTitleRow.createCell(0);
+        mainTitleCell.setCellValue("TỔNG HỢP CHẤM CÔNG");
+        mainTitleCell.setCellStyle(companyStyle); // dùng style to, đậm
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
 
-        int r = 2;
-        createInfoRow(sheet, r++, "Mã NV:", first.getEmployeeCode());
-        createInfoRow(sheet, r++, "Họ tên:", first.getEmployeeName());
-        createInfoRow(sheet, r++, "Chức vụ:", first.getPositionName() != null ? first.getPositionName() : "");
-        createInfoRow(sheet, r++, "Phòng ban:", first.getDepartmentName() != null ? first.getDepartmentName() : "");
-        createInfoRow(sheet, r++, "Tháng/Năm:", month + "/" + year);
+        rowIdx++; // cách dòng
 
+        // Thông tin nhân viên (không cần dòng tiêu đề riêng)
+        String[][] info = {
+                {"Mã NV:", first.getEmployeeCode()},
+                {"Họ tên:", first.getEmployeeName()},
+                {"Chức vụ:", first.getPositionName() != null ? first.getPositionName() : ""},
+                {"Phòng ban:", first.getDepartmentName() != null ? first.getDepartmentName() : ""},
+                {"Tháng/Năm:", month + "/" + year}
+        };
+        for (String[] rowData : info) {
+            Row r = sheet.createRow(rowIdx++);
+            Cell c0 = r.createCell(0);
+            c0.setCellValue(rowData[0]);
+            c0.setCellStyle(headerStyle);
+            Cell c1 = r.createCell(1);
+            c1.setCellValue(rowData[1]);
+            c1.setCellStyle(dataStyle);
+        }
+
+        rowIdx++; // cách dòng trước bảng thống kê
+
+        // Thống kê
         int totalDays = records.size();
         long presentDays = records.stream().filter(rec -> !"ABSENT".equals(rec.getStatus())).count();
         long absentDays = records.stream().filter(rec -> "ABSENT".equals(rec.getStatus())).count();
@@ -168,32 +336,37 @@ public class ExportPersonalAttendanceServlet extends HttpServlet {
         long forgotCheckin = records.stream().filter(rec -> "FORGOT_CHECK_IN".equals(rec.getStatus())).count();
         long forgotCheckout = records.stream().filter(rec -> "FORGOT_CHECK_OUT".equals(rec.getStatus())).count();
 
-        r += 1;
-        Row headerRow = sheet.createRow(r++);
-        headerRow.createCell(0).setCellValue("Chỉ số");
-        headerRow.createCell(1).setCellValue("Số lượng");
+        String[][] stats = {
+                {"Tổng ngày công trong tháng", String.valueOf(totalDays)},
+                {"Ngày có mặt", String.valueOf(presentDays)},
+                {"Ngày vắng", String.valueOf(absentDays)},
+                {"Số lần đi muộn", String.valueOf(lateCount)},
+                {"Số lần về sớm", String.valueOf(earlyCount)},
+                {"Quên check-in", String.valueOf(forgotCheckin)},
+                {"Quên check-out", String.valueOf(forgotCheckout)}
+        };
 
-        addSummaryRow(sheet, r++, "Tổng ngày công trong tháng", totalDays);
-        addSummaryRow(sheet, r++, "Ngày có mặt", presentDays);
-        addSummaryRow(sheet, r++, "Ngày vắng", absentDays);
-        addSummaryRow(sheet, r++, "Số lần đi muộn", lateCount);
-        addSummaryRow(sheet, r++, "Số lần về sớm", earlyCount);
-        addSummaryRow(sheet, r++, "Quên check-in", forgotCheckin);
-        addSummaryRow(sheet, r++, "Quên check-out", forgotCheckout);
+        // Header cho bảng thống kê
+        Row statHeader = sheet.createRow(rowIdx++);
+        Cell sh0 = statHeader.createCell(0);
+        sh0.setCellValue("Chỉ số");
+        sh0.setCellStyle(headerStyle);
+        Cell sh1 = statHeader.createCell(1);
+        sh1.setCellValue("Số lượng");
+        sh1.setCellStyle(headerStyle);
 
+        for (String[] stat : stats) {
+            Row row = sheet.createRow(rowIdx++);
+            Cell c0 = row.createCell(0);
+            c0.setCellValue(stat[0]);
+            c0.setCellStyle(dataStyle);
+            Cell c1 = row.createCell(1);
+            c1.setCellValue(stat[1]);
+            c1.setCellStyle(dataStyle);
+        }
+
+        // Auto size
         sheet.autoSizeColumn(0);
         sheet.autoSizeColumn(1);
-    }
-
-    private void createInfoRow(Sheet sheet, int rowIdx, String label, String value) {
-        Row row = sheet.createRow(rowIdx);
-        row.createCell(0).setCellValue(label);
-        row.createCell(1).setCellValue(value);
-    }
-
-    private void addSummaryRow(Sheet sheet, int rowIdx, String label, long value) {
-        Row row = sheet.createRow(rowIdx);
-        row.createCell(0).setCellValue(label);
-        row.createCell(1).setCellValue(value);
     }
 }

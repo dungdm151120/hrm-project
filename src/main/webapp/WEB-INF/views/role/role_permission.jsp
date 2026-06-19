@@ -65,6 +65,7 @@
                                 <c:choose>
                                     <c:when test="${entry.key eq 'HOMEPAGE'}">Home</c:when>
                                     <c:when test="${entry.key eq 'PROFILE'}">Profile</c:when>
+                                    <c:when test="${entry.key eq 'AUTH'}">Authentication</c:when>
                                     <c:when test="${entry.key eq 'USER'}">User Management</c:when>
                                     <c:when test="${entry.key eq 'ROLE'}">Role Management</c:when>
                                     <c:when test="${entry.key eq 'DEPARTMENT'}">Department</c:when>
@@ -73,6 +74,8 @@
                                     <c:when test="${entry.key eq 'ATTENDANCE'}">Attendance</c:when>
                                     <c:when test="${entry.key eq 'PAYROLL'}">Payroll</c:when>
                                     <c:when test="${entry.key eq 'ANNOUNCEMENT'}">Announcement</c:when>
+                                    <c:when test="${entry.key eq 'REQUEST'}">Request</c:when>
+                                    <c:when test="${entry.key eq 'TASK'}">Task</c:when>
                                     <c:otherwise>Other</c:otherwise>
                                 </c:choose>
                             </div>

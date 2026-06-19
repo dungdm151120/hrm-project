@@ -53,6 +53,7 @@
                 <form class="attendance-matrix-filters"
                       action="${pageContext.request.contextPath}/attendance/records"
                       method="get">
+                    <!-- filters giữ nguyên -->
                     <div class="matrix-filter-field">
                         <label for="matrixMonth">Month</label>
                         <select id="matrixMonth" name="month">
@@ -188,19 +189,19 @@
                                                            title="${record.status}">
                                                             <span class="matrix-status-dot"></span>
                                                             <span class="matrix-time">
-                                                                ${record.checkInText}
-                                                                <b>-</b>
-                                                                ${record.checkOutText}
+                                                                <c:choose>
+                                                                    <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
+                                                                    <c:otherwise>
+                                                                        ${record.checkInText} <b>-</b> ${record.checkOutText}
+                                                                    </c:otherwise>
+                                                                </c:choose>
                                                             </span>
                                                             <c:if test="${record.overtimeHours > 0}">
                                                                 <span class="matrix-ot-badge">OT</span>
                                                             </c:if>
-
-                                                             <c:if test="${record.edited}">
-                                                                 <span class="matrix-edited-badge">Edited</span>
-                                                             </c:if>
-
-
+                                                            <c:if test="${record.edited}">
+                                                                <span class="matrix-edited-badge">Edited</span>
+                                                            </c:if>
                                                         </a>
                                                     </td>
                                                 </c:when>

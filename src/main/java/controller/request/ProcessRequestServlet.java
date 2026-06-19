@@ -1,6 +1,9 @@
 package controller.request;
 
+import dao.AttendanceDAO;
+import dao.LeaveRequestDAO;
 import dao.RequestDAO;
+import model.LeaveRequest;
 import model.Request;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -12,6 +15,8 @@ import java.net.URLEncoder;
 @WebServlet("/process_request")
 public class ProcessRequestServlet extends HttpServlet {
     private final RequestDAO dao = new RequestDAO();
+    private final LeaveRequestDAO leaveRequestDAO = new LeaveRequestDAO();
+    private final AttendanceDAO attendanceDAO = new AttendanceDAO();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -57,13 +62,33 @@ public class ProcessRequestServlet extends HttpServlet {
                             return;
                         }
                         success = dao.updateRequestStatus(requestId, action.equals("APPROVE") ? "APPROVED" : "REJECTED", comment);
+
+                        if (success && "APPROVE".equals(action) && "LEAVE_REQUEST".equals(req.getType())) {
+                            LeaveRequest lr = leaveRequestDAO.getByRequestId(requestId);
+                            if (lr != null) {
+                                attendanceDAO.markOnLeave(req.getUserId(), lr.getLeaveDate());
+                            }
+                        }
                     }
                     break;
 
                 case "CANCEL":
                     if (String.valueOf(req.getUserId()).equals(String.valueOf(userId)) && "PENDING".equals(req.getStatus())) {
                         success = dao.updateRequestStatus(requestId, "CANCELLED", null);
-                        returnUrl = "view_my_request";
+
+                        // Lấy các tham số lọc từ form
+                        String statusFilter = request.getParameter("status");
+                        String typeFilter = request.getParameter("type");
+                        String sortFilter = request.getParameter("sort");
+                        String pageFilter = request.getParameter("page");
+
+                        StringBuilder redirectParams = new StringBuilder("view_my_request?success=true");
+                        if (statusFilter != null && !statusFilter.isEmpty()) redirectParams.append("&status=").append(statusFilter);
+                        if (typeFilter != null && !typeFilter.isEmpty()) redirectParams.append("&type=").append(typeFilter);
+                        if (sortFilter != null && !sortFilter.isEmpty()) redirectParams.append("&sort=").append(sortFilter);
+                        if (pageFilter != null && !pageFilter.isEmpty()) redirectParams.append("&page=").append(pageFilter);
+
+                        returnUrl = redirectParams.toString();
                     }
                     break;
             }
