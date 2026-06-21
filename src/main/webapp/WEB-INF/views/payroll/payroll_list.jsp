@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payroll Statements | HRM</title>
+    <title>${isMyPayroll ? 'My Payroll' : 'Payroll Statements'} | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body class="dashboard-body">
@@ -66,10 +66,12 @@
                         </c:otherwise>
                     </c:choose>
 
+                    <c:set var="monthNames" value="${fn:split('January,February,March,April,May,June,July,August,September,October,November,December', ',')}" />
+
                     <select name="month" onchange="this.form.submit()">
                         <option value="" ${empty month ? 'selected' : ''}>All months</option>
                         <c:forEach var="m" begin="1" end="12">
-                            <option value="${m}" ${month == m ? 'selected' : ''}>Month ${m}</option>
+                            <option value="${m}" ${month == m ? 'selected' : ''}>${monthNames[m - 1]}</option>
                         </c:forEach>
                     </select>
 
@@ -112,7 +114,7 @@
                         <c:forEach var="p" items="${payrollList}" varStatus="s">
                             <tr>
                                 <td>
-                                    <strong>Month ${p.month} / ${p.year}</strong>
+                                    <strong>${p.monthName} / ${p.year}</strong>
                                 </td>
                                 <td><c:out value="${p.employeeName}" default="N/A" /></td>
                                 <td>
