@@ -68,7 +68,11 @@ public class ProcessRequestServlet extends HttpServlet {
                         }
 
                         String newStatus = action.equals("APPROVE") ? "APPROVED" : "REJECTED";
-                        success = dao.updateRequestStatus(requestId,newStatus,comment);
+                        if ("APPROVE".equals(action) && "OVERTIME".equals(req.getType())) {
+                            success = dao.updateRequestStatusAndHandler(requestId, newStatus, comment, userId);
+                        } else {
+                            success = dao.updateRequestStatus(requestId, newStatus, comment);
+                        }
 
                         if (success) {
                             if ("APPROVE".equals(action) && "LEAVE_REQUEST".equals(req.getType())) {

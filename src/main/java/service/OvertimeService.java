@@ -134,7 +134,11 @@ public class OvertimeService {
 
         if (hasUpdates) {
             dao.RequestDAO requestDAO = new dao.RequestDAO();
-            requestDAO.updateRequestStatusOnly(requestId, "CONFIRMED");
+            boolean success = requestDAO.updateRequestStatusOnly(requestId, "CONFIRMED");
+            if (!success) {
+                // If the update fails (e.g. because of ENUM constraints), return false
+                return false;
+            }
         }
 
         return hasUpdates;
