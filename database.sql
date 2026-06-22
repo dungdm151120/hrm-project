@@ -180,7 +180,7 @@ CREATE TABLE requests (
                           user_id INT NOT NULL,
                           department_id INT NULL,
                           type ENUM('LEAVE_REQUEST', 'LATE_EARLY_REQUEST', 'EMP_MOVE_REMOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST') NOT NULL,
-                          status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED') DEFAULT 'PENDING',
+                          status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'CONFIRMED') DEFAULT 'PENDING',
                           reason TEXT,
                           approver_id INT,
                           approver_comment TEXT NULL,
@@ -562,98 +562,97 @@ INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, 
 -- ============================================================
 
 INSERT INTO permissions (code, name, description) VALUES
-                                                      ('HOMEPAGE_VIEW', 'View homepage', 'Can view homepage/dashboard'),
-                                                      ('AUTH_LOGIN', 'Login', 'Can login to the system'),
-                                                      ('AUTH_LOGOUT', 'Logout', 'Can logout from the system'),
-                                                      ('AUTH_FORGOT_PASSWORD', 'Forgot password', 'Can request password reset'),
-                                                      ('PROFILE_VIEW', 'View my profile', 'Can view own profile'),
-                                                      ('PROFILE_CHANGE_PASSWORD', 'Change password', 'Can change own password'),
-                                                      ('USER_VIEW_LIST', 'View user list', 'Can view list of users'),
-                                                      ('USER_VIEW_DETAIL', 'View user information', 'Can view user detail'),
-                                                      ('USER_CREATE', 'Add new user', 'Can create new user'),
-                                                      ('USER_UPDATE', 'Update user information', 'Can update user information'),
-                                                      ('USER_TOGGLE_STATUS', 'Active/deactive user', 'Can activate or deactivate user'),
-                                                      ('PASSWORD_RESET_REQUEST_VIEW', 'View password reset requests', 'Can view password reset request list'),
-                                                      ('PASSWORD_RESET_REQUEST_PROCESS', 'Process password reset requests', 'Can approve or reject password reset requests'),
-                                                      ('ROLE_VIEW_LIST', 'View role list', 'Can view role list'),
-                                                      ('ROLE_VIEW_PERMISSION', 'View role permissions', 'Can view permissions of role'),
-                                                      ('ROLE_UPDATE', 'Update role information', 'Can update role information'),
-                                                      ('ROLE_TOGGLE_STATUS', 'Active/deactive role', 'Can activate or deactivate role'),
-                                                      ('ROLE_EDIT_PERMISSION', 'Edit role permissions', 'Can edit permissions of role'),
-                                                      ('ROLE_CREATE', 'Add new role', 'Can create new role'),
-                                                      ('DEPARTMENT_VIEW_LIST', 'View department list', 'Can view list of departments'),
-                                                      ('DEPARTMENT_VIEW_DETAIL', 'View department detail', 'Can view department detail'),
-                                                      ('DEPARTMENT_CREATE', 'Add department', 'Can create new department'),
-                                                      ('DEPARTMENT_UPDATE', 'Update department', 'Can update department information'),
-                                                      ('DEPARTMENT_TOGGLE_STATUS', 'Active/deactive department', 'Can activate or deactivate department'),
-                                                      ('DEPARTMENT_ASSIGN_MANAGER', 'Assign department manager', 'Can assign manager to department'),
-                                                      ('DEPARTMENT_VIEW_EMPLOYEES', 'View department employees', 'Can view employees in a department'),
-                                                      ('DEPARTMENT_MOVE_MEMBER', 'Move department member', 'Can move members between departments'),
-                                                      ('DEPARTMENT_ASSIGN_POSITION', 'Assign position to department member', 'Can assign position to members in department'),
-                                                      ('POSITION_VIEW_LIST', 'View position list', 'Can view list of positions'),
-                                                      ('POSITION_VIEW_DETAIL', 'View position detail', 'Can view position detail'),
-                                                      ('POSITION_CREATE', 'Add position', 'Can create new position'),
-                                                      ('POSITION_UPDATE', 'Update position', 'Can update position information'),
-                                                      ('POSITION_TOGGLE_STATUS', 'Active/deactive position', 'Can activate or deactivate position'),
-                                                      ('POSITION_ASSIGN', 'Assign position to user', 'Can assign a position to a user'),
-                                                      ('POSITION_ASSIGN_MANAGER', 'Assign manager position', 'Can assign manager-level positions'),
-                                                      ('CONTRACT_VIEW_LIST', 'View contract list', 'Can view list of labor contracts'),
-                                                      ('CONTRACT_VIEW_DETAIL', 'View contract detail', 'Can view contract detail'),
-                                                      ('CONTRACT_VIEW_OWN', 'View own contract', 'Can view own labor contract'),
-                                                      ('CONTRACT_CREATE', 'Add contract', 'Can create new labor contract'),
-                                                      ('CONTRACT_UPDATE', 'Update labor contract', 'Can update labor contract'),
-                                                      ('CONTRACT_TERMINATE', 'Terminate contract', 'Can terminate labor contract'),
-                                                      ('CONTRACT_RENEW', 'Renew contract', 'Can renew labor contract'),
-                                                      ('ATTENDANCE_CHECK_IN', 'Check in', 'Can check in'),
-                                                      ('ATTENDANCE_CHECK_OUT', 'Check out', 'Can check out'),
-                                                      ('ATTENDANCE_VIEW_OWN', 'View own attendance', 'Can view own attendance'),
-                                                      ('ATTENDANCE_VIEW_DEPARTMENT', 'View department attendance', 'Can view attendance of own department'),
-                                                      ('ATTENDANCE_VIEW_ALL', 'View all attendance', 'Can view all attendance records'),
-                                                      ('ATTENDANCE_UPDATE', 'Update attendance', 'Can update attendance records'),
-                                                      ('ATTENDANCE_EXPORT_REPORT', 'Export attendance report', 'Can export attendance report'),
-                                                      ('PAYROLL_VIEW_OWN', 'View own salary', 'Can view own salary'),
-                                                      ('PAYROLL_VIEW_LIST', 'View payroll list', 'Can view payroll list'),
-                                                      ('PAYROLL_VIEW_DETAIL', 'View employee salary detail', 'Can view employee salary detail'),
-                                                      ('PAYROLL_GENERATE', 'Generate payroll', 'Can generate monthly payroll'),
-                                                      ('PAYROLL_UPDATE_COMPONENT', 'Update salary component', 'Can update salary components'),
-                                                      ('PAYROLL_CONFIRM', 'Confirm payroll', 'Can confirm payroll'),
-                                                      ('PAYROLL_EXPORT_REPORT', 'Export payroll report', 'Can export payroll report'),
+    ('HOMEPAGE_VIEW', 'View homepage', 'Can view homepage/dashboard'),
+    ('AUTH_LOGIN', 'Login', 'Can login to the system'),
+    ('AUTH_LOGOUT', 'Logout', 'Can logout from the system'),
+    ('AUTH_FORGOT_PASSWORD', 'Forgot password', 'Can request password reset'),
+    ('PROFILE_VIEW', 'View my profile', 'Can view own profile'),
+    ('PROFILE_CHANGE_PASSWORD', 'Change password', 'Can change own password'),
+    ('USER_VIEW_LIST', 'View user list', 'Can view list of users'),
+    ('USER_VIEW_DETAIL', 'View user information', 'Can view user detail'),
+    ('USER_CREATE', 'Add new user', 'Can create new user'),
+    ('USER_UPDATE', 'Update user information', 'Can update user information'),
+    ('USER_TOGGLE_STATUS', 'Active/deactive user', 'Can activate or deactivate user'),
+    ('PASSWORD_RESET_REQUEST_VIEW', 'View password reset requests', 'Can view password reset request list'),
+    ('PASSWORD_RESET_REQUEST_PROCESS', 'Process password reset requests', 'Can approve or reject password reset requests'),
+    ('ROLE_VIEW_LIST', 'View role list', 'Can view role list'),
+    ('ROLE_VIEW_PERMISSION', 'View role permissions', 'Can view permissions of role'),
+    ('ROLE_UPDATE', 'Update role information', 'Can update role information'),
+    ('ROLE_TOGGLE_STATUS', 'Active/deactive role', 'Can activate or deactivate role'),
+    ('ROLE_EDIT_PERMISSION', 'Edit role permissions', 'Can edit permissions of role'),
+    ('ROLE_CREATE', 'Add new role', 'Can create new role'),
+    ('DEPARTMENT_VIEW_LIST', 'View department list', 'Can view list of departments'),
+    ('DEPARTMENT_VIEW_DETAIL', 'View department detail', 'Can view department detail'),
+    ('DEPARTMENT_CREATE', 'Add department', 'Can create new department'),
+    ('DEPARTMENT_UPDATE', 'Update department', 'Can update department information'),
+    ('DEPARTMENT_TOGGLE_STATUS', 'Active/deactive department', 'Can activate or deactivate department'),
+    ('DEPARTMENT_ASSIGN_MANAGER', 'Assign department manager', 'Can assign manager to department'),
+    ('DEPARTMENT_VIEW_EMPLOYEES', 'View department employees', 'Can view employees in a department'),
+    ('DEPARTMENT_ASSIGN_POSITION', 'Assign position to department member', 'Can assign position to members in department'),
+    ('POSITION_VIEW_LIST', 'View position list', 'Can view list of positions'),
+    ('POSITION_VIEW_DETAIL', 'View position detail', 'Can view position detail'),
+    ('POSITION_CREATE', 'Add position', 'Can create new position'),
+	('POSITION_UPDATE', 'Update position', 'Can update position information'),
+	('POSITION_TOGGLE_STATUS', 'Active/deactive position', 'Can activate or deactivate position'),
+	('POSITION_ASSIGN', 'Assign position to user', 'Can assign a position to a user'),
+	('POSITION_ASSIGN_MANAGER', 'Assign manager position', 'Can assign manager-level positions'),
+	('CONTRACT_VIEW_LIST', 'View contract list', 'Can view list of labor contracts'),
+	('CONTRACT_VIEW_DETAIL', 'View contract detail', 'Can view contract detail'),
+	('CONTRACT_VIEW_OWN', 'View own contract', 'Can view own labor contract'),
+	('CONTRACT_CREATE', 'Add contract', 'Can create new labor contract'),
+	('CONTRACT_UPDATE', 'Update labor contract', 'Can update labor contract'),
+	('CONTRACT_TERMINATE', 'Terminate contract', 'Can terminate labor contract'),
+	('CONTRACT_RENEW', 'Renew contract', 'Can renew labor contract'),
+	('ATTENDANCE_CHECK_IN', 'Check in', 'Can check in'),
+    ('ATTENDANCE_CHECK_OUT', 'Check out', 'Can check out'),
+    ('ATTENDANCE_VIEW_OWN', 'View own attendance', 'Can view own attendance'),
+    ('ATTENDANCE_VIEW_DEPARTMENT', 'View department attendance', 'Can view attendance of own department'),
+    ('ATTENDANCE_VIEW_ALL', 'View all attendance', 'Can view all attendance records'),
+    ('ATTENDANCE_UPDATE', 'Update attendance', 'Can update attendance records'),
+    ('ATTENDANCE_EXPORT_REPORT', 'Export attendance report', 'Can export attendance report'),
+    ('PAYROLL_VIEW_OWN', 'View own salary', 'Can view own salary'),
+    ('PAYROLL_VIEW_LIST', 'View payroll list', 'Can view payroll list'),
+    ('PAYROLL_VIEW_DETAIL', 'View employee salary detail', 'Can view employee salary detail'),
+    ('PAYROLL_GENERATE', 'Generate payroll', 'Can generate monthly payroll'),
+    ('PAYROLL_UPDATE_COMPONENT', 'Update salary component', 'Can update salary components'),
+    ('PAYROLL_CONFIRM', 'Confirm payroll', 'Can confirm payroll'),
+    ('PAYROLL_EXPORT_REPORT', 'Export payroll report', 'Can export payroll report'),
 
-                                                      ('VIEW_MY_REQUEST', 'View own request', 'Can view own request'),
-                                                      ('VIEW_ALL_REQUEST', 'View all request', 'Can view all request'),
-                                                      ('VIEW_REQUEST_DETAIL', 'View request detail', 'Can view request detail info'),
-                                                      ('PROCESS_REQUEST', 'Process request', 'Can process request (approve/reject)'),
-                                                      ('CREATE_REQUEST', 'Create request', 'Can create new request'),
-                                                      ('VIEW_DEPARTMENT_REQUESTS', 'View department requests', 'Can view requests of own department'),
-                                                      -- Quyền Announcement
-                                                      ('ANNOUNCEMENT_VIEW_LIST', 'View announcements', 'Can view announcements available to the user'),
-                                                      ('ANNOUNCEMENT_VIEW_DETAIL', 'View announcement detail', 'Can view announcement detail'),
-                                                      ('ANNOUNCEMENT_CREATE', 'Create announcement', 'Can create and send announcements'),
-                                                      -- Quyền Task Management (từ DB1)
-                                                      ('TASK_VIEW', 'View tasks', 'Can view task management module'),
-                                                      ('TASK_CREATE', 'Create task', 'Can create new tasks'),
-                                                      ('TASK_UPDATE', 'Update task', 'Can update task information'),
-                                                      ('TASK_DELETE', 'Delete task', 'Can delete tasks'),
-                                                      ('TASK_MANAGE_CHECKLIST', 'Manage task work items', 'Can add, update, and delete task work items'),
-                                                      ('TASK_UPDATE_STATUS', 'Update task status', 'Can update task progress status');
+    ('VIEW_MY_REQUEST', 'View own request', 'Can view own request'),
+    ('VIEW_ALL_REQUEST', 'View all request', 'Can view all request'),
+    ('VIEW_REQUEST_DETAIL', 'View request detail', 'Can view request detail info'),
+    ('PROCESS_REQUEST', 'Process request', 'Can process request (approve/reject)'),
+    ('CREATE_REQUEST', 'Create request', 'Can create new request'),
+    ('VIEW_DEPARTMENT_REQUESTS', 'View department requests', 'Can view requests of own department'),
+    -- Quyền Announcement
+    ('ANNOUNCEMENT_VIEW_LIST', 'View announcements', 'Can view announcements available to the user'),
+    ('ANNOUNCEMENT_VIEW_DETAIL', 'View announcement detail', 'Can view announcement detail'),
+    ('ANNOUNCEMENT_CREATE', 'Create announcement', 'Can create and send announcements'),
+    -- Quyền Task Management (từ DB1)
+    ('TASK_VIEW', 'View tasks', 'Can view task management module'),
+    ('TASK_CREATE', 'Create task', 'Can create new tasks'),
+    ('TASK_UPDATE', 'Update task', 'Can update task information'),
+    ('TASK_DELETE', 'Delete task', 'Can delete tasks'),
+    ('TASK_MANAGE_CHECKLIST', 'Manage task work items', 'Can add, update, and delete task work items'),
+    ('TASK_UPDATE_STATUS', 'Update task status', 'Can update task progress status');
 
 -- ============================================================
--- 14. PHÂN QUYỀN CHO TỪNG VAI TRÒ
+-- 14. PHÂN QUYỀN CHO TỪNG VAI TRÒ (CẬP NHẬT THEO YÊU CẦU)
 -- ============================================================
+
+-- Xóa các gán quyền cũ
+-- DELETE FROM role_permissions;
 
 -- SYSTEM ADMIN
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'SYSTEM ADMIN' AND p.code IN (
-                                                                                               'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                               'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
-                                                                                               'PASSWORD_RESET_REQUEST_VIEW', 'PASSWORD_RESET_REQUEST_PROCESS', 'ROLE_VIEW_LIST',
-                                                                                               'ROLE_VIEW_PERMISSION', 'ROLE_UPDATE', 'ROLE_TOGGLE_STATUS', 'ROLE_EDIT_PERMISSION', 'ROLE_CREATE',
-                                                                                               'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
-                                                                                               'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
-                                                                                               'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST', 'VIEW_DEPARTMENT_REQUESTS',
-                                                                                               'TASK_VIEW',
-                                                                                               'PAYROLL_VIEW_DETAIL'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
+    'PASSWORD_RESET_REQUEST_VIEW', 'PASSWORD_RESET_REQUEST_PROCESS',
+    'ROLE_VIEW_LIST', 'ROLE_VIEW_PERMISSION', 'ROLE_UPDATE', 'ROLE_TOGGLE_STATUS', 'ROLE_EDIT_PERMISSION', 'ROLE_CREATE',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_CREATE', 'DEPARTMENT_UPDATE',
+    'POSITION_VIEW_LIST', 'POSITION_VIEW_DETAIL', 'POSITION_CREATE', 'POSITION_UPDATE', 'POSITION_TOGGLE_STATUS'
+);
 
 -- BUSINESS ADMIN (tất cả quyền)
 INSERT INTO role_permissions (role_id, permission_id)
@@ -662,81 +661,93 @@ SELECT r.id, p.id FROM roles r CROSS JOIN permissions p WHERE r.name = 'BUSINESS
 -- HR_MANAGER
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AND p.code IN (
-                                                                                             'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                             'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS', 'DEPARTMENT_VIEW_LIST',
-                                                                                             'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_CREATE', 'DEPARTMENT_UPDATE', 'DEPARTMENT_TOGGLE_STATUS',
-                                                                                             'DEPARTMENT_ASSIGN_MANAGER', 'DEPARTMENT_VIEW_EMPLOYEES', 'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
-                                                                                             'POSITION_VIEW_LIST', 'POSITION_VIEW_DETAIL', 'POSITION_CREATE', 'POSITION_UPDATE', 'POSITION_TOGGLE_STATUS',
-                                                                                             'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE',
-                                                                                             'CONTRACT_TERMINATE', 'CONTRACT_RENEW', 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL',
-                                                                                             'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT', 'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST',
-                                                                                             'PAYROLL_VIEW_DETAIL',
-                                                                                             'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
-                                                                                             'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
-                                                                                             'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST', 'VIEW_DEPARTMENT_REQUESTS',
-                                                                                             'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_CREATE', 'DEPARTMENT_UPDATE', 'DEPARTMENT_TOGGLE_STATUS',
+    'DEPARTMENT_ASSIGN_MANAGER', 'DEPARTMENT_VIEW_EMPLOYEES', 'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
+    'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS'
+);
 
 -- HR_STAFF
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_STAFF' AND p.code IN (
-                                                                                           'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                           'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
-                                                                                           'POSITION_VIEW_LIST', 'POSITION_VIEW_DETAIL', 'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN',
-                                                                                           'CONTRACT_CREATE', 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE', 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
-                                                                                           'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT', 'PAYROLL_VIEW_OWN',
-                                                                                           'PAYROLL_VIEW_DETAIL',
-                                                                                           'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
-                                                                                           'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST',
-                                                                                           'TASK_VIEW'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DETAIL',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
+    'TASK_VIEW'
+);
 
 -- PAYROLL_MANAGER
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_MANAGER' AND p.code IN (
-                                                                                                  'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                                  'DEPARTMENT_VIEW_EMPLOYEES', 'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'CONTRACT_VIEW_OWN',
-                                                                                                  'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT',
-                                                                                                  'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
-                                                                                                  'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
-                                                                                                  'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST', 'VIEW_DEPARTMENT_REQUESTS',
-                                                                                                  'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
+    'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS'
+);
 
 -- PAYROLL_STAFF
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_STAFF' AND p.code IN (
-                                                                                                'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                                'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_EXPORT_REPORT', 'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST',
-                                                                                                'PAYROLL_VIEW_DETAIL', 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT',
-                                                                                                'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
-                                                                                                'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST',
-                                                                                                'TASK_VIEW'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_OWN',
+    'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
+    'TASK_VIEW'
+);
 
 -- DEPARTMENT_MANAGER
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'DEPARTMENT_MANAGER' AND p.code IN (
-                                                                                                     'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                                     'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES', 'ATTENDANCE_VIEW_OWN',
-                                                                                                     'ATTENDANCE_VIEW_DEPARTMENT', 'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN',
-                                                                                                     'PAYROLL_VIEW_DETAIL',
-                                                                                                     'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
-                                                                                                     'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST', 'VIEW_DEPARTMENT_REQUESTS',
-                                                                                                     'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_OWN',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DETAIL',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
+    'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS'
+);
 
 -- EMPLOYEE
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'EMPLOYEE' AND p.code IN (
-                                                                                           'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                           'ATTENDANCE_CHECK_IN', 'ATTENDANCE_CHECK_OUT', 'ATTENDANCE_VIEW_OWN', 'CONTRACT_VIEW_OWN', 'PAYROLL_VIEW_OWN',
-                                                                                           'PAYROLL_VIEW_DETAIL',
-                                                                                           'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
-                                                                                           'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST', 'PROCESS_REQUEST',
-                                                                                           'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
-                                                                                           'TASK_VIEW'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_OWN',
+    'ATTENDANCE_VIEW_OWN',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DETAIL',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL','PROCESS_REQUEST',
+    'TASK_VIEW'
+);
 
 -- ============================================================
 -- 15. KẾT THÚC - DATABASE ĐÃ SẴN SÀNG
