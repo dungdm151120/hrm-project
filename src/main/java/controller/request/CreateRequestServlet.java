@@ -31,14 +31,13 @@ public class CreateRequestServlet extends HttpServlet {
 
         String position = userDAO.getPositionNameByUserId(user.getId());
         boolean isManager = (position != null && position.contains("Manager"));
-        boolean isSysAdmin = (position != null && position.contains("Admin"));
 
         Map<String, String> allTypes = Request.getAllType();
         Map<String, String> filteredTypes = new LinkedHashMap<>();
 
         for (var entry : allTypes.entrySet()) {
             if ("POSITION_HANDOVER".equals(entry.getKey())) {
-                if (isManager || isSysAdmin) {
+                if (isManager) {
                     filteredTypes.put(entry.getKey(), entry.getValue());
                 }
             } else {
@@ -47,10 +46,6 @@ public class CreateRequestServlet extends HttpServlet {
         }
 
         request.setAttribute("requestTypes", filteredTypes);
-
-        int deptId = (user.getDepartmentId() != null) ? user.getDepartmentId() : 0;
-        request.setAttribute("deptEmployees", userDAO.getAllEmployeesByDepartment(deptId));
-        request.setAttribute("businessAdminList", userDAO.getUserByRole("BUSINESS ADMIN"));
 
         request.getRequestDispatcher("WEB-INF/views/request/create_request.jsp").forward(request, response);
     }
