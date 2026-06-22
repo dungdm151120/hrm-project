@@ -26,6 +26,7 @@ public class OvertimeService {
             req.setType("OVERTIME");
             req.setReason(reason);
             req.setApproverId(approverId);
+            req.setHandlerId(approverId); // Set handler_id immediately upon creation
 
             int requestId = requestDAO.createRequestAndGetId(req, observerIds);
 
