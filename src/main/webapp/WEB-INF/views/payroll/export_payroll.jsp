@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generate Payrolls | HRM</title>
+    <title>Export Payrolls | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body class="dashboard-body">
@@ -25,7 +25,7 @@
     <div class="dashboard-main">
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Generate Payrolls</h1>
+                <h1 class="header-title">Export Payrolls</h1>
             </div>
         </div>
 
@@ -40,7 +40,7 @@
                 <div class="alert alert-success">${success}</div>
             </c:if>
 
-            <form action="${pageContext.request.contextPath}/payroll/generate" method="post">
+            <form action="${pageContext.request.contextPath}/payroll/export" method="post">
                 <div class="form-group">
                     <label for="departmentId">Department <span class="required-star">*</span></label>
                     <select id="departmentId" name="departmentId" required>
@@ -58,8 +58,7 @@
                         <label for="month">Payroll Month <span class="required-star">*</span></label>
                         <c:set var="monthNames" value="${fn:split('January,February,March,April,May,June,July,August,September,October,November,December', ',')}" />
 
-                        <select name="month">
-                            <option value="" ${empty month ? 'selected' : ''}>All months</option>
+                        <select name="month" required>
                             <c:forEach var="m" begin="1" end="12">
                                 <option value="${m}" ${month == m ? 'selected' : ''}>${monthNames[m - 1]}</option>
                             </c:forEach>
@@ -80,7 +79,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn-save" onclick="return confirm('Are you sure you want to generate payrolls for the selected period? This will overwrite existing draft payrolls.');">Generate Payrolls</button>
+                    <button type="submit" class="btn-save" onclick="return confirm('Are you sure you want to export payrolls of this department for the selected period?');">Export Payrolls</button>
                 </div>
             </form>
         </div>

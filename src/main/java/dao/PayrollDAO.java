@@ -1,5 +1,6 @@
 package dao;
 
+import model.DepartmentPayrollSummary;
 import model.Payroll;
 import util.DBConnection;
 
@@ -111,7 +112,7 @@ public class PayrollDAO {
         return payroll;
     }
 
-    public List<Payroll> findPayrollsAdvanced(String keyword, String status, String sort, int offset, int limit, Integer userId, Integer month, Integer year) {
+    public List<Payroll> findPayrollsAdvanced(String keyword, String status, String sort, int offset, int limit, Integer userId, Integer month, Integer year, Integer departmentId) {
         List<Payroll> list = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder("""
@@ -125,8 +126,16 @@ public class PayrollDAO {
             WHERE 1=1
             """);
 
+        boolean hasAccent = false;
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND u.full_name COLLATE utf8mb4_vietnamese_ci LIKE ? ");
+            String k = keyword.trim();
+            hasAccent = k.matches(".*[áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴĐ].*");
+
+            if (hasAccent) {
+                sql.append(" AND LOWER(u.full_name) COLLATE utf8mb4_bin LIKE LOWER(?) ");
+            } else {
+                sql.append(" AND u.full_name COLLATE utf8mb4_general_ci LIKE ? ");
+            }
         }
 
         if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status)) {
@@ -143,6 +152,10 @@ public class PayrollDAO {
 
         if (year != null) {
             sql.append(" AND p.year = ? ");
+        }
+
+        if (departmentId != null) {
+            sql.append(" AND u.department_id = ? ");
         }
 
         if (sort != null) {
@@ -175,6 +188,9 @@ public class PayrollDAO {
             }
             if (year != null) {
                 ps.setInt(paramIndex++, year);
+            }
+            if (departmentId != null) {
+                ps.setInt(paramIndex++, departmentId);
             }
 
             ps.setInt(paramIndex++, limit);
@@ -216,25 +232,35 @@ public class PayrollDAO {
         return false;
     }
 
-    public boolean updatePayrollValuesAndStatus(Payroll payroll) {
-        String sql = "UPDATE payrolls SET status = ?, bonus = ?, description = ?, net_pay = ? WHERE id = ? AND status = 'DRAFT'";
+    public int confirmAllDepartmentPayrolls(Integer departmentId, Integer month, Integer year) {
+        StringBuilder sql = new StringBuilder("""
+            UPDATE payrolls p
+            JOIN users u ON p.user_id = u.id
+            SET p.status = 'CONFIRMED'
+            WHERE LOWER(p.status) = 'draft'
+        """);
+
+        if (departmentId != null) sql.append(" AND u.department_id = ? ");
+        if (month != null) sql.append(" AND p.month = ? ");
+        if (year != null) sql.append(" AND p.year = ? ");
+
+        int updatedRows = 0;
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            ps.setString(1, payroll.getStatus());
-            ps.setDouble(2, payroll.getBonus());
-            ps.setString(3, payroll.getDescription());
-            ps.setDouble(4, payroll.getNetPay());
-            ps.setInt(5, payroll.getId());
+            int idx = 1;
+            if (departmentId != null) ps.setInt(idx++, departmentId);
+            if (month != null) ps.setInt(idx++, month);
+            if (year != null) ps.setInt(idx++, year);
 
-            return ps.executeUpdate() > 0;
+            updatedRows = ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return updatedRows;
     }
 
-    public int countPayrolls(String keyword, String status, Integer userId, Integer month, Integer year) {
+    public int countPayrolls(String keyword, String status, Integer userId, Integer month, Integer year, Integer departmentId) {
         int totalRows = 0;
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM payrolls p JOIN users u ON p.user_id = u.id WHERE 1=1 ");
 
@@ -258,6 +284,10 @@ public class PayrollDAO {
             sql.append(" AND p.year = ? ");
         }
 
+        if (departmentId != null) {
+            sql.append(" AND u.department_id = ? ");
+        }
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
@@ -277,6 +307,9 @@ public class PayrollDAO {
             if (year != null) {
                 ps.setInt(paramIndex++, year);
             }
+            if (departmentId != null) {
+                ps.setInt(paramIndex++, departmentId);
+            }
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -287,5 +320,189 @@ public class PayrollDAO {
             e.printStackTrace();
         }
         return totalRows;
+    }
+
+    public List<DepartmentPayrollSummary> findDepartmentPayrollSummaries(Integer departmentId, Integer month, Integer year, int offset, int limit) {
+        List<DepartmentPayrollSummary> list = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT u.department_id, d.name AS department_name, p.month, p.year, SUM(p.net_pay) AS total_payroll
+            FROM payrolls p
+            JOIN users u ON p.user_id = u.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            WHERE 1=1
+            AND u.department_id IS NOT NULL
+        """);
+
+        if (departmentId != null) sql.append(" AND u.department_id = ? ");
+        if (month != null) sql.append(" AND p.month = ? ");
+        if (year != null) sql.append(" AND p.year = ? ");
+
+        sql.append(" GROUP BY u.department_id, d.name, p.month, p.year ");
+        sql.append(" ORDER BY p.year DESC, p.month DESC, d.name ASC ");
+        sql.append(" LIMIT ? OFFSET ? ");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (departmentId != null) ps.setInt(idx++, departmentId);
+            if (month != null) ps.setInt(idx++, month);
+            if (year != null) ps.setInt(idx++, year);
+
+            ps.setInt(idx++, limit);
+            ps.setInt(idx++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    DepartmentPayrollSummary summary = new DepartmentPayrollSummary();
+                    summary.setDepartmentId(rs.getInt("department_id"));
+                    summary.setDepartmentName(rs.getString("department_name"));
+                    summary.setMonth(rs.getInt("month"));
+                    summary.setYear(rs.getInt("year"));
+                    summary.setTotalPayroll(rs.getDouble("total_payroll"));
+                    list.add(summary);
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
+    }
+
+    public int countDepartmentPayrollSummaries(Integer departmentId, Integer month, Integer year) {
+        int totalRows = 0;
+
+        StringBuilder sql = new StringBuilder("""
+        SELECT COUNT(*) FROM (
+            SELECT 1
+            FROM payrolls p
+            JOIN users u ON p.user_id = u.id
+            WHERE 1=1
+            AND u.department_id IS NOT NULL
+        """);
+
+        if (departmentId != null) sql.append(" AND u.department_id = ? ");
+        if (month != null) sql.append(" AND p.month = ? ");
+        if (year != null) sql.append(" AND p.year = ? ");
+
+        sql.append(" GROUP BY u.department_id, p.month, p.year ")
+                .append(") AS subquery");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (departmentId != null) ps.setInt(idx++, departmentId);
+            if (month != null) ps.setInt(idx++, month);
+            if (year != null) ps.setInt(idx++, year);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    totalRows = rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return totalRows;
+    }
+
+    public List<Payroll> findPayrollsByDepartment(Integer departmentId, Integer month, Integer year) {
+        List<Payroll> list = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder("""
+        SELECT p.*, 
+               u.full_name AS employee_name, 
+               d.name AS department_name, 
+               pos.name AS position_name
+        FROM payrolls p
+        JOIN users u ON p.user_id = u.id
+        LEFT JOIN departments d ON u.department_id = d.id
+        LEFT JOIN positions pos ON u.position_id = pos.id
+        WHERE p.month = ? AND p.year = ?
+    """);
+
+        if (departmentId != null && departmentId > 0) {
+            sql.append(" AND u.department_id = ? ");
+        }
+
+        sql.append(" ORDER BY u.full_name ASC ");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+
+            if (departmentId != null && departmentId > 0) {
+                ps.setInt(3, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Payroll p = new Payroll();
+                    p.setId(rs.getInt("id"));
+                    p.setUserId(rs.getInt("user_id"));
+                    p.setMonth(rs.getInt("month"));
+                    p.setYear(rs.getInt("year"));
+                    p.setExpectedHours(rs.getDouble("expected_hours"));
+                    p.setActualHours(rs.getDouble("actual_hours"));
+                    p.setBasicSalary(rs.getDouble("basic_salary"));
+                    p.setRateMultiplier(rs.getDouble("rate_multiplier"));
+                    p.setTotalIncome(rs.getDouble("total_income"));
+                    p.setBonus(rs.getDouble("bonus"));
+                    p.setDescription(rs.getString("description"));
+                    p.setSocialInsurance(rs.getDouble("social_insurance"));
+                    p.setHealthInsurance(rs.getDouble("health_insurance"));
+                    p.setUnemploymentInsurance(rs.getDouble("unemployment_insurance"));
+                    p.setIncomeBeforeTax(rs.getDouble("income_before_tax"));
+                    p.setTaxableIncome(rs.getDouble("taxable_income"));
+                    p.setIncomeTax(rs.getDouble("income_tax"));
+                    p.setNetPay(rs.getDouble("net_pay"));
+                    p.setStatus(rs.getString("status"));
+
+                    // Set thêm các thuộc tính phụ phục vụ hiển thị báo cáo Excel
+                    p.setEmployeeName(rs.getString("employee_name"));
+                    p.setDepartmentName(rs.getString("department_name"));
+                    p.setPositionName(rs.getString("position_name"));
+
+                    list.add(p);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countEmployeesWithPayroll(Integer departmentId, int month, int year) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(DISTINCT p.user_id)
+            FROM payrolls p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.month = ? AND p.year = ?
+        """);
+
+        if (departmentId != null && departmentId > 0) {
+            sql.append(" AND u.department_id = ? ");
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            if (departmentId != null && departmentId > 0) {
+                ps.setInt(3, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }

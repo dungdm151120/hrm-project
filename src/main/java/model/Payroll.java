@@ -1,6 +1,8 @@
 package model;
 
+import java.text.DateFormatSymbols;
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 public class Payroll {
     private int id;
@@ -138,6 +140,14 @@ public class Payroll {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getMonthName() {
+        if (this.month >= 1 && this.month <= 12) {
+            String name = new DateFormatSymbols(Locale.ENGLISH).getMonths()[this.month - 1];
+            return name;
+        }
+        return "";
     }
 
     public LocalDateTime getCreatedAt() {

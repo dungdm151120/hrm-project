@@ -90,9 +90,26 @@ public class PayrollService {
         return isSaved ? payroll : null;
     }
 
-    public int generateBulkPayroll(List<User> users, int month, int year, double expectedHours) {
-        int successCount = 0;
+    public int generateBulkPayroll(List<User> users, int month, int year, double expectedHours, Integer departmentId) throws Exception{
+        int totalUsersInDept = users.size();
 
+        if (totalUsersInDept == 0) {
+            throw new Exception("This department has no active employees to generate payroll.");
+        }
+
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        int employeesWithAttendance = attendanceDAO.countEmployeesWithAttendance(departmentId, startDate, endDate);
+
+        if (employeesWithAttendance < totalUsersInDept) {
+            int missingCount = totalUsersInDept - employeesWithAttendance;
+            throw new Exception("Cannot generate payroll! There are " + missingCount
+                    + " employee(s) in this department who do not have attendance data for " + month + "/" + year + ".");
+        }
+
+        int successCount = 0;
         for (User user : users) {
             int userId = user.getId();
 

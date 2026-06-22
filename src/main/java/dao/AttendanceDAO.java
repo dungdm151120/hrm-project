@@ -882,4 +882,37 @@ public class AttendanceDAO {
         }
         return null;
     }
+
+    public int countEmployeesWithAttendance(Integer departmentId, java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        StringBuilder sql = new StringBuilder("""
+        SELECT COUNT(DISTINCT u.id)
+        FROM users u
+        JOIN attendance_records a ON u.id = a.user_id
+        WHERE a.work_date BETWEEN ? AND ?
+    """);
+
+        if (departmentId != null && departmentId > 0) {
+            sql.append(" AND u.department_id = ? ");
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            ps.setDate(1, java.sql.Date.valueOf(startDate));
+            ps.setDate(2, java.sql.Date.valueOf(endDate));
+
+            if (departmentId != null && departmentId > 0) {
+                ps.setInt(3, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payroll Statements | HRM</title>
+    <title>${isMyPayroll ? 'My Payroll' : 'Payroll Statements'} | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body class="dashboard-body">
@@ -27,9 +27,25 @@
             <div class="header-left">
                 <h1 class="header-title">${isMyPayroll ? 'My Payroll' : 'Payroll List'}</h1>
             </div>
+            <div class="header-right">
+                <c:if test="${userPermissions.contains('PAYROLL_CONFIRM') && not isMyPayroll}">
+                    <form action="${pageContext.request.contextPath}/payroll/confirm" method="POST" onsubmit="return confirm('Confirm all payrolls?')">
+                        <input type="hidden" name="all" value="all">
+
+                        <input type="hidden" name="redirectDepartmentId" value="${departmentId}">
+                        <input type="hidden" name="redirectMonth" value="${month}">
+                        <input type="hidden" name="redirectYear" value="${year}">
+
+                        <button type="submit" class="btn-save">Confirm All</button>
+                    </form>
+                </c:if>
+            </div>
         </div>
 
         <div class="dashboard-content">
+            <c:if test="${not isMyPayroll}">
+                <a class="back-link" href="${pageContext.request.contextPath}/payroll/department">Return to payroll department list</a>
+            </c:if>
             <c:if test="${not empty sessionScope.message}">
                 <div class="alert alert-success">
                     ${sessionScope.message}
@@ -43,39 +59,54 @@
                 <% session.removeAttribute("error"); %>
             </c:if>
 
-
-
             <div class="search-filter">
                 <form action="${pageContext.request.contextPath}${isMyPayroll ? '/payroll/my' : '/payroll/list'}" method="GET">
+                    <c:set var="monthNames" value="${fn:split('January,February,March,April,May,June,July,August,September,October,November,December', ',')}" />
 
                     <c:choose>
                         <c:when test="${isMyPayroll}">
                             <input type="hidden" name="status" value="confirmed">
+
+                            <select name="month" onchange="this.form.submit()">
+                                <option value="" ${empty month ? 'selected' : ''}>All months</option>
+                                <c:forEach var="m" begin="1" end="12">
+                                    <option value="${m}" ${month == m ? 'selected' : ''}>${monthNames[m - 1]}</option>
+                                </c:forEach>
+                            </select>
+
+                            <select name="year" onchange="this.form.submit()">
+                                <option value="" ${empty year ? 'selected' : ''}>All years</option>
+                                <c:forEach var="y" begin="${currentYear - 1}" end="${currentYear + 1}">
+                                    <option value="${y}" ${year == y ? 'selected' : ''}>Year ${y}</option>
+                                </c:forEach>
+                            </select>
                         </c:when>
+
                         <c:otherwise>
-                            <input type="text" name="search" placeholder="Search name" value="${keyword}">
+                            <input type="text" name="search" placeholder="Search name..." value="${keyword}">
 
                             <select name="status" onchange="this.form.submit()">
                                 <option value="all" ${status == 'all' || empty status ? 'selected' : ''}>All status</option>
                                 <option value="draft" ${status == 'draft' ? 'selected' : ''}>Draft</option>
                                 <option value="confirmed" ${status == 'confirmed' ? 'selected' : ''}>Confirmed</option>
                             </select>
+
+                            <div class="filter-static-info" style="display: flex; align-items: center; gap: 5px; font-weight: bold; background: #e2e8f0; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; color: #334155;">
+                                <span class="info-label">Period:</span>
+                                <span class="info-value">
+                                    <c:choose>
+                                        <c:when test="${not empty month}">${monthNames[month - 1]}</c:when>
+                                        <c:otherwise>All months</c:otherwise>
+                                    </c:choose>
+                                    / ${not empty year ? year : 'All years'}
+                                </span>
+                            </div>
+
+                            <input type="hidden" name="month" value="${month}">
+                            <input type="hidden" name="year" value="${year}">
+                            <input type="hidden" name="departmentId" value="${departmentId}">
                         </c:otherwise>
                     </c:choose>
-
-                    <select name="month" onchange="this.form.submit()">
-                        <option value="" ${empty month ? 'selected' : ''}>All months</option>
-                        <c:forEach var="m" begin="1" end="12">
-                            <option value="${m}" ${month == m ? 'selected' : ''}>Month ${m}</option>
-                        </c:forEach>
-                    </select>
-
-                    <select name="year" onchange="this.form.submit()">
-                        <option value="" ${empty year ? 'selected' : ''}>All years</option>
-                        <c:forEach var="y" begin="${currentYear - 5}" end="${currentYear + 1}">
-                            <option value="${y}" ${year == y ? 'selected' : ''}>${y}</option>
-                        </c:forEach>
-                    </select>
 
                     <select name="sort" onchange="this.form.submit()">
                         <option value="name_asc" ${sort == 'name_asc' ? 'selected' : ''}>Name A-Z</option>
@@ -84,14 +115,23 @@
 
                     <button type="submit" class="search-btn">Search</button>
 
-                    <c:if test="${not empty keyword || (!isMyPayroll && not empty status && status != 'all') || not empty month || not empty year || not empty sort}">
-                        <a href="${pageContext.request.contextPath}${isMyPayroll ? '/payroll/my' : '/payroll/list'}" class="btn-reset" style="text-decoration: none; padding: 8px 12px; margin-left: 5px;">Clear</a>
-                    </c:if>
+                    <c:choose>
+                        <c:when test="${isMyPayroll}">
+                            <c:if test="${not empty month || not empty year || not empty sort}">
+                                <a href="${pageContext.request.contextPath}/payroll/my" class="btn-reset">
+                                    Clear Filters
+                                </a>
+                            </c:if>
+                        </c:when>
+                        <c:otherwise>
+                            <c:if test="${not empty keyword || (not empty status && status != 'all')}">
+                                <a href="${pageContext.request.contextPath}/payroll/list?departmentId=${departmentId}&month=${month}&year=${year}" class="btn-reset">
+                                    Clear Filters
+                                </a>
+                            </c:if>
+                        </c:otherwise>
+                    </c:choose>
                 </form>
-
-                <c:if test="${userPermissions.contains('PAYROLL_EXPORT_REPORT')}">
-                    <a href="${pageContext.request.contextPath}/payroll/export" class="btn-save">Export Report</a>
-                </c:if>
             </div>
 
             <div class="table-wrapper">
@@ -103,7 +143,6 @@
                             <th>Department</th>
                             <th>Position</th>
                             <th style="text-align: right;">Basic Salary</th>
-                            <th style="text-align: right;">Gross Income</th>
                             <th style="text-align: right;">Net Pay Amount</th>
                             <th style="text-align: center;">Status</th>
                             <th style="text-align: center;">Actions</th>
@@ -113,7 +152,7 @@
                         <c:forEach var="p" items="${payrollList}" varStatus="s">
                             <tr>
                                 <td>
-                                    <strong>Month ${p.month} / ${p.year}</strong>
+                                    <strong>${p.monthName} / ${p.year}</strong>
                                 </td>
                                 <td><c:out value="${p.employeeName}" default="N/A" /></td>
                                 <td>
@@ -130,9 +169,6 @@
                                 <td style="text-align: right;">
                                     <fmt:formatNumber value="${p.basicSalary}" type="number" maxFractionDigits="0"/> VND
                                 </td>
-                                <td style="text-align: right;">
-                                    <fmt:formatNumber value="${p.totalIncome}" type="number" maxFractionDigits="0"/> VND
-                                </td>
                                 <td style="text-align: right; font-weight: bold; color: #2563EB;">
                                     <fmt:formatNumber value="${p.netPay}" type="number" maxFractionDigits="0"/> VND
                                 </td>
@@ -142,7 +178,7 @@
                                         <c:out value="${statusLower == 'confirmed' ? 'CONFIRMED' : 'DRAFT'}" />
                                     </span>
                                 </td>
-                                <td style="text-align: center;">
+                                <td>
                                     <div class="actions">
                                         <c:url var="detailUrl" value="/payroll/detail">
                                             <c:param name="id" value="${p.id}" />
@@ -150,9 +186,32 @@
                                                 <c:param name="from" value="my" />
                                             </c:if>
                                         </c:url>
-                                        <a href="${detailUrl}" class="btn-save" style="padding: 5px 12px; font-size: 0.85rem; text-decoration: none;">
-                                            View Details
-                                        </a>
+                                        <c:choose>
+                                            <c:when test="${isMyPayroll}">
+                                                <a href="${pageContext.request.contextPath}/payroll/detail?id=${p.id}&from=my" class="btn-save">
+                                                    View Details
+                                                </a>
+                                            </c:when>
+
+                                            <c:otherwise>
+                                                <a href="${pageContext.request.contextPath}/payroll/detail?id=${p.id}&redirectDepartmentId=${departmentId}&redirectMonth=${month}&redirectYear=${year}" class="btn-save">
+                                                    View Details
+                                                </a>
+                                            </c:otherwise>
+                                        </c:choose>
+                                        <c:if test="${userPermissions.contains('PAYROLL_CONFIRM') && not isMyPayroll}">
+                                            <form action="${pageContext.request.contextPath}/payroll/confirm" method="POST" onsubmit="return confirm('Confirm this payroll?')">
+                                                <input type="hidden" name="id" value="${p.id}">
+
+                                                <input type="hidden" name="redirectDepartmentId" value="${departmentId}">
+                                                <input type="hidden" name="redirectMonth" value="${month}">
+                                                <input type="hidden" name="redirectYear" value="${year}">
+
+                                                <button type="submit" class="btn-save">
+                                                    Confirm
+                                                </button>
+                                            </form>
+                                        </c:if>
                                     </div>
                                 </td>
                             </tr>
