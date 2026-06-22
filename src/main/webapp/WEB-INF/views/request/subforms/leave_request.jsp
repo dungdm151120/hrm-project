@@ -22,6 +22,14 @@
 </div>
 
 <div class="request-group">
+    <label>Leave Type <span class="required-star">*</span></label>
+    <div>
+        <label><input type="radio" name="leaveType" value="ON_LEAVE" checked onchange="updateBalanceDisplay()"> On Leave (Paid)</label>
+        <label><input type="radio" name="leaveType" value="LEAVE" onchange="updateBalanceDisplay()"> Leave (Absent)</label>
+    </div>
+</div>
+
+<div class="request-group">
     <label for="leaveDate">Leave Date <span class="required-star">*</span></label>
     <input type="date" name="leaveDate" id="leaveDate" class="request-input"
            min="${today}" required onchange="updateLeaveDays()" />
@@ -38,7 +46,8 @@
 
 <div class="request-group">
     <div class="balance-text-italic-red">
-        Remaining leave balance: <span id="remainingBalance">${remainingLeave}</span> days<br/>
+        <span id="balanceLabel">Remaining paid leave:</span>
+        <span id="remainingBalance">${remainingLeave}</span> days<br/>
         Requested days: <span id="requestedDays">0</span>
     </div>
 </div>
@@ -52,8 +61,8 @@
     <label>Notes</label>
     <div class="request-info-box">
         <ul>
-            <li>Your leave request will be reviewed by your department manager.</li>
-            <li>If approved, your attendance for the selected date will be marked as "ON_LEAVE" with full 8 hours credited.</li>
+            <li>If approved, your attendance for the selected date will be marked accordingly.</li>
+            <li>Paid leave grants 8 hours; unpaid leave grants 0 hours and marks absent.</li>
             <li>You will be notified after processing.</li>
         </ul>
     </div>
@@ -75,4 +84,19 @@
             daysSpan.innerText = '0';
         }
     }
+
+    function updateBalanceDisplay() {
+        var radios = document.getElementsByName('leaveType');
+        var balanceLabel = document.getElementById('balanceLabel');
+        var balanceSpan = document.getElementById('remainingBalance');
+        if (radios[0].checked) {
+            balanceLabel.innerText = 'Remaining paid leave:';
+            balanceSpan.innerText = '${remainingLeave}';
+        } else {
+            balanceLabel.innerText = 'Remaining absent leave:';
+            balanceSpan.innerText = '${remainingAbsent}';
+        }
+    }
+
+    updateBalanceDisplay();
 </script>

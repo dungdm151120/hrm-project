@@ -61,7 +61,7 @@ public class ProcessRequestServlet extends HttpServlet {
                             response.sendRedirect("request_detail?id=" + requestId + "&error=comment_required");
                             return;
                         }
-                        
+
                         String newStatus = action.equals("APPROVE") ? "APPROVED" : "REJECTED";
                         success = dao.updateRequestStatusAndHandler(requestId, newStatus, comment, userId);
 
@@ -69,7 +69,11 @@ public class ProcessRequestServlet extends HttpServlet {
                             if ("APPROVE".equals(action) && "LEAVE_REQUEST".equals(req.getType())) {
                                 LeaveRequest lr = leaveRequestDAO.getByRequestId(requestId);
                                 if (lr != null) {
-                                    attendanceDAO.markOnLeave(req.getUserId(), lr.getLeaveDate());
+                                    if ("ON_LEAVE".equals(lr.getLeaveType())) {
+                                        attendanceDAO.markOnLeave(req.getUserId(), lr.getLeaveDate());
+                                    } else if ("LEAVE".equals(lr.getLeaveType())) {
+                                        attendanceDAO.markAbsent(req.getUserId(), lr.getLeaveDate());
+                                    }
                                 }
                             } else if ("OVERTIME".equals(req.getType())) {
                                 service.OvertimeService overtimeService = new service.OvertimeService();
@@ -82,13 +86,12 @@ public class ProcessRequestServlet extends HttpServlet {
                 case "CANCEL":
                     if (String.valueOf(req.getUserId()).equals(String.valueOf(userId)) && "PENDING".equals(req.getStatus())) {
                         success = dao.updateRequestStatus(requestId, "CANCELLED", null);
-                        
+
                         if (success && "OVERTIME".equals(req.getType())) {
                             service.OvertimeService overtimeService = new service.OvertimeService();
                             overtimeService.handleProcessAction(requestId, "CANCEL");
                         }
 
-                        // Lấy các tham số lọc từ form
                         String statusFilter = request.getParameter("status");
                         String typeFilter = request.getParameter("type");
                         String sortFilter = request.getParameter("sort");

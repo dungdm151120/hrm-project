@@ -72,7 +72,6 @@ public class LoadSubFormServlet extends HttpServlet {
                     observers.add(ba);
                 }
             }
-            // Thêm HR Manager và Payroll Manager
             List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
             for (User hr : hrManagers) {
                 if (!observers.contains(hr)) {
@@ -94,6 +93,7 @@ public class LoadSubFormServlet extends HttpServlet {
                     today
             );
             request.setAttribute("remainingLeave", summary.getRemainingLeaveDays());
+            request.setAttribute("remainingAbsent", summary.getRemainingAbsentDays());
 
             request.setAttribute("proposer", currentUser);
             request.setAttribute("today", today.toString());
@@ -146,7 +146,7 @@ public class LoadSubFormServlet extends HttpServlet {
             request.setAttribute("proposer", userDAO.findById(currentUser.getId()));
             request.setAttribute("today", LocalDate.now().toString());
             request.setAttribute("now", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-            
+
             List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
             request.setAttribute("approverList", hrManagers);
 

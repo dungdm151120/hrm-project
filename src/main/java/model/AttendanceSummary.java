@@ -13,6 +13,8 @@ public class AttendanceSummary {
     private double overtimeHours;
     private double leaveDaysInMonth;
     private double absentDaysInMonth;
+    private double entitledAbsentDays;
+    private double remainingAbsentDays;
 
     public double getTotalWorkHours() {
         return totalWorkHours;
@@ -102,7 +104,27 @@ public class AttendanceSummary {
         this.leaveDaysInMonth = leaveDaysInMonth;
     }
 
-    public double getAbsentDaysInMonth() { return absentDaysInMonth; }
+    public double getAbsentDaysInMonth() {
+        return absentDaysInMonth;
+    }
 
-    public void setAbsentDaysInMonth(double absentDaysInMonth) { this.absentDaysInMonth = absentDaysInMonth; }
+    public void setAbsentDaysInMonth(double absentDaysInMonth) {
+        this.absentDaysInMonth = absentDaysInMonth;
+    }
+
+    public double getEntitledAbsentDays() {
+        return entitledAbsentDays;
+    }
+
+    public void setEntitledAbsentDays(double entitledAbsentDays) {
+        this.entitledAbsentDays = entitledAbsentDays;
+    }
+
+    public double getRemainingAbsentDays() {
+        return remainingAbsentDays;
+    }
+
+    public void setRemainingAbsentDays(double remainingAbsentDays) {
+        this.remainingAbsentDays = remainingAbsentDays;
+    }
 }

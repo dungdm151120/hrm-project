@@ -54,6 +54,16 @@
                     </div>
                     <c:if test="${request.type == 'LEAVE_REQUEST' && not empty leaveRequest}">
                         <div class="detail-row">
+                            <span class="detail-label">Leave Type:</span>
+                            <span class="detail-value">
+                                <c:choose>
+                                    <c:when test="${leaveRequest.leaveType == 'ON_LEAVE'}">On Leave (Paid)</c:when>
+                                    <c:when test="${leaveRequest.leaveType == 'LEAVE'}">Leave (Unpaid)</c:when>
+                                    <c:otherwise>${leaveRequest.leaveType}</c:otherwise>
+                                </c:choose>
+                            </span>
+                        </div>
+                        <div class="detail-row">
                             <span class="detail-label">Leave Date:</span>
                             <span class="detail-value"><strong>${leaveRequest.leaveDate}</strong></span>
                         </div>

@@ -104,21 +104,21 @@ public class CreateRequestServlet extends HttpServlet {
                 }
             }
 
-            // ---------- VALIDATION CHO LEAVE_REQUEST ----------
             if ("LEAVE_REQUEST".equals(req.getType())) {
                 String leaveDateStr = request.getParameter("leaveDate");
-                if (leaveDateStr == null || leaveDateStr.trim().isEmpty()) {
-                    response.sendRedirect("create_request?error=missing_leave_date");
+                String leaveType = request.getParameter("leaveType");
+
+                if (leaveDateStr == null || leaveDateStr.trim().isEmpty() || leaveType == null || leaveType.trim().isEmpty()) {
+                    response.sendRedirect("create_request?error=missing_leave_info");
                     return;
                 }
-                LocalDate leaveDate = LocalDate.parse(leaveDateStr);
 
+                LocalDate leaveDate = LocalDate.parse(leaveDateStr);
 
                 if (leaveDate.isBefore(LocalDate.now())) {
                     response.sendRedirect("create_request?error=leave_date_past");
                     return;
                 }
-
 
                 DayOfWeek dayOfWeek = leaveDate.getDayOfWeek();
                 if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
@@ -126,32 +126,40 @@ public class CreateRequestServlet extends HttpServlet {
                     return;
                 }
 
-
                 AttendanceRecord existingRecord = attendanceDAO.getRecordByUserAndDate(currentUser.getId(), leaveDate);
-                if (existingRecord != null && "ON_LEAVE".equals(existingRecord.getStatus())) {
-                    response.sendRedirect("create_request?error=leave_date_already_on_leave");
+                if (existingRecord != null && ("ON_LEAVE".equals(existingRecord.getStatus()) || "ABSENT".equals(existingRecord.getStatus()))) {
+                    response.sendRedirect("create_request?error=leave_date_already_marked");
                     return;
                 }
-
 
                 if (leaveRequestDAO.existsLeaveRequestForDate(currentUser.getId(), leaveDate)) {
                     response.sendRedirect("create_request?error=leave_date_duplicate_request");
                     return;
                 }
 
-
                 AttendanceSummary summary = attendanceDAO.getSummaryByUser(
                         currentUser.getId(),
                         LocalDate.of(LocalDate.now().getYear(), 1, 1),
                         LocalDate.now()
                 );
-                if (summary.getRemainingLeaveDays() <= 0) {
-                    response.sendRedirect("create_request?error=leave_balance_exhausted");
+
+                if ("ON_LEAVE".equals(leaveType)) {
+                    if (summary.getRemainingLeaveDays() <= 0) {
+                        response.sendRedirect("create_request?error=leave_balance_exhausted");
+                        return;
+                    }
+                } else if ("LEAVE".equals(leaveType)) {
+                    if (summary.getRemainingAbsentDays() <= 0) {
+                        response.sendRedirect("create_request?error=absent_balance_exhausted");
+                        return;
+                    }
+                } else {
+                    response.sendRedirect("create_request?error=invalid_leave_type");
                     return;
                 }
 
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
-                leaveRequestDAO.createLeaveRequest(requestId, leaveDate);
+                leaveRequestDAO.createLeaveRequest(requestId, leaveDate, leaveType);
             } else {
                 requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
             }
