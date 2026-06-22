@@ -134,6 +134,7 @@
                     <span><i class="legend-dot status-absent"></i>Absent</span>
                     <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
                     <span><i class="legend-dot status-leave"></i>On leave</span>
+                    <span><span class="matrix-ot-badge" style="margin-right:4px;">OT</span>Overtime</span>
                 </div>
 
                 <div class="attendance-matrix-wrapper">
@@ -196,9 +197,9 @@
                                                                     </c:otherwise>
                                                                 </c:choose>
                                                             </span>
-                                                            <c:if test="${record.overtimeHours > 0}">
-                                                                <span class="matrix-ot-badge">OT</span>
-                                                            </c:if>
+                                                            <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}">
+                                                            <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge" style="text-decoration:none;" title="View OT Detail">OT</a>
+                                                        </c:if>
                                                             <c:if test="${record.edited}">
                                                                 <span class="matrix-edited-badge">Edited</span>
                                                             </c:if>

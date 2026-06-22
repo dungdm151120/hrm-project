@@ -9,6 +9,7 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 @WebServlet("/create_request")
@@ -29,20 +30,27 @@ public class CreateRequestServlet extends HttpServlet {
 
         User user = (User) session.getAttribute("currentUser");
 
-        String position = userDAO.getPositionNameByUserId(user.getId());
-        boolean isManager = (position != null && position.contains("Manager"));
-        boolean isSysAdmin = (position != null && position.contains("Admin"));
+        String roleName = user.getRoleName();
+        boolean isManagerRole = roleName != null && (roleName.contains("MANAGER") || "SYSTEM ADMIN".equals(roleName) || "BUSINESS ADMIN".equals(roleName));
 
         Map<String, String> allTypes = Request.getAllType();
         Map<String, String> filteredTypes = new LinkedHashMap<>();
 
         for (var entry : allTypes.entrySet()) {
-            if ("POSITION_HANDOVER".equals(entry.getKey())) {
+            String key = entry.getKey();
+            if ("POSITION_HANDOVER".equals(key)) {
+                String position = userDAO.getPositionNameByUserId(user.getId());
+                boolean isManager = (position != null && position.contains("Manager"));
+                boolean isSysAdmin = (position != null && position.contains("Admin"));
                 if (isManager || isSysAdmin) {
-                    filteredTypes.put(entry.getKey(), entry.getValue());
+                    filteredTypes.put(key, entry.getValue());
+                }
+            } else if ("OVERTIME".equals(key)) {
+                if (isManagerRole) {
+                    filteredTypes.put(key, entry.getValue());
                 }
             } else {
-                filteredTypes.put(entry.getKey(), entry.getValue());
+                filteredTypes.put(key, entry.getValue());
             }
         }
 
@@ -87,6 +95,8 @@ public class CreateRequestServlet extends HttpServlet {
                         req.setHandlerId(dept.getManagerUserId());
                     }
                 }
+            } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
+                req.setHandlerId(req.getApproverId());
             } else {
                 String handlerIdParam = request.getParameter("handlerId");
                 if (handlerIdParam != null && !handlerIdParam.trim().isEmpty()) {
@@ -104,21 +114,21 @@ public class CreateRequestServlet extends HttpServlet {
                 }
             }
 
-            // ---------- VALIDATION CHO LEAVE_REQUEST ----------
             if ("LEAVE_REQUEST".equals(req.getType())) {
                 String leaveDateStr = request.getParameter("leaveDate");
-                if (leaveDateStr == null || leaveDateStr.trim().isEmpty()) {
-                    response.sendRedirect("create_request?error=missing_leave_date");
+                String leaveType = request.getParameter("leaveType");
+
+                if (leaveDateStr == null || leaveDateStr.trim().isEmpty() || leaveType == null || leaveType.trim().isEmpty()) {
+                    response.sendRedirect("create_request?error=missing_leave_info");
                     return;
                 }
-                LocalDate leaveDate = LocalDate.parse(leaveDateStr);
 
+                LocalDate leaveDate = LocalDate.parse(leaveDateStr);
 
                 if (leaveDate.isBefore(LocalDate.now())) {
                     response.sendRedirect("create_request?error=leave_date_past");
                     return;
                 }
-
 
                 DayOfWeek dayOfWeek = leaveDate.getDayOfWeek();
                 if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
@@ -126,32 +136,79 @@ public class CreateRequestServlet extends HttpServlet {
                     return;
                 }
 
-
                 AttendanceRecord existingRecord = attendanceDAO.getRecordByUserAndDate(currentUser.getId(), leaveDate);
-                if (existingRecord != null && "ON_LEAVE".equals(existingRecord.getStatus())) {
-                    response.sendRedirect("create_request?error=leave_date_already_on_leave");
+                if (existingRecord != null && ("ON_LEAVE".equals(existingRecord.getStatus()) || "ABSENT".equals(existingRecord.getStatus()))) {
+                    response.sendRedirect("create_request?error=leave_date_already_marked");
                     return;
                 }
-
 
                 if (leaveRequestDAO.existsLeaveRequestForDate(currentUser.getId(), leaveDate)) {
                     response.sendRedirect("create_request?error=leave_date_duplicate_request");
                     return;
                 }
 
-
                 AttendanceSummary summary = attendanceDAO.getSummaryByUser(
                         currentUser.getId(),
                         LocalDate.of(LocalDate.now().getYear(), 1, 1),
                         LocalDate.now()
                 );
-                if (summary.getRemainingLeaveDays() <= 0) {
-                    response.sendRedirect("create_request?error=leave_balance_exhausted");
+
+                if ("ON_LEAVE".equals(leaveType)) {
+                    if (summary.getRemainingLeaveDays() <= 0) {
+                        response.sendRedirect("create_request?error=leave_balance_exhausted");
+                        return;
+                    }
+                } else if ("LEAVE".equals(leaveType)) {
+                    if (summary.getRemainingAbsentDays() <= 0) {
+                        response.sendRedirect("create_request?error=absent_balance_exhausted");
+                        return;
+                    }
+                } else {
+                    response.sendRedirect("create_request?error=invalid_leave_type");
                     return;
                 }
 
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
-                leaveRequestDAO.createLeaveRequest(requestId, leaveDate);
+                leaveRequestDAO.createLeaveRequest(requestId, leaveDate, leaveType);
+            } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
+                String workDateStr = request.getParameter("workDate");
+                if (workDateStr == null || workDateStr.trim().isEmpty()) {
+                    response.sendRedirect("create_request?error=missing_work_date");
+                    return;
+                }
+                LocalDate workDate = LocalDate.parse(workDateStr);
+
+                if (workDate.getDayOfMonth() <= 5) {
+                    response.sendRedirect("create_request?error=adjustment_blocked_first_5_days");
+                    return;
+                }
+
+                AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
+                int count = acrDAO.countCurrentMonthByUser(
+                        currentUser.getId(),
+                        workDate.getMonthValue(),
+                        workDate.getYear()
+                );
+                if (count >= 2) {
+                    response.sendRedirect("create_request?error=adjustment_limit_exceeded");
+                    return;
+                }
+
+                String desiredCheckInStr = request.getParameter("desiredCheckIn");
+                String desiredCheckOutStr = request.getParameter("desiredCheckOut");
+
+                AttendanceChangeRequest acr = new AttendanceChangeRequest();
+                acr.setWorkDate(workDate);
+                if (desiredCheckInStr != null && !desiredCheckInStr.trim().isEmpty()) {
+                    acr.setDesiredCheckIn(LocalTime.parse(desiredCheckInStr));
+                }
+                if (desiredCheckOutStr != null && !desiredCheckOutStr.trim().isEmpty()) {
+                    acr.setDesiredCheckOut(LocalTime.parse(desiredCheckOutStr));
+                }
+
+                int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
+                acr.setRequestId(requestId);
+                acrDAO.create(acr);
             } else {
                 requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
             }

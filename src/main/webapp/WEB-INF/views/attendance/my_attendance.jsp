@@ -63,12 +63,18 @@
                                 </c:forEach>
                             </select>
                         </form>
-                        <a href="${pageContext.request.contextPath}/admin/attendance/exportPersonal?userId=${displayUser.id}&month=${selectedMonth}&year=${selectedYear}"
-                           class="btn-export"
-                           style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: #4361ee; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            Export
-                        </a>
+                        <div style="margin-left: auto; display: flex; gap: 8px;">
+                            <a href="${pageContext.request.contextPath}/admin/attendance/exportPersonal?userId=${displayUser.id}&month=${selectedMonth}&year=${selectedYear}"
+                               class="btn-export"
+                               style="display: inline-flex; align-items: center; gap: 6px; background: #4361ee; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Export
+                            </a>
+                            <a href="${pageContext.request.contextPath}/create_request?type=ATTENDANCE_ADJUST"
+                               style="display: inline-flex; align-items: center; gap: 6px; background: #f39c12; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">
+                                Send Attendance Feedback
+                            </a>
+                        </div>
                     </div>
 
                     <div class="attendance-legend">
@@ -77,6 +83,7 @@
                         <span><i class="legend-dot status-absent"></i>Absent</span>
                         <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
                         <span><i class="legend-dot status-leave"></i>On leave</span>
+                        <span><span class="record-chip chip-ot" style="margin-right:4px;">OT</span>Overtime</span>
                     </div>
 
                     <div class="attendance-calendar">
@@ -120,8 +127,8 @@
                                                                     <c:otherwise>${record.checkInText} - ${record.checkOutText}</c:otherwise>
                                                                 </c:choose>
                                                             </span>
-                                                            <c:if test="${record.overtimeHours > 0}">
-                                                                <span class="record-chip chip-ot">OT</span>
+                                                            <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}">
+                                                                <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="record-chip chip-ot" style="text-decoration:none;" title="View OT Detail">OT</a>
                                                             </c:if>
                                                             <c:if test="${record.edited}">
                                                                 <span class="record-chip chip-edited">Edited</span>

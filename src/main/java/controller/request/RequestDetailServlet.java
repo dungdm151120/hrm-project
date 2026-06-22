@@ -1,7 +1,9 @@
 package controller.request;
 
 import dao.LeaveRequestDAO;
+import dao.AttendanceChangeRequestDAO;
 import dao.RequestDAO;
+import model.AttendanceChangeRequest;
 import model.LeaveRequest;
 import model.Request;
 import model.User;
@@ -36,6 +38,12 @@ public class RequestDetailServlet extends HttpServlet {
                 LeaveRequestDAO leaveRequestDAO = new LeaveRequestDAO();
                 LeaveRequest lr = leaveRequestDAO.getByRequestId(id);
                 request.setAttribute("leaveRequest", lr);
+            } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
+                AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
+                AttendanceChangeRequest acr = acrDAO.getByRequestId(id);
+                request.setAttribute("attendanceChangeRequest", acr);
+            } else if ("OVERTIME".equals(req.getType())) {
+                // xử lý overtime nếu có
             }
 
             request.setAttribute("request", req);

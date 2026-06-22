@@ -3402,3 +3402,8 @@ body.dashboard-body {
 .select2-search--inline {
     margin: 3px !important;
 }
+.badge-confirmed { background-color: #8b5cf6; color: white; }
+.badge-approved { background-color: #3b82f6; color: white; }
+.badge-pending { background-color: #f59e0b; color: white; }
+.badge-rejected { background-color: #ef4444; color: white; }
+.badge-cancelled { background-color: #6b7280; color: white; }

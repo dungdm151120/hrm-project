@@ -373,6 +373,9 @@
                     <c:if test="${userPermissions.contains('VIEW_MY_REQUEST')}">
                         <a href="${ctx}/view_my_request" class="submenu-item ${currentPath == ctx.concat('/view_my_request') ? 'active' : ''}">View my requests</a>
                     </c:if>
+                    <!-- Mọi người dùng đăng nhập đều có thể được làm approver, nên cứ hiển thị menu Pending Approvals -->
+                    <a href="${ctx}/view_pending_request" class="submenu-item ${currentPath == ctx.concat('/view_pending_request') ? 'active' : ''}">Pending Approvals</a>
+                    
                     <c:if test="${userPermissions.contains('VIEW_DEPARTMENT_REQUEST') and not empty currentUser.departmentId}">
                         <a href="${ctx}/view_department_request" class="submenu-item ${currentPath == ctx.concat('/view_department_request') ? 'active' : ''}">View department requests</a>
                     </c:if>

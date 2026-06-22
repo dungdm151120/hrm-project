@@ -323,6 +323,34 @@ public class RequestDAO {
         }
     }
 
+    public boolean updateRequestStatusOnly(int requestId, String status) {
+        String sql = "UPDATE requests SET status = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, requestId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateRequestStatusAndHandler(int requestId, String status, String comment, int handlerId) {
+        String sql = "UPDATE requests SET status = ?, processed_at = NOW(), approver_comment = ?, handler_id = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setString(2, comment);
+            ps.setInt(3, handlerId);
+            ps.setInt(4, requestId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public int countRequestByUserId(int userId, String status, String type) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM requests WHERE user_id = ?");
         if (status != null && !status.isEmpty()) sql.append(" AND status = ?");
@@ -576,6 +604,67 @@ public class RequestDAO {
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int index = 1;
             if (status != null && !status.isEmpty()) ps.setString(index++, status);
+            if (type != null && !type.isEmpty()) ps.setString(index++, type);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // Lấy danh sách đơn đang chờ duyệt (Pending Approvals)
+    public List<Request> getPendingApprovals(int approverId, String type, String sort, int offset, int limit) {
+        List<Request> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT r.*, u.full_name as proposer_name, h.full_name as handler_name FROM requests r " +
+                        "LEFT JOIN users u ON r.user_id = u.id " +
+                        "LEFT JOIN users h ON r.handler_id = h.id " +
+                        "WHERE r.approver_id = ? AND r.status = 'PENDING' "
+        );
+
+        if (type != null && !type.isEmpty()) sql.append(" AND r.type = ?");
+        sql.append(" ORDER BY r.created_at ").append("oldest".equals(sort) ? "ASC" : "DESC").append(" LIMIT ? OFFSET ?");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            ps.setInt(paramIndex++, approverId);
+            if (type != null && !type.isEmpty()) ps.setString(paramIndex++, type);
+            ps.setInt(paramIndex++, limit);
+            ps.setInt(paramIndex++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Request r = new Request();
+                    r.setId(rs.getInt("id"));
+                    r.setType(rs.getString("type"));
+                    r.setStatus(rs.getString("status"));
+                    r.setCreatedAt(rs.getTimestamp("created_at"));
+                    r.setProposerName(rs.getString("proposer_name"));
+                    r.setHandlerName(rs.getString("handler_name"));
+                    r.setProcessedAt(rs.getTimestamp("processed_at"));
+                    list.add(r);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countPendingApprovals(int approverId, String type) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM requests WHERE approver_id = ? AND status = 'PENDING'");
+
+        if (type != null && !type.isEmpty()) sql.append(" AND type = ?");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int index = 1;
+            ps.setInt(index++, approverId);
             if (type != null && !type.isEmpty()) ps.setString(index++, type);
 
             try (ResultSet rs = ps.executeQuery()) {

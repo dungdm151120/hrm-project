@@ -33,6 +33,7 @@
                         <option value="" ${empty selectedStatus ? 'selected' : ''}>All Status</option>
                         <option value="PENDING" ${selectedStatus == 'PENDING' ? 'selected' : ''}>Pending</option>
                         <option value="APPROVED" ${selectedStatus == 'APPROVED' ? 'selected' : ''}>Approved</option>
+                        <option value="CONFIRMED" ${selectedStatus == 'CONFIRMED' ? 'selected' : ''}>Confirmed</option>
                         <option value="REJECTED" ${selectedStatus == 'REJECTED' ? 'selected' : ''}>Rejected</option>
                         <option value="CLOSED" ${selectedStatus == 'CLOSED' ? 'selected' : ''}>Closed</option>
                     </select>
@@ -67,7 +68,19 @@
                     <tbody>
                     <c:forEach items="${handledRequests}" var="req" varStatus="r">
                         <tr>
-                            <td>${req.readableType}</td>
+                            <td>
+                                ${req.readableType}
+                                <c:choose>
+                                    <c:when test="${req.type == 'OVERTIME'}">
+                                        <jsp:useBean id="otDao_handled" class="dao.OvertimeRequestDAO"/>
+                                        <br><small style="color: #666;">Date: ${otDao_handled.getByRequestId(req.id).overtimeDate}</small>
+                                    </c:when>
+                                    <c:when test="${req.type == 'LEAVE_REQUEST'}">
+                                        <jsp:useBean id="lrDao_handled" class="dao.LeaveRequestDAO"/>
+                                        <br><small style="color: #666;">Date: ${lrDao_handled.getByRequestId(req.id).leaveDate}</small>
+                                    </c:when>
+                                </c:choose>
+                            </td>
                             <td>${req.proposerName}</td>
                             <td><span class="badge badge-${fn:toLowerCase(req.status)}">${req.status}</span></td>
                             <td><fmt:formatDate value="${req.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>

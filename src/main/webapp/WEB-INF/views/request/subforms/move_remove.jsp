@@ -1,7 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<!-- Cột trái -->
+<div class="request-group">
+    <label>Proposer</label>
+    <input type="text" class="request-input" value="${sessionScope.currentUser.fullName}" readonly />
+</div>
+
 <div class="request-group">
     <label>Approver <span class="required-star">*</span></label>
     <select name="approverId" class="request-select" required>
@@ -22,7 +26,6 @@
     </select>
 </div>
 
-<!-- Cột phải -->
 <div class="request-group">
     <label>Observer(s)</label>
     <select class="select2-dynamic request-select" name="observerIds" multiple="multiple">
