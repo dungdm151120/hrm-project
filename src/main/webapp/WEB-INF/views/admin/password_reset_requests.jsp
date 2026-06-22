@@ -93,7 +93,7 @@
                                 <td>${resetRequest.handledAt}</td>
                                 <td>${resetRequest.adminNote}</td>
                                 <td>
-                                    <c:if test="${resetRequest.status == 'PENDING' and sessionScope.userPermissions.contains('PASSWORD_RESET_REQUEST_PROCESS')}">
+                                    <c:if test="${resetRequest.status == 'PENDING'}">
                                         <div class="actions">
                                             <form action="${pageContext.request.contextPath}/admin/password-reset/approve" method="post" style="display:inline;">
                                                 <input type="hidden" name="id" value="${resetRequest.id}">

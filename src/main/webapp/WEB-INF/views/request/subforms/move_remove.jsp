@@ -36,6 +36,6 @@
 </div>
 
 <div class="request-group">
-    <label>Request description: <span class="required-star">*</span></label>
-    <textarea name="reason" class="request-textarea" rows="5" required placeholder="Please describe your request description.."></textarea>
+    <label>Reason <span class="required-star">*</span></label>
+    <textarea name="reason" class="request-textarea" rows="5" required placeholder="Enter reasons for move/remove action..."></textarea>
 </div>

@@ -75,9 +75,6 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/users/add")) return "USER_CREATE";
         if (path.equals("/users/update")) return "USER_UPDATE";
         if (path.equals("/users/toggle-status") && "POST".equals(method)) return "USER_TOGGLE_STATUS";
-        if (path.equals("/admin/password-reset-requests") && "GET".equals(method)) return "PASSWORD_RESET_REQUEST_VIEW";
-        if (path.equals("/admin/password-reset/approve") && "POST".equals(method)) return "PASSWORD_RESET_REQUEST_PROCESS";
-        if (path.equals("/admin/password-reset/reject") && "POST".equals(method)) return "PASSWORD_RESET_REQUEST_PROCESS";
 
         // Role
         if (path.equals("/admin/roles") && "GET".equals(method)) return "ROLE_VIEW_LIST";
@@ -93,7 +90,7 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/departments/add")) return "DEPARTMENT_CREATE";
         if (path.equals("/admin/departments/update")) return "DEPARTMENT_UPDATE";
         if (path.equals("/admin/departments/toggle-status") && "POST".equals(method)) return "DEPARTMENT_TOGGLE_STATUS";
-        if (path.equals("/add_member")) return "DEPARTMENT_MOVE_MEMBER";
+        if (path.equals("/add_member")) return "DEPARTMENT_ASSIGN_MANAGER";
         if (path.equals("/remove_member")) return "DEPARTMENT_MOVE_MEMBER";
         if (path.equals("/move_member")) return "DEPARTMENT_MOVE_MEMBER";
         if (path.equals("/admin/departments/assign-manager")) return "DEPARTMENT_ASSIGN_MANAGER";
@@ -143,7 +140,7 @@ public class PermissionFilter implements Filter {
         // Request
         if (path.equals("/view_my_request") && "GET".equals(method)) return "VIEW_MY_REQUEST";
         if (path.equals("/view_all_request") && "GET".equals(method)) return "VIEW_ALL_REQUEST";
-        if (path.equals("/view_department_request") && "GET".equals(method)) return "VIEW_DEPARTMENT_REQUESTS";
+        if (path.equals("/view_department_request") && "GET".equals(method)) return "VIEW_DEPARTMENT_REQUEST";
         if (path.equals("/request_detail") && "GET".equals(method)) return "VIEW_REQUEST_DETAIL";
         if (path.equals("/process_request") && "POST".equals(method)) return "PROCESS_REQUEST";
         if (path.equals("/create_request")) return "CREATE_REQUEST";
