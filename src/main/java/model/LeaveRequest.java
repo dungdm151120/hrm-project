@@ -7,6 +7,7 @@ public class LeaveRequest {
     private int id;
     private int requestId;
     private LocalDate leaveDate;
+    private String leaveType; // ON_LEAVE hoặc LEAVE
     private LocalDateTime createdAt;
 
     public LeaveRequest() {
@@ -15,6 +16,12 @@ public class LeaveRequest {
     public LeaveRequest(int requestId, LocalDate leaveDate) {
         this.requestId = requestId;
         this.leaveDate = leaveDate;
+    }
+
+    public LeaveRequest(int requestId, LocalDate leaveDate, String leaveType) {
+        this.requestId = requestId;
+        this.leaveDate = leaveDate;
+        this.leaveType = leaveType;
     }
 
     public int getId() {
@@ -41,6 +48,14 @@ public class LeaveRequest {
         this.leaveDate = leaveDate;
     }
 
+    public String getLeaveType() {
+        return leaveType;
+    }
+
+    public void setLeaveType(String leaveType) {
+        this.leaveType = leaveType;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -55,6 +70,7 @@ public class LeaveRequest {
                 "id=" + id +
                 ", requestId=" + requestId +
                 ", leaveDate=" + leaveDate +
+                ", leaveType='" + leaveType + '\'' +
                 ", createdAt=" + createdAt +
                 '}';
     }

@@ -12,10 +12,7 @@
   java.util.Set<String> userPermissions = (java.util.Set<String>) session.getAttribute("userPermissions");
   pageContext.setAttribute("userPermissions", userPermissions);
 
-  // Lấy roleId từ session (giả sử currentUser có getRoleId())
   model.User currentUser = (model.User) session.getAttribute("currentUser");
-  boolean isAdmin = (currentUser != null && currentUser.getRoleId() == 1);
-  pageContext.setAttribute("isAdmin", isAdmin);
 
   int unreadAnnouncementCount = 0;
   java.util.List<model.Announcement> unreadAnnouncements = java.util.Collections.emptyList();
@@ -35,7 +32,7 @@
 <c:set var="showContracts"   value="${userPermissions.contains('CONTRACT_VIEW_LIST') or userPermissions.contains('CONTRACT_VIEW_OWN') or userPermissions.contains('CONTRACT_CREATE')}" />
 <c:set var="showAttendance"  value="${userPermissions.contains('ATTENDANCE_VIEW_OWN') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_UPDATE') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}" />
 <c:set var="showTasks"       value="${userPermissions.contains('TASK_VIEW')}" />
-<c:set var="showRequests"    value="${userPermissions.contains('VIEW_MY_REQUEST') or (userPermissions.contains('VIEW_DEPARTMENT_REQUEST') and not empty currentUser.departmentId) or userPermissions.contains('VIEW_ALL_REQUEST') or userPermissions.contains('CREATE_REQUEST')}" />
+<c:set var="showRequests"    value="${userPermissions.contains('VIEW_MY_REQUEST') or (userPermissions.contains('VIEW_DEPARTMENT_REQUESTS') and not empty currentUser.departmentId) or userPermissions.contains('VIEW_ALL_REQUEST') or userPermissions.contains('CREATE_REQUEST')}" />
 <c:set var="showPayroll"     value="${userPermissions.contains('PAYROLL_VIEW_OWN') or userPermissions.contains('PAYROLL_VIEW_LIST') or userPermissions.contains('PAYROLL_GENERATE') or userPermissions.contains('PAYROLL_EXPORT_REPORT')}" />
 <c:set var="showAnnouncements" value="${userPermissions.contains('ANNOUNCEMENT_VIEW_LIST') or userPermissions.contains('ANNOUNCEMENT_CREATE')}" />
 
@@ -150,6 +147,33 @@
             </svg>
             <span>Dashboard</span>
         </a>
+
+        <!-- Announcements Group -->
+                <c:if test="${showAnnouncements}">
+                <c:set var="announcementActive" value="${currentPath.startsWith(ctx.concat('/announcements'))}" />
+                <div class="nav-group">
+                    <button class="nav-item nav-toggle ${announcementActive ? 'open' : ''}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18l-4-2-4 2-4-2-4 2z"/>
+                            <path d="M8 6h8"/>
+                            <path d="M8 10h8"/>
+                            <path d="M8 14h5"/>
+                        </svg>
+                        <span>Announcements</span>
+                        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="submenu">
+                        <c:if test="${userPermissions.contains('ANNOUNCEMENT_VIEW_LIST')}">
+                            <a href="${ctx}/announcements" class="submenu-item ${currentPath == ctx.concat('/announcements') ? 'active' : ''}">View announcements</a>
+                        </c:if>
+                        <c:if test="${userPermissions.contains('ANNOUNCEMENT_CREATE')}">
+                            <a href="${ctx}/announcements/add" class="submenu-item ${currentPath == ctx.concat('/announcements/add') ? 'active' : ''}">Create announcement</a>
+                        </c:if>
+                    </div>
+                </div>
+                </c:if>
 
         <!-- Employees Group -->
         <c:if test="${showEmployees}">
@@ -373,7 +397,10 @@
                     <c:if test="${userPermissions.contains('VIEW_MY_REQUEST')}">
                         <a href="${ctx}/view_my_request" class="submenu-item ${currentPath == ctx.concat('/view_my_request') ? 'active' : ''}">View my requests</a>
                     </c:if>
-                    <c:if test="${userPermissions.contains('VIEW_DEPARTMENT_REQUEST') and not empty currentUser.departmentId}">
+                    <!-- Mọi người dùng đăng nhập đều có thể được làm approver, nên cứ hiển thị menu Pending Approvals -->
+                    <a href="${ctx}/view_pending_request" class="submenu-item ${currentPath == ctx.concat('/view_pending_request') ? 'active' : ''}">Pending Approvals</a>
+                    
+                    <c:if test="${userPermissions.contains('VIEW_DEPARTMENT_REQUESTS') and not empty currentUser.departmentId}">
                         <a href="${ctx}/view_department_request" class="submenu-item ${currentPath == ctx.concat('/view_department_request') ? 'active' : ''}">View department requests</a>
                     </c:if>
                     <c:if test="${userPermissions.contains('VIEW_ALL_REQUEST')}">
@@ -405,10 +432,13 @@
                     <a href="${ctx}/payroll/my" class="submenu-item ${currentPath == ctx.concat('/payroll/my') ? 'active' : ''}">My Payroll</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('PAYROLL_VIEW_LIST')}">
-                    <a href="${ctx}/payroll/list" class="submenu-item ${currentPath == ctx.concat('/payroll/list') ? 'active' : ''}">Payroll List</a>
+                    <a href="${ctx}/payroll/department" class="submenu-item ${currentPath == ctx.concat('/payroll/department') ? 'active' : ''}">Payroll List</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('PAYROLL_GENERATE')}">
                     <a href="${ctx}/payroll/generate" class="submenu-item ${currentPath == ctx.concat('/payroll/generate') ? 'active' : ''}">Generate Payroll</a>
+                </c:if>
+                <c:if test="${userPermissions.contains('PAYROLL_EXPORT_REPORT')}">
+                    <a href="${ctx}/payroll/export" class="submenu-item ${currentPath == ctx.concat('/payroll/export') ? 'active' : ''}">Export Payrolls</a>
                 </c:if>
             </div>
         </div>
@@ -436,6 +466,7 @@
             </div>
         </div>
         </c:if>
+
         <!-- Chat  -->
         <a href="${ctx}/chat"
            class="nav-item ${currentPath == ctx.concat('/chat') ? 'active' : ''}">
@@ -444,35 +475,9 @@
             </svg>
             <span>Messages</span>
         </a>
-        <!-- Announcements Group -->
-        <c:if test="${showAnnouncements}">
-        <c:set var="announcementActive" value="${currentPath.startsWith(ctx.concat('/announcements'))}" />
-        <div class="nav-group">
-            <button class="nav-item nav-toggle ${announcementActive ? 'open' : ''}">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18l-4-2-4 2-4-2-4 2z"/>
-                    <path d="M8 6h8"/>
-                    <path d="M8 10h8"/>
-                    <path d="M8 14h5"/>
-                </svg>
-                <span>Announcements</span>
-                <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </button>
-            <div class="submenu">
-                <c:if test="${userPermissions.contains('ANNOUNCEMENT_VIEW_LIST')}">
-                    <a href="${ctx}/announcements" class="submenu-item ${currentPath == ctx.concat('/announcements') ? 'active' : ''}">View announcements</a>
-                </c:if>
-                <c:if test="${userPermissions.contains('ANNOUNCEMENT_CREATE')}">
-                    <a href="${ctx}/announcements/add" class="submenu-item ${currentPath == ctx.concat('/announcements/add') ? 'active' : ''}">Create announcement</a>
-                </c:if>
-            </div>
-        </div>
-        </c:if>
 
-        <!-- Others Group (chỉ hiển thị nếu là ADMIN) -->
-        <c:if test="${isAdmin}">
+        <!-- Others Group -->
+        <c:if test="${userPermissions.contains('PASSWORD_RESET_REQUEST_VIEW')}">
         <c:set var="othersActive" value="${currentPath.startsWith(ctx.concat('/admin/password-reset-requests'))}" />
         <div class="nav-group">
             <button class="nav-item nav-toggle ${othersActive ? 'open' : ''}">

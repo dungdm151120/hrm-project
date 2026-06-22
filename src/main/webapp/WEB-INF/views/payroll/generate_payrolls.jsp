@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.time.LocalDate" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%
     int currentYear = LocalDate.now().getYear();
     int currentMonth = LocalDate.now().getMonthValue();
@@ -12,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Position | HRM</title>
+    <title>Generate Payrolls | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body class="dashboard-body">
@@ -29,7 +30,7 @@
         </div>
 
         <div class="dashboard-content">
-            <a class="back-link" href="${pageContext.request.contextPath}/payroll/list">Return to payroll list</a>
+            <a class="back-link" href="${pageContext.request.contextPath}/payroll/department">Return to payroll department list</a>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>
@@ -55,12 +56,12 @@
                 <div class="form-row" style="display: flex; gap: 20px;">
                     <div class="form-group" style="flex: 1;">
                         <label for="month">Payroll Month <span class="required-star">*</span></label>
-                        <select id="month" name="month" required>
+                        <c:set var="monthNames" value="${fn:split('January,February,March,April,May,June,July,August,September,October,November,December', ',')}" />
+
+                        <select name="month">
+                            <option value="" ${empty month ? 'selected' : ''}>All months</option>
                             <c:forEach var="m" begin="1" end="12">
-                                <c:set var="monthSelected" value="${not empty param.month ? param.month : currentMonth}" />
-                                <option value="${m}" ${m == monthSelected ? 'selected' : ''}>
-                                    Month ${m}
-                                </option>
+                                <option value="${m}" ${month == m ? 'selected' : ''}>${monthNames[m - 1]}</option>
                             </c:forEach>
                         </select>
                     </div>
@@ -68,7 +69,7 @@
                     <div class="form-group" style="flex: 1;">
                         <label for="year">Payroll Year <span class="required-star">*</span></label>
                         <select id="year" name="year" required>
-                            <c:forEach var="y" begin="${currentYear - 2}" end="${currentYear + 1}">
+                            <c:forEach var="y" begin="${currentYear - 1}" end="${currentYear + 1}">
                                 <c:set var="yearSelected" value="${not empty param.year ? param.year : currentYear}" />
                                 <option value="${y}" ${y == yearSelected ? 'selected' : ''}>
                                     Year ${y}
@@ -80,7 +81,6 @@
 
                 <div class="form-actions">
                     <button type="submit" class="btn-save" onclick="return confirm('Are you sure you want to generate payrolls for the selected period? This will overwrite existing draft payrolls.');">Generate Payrolls</button>
-                    <a href="${pageContext.request.contextPath}/payroll/list" class="btn-cancel">Cancel</a>
                 </div>
             </form>
         </div>

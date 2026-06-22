@@ -43,7 +43,7 @@ public class ChangePositionStatusServlet extends HttpServlet {
 
                 boolean isAssigned = userDAO.isPositionAssigned(positionId);
                 if (isAssigned) {
-                    session.setAttribute("error", "Không thể vô hiệu hóa vì đang có nhân viên đảm nhận vị trí này!");
+                    session.setAttribute("error", "Can not deactivate this position due to having at least 1 employee has it!");
                     response.sendRedirect(request.getContextPath() + "/position/list");
                     return;
                 }
@@ -54,7 +54,7 @@ public class ChangePositionStatusServlet extends HttpServlet {
                     if ("System Administrator".equalsIgnoreCase(posName) ||
                             "HR Manager".equalsIgnoreCase(posName) ||
                             "Department Manager".equalsIgnoreCase(posName)) {
-                        session.setAttribute("error", "Không thể vô hiệu hóa vị trí quản lý hệ thống: " + posName);
+                        session.setAttribute("error", "Can not deactivate this position in the system: " + posName);
                         response.sendRedirect(request.getContextPath() + "/position/list");
                         return;
                     }

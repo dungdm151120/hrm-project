@@ -6,7 +6,6 @@
     <meta charset="UTF-8">
     <title>Create New Request | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
-    <!-- Thêm request.css -->
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/request.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -23,7 +22,6 @@
         </div>
 
         <div class="dashboard-content">
-            <!-- Error / Success alerts -->
             <c:if test="${not empty param.error}">
                 <div class="alert alert-error" style="margin-bottom:1.5rem;">
                     <span class="alert-icon">⚠️</span>
@@ -33,9 +31,23 @@
                             <c:when test="${param.error == 'leave_date_past'}">Leave date cannot be in the past.</c:when>
                             <c:when test="${param.error == 'leave_date_weekend'}">Weekends are not allowed for leave requests.</c:when>
                             <c:when test="${param.error == 'leave_date_already_on_leave'}">You already have an approved leave on this date.</c:when>
+                            <c:when test="${param.error == 'leave_date_already_marked'}">This date is already marked as leave or absent.</c:when>
                             <c:when test="${param.error == 'leave_date_duplicate_request'}">A leave request for this date already exists (pending or approved).</c:when>
                             <c:when test="${param.error == 'leave_balance_exhausted'}">You have no remaining leave balance. Cannot submit request.</c:when>
+                            <c:when test="${param.error == 'absent_balance_exhausted'}">You have no remaining unpaid leave balance. Cannot submit request.</c:when>
+                            <c:when test="${param.error == 'missing_leave_info'}">Please fill in all leave request information.</c:when>
+                            <c:when test="${param.error == 'invalid_leave_type'}">Invalid leave type.</c:when>
                             <c:when test="${param.error == 'missing_approver'}">Please select an approver.</c:when>
+                            <c:when test="${param.error == 'missing_department'}">You must be assigned to a department to create this request.</c:when>
+                            <c:when test="${param.error == 'missing_date'}">Please select an overtime date.</c:when>
+                            <c:when test="${param.error == 'date_past'}">Overtime date cannot be in the past.</c:when>
+                            <c:when test="${param.error == 'date_weekend'}">Overtime is only allowed from Monday to Friday.</c:when>
+                            <c:when test="${param.error == 'reason_too_short'}">The reason must be at least 10 characters long.</c:when>
+                            <c:when test="${param.error == 'missing_employees'}">Please select at least one employee to work overtime.</c:when>
+                            <c:when test="${param.error == 'duplicate_overtime'}">One or more selected employees already have an overtime request (pending or approved) on this date.</c:when>
+                            <c:when test="${param.error == 'missing_work_date'}">Please select a work date.</c:when>
+                            <c:when test="${param.error == 'adjustment_blocked_first_5_days'}">Cannot submit adjustment requests during the first 5 days of the month.</c:when>
+                            <c:when test="${param.error == 'adjustment_limit_exceeded'}">You have reached the maximum of 2 adjustment requests for this month.</c:when>
                             <c:when test="${param.error == 'system_error'}">A system error occurred. Please try again later.</c:when>
                             <c:otherwise>${param.error}</c:otherwise>
                         </c:choose>
@@ -45,7 +57,6 @@
 
             <div class="request-card">
                 <form action="create_request" method="POST">
-                    <!-- Dropdown chọn loại request -->
                     <div class="request-group" style="max-width: 400px;">
                         <label for="typeSelect">Request Type <span class="required-star">*</span></label>
                         <select name="type" id="typeSelect" class="request-select" required>
@@ -56,10 +67,8 @@
                         </select>
                     </div>
 
-                    <!-- Container động -->
                     <div id="dynamicFormContainer" class="request-grid"></div>
 
-                    <!-- Nút hành động -->
                     <div class="request-actions">
                         <button type="submit" class="btn-submit-request">Send Request</button>
                         <a href="${pageContext.request.contextPath}/view_my_request" class="btn-cancel-request">Cancel</a>
@@ -72,8 +81,7 @@
 
 <script>
 $(document).ready(function() {
-    $('#typeSelect').change(function() {
-        var selectedType = $(this).val();
+    function loadSubForm(selectedType) {
         if(selectedType) {
             $.ajax({
                 url: '${pageContext.request.contextPath}/load_sub_form',
@@ -81,7 +89,11 @@ $(document).ready(function() {
                 data: { type: selectedType },
                 success: function(htmlResult) {
                     $('#dynamicFormContainer').html(htmlResult);
-                    // Re-init Select2
+                    if (selectedType === 'OVERTIME') {
+                        $('form').attr('action', 'create_overtime_request');
+                    } else {
+                        $('form').attr('action', 'create_request');
+                    }
                     $('.select2-dynamic').select2({
                         placeholder: "Select options...",
                         allowClear: true,
@@ -95,6 +107,17 @@ $(document).ready(function() {
         } else {
             $('#dynamicFormContainer').empty();
         }
+    }
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var typeParam = urlParams.get('type');
+    if (typeParam) {
+        $('#typeSelect').val(typeParam);
+        loadSubForm(typeParam);
+    }
+
+    $('#typeSelect').change(function() {
+        loadSubForm($(this).val());
     });
 });
 </script>

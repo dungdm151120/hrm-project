@@ -22,8 +22,17 @@ public class AttendanceRecordDTO {
     private String checkOutText;
     private String cssClass;
     private boolean edited;
+    private String otStatus;
     // Thêm vào model AttendanceRecordDTO
     private String positionName;
+
+    public String getOtStatus() {
+        return otStatus;
+    }
+
+    public void setOtStatus(String otStatus) {
+        this.otStatus = otStatus;
+    }
 
     public String getPositionName() {
         return positionName;

@@ -17,10 +17,11 @@ public class UserDAO {
 
     public User findByEmailAndPassword(String email, String password) {
         String sql = """
-                SELECT u.*, r.name AS role_name
+                SELECT u.*, r.name AS role_name, p.name AS position_name, d.name AS department_name
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
-                
+                LEFT JOIN positions p ON u.position_id = p.id
+                LEFT JOIN departments d ON u.department_id = d.id
                 WHERE u.email = ?
                   AND u.password = ?
                   AND u.active = TRUE

@@ -8,12 +8,13 @@ import java.time.LocalDate;
 
 public class LeaveRequestDAO {
 
-    public void createLeaveRequest(int requestId, LocalDate leaveDate) throws SQLException {
-        String sql = "INSERT INTO leave_requests (request_id, leave_date) VALUES (?, ?)";
+    public void createLeaveRequest(int requestId, LocalDate leaveDate, String leaveType) throws SQLException {
+        String sql = "INSERT INTO leave_requests (request_id, leave_date, leave_type) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, requestId);
             ps.setDate(2, Date.valueOf(leaveDate));
+            ps.setString(3, leaveType);
             ps.executeUpdate();
         }
     }
@@ -29,6 +30,7 @@ public class LeaveRequestDAO {
                     lr.setId(rs.getInt("id"));
                     lr.setRequestId(rs.getInt("request_id"));
                     lr.setLeaveDate(rs.getDate("leave_date").toLocalDate());
+                    lr.setLeaveType(rs.getString("leave_type"));
                     lr.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
                     return lr;
                 }
@@ -38,6 +40,7 @@ public class LeaveRequestDAO {
         }
         return null;
     }
+
     public boolean existsLeaveRequestForDate(int userId, LocalDate leaveDate) {
         String sql = "SELECT COUNT(*) FROM leave_requests lr " +
                 "JOIN requests r ON lr.request_id = r.id " +

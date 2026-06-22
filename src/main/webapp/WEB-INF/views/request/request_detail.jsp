@@ -54,8 +54,79 @@
                     </div>
                     <c:if test="${request.type == 'LEAVE_REQUEST' && not empty leaveRequest}">
                         <div class="detail-row">
+                            <span class="detail-label">Leave Type:</span>
+                            <span class="detail-value">
+                                <c:choose>
+                                    <c:when test="${leaveRequest.leaveType == 'ON_LEAVE'}">On Leave (Paid)</c:when>
+                                    <c:when test="${leaveRequest.leaveType == 'LEAVE'}">Leave (Unpaid)</c:when>
+                                    <c:otherwise>${leaveRequest.leaveType}</c:otherwise>
+                                </c:choose>
+                            </span>
+                        </div>
+                        <div class="detail-row">
                             <span class="detail-label">Leave Date:</span>
                             <span class="detail-value"><strong>${leaveRequest.leaveDate}</strong></span>
+                        </div>
+                    </c:if>
+                    <c:if test="${request.type == 'ATTENDANCE_ADJUST' && not empty attendanceChangeRequest}">
+                        <div class="detail-row">
+                            <span class="detail-label">Work Date:</span>
+                            <span class="detail-value">${attendanceChangeRequest.workDate}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Desired Check-in:</span>
+                            <span class="detail-value">${not empty attendanceChangeRequest.desiredCheckIn ? attendanceChangeRequest.desiredCheckIn : '--'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Desired Check-out:</span>
+                            <span class="detail-value">${not empty attendanceChangeRequest.desiredCheckOut ? attendanceChangeRequest.desiredCheckOut : '--'}</span>
+                        </div>
+                    </c:if>
+                    <c:if test="${request.type == 'OVERTIME' && not empty overtimeRequest}">
+                        <div class="detail-row">
+                            <span class="detail-label">OT Date:</span>
+                            <span class="detail-value"><strong>${overtimeRequest.overtimeDate}</strong></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Shift:</span>
+                            <span class="detail-value">${overtimeRequest.shiftStart} - ${overtimeRequest.shiftEnd}</span>
+                        </div>
+                        <div class="detail-row" style="grid-column: 1 / -1; margin-top: 15px;">
+                            <span class="detail-label">OT Participants:</span>
+                            <div class="detail-value" style="width: 100%;">
+                                <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                                    <thead>
+                                        <tr style="background-color: #f5f5f5;">
+                                            <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Employee</th>
+                                            <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Status</th>
+                                            <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Actual Hours</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach items="${overtimeParticipants}" var="p">
+                                            <tr>
+                                                <td style="padding: 8px; border: 1px solid #ddd;">${p.userFullName} - ${p.employeeCode}</td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                                    <span class="badge badge-${fn:toLowerCase(p.status)}">${p.status}</span>
+                                                </td>
+                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${p.hoursActual}</td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                                <c:if test="${request.status == 'APPROVED' && (sessionScope.currentUser.id eq request.approverId || fn:contains(sessionScope.currentUser.roleName, 'HR'))}">
+                                    <form action="confirm_overtime" method="POST" style="margin-top: 15px;">
+                                        <input type="hidden" name="requestId" value="${request.id}">
+                                        <button type="submit" class="btn btn-success" style="border: 2px solid #28a745;" onclick="return confirm('Bạn có chắc chắn muốn xác nhận tính giờ OT cho request này?');">Confirm Overtime</button>
+                                    </form>
+                                </c:if>
+                                <c:if test="${request.status == 'CONFIRMED'}">
+                                    <div style="margin-top: 15px; padding: 10px; background-color: #f3e8ff; color: #6b21a8; border-radius: 8px; border: 1px solid #d8b4fe;">
+                                        <strong><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> OT Confirmed!</strong><br/>
+                                        The OT hours for this request have been successfully calculated and synced with the attendance records.
+                                    </div>
+                                </c:if>
+                            </div>
                         </div>
                     </c:if>
                     <div class="detail-row">

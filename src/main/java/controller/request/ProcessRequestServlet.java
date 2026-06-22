@@ -1,8 +1,11 @@
 package controller.request;
 
 import dao.AttendanceDAO;
+import dao.AttendanceChangeRequestDAO;
 import dao.LeaveRequestDAO;
 import dao.RequestDAO;
+import model.AttendanceChangeRequest;
+import model.AttendanceRecord;
 import model.LeaveRequest;
 import model.Request;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,12 +14,14 @@ import model.User;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.time.LocalDateTime;
 
 @WebServlet("/process_request")
 public class ProcessRequestServlet extends HttpServlet {
     private final RequestDAO dao = new RequestDAO();
     private final LeaveRequestDAO leaveRequestDAO = new LeaveRequestDAO();
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();
+    private final AttendanceChangeRequestDAO attendanceChangeRequestDAO = new AttendanceChangeRequestDAO();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -61,12 +66,51 @@ public class ProcessRequestServlet extends HttpServlet {
                             response.sendRedirect("request_detail?id=" + requestId + "&error=comment_required");
                             return;
                         }
-                        success = dao.updateRequestStatus(requestId, action.equals("APPROVE") ? "APPROVED" : "REJECTED", comment);
 
-                        if (success && "APPROVE".equals(action) && "LEAVE_REQUEST".equals(req.getType())) {
-                            LeaveRequest lr = leaveRequestDAO.getByRequestId(requestId);
-                            if (lr != null) {
-                                attendanceDAO.markOnLeave(req.getUserId(), lr.getLeaveDate());
+                        String newStatus = action.equals("APPROVE") ? "APPROVED" : "REJECTED";
+                        if ("APPROVE".equals(action) && "OVERTIME".equals(req.getType())) {
+                            success = dao.updateRequestStatusAndHandler(requestId, newStatus, comment, userId);
+                        } else {
+                            success = dao.updateRequestStatus(requestId, newStatus, comment);
+                        }
+
+                        if (success) {
+                            if ("APPROVE".equals(action) && "LEAVE_REQUEST".equals(req.getType())) {
+                                LeaveRequest lr = leaveRequestDAO.getByRequestId(requestId);
+                                if (lr != null) {
+                                    if ("ON_LEAVE".equals(lr.getLeaveType())) {
+                                        attendanceDAO.markOnLeave(req.getUserId(), lr.getLeaveDate());
+                                    } else if ("LEAVE".equals(lr.getLeaveType())) {
+                                        attendanceDAO.markAbsent(req.getUserId(), lr.getLeaveDate());
+                                    }
+                                }
+                            } else if ("APPROVE".equals(action) && "ATTENDANCE_ADJUST".equals(req.getType())) {
+                                AttendanceChangeRequest acr = attendanceChangeRequestDAO.getByRequestId(requestId);
+                                if (acr != null) {
+                                    AttendanceRecord record = attendanceDAO.getRecordByUserAndDate(req.getUserId(), acr.getWorkDate());
+                                    if (record == null) {
+                                        record = new AttendanceRecord();
+                                        record.setUserId(req.getUserId());
+                                        record.setWorkDate(acr.getWorkDate());
+                                    }
+                                    if (acr.getDesiredCheckIn() != null) {
+                                        record.setCheckIn(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckIn()));
+                                    } else {
+                                        record.setCheckIn(null);
+                                    }
+                                    if (acr.getDesiredCheckOut() != null) {
+                                        record.setCheckOut(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckOut()));
+                                    } else {
+                                        record.setCheckOut(null);
+                                    }
+                                    record.setNote("Attendance adjusted via request #" + requestId);
+                                    attendanceDAO.calculateWorkingHours(record);
+                                    record.setStatus(attendanceDAO.determineStatus(record));
+                                    attendanceDAO.saveAttendanceRecord(record);
+                                }
+                            } else if ("OVERTIME".equals(req.getType())) {
+                                service.OvertimeService overtimeService = new service.OvertimeService();
+                                overtimeService.handleProcessAction(requestId, action);
                             }
                         }
                     }
@@ -76,7 +120,11 @@ public class ProcessRequestServlet extends HttpServlet {
                     if (String.valueOf(req.getUserId()).equals(String.valueOf(userId)) && "PENDING".equals(req.getStatus())) {
                         success = dao.updateRequestStatus(requestId, "CANCELLED", null);
 
-                        // Lấy các tham số lọc từ form
+                        if (success && "OVERTIME".equals(req.getType())) {
+                            service.OvertimeService overtimeService = new service.OvertimeService();
+                            overtimeService.handleProcessAction(requestId, "CANCEL");
+                        }
+
                         String statusFilter = request.getParameter("status");
                         String typeFilter = request.getParameter("type");
                         String sortFilter = request.getParameter("sort");

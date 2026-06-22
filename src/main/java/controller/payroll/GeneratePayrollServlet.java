@@ -16,9 +16,9 @@ import java.util.List;
 @WebServlet("/payroll/generate")
 public class GeneratePayrollServlet extends HttpServlet {
 
-    private PayrollService payrollService = new PayrollService();
-    private UserDAO userDAO = new UserDAO();
-    private DepartmentDAO departmentDAO = new DepartmentDAO();
+    private final PayrollService payrollService = new PayrollService();
+    private final UserDAO userDAO = new UserDAO();
+    private final DepartmentDAO departmentDAO = new DepartmentDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -51,7 +51,7 @@ public class GeneratePayrollServlet extends HttpServlet {
                 return;
             }
 
-            int successCount = payrollService.generateBulkPayroll(employeesToCalculate, month, year, expectedHours);
+            int successCount = payrollService.generateBulkPayroll(employeesToCalculate, month, year, expectedHours, departmentId);
 
             request.setAttribute("success", "Successfully generated " + successCount + " payroll records for " + month + "/" + year + ".");
 

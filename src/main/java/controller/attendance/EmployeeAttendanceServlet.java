@@ -68,16 +68,16 @@ public class EmployeeAttendanceServlet extends HttpServlet {
         int selectedMonth = parseIntInRange(request.getParameter("month"), today.getMonthValue(), 1, 12);
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);
 
-        List<AttendanceRecord> recordList = attendanceDAO.getRecordsByUser(
+        List<AttendanceRecordDTO> recordList = attendanceDAO.getAttendanceDetailByUserAndMonth(
                 employee.getId(),
-                selectedPeriod.atDay(1),
-                selectedPeriod.atEndOfMonth()
+                selectedMonth,
+                selectedYear
         );
 
         Map<String, AttendanceRecordDTO> attendanceMap = new LinkedHashMap<>();
-        for (AttendanceRecord record : recordList) {
-            AttendanceRecordDTO dto = mapToDTO(record);
-            attendanceMap.put(record.getUserId() + "_" + record.getWorkDate(), dto);
+        for (AttendanceRecordDTO dto : recordList) {
+            dto.setCssClass(resolveCssClass(dto.getStatus()));
+            attendanceMap.put(dto.getUserId() + "_" + dto.getWorkDate(), dto);
         }
 
         AttendanceSummary summary = attendanceDAO.getSummaryByUser(
