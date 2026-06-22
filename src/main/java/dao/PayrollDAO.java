@@ -232,6 +232,34 @@ public class PayrollDAO {
         return false;
     }
 
+    public int confirmAllDepartmentPayrolls(Integer departmentId, Integer month, Integer year) {
+        StringBuilder sql = new StringBuilder("""
+            UPDATE payrolls p
+            JOIN users u ON p.user_id = u.id
+            SET p.status = 'CONFIRMED'
+            WHERE LOWER(p.status) = 'draft'
+        """);
+
+        if (departmentId != null) sql.append(" AND u.department_id = ? ");
+        if (month != null) sql.append(" AND p.month = ? ");
+        if (year != null) sql.append(" AND p.year = ? ");
+
+        int updatedRows = 0;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (departmentId != null) ps.setInt(idx++, departmentId);
+            if (month != null) ps.setInt(idx++, month);
+            if (year != null) ps.setInt(idx++, year);
+
+            updatedRows = ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return updatedRows;
+    }
+
     public int countPayrolls(String keyword, String status, Integer userId, Integer month, Integer year, Integer departmentId) {
         int totalRows = 0;
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM payrolls p JOIN users u ON p.user_id = u.id WHERE 1=1 ");

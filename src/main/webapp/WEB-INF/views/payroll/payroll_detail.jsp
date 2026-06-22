@@ -34,19 +34,27 @@
         <form action="${pageContext.request.contextPath}/payroll/confirm" method="post" style="display: inline;">
             <div class="dashboard-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px;">
+                    <c:choose>
+                        <c:when test="${isMyPayroll}">
+                            <a class="back-link" href="${pageContext.request.contextPath}/payroll/my" style="margin: 0;">
+                                Return to my payroll list
+                            </a>
+                        </c:when>
 
-                     <a class="back-link" href="${pageContext.request.contextPath}/payroll/${isMyPayroll ? 'my' : 'list'}" style="margin: 0;">
-                         Return to payroll list
-                     </a>
+                        <c:otherwise>
+                            <a class="back-link" href="${pageContext.request.contextPath}/payroll/list?departmentId=${param.redirectDepartmentId}&month=${param.redirectMonth}&year=${param.redirectYear}" style="margin: 0;">
+                                Return to payroll list
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
+                    <div>
+                        <c:set var="statusLower" value="${fn:toLowerCase(not empty payroll.status ? payroll.status : 'draft')}" />
 
-                     <div>
-                         <c:set var="statusLower" value="${fn:toLowerCase(not empty payroll.status ? payroll.status : 'draft')}" />
-
-                         <span class="badge ${statusLower == 'confirmed' ? 'badge-active' : 'badge-inactive'}">
+                        <span class="badge ${statusLower == 'confirmed' ? 'badge-active' : 'badge-inactive'}">
                              <c:out value="${statusLower == 'confirmed' ? 'CONFIRMED' : 'DRAFT'}" />
-                         </span>
-                     </div>
-                 </div>
+                        </span>
+                    </div>
+                </div>
 
                 <div class="form-row" style="display: flex; gap: 20px; ">
                     <div class="form-group" style="flex: 1;">
@@ -139,19 +147,6 @@
                 <div class="form-group" style="margin-bottom: 32px;">
                     <label style="font-weight: bold; font-size: 1.1rem;">Net Take-Home Pay (Total Remuneration)</label>
                     <input type="text" value="<fmt:formatNumber value='${payroll.netPay}' type='number' maxFractionDigits='0'/> VND" readonly style="font-size: 1.5rem; font-weight: bold; color: #2563EB;" />
-                </div>
-
-                <div class="form-actions">
-                    <a href="${pageContext.request.contextPath}/payroll/list" class="btn-cancel" style="text-decoration: none; display: inline-block; text-align: center;">
-                        Cancel
-                    </a>
-
-                    <c:if test="${(payroll.status == 'DRAFT') && sessionScope.userPermissions.contains('PAYROLL_CONFIRM')}">
-                            <input type="hidden" name="id" value="${payroll.id}">
-                            <button type="submit" class="btn-save" style="display: inline-block; text-align: center;">
-                                Confirm This Payroll
-                            </button>
-                    </c:if>
                 </div>
             </div>
         </form>
