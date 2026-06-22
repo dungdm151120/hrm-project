@@ -28,8 +28,8 @@
                 <h1 class="header-title">${isMyPayroll ? 'My Payroll' : 'Payroll List'}</h1>
             </div>
             <div class="header-right">
-                <c:if test="${userPermissions.contains('PAYROLL_EXPORT_REPORT')}">
-                    <a href="${pageContext.request.contextPath}/payroll/export" class="btn-save">Export Report</a>
+                <c:if test="${userPermissions.contains('PAYROLL_CONFIRM')}">
+                    <a href="${pageContext.request.contextPath}/payroll/export" class="btn-save">Confirm All</a>
                 </c:if>
             </div>
         </div>
@@ -68,19 +68,20 @@
 
                     <c:set var="monthNames" value="${fn:split('January,February,March,April,May,June,July,August,September,October,November,December', ',')}" />
 
-                    <select name="month" onchange="this.form.submit()">
-                        <option value="" ${empty month ? 'selected' : ''}>All months</option>
-                        <c:forEach var="m" begin="1" end="12">
-                            <option value="${m}" ${month == m ? 'selected' : ''}>${monthNames[m - 1]}</option>
-                        </c:forEach>
-                    </select>
+                    <div class="filter-static-info" style="display: flex; align-items: center; gap: 5px; font-weight: bold; background: #e2e8f0; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; color: #334155;">
+                        <span class="info-label">Period:</span>
+                        <span class="info-value">
+                            <c:choose>
+                                <c:when test="${not empty month}">${monthNames[month - 1]}</c:when>
+                                <c:otherwise>All months</c:otherwise>
+                            </c:choose>
+                            / ${not empty year ? year : 'All years'}
+                        </span>
+                    </div>
 
-                    <select name="year" onchange="this.form.submit()">
-                        <option value="" ${empty year ? 'selected' : ''}>All years</option>
-                        <c:forEach var="y" begin="${currentYear - 5}" end="${currentYear + 1}">
-                            <option value="${y}" ${year == y ? 'selected' : ''}>${y}</option>
-                        </c:forEach>
-                    </select>
+                    <input type="hidden" name="month" value="${month}">
+                    <input type="hidden" name="year" value="${year}">
+                    <input type="hidden" name="departmentId" value="${departmentId}">
 
                     <select name="sort" onchange="this.form.submit()">
                         <option value="name_asc" ${sort == 'name_asc' ? 'selected' : ''}>Name A-Z</option>
@@ -89,8 +90,10 @@
 
                     <button type="submit" class="search-btn">Search</button>
 
-                    <c:if test="${not empty keyword || (!isMyPayroll && not empty status && status != 'all') || not empty month || not empty year || not empty sort}">
-                        <a href="${pageContext.request.contextPath}${isMyPayroll ? '/payroll/my' : '/payroll/list'}" class="btn-reset" style="text-decoration: none; padding: 8px 12px; margin-left: 5px;">Clear</a>
+                    <c:if test="${not empty keyword || (not empty status && status != 'all')}">
+                        <a href="${pageContext.request.contextPath}/payroll/list?departmentId=${departmentId}&month=${month}&year=${year}" class="btn-reset">
+                            Clear Filters
+                        </a>
                     </c:if>
                 </form>
             </div>
@@ -154,6 +157,9 @@
                                         <a href="${detailUrl}" class="btn-save" style="padding: 5px 12px; font-size: 0.85rem; text-decoration: none;">
                                             View Details
                                         </a>
+                                        <c:if test="${userPermissions.contains('PAYROLL_CONFIRM')}">
+                                            <a href="${pageContext.request.contextPath}/payroll/export" class="btn-save">Confirm</a>
+                                        </c:if>
                                     </div>
                                 </td>
                             </tr>

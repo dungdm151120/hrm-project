@@ -405,7 +405,7 @@
                     <a href="${ctx}/payroll/my" class="submenu-item ${currentPath == ctx.concat('/payroll/my') ? 'active' : ''}">My Payroll</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('PAYROLL_VIEW_LIST')}">
-                    <a href="${ctx}/payroll/list" class="submenu-item ${currentPath == ctx.concat('/payroll/list') ? 'active' : ''}">Payroll List</a>
+                    <a href="${ctx}/payroll/department" class="submenu-item ${currentPath == ctx.concat('/payroll/department') ? 'active' : ''}">Payroll List</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('PAYROLL_GENERATE')}">
                     <a href="${ctx}/payroll/generate" class="submenu-item ${currentPath == ctx.concat('/payroll/generate') ? 'active' : ''}">Generate Payroll</a>

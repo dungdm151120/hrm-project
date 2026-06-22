@@ -25,12 +25,14 @@ public class PayrollListServlet extends HttpServlet {
         String statusParam = request.getParameter("status");
         String monthParam = request.getParameter("month");
         String yearParam = request.getParameter("year");
+        String deptParam = request.getParameter("departmentId");
         String sort = request.getParameter("sort");
         String pageParam = request.getParameter("page");
         boolean isMyPayroll = "/payroll/my".equals(request.getServletPath());
         Integer userId = null;
         Integer month = parseIntegerInRange(monthParam, 1, 12);
         Integer year = parseIntegerInRange(yearParam, 1900, 9999);
+        Integer departmentId = null;
 
         if (isMyPayroll) {
             HttpSession session = request.getSession(false);
@@ -45,6 +47,11 @@ public class PayrollListServlet extends HttpServlet {
             statusParam = "all";
         }
 
+        if (deptParam != null && !deptParam.isEmpty()) {
+            try { departmentId = Integer.parseInt(deptParam); }
+            catch (NumberFormatException ignored) {}
+        }
+
         int currentPage = 1;
         int pageSize = 10;
         if (pageParam != null && !pageParam.isEmpty()) {
@@ -56,7 +63,7 @@ public class PayrollListServlet extends HttpServlet {
 
         PayrollDAO payrollDAO = new PayrollDAO();
 
-        int totalRows = payrollDAO.countPayrolls(keyword, statusParam, userId, month, year);
+        int totalRows = payrollDAO.countPayrolls(keyword, statusParam, userId, month, year, departmentId);
         int totalPages = (int) Math.ceil((double) totalRows / pageSize);
 
         if (currentPage > totalPages && totalPages > 0) {
@@ -65,7 +72,7 @@ public class PayrollListServlet extends HttpServlet {
 
         int offset = (currentPage - 1) * pageSize;
 
-        List<Payroll> payrollList = payrollDAO.findPayrollsAdvanced(keyword, statusParam, sort, offset, pageSize, userId, month, year);
+        List<Payroll> payrollList = payrollDAO.findPayrollsAdvanced(keyword, statusParam, sort, offset, pageSize, userId, month, year, departmentId);
 
         request.setAttribute("payrollList", payrollList);
         request.setAttribute("currentPage", currentPage);
@@ -75,6 +82,7 @@ public class PayrollListServlet extends HttpServlet {
         request.setAttribute("status", statusParam);
         request.setAttribute("month", month);
         request.setAttribute("year", year);
+        request.setAttribute("departmentId", departmentId);
         request.setAttribute("currentYear", Year.now().getValue());
         request.setAttribute("sort", sort);
         request.setAttribute("isMyPayroll", isMyPayroll);

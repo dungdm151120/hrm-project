@@ -58,7 +58,7 @@
                         <label for="month">Payroll Month <span class="required-star">*</span></label>
                         <c:set var="monthNames" value="${fn:split('January,February,March,April,May,June,July,August,September,October,November,December', ',')}" />
 
-                        <select name="month" onchange="this.form.submit()">
+                        <select name="month"">
                             <option value="" ${empty month ? 'selected' : ''}>All months</option>
                             <c:forEach var="m" begin="1" end="12">
                                 <option value="${m}" ${month == m ? 'selected' : ''}>${monthNames[m - 1]}</option>
