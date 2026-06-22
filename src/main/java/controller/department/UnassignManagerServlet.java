@@ -2,6 +2,8 @@ package controller.department;
 
 import dao.DepartmentDAO;
 import dao.PositionDAO;
+import dao.RoleDAO;
+import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -9,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Department;
 import model.Position;
+import model.Role;
 
 import java.io.IOException;
 
@@ -17,6 +20,8 @@ public class UnassignManagerServlet extends HttpServlet {
 
     private final DepartmentDAO departmentDAO = new DepartmentDAO();
     private final PositionDAO positionDAO = new PositionDAO();
+    private final RoleDAO roleDAO = new RoleDAO();
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -60,12 +65,16 @@ public class UnassignManagerServlet extends HttpServlet {
 
         Integer fallbackPositionId = null;
         String fallbackPositionName = null;
+        String fallbackRoleName = null;
         if(isHR){
             fallbackPositionName = "HR Staff";
+            fallbackRoleName = "HR_STAFF";
         }else if(isFI){
             fallbackPositionName = "Payroll Staff";
+            fallbackRoleName = "PAYROLL_STAFF";
         }else{
             fallbackPositionName = "Employee";
+            fallbackRoleName = "EMPLOYEE";
         }
         Position fallbackPosition = positionDAO.findByName(fallbackPositionName);
         if (fallbackPosition != null && fallbackPosition.isActive()) {
@@ -74,6 +83,12 @@ public class UnassignManagerServlet extends HttpServlet {
 
         boolean unassigned = departmentDAO.unassignManager(departmentId, managerUserId, fallbackPositionId);
         if (unassigned) {
+            if (fallbackRoleName != null) {
+                Role fallbackRole = roleDAO.findByName(fallbackRoleName);
+                if (fallbackRole != null) {
+                    userDAO.updateUserRole(managerUserId, fallbackRole.getId());
+                }
+            }
             response.sendRedirect(employeeListUrl + "&msg=unassign_manager_success");
         } else {
             response.sendRedirect(employeeListUrl + "&error=unassign_manager_failed");
