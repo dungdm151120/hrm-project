@@ -467,15 +467,6 @@
         </div>
         </c:if>
 
-        <!-- Chat  -->
-        <a href="${ctx}/chat"
-           class="nav-item ${currentPath == ctx.concat('/chat') ? 'active' : ''}">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 11.5a8.38 8.38 0 0 1-1.76 5.18 8.5 8.5 0 0 1-9.3 3.76 8.38 8.38 0 0 1-5.18-1.76L2 21l3.3-3.3A8.5 8.5 0 0 1 12.5 3a8.38 8.38 0 0 1 5.18 1.76A8.5 8.5 0 0 1 21 11.5z"/>
-            </svg>
-            <span>Messages</span>
-        </a>
-
         <!-- Others Group -->
         <c:if test="${userPermissions.contains('PASSWORD_RESET_REQUEST_VIEW')}">
         <c:set var="othersActive" value="${currentPath.startsWith(ctx.concat('/admin/password-reset-requests'))}" />

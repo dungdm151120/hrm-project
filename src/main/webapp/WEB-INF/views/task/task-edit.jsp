@@ -126,7 +126,7 @@
 
                 <div class="form-row">
                     <label>Deadline *</label>
-                    <input type="date" name="deadline" value="${task.deadline}" required>
+                    <input type="date" name="deadline" value="${task.deadline}" min="${deadlineMin}" required>
                 </div>
 
                 <label class="inline-checkbox">
@@ -217,11 +217,6 @@
             const text = (item.dataset.search || item.textContent).toLowerCase();
             item.style.display = text.includes(keyword) ? 'flex' : 'none';
         });
-    }
-    const deadlineInput = document.querySelector('input[name="deadline"]');
-    if (deadlineInput) {
-        const today = new Date().toISOString().split('T')[0];
-        deadlineInput.min = deadlineInput.value && deadlineInput.value < today ? deadlineInput.value : today;
     }
 </script>
 </body>

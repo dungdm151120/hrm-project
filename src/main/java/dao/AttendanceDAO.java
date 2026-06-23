@@ -490,12 +490,13 @@ public class AttendanceDAO {
     private void calculateLeaveBalance(Connection conn, int userId, int year, int month,
                                        AttendanceSummary summary) throws SQLException {
         double entitled = month;
+        LocalDate startOfYear = LocalDate.of(year, 1, 1);
+        LocalDate endOfMonth = LocalDate.of(year, month, YearMonth.of(year, month).lengthOfMonth());
 
+        // --- Phép năm (ON_LEAVE) ---
         String sqlLeave = "SELECT COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS used_days " +
                 "FROM attendance_records WHERE user_id = ? " +
                 "AND work_date BETWEEN ? AND ?";
-        LocalDate startOfYear = LocalDate.of(year, 1, 1);
-        LocalDate endOfMonth = LocalDate.of(year, month, YearMonth.of(year, month).lengthOfMonth());
         double usedLeave = 0;
         try (PreparedStatement ps = conn.prepareStatement(sqlLeave)) {
             ps.setInt(1, userId);
@@ -507,10 +508,32 @@ public class AttendanceDAO {
                 }
             }
         }
-        summary.setEntitledLeaveDays(entitled);
-        summary.setRemainingLeaveDays(entitled - usedLeave);
 
+        // Đếm thêm các leave request tương lai (PENDING/APPROVED) loại ON_LEAVE
+        String sqlRequestsOnLeave = "SELECT COUNT(*) FROM leave_requests lr " +
+                "JOIN requests r ON lr.request_id = r.id " +
+                "WHERE r.user_id = ? AND lr.leave_type = 'ON_LEAVE' " +
+                "AND r.status IN ('PENDING', 'APPROVED') " +
+                "AND lr.leave_date > ? AND lr.leave_date <= ?";
+        double pendingApprovedOnLeave = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sqlRequestsOnLeave)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(endOfMonth));
+            ps.setDate(3, Date.valueOf(LocalDate.of(year, 12, 31)));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    pendingApprovedOnLeave = rs.getInt(1);
+                }
+            }
+        }
+
+        double totalUsedLeave = usedLeave + pendingApprovedOnLeave;
+        summary.setEntitledLeaveDays(entitled);
+        summary.setRemainingLeaveDays(entitled - totalUsedLeave);
+
+        // --- Vắng không phép (LEAVE / ABSENT) ---
         double entitledAbsent = month;
+
         String sqlAbsent = "SELECT COALESCE(SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END), 0) AS used_days " +
                 "FROM attendance_records WHERE user_id = ? " +
                 "AND work_date BETWEEN ? AND ?";
@@ -525,8 +548,28 @@ public class AttendanceDAO {
                 }
             }
         }
+
+        // Đếm thêm các leave request tương lai loại LEAVE
+        String sqlRequestsLeave = "SELECT COUNT(*) FROM leave_requests lr " +
+                "JOIN requests r ON lr.request_id = r.id " +
+                "WHERE r.user_id = ? AND lr.leave_type = 'LEAVE' " +
+                "AND r.status IN ('PENDING', 'APPROVED') " +
+                "AND lr.leave_date > ? AND lr.leave_date <= ?";
+        double pendingApprovedLeave = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sqlRequestsLeave)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(endOfMonth));
+            ps.setDate(3, Date.valueOf(LocalDate.of(year, 12, 31)));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    pendingApprovedLeave = rs.getInt(1);
+                }
+            }
+        }
+
+        double totalUsedAbsent = usedAbsent + pendingApprovedLeave;
         summary.setEntitledAbsentDays(entitledAbsent);
-        summary.setRemainingAbsentDays(entitledAbsent - usedAbsent);
+        summary.setRemainingAbsentDays(entitledAbsent - totalUsedAbsent);
     }
 
     public List<AttendanceRecordDTO> getAttendanceDetailByUserAndMonth(int userId, int month, int year) {

@@ -113,6 +113,7 @@ public class TaskServlet extends HttpServlet {
         request.setAttribute("users", userDAO.getActiveUsersForTaskSelection());
         request.setAttribute("departmentUsers", departmentUsers);
         request.setAttribute("participantUsers", departmentUsers);
+        request.setAttribute("deadlineMin", LocalDate.now().toString());
         request.getRequestDispatcher("/WEB-INF/views/task/task-create.jsp").forward(request, response);
     }
 
@@ -186,6 +187,7 @@ public class TaskServlet extends HttpServlet {
         request.setAttribute("departmentUsers", departmentUsers);
         request.setAttribute("participantUsers", departmentUsers);
         request.setAttribute("canManageChecklist", canManageChecklist(request, task));
+        request.setAttribute("deadlineMin", deadlineMin(task));
         request.getRequestDispatcher("/WEB-INF/views/task/task-edit.jsp").forward(request, response);
     }
 
@@ -720,6 +722,15 @@ public class TaskServlet extends HttpServlet {
             throw new IllegalArgumentException("Deadline cannot be in the past.");
         }
         return deadline;
+    }
+
+    private String deadlineMin(Task task) {
+        LocalDate today = LocalDate.now();
+        Date currentDeadline = task == null ? null : task.getDeadline();
+        if (currentDeadline != null && currentDeadline.toLocalDate().isBefore(today)) {
+            return currentDeadline.toString();
+        }
+        return today.toString();
     }
 
     private Long parseNullableLong(String value) {
