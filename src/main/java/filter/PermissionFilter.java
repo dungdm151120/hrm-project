@@ -148,41 +148,19 @@ public class PermissionFilter implements Filter {
         if (path.equals("/process_request") && "POST".equals(method)) return "PROCESS_REQUEST";
         if (path.equals("/create_request")) return "CREATE_REQUEST";
         // Task
-        if (path.equals("/tasks")) return resolveTaskPermission(request, method);
+        if (path.equals("/tasks") && "GET".equals(method)) return "TASK_VIEW";
+        if (path.equals("/tasks/all") && "GET".equals(method)) return "TASK_VIEW_ALL";
+        if (path.equals("/tasks/detail") && "GET".equals(method)) return "TASK_VIEW";
+        if (path.equals("/tasks/comment") && "POST".equals(method)) return "TASK_VIEW";
+        if (path.equals("/tasks/checklist/toggle")) return "TASK_VIEW";
+        if (path.equals("/tasks/create")) return "TASK_CREATE";
+        if (path.equals("/tasks/edit")) return "TASK_UPDATE";
+        if (path.equals("/tasks/delete") && "POST".equals(method)) return "TASK_DELETE";
+        if (path.equals("/tasks/checklist/add") && "POST".equals(method)) return "TASK_MANAGE_CHECKLIST";
+        if (path.equals("/tasks/checklist/assign") && "POST".equals(method)) return "TASK_MANAGE_CHECKLIST";
+        if (path.equals("/tasks/checklist/delete") && "POST".equals(method)) return "TASK_MANAGE_CHECKLIST";
+        if (path.equals("/tasks/status") && "POST".equals(method)) return "TASK_UPDATE_STATUS";
         return null;
-    }
-
-    private String resolveTaskPermission(HttpServletRequest request, String method) {
-        String action = request.getParameter("action");
-        if (action == null || action.isBlank()) {
-            action = "list";
-        }
-
-        if ("GET".equals(method)) {
-            return switch (action) {
-                case "create" -> "TASK_CREATE";
-                case "edit" -> "TASK_UPDATE";
-                case "toggleChecklist" -> "TASK_VIEW";
-                case "list", "detail" -> "TASK_VIEW";
-                default -> "TASK_VIEW";
-            };
-        }
-
-        if ("POST".equals(method)) {
-            return switch (action) {
-                case "insert" -> "TASK_CREATE";
-                case "update" -> "TASK_UPDATE";
-                case "delete" -> "TASK_DELETE";
-                case "addChecklist", "assignChecklist" -> "TASK_MANAGE_CHECKLIST";
-                case "deleteChecklist" -> "TASK_MANAGE_CHECKLIST";
-                case "addComment" -> "TASK_VIEW";
-                case "updateStatus" -> "TASK_UPDATE_STATUS";
-                case "toggleChecklist" -> "TASK_VIEW";
-                default -> "TASK_VIEW";
-            };
-        }
-
-        return "TASK_VIEW";
     }
 
     private boolean canViewAttendanceSummary(

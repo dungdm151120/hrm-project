@@ -74,16 +74,16 @@
                 <h1 class="task-detail-title"><c:out value="${task.title}"/></h1>
                 <div class="task-actions">
                     <c:if test="${canUpdateTask}">
-                        <a href="${pageContext.request.contextPath}/tasks?action=edit&id=${task.id}" class="btn-primary">Edit</a>
+                        <a href="${pageContext.request.contextPath}/tasks/edit?id=${task.id}" class="btn-primary">Edit</a>
                     </c:if>
                     <c:if test="${canDeleteTask}">
-                        <form action="${pageContext.request.contextPath}/tasks?action=delete" method="post"
+                        <form action="${pageContext.request.contextPath}/tasks/delete" method="post"
                               onsubmit="return confirm('Delete this task?')">
                             <input type="hidden" name="id" value="${task.id}">
                             <button type="submit" class="btn-reset">Delete</button>
                         </form>
                     </c:if>
-                    <a href="${pageContext.request.contextPath}/tasks?action=list" class="btn-cancel">Back to list</a>
+                    <a href="${pageContext.request.contextPath}/tasks" class="btn-cancel">Back to list</a>
                 </div>
             </div>
 
@@ -111,7 +111,7 @@
                                         <c:choose>
                                             <c:when test="${canToggleChecklist}">
                                                 <input type="checkbox"
-                                                       onchange="location.href='${pageContext.request.contextPath}/tasks?action=toggleChecklist&itemId=${item.id}&taskId=${task.id}'"
+                                                       onchange="location.href='${pageContext.request.contextPath}/tasks/checklist/toggle?itemId=${item.id}&taskId=${task.id}'"
                                                        ${item.completed ? 'checked' : ''}>
                                             </c:when>
                                             <c:otherwise>
@@ -132,7 +132,7 @@
                                     </div>
                                     <div class="checklist-actions">
                                         <c:if test="${canManageChecklist and task.status != 'PAUSED'}">
-                                            <form class="assign-subtask-form" action="${pageContext.request.contextPath}/tasks?action=assignChecklist" method="post">
+                                            <form class="assign-subtask-form" action="${pageContext.request.contextPath}/tasks/checklist/assign" method="post">
                                                 <input type="hidden" name="taskId" value="${task.id}">
                                                 <input type="hidden" name="itemId" value="${item.id}">
                                                 <select name="assignedTo">
@@ -145,7 +145,7 @@
                                                 </select>
                                                 <button type="submit" class="btn-secondary">Assign</button>
                                             </form>
-                                            <form action="${pageContext.request.contextPath}/tasks?action=deleteChecklist" method="post"
+                                            <form action="${pageContext.request.contextPath}/tasks/checklist/delete" method="post"
                                                   onsubmit="return confirm('Delete this subtask?')">
                                                 <input type="hidden" name="itemId" value="${item.id}">
                                                 <input type="hidden" name="taskId" value="${task.id}">
@@ -164,7 +164,7 @@
                     <c:if test="${canManageChecklist and task.status != 'PAUSED'}">
                         <section class="task-panel">
                             <h3>Add subtask</h3>
-                            <form class="inline-form" action="${pageContext.request.contextPath}/tasks?action=addChecklist" method="post">
+                            <form class="inline-form" action="${pageContext.request.contextPath}/tasks/checklist/add" method="post">
                                 <input type="hidden" name="taskId" value="${task.id}">
                                 <input type="text" name="content" placeholder="Subtask content" required>
                                 <select name="assignedTo">
@@ -181,7 +181,7 @@
                     <section class="task-panel">
                         <div class="button-row">
                             <c:if test="${canUpdateTaskStatus and task.status != 'COMPLETED'}">
-                                <form class="inline-form" action="${pageContext.request.contextPath}/tasks?action=updateStatus" method="post">
+                                <form class="inline-form" action="${pageContext.request.contextPath}/tasks/status" method="post">
                                     <input type="hidden" name="taskId" value="${task.id}">
                                     <c:choose>
                                         <c:when test="${task.status == 'PAUSED'}">
@@ -195,7 +195,7 @@
                                     </c:choose>
                                 </form>
                             </c:if>
-                            <a href="${pageContext.request.contextPath}/tasks?action=list" class="btn-cancel">Back to list</a>
+                            <a href="${pageContext.request.contextPath}/tasks" class="btn-cancel">Back to list</a>
                         </div>
                     </section>
 
@@ -223,7 +223,7 @@
                                     <div class="empty-state">No comments yet.</div>
                                 </c:if>
                             </div>
-                            <form class="inline-form" action="${pageContext.request.contextPath}/tasks?action=addComment" method="post">
+                            <form class="inline-form" action="${pageContext.request.contextPath}/tasks/comment" method="post">
                                 <input type="hidden" name="taskId" value="${task.id}">
                                 <textarea name="content" rows="3" placeholder="Write a comment" required style="width: 100%;"></textarea>
                                 <button type="submit" class="btn-primary">Send comment</button>
@@ -289,7 +289,7 @@
                         </c:if>
                         <c:if test="${canUpdateTask}">
                             <div class="person-meta">
-                                <a href="${pageContext.request.contextPath}/tasks?action=edit&id=${task.id}">Change assignee</a>
+                                <a href="${pageContext.request.contextPath}/tasks/edit?id=${task.id}">Change assignee</a>
                             </div>
                         </c:if>
                     </div>

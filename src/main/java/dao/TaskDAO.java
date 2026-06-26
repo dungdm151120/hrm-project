@@ -20,7 +20,7 @@ public class TaskDAO {
     private final TaskCommentDAO commentDAO = new TaskCommentDAO();
     private final TaskHistoryDAO historyDAO = new TaskHistoryDAO();
 
-    public List<Task> getTasks(String keyword, String status, int page, int pageSize) {
+    public List<Task> getTasks(String keyword, String status, int page, int pageSize, long userId, boolean relatedOnly) {
         List<Task> tasks = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
                 SELECT t.*, creator.full_name AS created_by_name, assignee.full_name AS assigned_to_name
@@ -31,11 +31,13 @@ public class TaskDAO {
                 """);
 
         appendFilters(sql, keyword, status);
+        appendRelatedFilter(sql, relatedOnly);
         sql.append(" ORDER BY t.created_at DESC LIMIT ? OFFSET ?");
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int index = bindFilters(ps, 1, keyword, status);
+            index = bindRelatedFilter(ps, index, userId, relatedOnly);
             ps.setInt(index++, pageSize);
             ps.setInt(index, Math.max(0, (page - 1) * pageSize));
 
@@ -50,13 +52,15 @@ public class TaskDAO {
         return tasks;
     }
 
-    public int countTasks(String keyword, String status) {
+    public int countTasks(String keyword, String status, long userId, boolean relatedOnly) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM tasks t WHERE 1 = 1");
         appendFilters(sql, keyword, status);
+        appendRelatedFilter(sql, relatedOnly);
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            bindFilters(ps, 1, keyword, status);
+            int index = bindFilters(ps, 1, keyword, status);
+            bindRelatedFilter(ps, index, userId, relatedOnly);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -243,12 +247,37 @@ public class TaskDAO {
         }
     }
 
+    private void appendRelatedFilter(StringBuilder sql, boolean relatedOnly) {
+        if (!relatedOnly) {
+            return;
+        }
+        sql.append("""
+                 AND (
+                     t.created_by = ?
+                     OR t.assigned_to = ?
+                     OR EXISTS (SELECT 1 FROM task_participants tp WHERE tp.task_id = t.id AND tp.user_id = ?)
+                     OR EXISTS (SELECT 1 FROM task_observers tob WHERE tob.task_id = t.id AND tob.user_id = ?)
+                     OR EXISTS (SELECT 1 FROM task_checklist_items ci WHERE ci.task_id = t.id AND ci.assigned_to = ?)
+                 )
+                """);
+    }
+
     private int bindFilters(PreparedStatement ps, int index, String keyword, String status) throws SQLException {
         if (keyword != null && !keyword.isBlank()) {
             ps.setString(index++, "%" + keyword.trim() + "%");
         }
         if (status != null && !status.isBlank() && !"OVERDUE".equals(status)) {
             ps.setString(index++, status);
+        }
+        return index;
+    }
+
+    private int bindRelatedFilter(PreparedStatement ps, int index, long userId, boolean relatedOnly) throws SQLException {
+        if (!relatedOnly) {
+            return index;
+        }
+        for (int i = 0; i < 5; i++) {
+            ps.setLong(index++, userId);
         }
         return index;
     }
