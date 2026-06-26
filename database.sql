@@ -630,6 +630,7 @@ INSERT INTO permissions (code, name, description) VALUES
     ('ANNOUNCEMENT_CREATE', 'Create announcement', 'Can create and send announcements'),
     -- Quyền Task Management (từ DB1)
     ('TASK_VIEW', 'View tasks', 'Can view task management module'),
+    ('TASK_VIEW_ALL', 'View all tasks', 'Can view all tasks in task management module'),
     ('TASK_CREATE', 'Create task', 'Can create new tasks'),
     ('TASK_UPDATE', 'Update task', 'Can update task information'),
     ('TASK_DELETE', 'Delete task', 'Can delete tasks'),
