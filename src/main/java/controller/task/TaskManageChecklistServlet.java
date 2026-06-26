@@ -9,6 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import model.Task;
 import model.TaskChecklistItem;
 import model.TaskParticipant;
@@ -20,6 +21,8 @@ import java.util.Set;
 
 @WebServlet(urlPatterns = {"/tasks/checklist/add", "/tasks/checklist/assign", "/tasks/checklist/delete"})
 public class TaskManageChecklistServlet extends HttpServlet {
+    private static final String TASK_VIEW_ALL = "TASK_VIEW_ALL";
+
     private final TaskDAO taskDAO = new TaskDAO();
     private final TaskChecklistItemDAO checklistItemDAO = new TaskChecklistItemDAO();
     private final TaskHistoryDAO historyDAO = new TaskHistoryDAO();
@@ -49,6 +52,10 @@ public class TaskManageChecklistServlet extends HttpServlet {
         Task task = taskDAO.getTaskById(taskId);
         if (task == null) {
             response.sendRedirect(request.getContextPath() + "/tasks?error=not_found");
+            return;
+        }
+        if (!canModifyTask(task, request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
         if (isPaused(task)) {
@@ -84,6 +91,10 @@ public class TaskManageChecklistServlet extends HttpServlet {
         }
 
         Task task = taskDAO.getTaskById(item.getTaskId());
+        if (!canModifyTask(task, request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
         if (isPaused(task)) {
             request.getSession().setAttribute("error", "Paused task cannot be changed.");
             response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + item.getTaskId());
@@ -109,6 +120,10 @@ public class TaskManageChecklistServlet extends HttpServlet {
             return;
         }
         Task task = taskDAO.getTaskById(item.getTaskId());
+        if (!canModifyTask(task, request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
         if (isPaused(task)) {
             request.getSession().setAttribute("error", "Paused task cannot be changed.");
             response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + item.getTaskId());
@@ -141,6 +156,22 @@ public class TaskManageChecklistServlet extends HttpServlet {
 
     private boolean isPaused(Task task) {
         return task != null && "PAUSED".equals(task.getStatus());
+    }
+
+    private boolean canModifyTask(Task task, HttpServletRequest request) {
+        long currentUserId = currentUserId(request);
+        return task != null
+                && currentUserId > 0
+                && (task.getCreatedBy() == currentUserId || hasPermission(request, TASK_VIEW_ALL));
+    }
+
+    private boolean hasPermission(HttpServletRequest request, String permission) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return false;
+        }
+        Object permissions = session.getAttribute("userPermissions");
+        return permissions instanceof Set<?> permissionSet && permissionSet.contains(permission);
     }
 
     private String userDisplayName(long userId) {

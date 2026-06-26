@@ -26,6 +26,7 @@ import java.util.Set;
 @WebServlet("/tasks/edit")
 public class TaskUpdateServlet extends HttpServlet {
     private static final String TASK_MANAGE_CHECKLIST = "TASK_MANAGE_CHECKLIST";
+    private static final String TASK_VIEW_ALL = "TASK_VIEW_ALL";
 
     private final TaskDAO taskDAO = new TaskDAO();
     private final TaskChecklistItemDAO checklistItemDAO = new TaskChecklistItemDAO();
@@ -39,6 +40,10 @@ public class TaskUpdateServlet extends HttpServlet {
         Task task = taskDAO.getTaskById(id);
         if (task == null) {
             response.sendRedirect(request.getContextPath() + "/tasks?error=not_found");
+            return;
+        }
+        if (!canModifyTask(task, request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
@@ -60,6 +65,10 @@ public class TaskUpdateServlet extends HttpServlet {
             Task existingTask = taskDAO.getTaskById(taskId);
             if (existingTask == null) {
                 response.sendRedirect(request.getContextPath() + "/tasks?error=not_found");
+                return;
+            }
+            if (!canModifyTask(existingTask, request)) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
 
@@ -231,14 +240,20 @@ public class TaskUpdateServlet extends HttpServlet {
         return date == null ? "-" : date.toString();
     }
 
-    @SuppressWarnings("unchecked")
+    private boolean canModifyTask(Task task, HttpServletRequest request) {
+        long currentUserId = currentUserId(request);
+        return task != null
+                && currentUserId > 0
+                && (task.getCreatedBy() == currentUserId || hasPermission(request, TASK_VIEW_ALL));
+    }
+
     private boolean hasPermission(HttpServletRequest request, String permission) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             return false;
         }
-        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
-        return permissions != null && permissions.contains(permission);
+        Object permissions = session.getAttribute("userPermissions");
+        return permissions instanceof Set<?> permissionSet && permissionSet.contains(permission);
     }
 
     private long currentUserId(HttpServletRequest request) {

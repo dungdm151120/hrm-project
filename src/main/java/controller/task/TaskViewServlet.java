@@ -115,10 +115,10 @@ public class TaskViewServlet extends HttpServlet {
         request.setAttribute("comments", commentDAO.getCommentsByTaskId(id));
         request.setAttribute("histories", historyDAO.getHistoriesByTaskId(id));
         request.setAttribute("canToggleChecklist", canToggleChecklist(task, currentUserId));
-        request.setAttribute("canUpdateTask", hasPermission(request, TASK_UPDATE));
-        request.setAttribute("canDeleteTask", hasPermission(request, TASK_DELETE));
-        request.setAttribute("canManageChecklist", hasPermission(request, TASK_MANAGE_CHECKLIST));
-        request.setAttribute("canUpdateTaskStatus", hasPermission(request, TASK_UPDATE_STATUS));
+        request.setAttribute("canUpdateTask", canModifyTask(task, currentUserId, request, TASK_UPDATE));
+        request.setAttribute("canDeleteTask", canModifyTask(task, currentUserId, request, TASK_DELETE));
+        request.setAttribute("canManageChecklist", canModifyTask(task, currentUserId, request, TASK_MANAGE_CHECKLIST));
+        request.setAttribute("canUpdateTaskStatus", canModifyTask(task, currentUserId, request, TASK_UPDATE_STATUS));
         request.getRequestDispatcher("/WEB-INF/views/task/task-detail.jsp").forward(request, response);
     }
 
@@ -214,14 +214,20 @@ public class TaskViewServlet extends HttpServlet {
                 || participantDAO.existsByTaskIdAndUserId(task.getId(), currentUserId));
     }
 
-    @SuppressWarnings("unchecked")
+    private boolean canModifyTask(Task task, long currentUserId, HttpServletRequest request, String permission) {
+        if (!hasPermission(request, permission) || task == null || currentUserId <= 0) {
+            return false;
+        }
+        return task.getCreatedBy() == currentUserId || hasPermission(request, TASK_VIEW_ALL);
+    }
+
     private boolean hasPermission(HttpServletRequest request, String permission) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             return false;
         }
-        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
-        return permissions != null && permissions.contains(permission);
+        Object permissions = session.getAttribute("userPermissions");
+        return permissions instanceof Set<?> permissionSet && permissionSet.contains(permission);
     }
 
     private long currentUserId(HttpServletRequest request) {

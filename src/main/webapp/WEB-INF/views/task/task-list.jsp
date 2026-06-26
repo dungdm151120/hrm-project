@@ -122,7 +122,7 @@
                             </td>
                             <td class="actions">
                                 <a href="${pageContext.request.contextPath}/tasks/detail?id=${task.id}">View detail</a>
-                                <c:if test="${sessionScope.userPermissions.contains('TASK_UPDATE')}">
+                                <c:if test="${sessionScope.userPermissions.contains('TASK_UPDATE') and (canViewAllTasks or task.createdBy == sessionScope.userId)}">
                                     <a href="${pageContext.request.contextPath}/tasks/edit?id=${task.id}">Update</a>
                                 </c:if>
                             </td>
