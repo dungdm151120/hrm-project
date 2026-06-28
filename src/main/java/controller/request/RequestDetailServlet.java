@@ -3,15 +3,18 @@ package controller.request;
 import dao.LeaveRequestDAO;
 import dao.AttendanceChangeRequestDAO;
 import dao.RequestDAO;
+import dao.SickLeaveRequestDAO;
 import model.AttendanceChangeRequest;
 import model.LeaveRequest;
 import model.Request;
+import model.SickLeaveRequest;
 import model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 
 @WebServlet("/request_detail")
@@ -42,6 +45,14 @@ public class RequestDetailServlet extends HttpServlet {
                 AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
                 AttendanceChangeRequest acr = acrDAO.getByRequestId(id);
                 request.setAttribute("attendanceChangeRequest", acr);
+            } else if ("SICK_LEAVE_REQUEST".equals(req.getType())) {
+                SickLeaveRequestDAO sickDAO = new SickLeaveRequestDAO();
+                SickLeaveRequest sickReq = sickDAO.getByRequestId(id);
+                if (sickReq != null) {
+                    request.setAttribute("sickLeaveRequest", sickReq);
+                    List<LocalDate> dates = sickDAO.getDatesBySickRequestId(sickReq.getId());
+                    request.setAttribute("sickLeaveDates", dates);
+                }
             } else if ("OVERTIME".equals(req.getType())) {
                 dao.OvertimeRequestDAO overtimeRequestDAO = new dao.OvertimeRequestDAO();
                 dao.OvertimeParticipantDAO overtimeParticipantDAO = new dao.OvertimeParticipantDAO();
