@@ -104,7 +104,7 @@ public class AttendanceDAO {
 
     public void calculateAndSaveRecord(int employeeId, LocalDate workDate) {
         AttendanceRecord existing = getRecordByUserAndDate(employeeId, workDate);
-        if (existing != null && ("ON_LEAVE".equals(existing.getStatus()) || "ABSENT".equals(existing.getStatus()))) {
+        if (existing != null && ("ON_LEAVE".equals(existing.getStatus()) || "ABSENT".equals(existing.getStatus()) || "SICK_LEAVE".equals(existing.getStatus()))) {
             return;
         }
 
@@ -458,7 +458,8 @@ public class AttendanceDAO {
                         "COALESCE(SUM(CASE WHEN early_leave_hours > 0 THEN 1 ELSE 0 END), 0) AS early_count, " +
                         "COALESCE(SUM(CASE WHEN (check_in IS NULL) <> (check_out IS NULL) THEN 1 ELSE 0 END), 0) AS forgot_count, " +
                         "COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS leave_days, " +
-                        "COALESCE(SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END), 0) AS absent_days " +
+                        "COALESCE(SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END), 0) AS absent_days, " +
+                        "COALESCE(SUM(CASE WHEN status = 'SICK_LEAVE' THEN 1 ELSE 0 END), 0) AS sick_days " +  // <-- thêm dòng này
                         "FROM attendance_records WHERE user_id = ? AND work_date BETWEEN ? AND ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -476,6 +477,7 @@ public class AttendanceDAO {
                     summary.setForgotCheckCount(rs.getInt("forgot_count"));
                     summary.setLeaveDaysInMonth(rs.getDouble("leave_days"));
                     summary.setAbsentDaysInMonth(rs.getDouble("absent_days"));
+                    summary.setSickLeaveDaysInMonth(rs.getDouble("sick_days"));  // <-- thêm dòng này
                 }
             }
 
@@ -509,7 +511,6 @@ public class AttendanceDAO {
             }
         }
 
-        // Đếm thêm các leave request tương lai (PENDING/APPROVED) loại ON_LEAVE
         String sqlRequestsOnLeave = "SELECT COUNT(*) FROM leave_requests lr " +
                 "JOIN requests r ON lr.request_id = r.id " +
                 "WHERE r.user_id = ? AND lr.leave_type = 'ON_LEAVE' " +
@@ -549,7 +550,6 @@ public class AttendanceDAO {
             }
         }
 
-        // Đếm thêm các leave request tương lai loại LEAVE
         String sqlRequestsLeave = "SELECT COUNT(*) FROM leave_requests lr " +
                 "JOIN requests r ON lr.request_id = r.id " +
                 "WHERE r.user_id = ? AND lr.leave_type = 'LEAVE' " +
@@ -570,6 +570,33 @@ public class AttendanceDAO {
         double totalUsedAbsent = usedAbsent + pendingApprovedLeave;
         summary.setEntitledAbsentDays(entitledAbsent);
         summary.setRemainingAbsentDays(entitledAbsent - totalUsedAbsent);
+
+        // --- Sick leave ---
+        double entitledSick = 30;
+        String sqlSickUsed = "SELECT COALESCE(COUNT(*), 0) FROM attendance_records WHERE user_id = ? AND status = 'SICK_LEAVE' AND work_date BETWEEN ? AND ?";
+        double usedSick = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sqlSickUsed)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(startOfYear));
+            ps.setDate(3, Date.valueOf(endOfMonth));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) usedSick = rs.getInt(1);
+        }
+
+        String sqlSickPending = "SELECT COUNT(*) FROM sick_leave_dates sd " +
+                "JOIN sick_leave_requests sr ON sd.sick_leave_request_id = sr.id " +
+                "JOIN requests r ON sr.request_id = r.id " +
+                "WHERE r.user_id = ? AND r.status IN ('PENDING','APPROVED') AND sd.leave_date > ? AND sd.leave_date <= ?";
+        double pendingSick = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sqlSickPending)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(endOfMonth));
+            ps.setDate(3, Date.valueOf(LocalDate.of(year, 12, 31)));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) pendingSick = rs.getInt(1);
+        }
+        summary.setEntitledSickLeaveDays(entitledSick);
+        summary.setRemainingSickLeaveDays(entitledSick - usedSick - pendingSick);
     }
 
     public List<AttendanceRecordDTO> getAttendanceDetailByUserAndMonth(int userId, int month, int year) {
@@ -860,6 +887,7 @@ public class AttendanceDAO {
             case "ON_TIME" -> "status-on-time";
             case "LATE", "EARLY_LEAVE", "LATE_AND_EARLY", "LATE_AND_EARLY_LEAVE" -> "status-late";
             case "ON_LEAVE" -> "status-leave";
+            case "SICK_LEAVE" -> "status-sick-leave";
             case "ABSENT" -> "status-absent";
             case "FORGOT_CHECKIN", "FORGOT_CHECKOUT",
                  "FORGOT_CHECK_IN", "FORGOT_CHECK_OUT" -> "status-forgot";
@@ -900,6 +928,21 @@ public class AttendanceDAO {
         String sql = "INSERT INTO attendance_records (user_id, work_date, check_in, check_out, total_work_hours, overtime_hours, late_hours, early_leave_hours, status, note, created_at) " +
                 "VALUES (?, ?, NULL, NULL, 0.0, 0.0, 0.0, 0.0, 'ABSENT', 'Unpaid leave request approved', NOW()) " +
                 "ON DUPLICATE KEY UPDATE check_in = NULL, check_out = NULL, total_work_hours = 0.0, overtime_hours = 0.0, late_hours = 0.0, early_leave_hours = 0.0, status = 'ABSENT', note = VALUES(note), updated_at = NOW()";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(date));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void markSickLeave(int userId, LocalDate date) {
+        deleteAttendanceLog(userId, date);
+        String sql = "INSERT INTO attendance_records (user_id, work_date, check_in, check_out, total_work_hours, overtime_hours, late_hours, early_leave_hours, status, note, created_at) " +
+                "VALUES (?, ?, NULL, NULL, 0.0, 0.0, 0.0, 0.0, 'SICK_LEAVE', 'Sick leave request approved', NOW()) " +
+                "ON DUPLICATE KEY UPDATE check_in = NULL, check_out = NULL, total_work_hours = 0.0, overtime_hours = 0.0, late_hours = 0.0, early_leave_hours = 0.0, status = 'SICK_LEAVE', note = VALUES(note), updated_at = NOW()";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);

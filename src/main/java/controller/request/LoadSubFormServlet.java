@@ -13,7 +13,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @WebServlet("/load_sub_form")
 public class LoadSubFormServlet extends HttpServlet {
@@ -222,6 +224,47 @@ public class LoadSubFormServlet extends HttpServlet {
             request.setAttribute("now", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
 
             jspPath = "/WEB-INF/views/request/subforms/attendance_change.jsp";
+        } else if ("SICK_LEAVE_REQUEST".equals(type)) {
+            User currentUser = userDAO.findById(user.getId());
+
+            List<User> hrStaffList = userDAO.getUserByPosition("HR Staff");
+            request.setAttribute("hrStaffList", hrStaffList);
+
+            List<User> observers = new ArrayList<>();
+            List<User> hrStaffAll = new ArrayList<>(hrStaffList);
+            List<User> payrollStaff = userDAO.getUserByPosition("Payroll Staff");
+            List<User> allManagers = userDAO.getAllDeptManager();
+            List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
+            List<User> payrollManagers = userDAO.getUserByPosition("Payroll Manager");
+
+            hrStaffAll.removeIf(u -> u.getId() == currentUser.getId());
+            payrollStaff.removeIf(u -> u.getId() == currentUser.getId());
+            allManagers.removeIf(u -> u.getId() == currentUser.getId());
+            hrManagers.removeIf(u -> u.getId() == currentUser.getId());
+            payrollManagers.removeIf(u -> u.getId() == currentUser.getId());
+
+            observers.addAll(hrStaffAll);
+            observers.addAll(payrollStaff);
+            observers.addAll(allManagers);
+            observers.addAll(hrManagers);
+            observers.addAll(payrollManagers);
+
+            Set<User> uniqueObservers = new HashSet<>(observers);
+            request.setAttribute("observerList", new ArrayList<>(uniqueObservers));
+
+            int year = LocalDate.now().getYear();
+            SickLeaveRequestDAO sickDAO = new SickLeaveRequestDAO();
+            int usedDays = sickDAO.countSickLeaveDaysUsed(currentUser.getId(), year);
+            int pendingDays = sickDAO.countPendingOrApprovedFuture(currentUser.getId(), year);
+            int remainingSickDays = 30 - usedDays - pendingDays;
+            request.setAttribute("remainingSickDays", Math.max(0, remainingSickDays));
+            request.setAttribute("totalSickDays", 30);
+
+            request.setAttribute("proposer", currentUser);
+            request.setAttribute("today", LocalDate.now().toString());
+            request.setAttribute("now", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+
+            jspPath = "/WEB-INF/views/request/subforms/sick_leave.jsp";
         }
 
         try {

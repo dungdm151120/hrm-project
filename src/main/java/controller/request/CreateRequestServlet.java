@@ -3,16 +3,20 @@ package controller.request;
 import dao.*;
 import model.*;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @WebServlet("/create_request")
+@MultipartConfig
 public class CreateRequestServlet extends HttpServlet {
     private final RequestDAO requestDAO = new RequestDAO();
     private final UserDAO userDAO = new UserDAO();
@@ -96,6 +100,8 @@ public class CreateRequestServlet extends HttpServlet {
                     }
                 }
             } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
+                req.setHandlerId(req.getApproverId());
+            } else if ("SICK_LEAVE_REQUEST".equals(req.getType())) {
                 req.setHandlerId(req.getApproverId());
             } else {
                 String handlerIdParam = request.getParameter("handlerId");
@@ -209,6 +215,61 @@ public class CreateRequestServlet extends HttpServlet {
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
                 acr.setRequestId(requestId);
                 acrDAO.create(acr);
+            } else if ("SICK_LEAVE_REQUEST".equals(req.getType())) {
+                Part filePart = request.getPart("sickFile");
+                if (filePart == null || filePart.getSize() == 0) {
+                    response.sendRedirect("create_request?error=missing_file");
+                    return;
+                }
+
+                String[] sickDates = request.getParameterValues("sickDates");
+                if (sickDates == null || sickDates.length == 0) {
+                    response.sendRedirect("create_request?error=missing_sick_dates");
+                    return;
+                }
+                List<LocalDate> dates = Arrays.stream(sickDates)
+                        .map(LocalDate::parse)
+                        .sorted()
+                        .collect(Collectors.toList());
+
+                LocalDate today = LocalDate.now();
+                for (LocalDate date : dates) {
+                    if (date.isAfter(today)) {
+                        response.sendRedirect("create_request?error=invalid_date");
+                        return;
+                    }
+                    DayOfWeek dayOfWeek = date.getDayOfWeek();
+                    if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+                        response.sendRedirect("create_request?error=date_weekend");
+                        return;
+                    }
+                }
+
+                SickLeaveRequestDAO sickDAO = new SickLeaveRequestDAO();
+                int year = today.getYear();
+                int usedDays = sickDAO.countSickLeaveDaysUsed(currentUser.getId(), year);
+                int pendingDays = sickDAO.countPendingOrApprovedFuture(currentUser.getId(), year);
+                int remaining = 30 - usedDays - pendingDays;
+                if (remaining < dates.size()) {
+                    response.sendRedirect("create_request?error=insufficient_sick_days");
+                    return;
+                }
+
+                if (sickDAO.hasDuplicateRequest(currentUser.getId(), dates)) {
+                    response.sendRedirect("create_request?error=duplicate_sick_request");
+                    return;
+                }
+
+                String fileName = System.currentTimeMillis() + "_" + filePart.getSubmittedFileName();
+                String uploadDir = getServletContext().getRealPath("/uploads/sick_leave");
+                File uploadFolder = new File(uploadDir);
+                if (!uploadFolder.exists()) uploadFolder.mkdirs();
+                String filePath = uploadDir + File.separator + fileName;
+                filePart.write(filePath);
+                String relativePath = "/uploads/sick_leave/" + fileName;
+
+                int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
+                sickDAO.createSickLeaveRequest(requestId, relativePath, dates);
             } else {
                 requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
             }
