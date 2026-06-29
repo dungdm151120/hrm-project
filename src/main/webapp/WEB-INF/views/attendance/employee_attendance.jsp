@@ -75,6 +75,7 @@
                         <span><i class="legend-dot status-absent"></i>Absent</span>
                         <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
                         <span><i class="legend-dot status-leave"></i>On leave</span>
+                        <span><i class="legend-dot status-sick-leave"></i>Sick leave</span>
                         <span><span class="record-chip chip-ot" style="margin-right:4px;">OT</span>Overtime</span>
                     </div>
 
@@ -117,6 +118,7 @@
                                                                 <span class="chip-dot"></span>
                                                                 <c:choose>
                                                                     <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
+                                                                    <c:when test="${record.status == 'SICK_LEAVE'}">Sick leave</c:when>
                                                                     <c:otherwise>${record.checkInText} - ${record.checkOutText}</c:otherwise>
                                                                 </c:choose>
                                                             </a>
@@ -169,6 +171,10 @@
                             <strong><fmt:formatNumber value="${summary.absentDaysInMonth}" maxFractionDigits="2"/></strong>
                         </div>
                         <div class="attendance-summary-row">
+                            <span>Number of Sick Leaves this month</span>
+                            <strong><fmt:formatNumber value="${summary.sickLeaveDaysInMonth}" maxFractionDigits="2"/></strong>
+                        </div>
+                        <div class="attendance-summary-row">
                             <span>Number of Late Arrivals</span>
                             <strong>${summary.lateCount}</strong>
                         </div>
@@ -195,6 +201,10 @@
                         <div class="attendance-summary-row">
                             <span>Advanced Leave Taken</span>
                             <strong><fmt:formatNumber value="${summary.advancedLeaveDays}" maxFractionDigits="2"/></strong>
+                        </div>
+                        <div class="attendance-summary-row">
+                            <span>Remaining Sick Leave Balance</span>
+                            <strong><fmt:formatNumber value="${summary.remainingSickLeaveDays}" maxFractionDigits="2"/> / <fmt:formatNumber value="${summary.entitledSickLeaveDays}" maxFractionDigits="2"/></strong>
                         </div>
                         <div class="attendance-summary-row">
                             <span>Overtime Hours</span>

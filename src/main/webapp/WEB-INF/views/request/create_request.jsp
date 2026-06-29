@@ -41,13 +41,18 @@
                             <c:when test="${param.error == 'missing_department'}">You must be assigned to a department to create this request.</c:when>
                             <c:when test="${param.error == 'missing_date'}">Please select an overtime date.</c:when>
                             <c:when test="${param.error == 'date_past'}">Overtime date cannot be in the past.</c:when>
-                            <c:when test="${param.error == 'date_weekend'}">Overtime is only allowed from Monday to Friday.</c:when>
+                            <c:when test="${param.error == 'date_weekend'}">Sick leave and overtime are only allowed from Monday to Friday.</c:when>
                             <c:when test="${param.error == 'reason_too_short'}">The reason must be at least 10 characters long.</c:when>
                             <c:when test="${param.error == 'missing_employees'}">Please select at least one employee to work overtime.</c:when>
                             <c:when test="${param.error == 'duplicate_overtime'}">One or more selected employees already have an overtime request (pending or approved) on this date.</c:when>
                             <c:when test="${param.error == 'missing_work_date'}">Please select a work date.</c:when>
                             <c:when test="${param.error == 'adjustment_blocked_first_5_days'}">Cannot submit adjustment requests during the first 5 days of the month.</c:when>
                             <c:when test="${param.error == 'adjustment_limit_exceeded'}">You have reached the maximum of 2 adjustment requests for this month.</c:when>
+                            <c:when test="${param.error == 'missing_file'}">Please attach a medical certificate.</c:when>
+                            <c:when test="${param.error == 'missing_sick_dates'}">Please select at least one sick date.</c:when>
+                            <c:when test="${param.error == 'invalid_date'}">Sick leave cannot be requested for future dates.</c:when>
+                            <c:when test="${param.error == 'insufficient_sick_days'}">You do not have enough remaining sick leave days.</c:when>
+                            <c:when test="${param.error == 'duplicate_sick_request'}">One or more selected dates are already covered by an existing sick leave request.</c:when>
                             <c:when test="${param.error == 'system_error'}">A system error occurred. Please try again later.</c:when>
                             <c:otherwise>${param.error}</c:otherwise>
                         </c:choose>
@@ -93,6 +98,11 @@ $(document).ready(function() {
                         $('form').attr('action', 'create_overtime_request');
                     } else {
                         $('form').attr('action', 'create_request');
+                    }
+                    if (selectedType === 'SICK_LEAVE_REQUEST') {
+                        $('form').attr('enctype', 'multipart/form-data');
+                    } else {
+                        $('form').removeAttr('enctype');
                     }
                     $('.select2-dynamic').select2({
                         placeholder: "Select options...",

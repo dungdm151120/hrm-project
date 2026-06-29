@@ -37,7 +37,7 @@
         </div>
         <div class="dashboard-content">
             <fmt:formatDate var="createdAtText" value="${task.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
-            <form class="task-form" action="${pageContext.request.contextPath}/tasks?action=update&id=${task.id}" method="post">
+            <form class="task-form" action="${pageContext.request.contextPath}/tasks/edit?id=${task.id}" method="post">
                 <div class="form-row">
                     <label>Task name *</label>
                     <input type="text" name="title" value="${task.title}" required>
@@ -149,7 +149,7 @@
                                         </c:forEach>
                                     </select>
                                     <button type="submit" class="btn-reset"
-                                            formaction="${pageContext.request.contextPath}/tasks?action=deleteChecklist&itemId=${item.id}&taskId=${task.id}"
+                                            formaction="${pageContext.request.contextPath}/tasks/checklist/delete?itemId=${item.id}&taskId=${task.id}"
                                             formmethod="post"
                                             formnovalidate
                                             onclick="return confirm('Delete this work item?')">Delete</button>
@@ -175,7 +175,7 @@
 
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Save</button>
-                    <a href="${pageContext.request.contextPath}/tasks?action=detail&id=${task.id}" class="btn-cancel">Cancel</a>
+                    <a href="${pageContext.request.contextPath}/tasks/detail?id=${task.id}" class="btn-cancel">Cancel</a>
                 </div>
             </form>
         </div>

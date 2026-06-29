@@ -161,8 +161,9 @@ public class Request {
             case "LATE_EARLY_REQUEST": return "Late arrival/Early departure";
             case "EMP_MOVE_REMOVE": return "Move/Remove employee";
             case "POSITION_HANDOVER": return "Position handover";
-            case "OVERTIME":return "Overtime";
+            case "OVERTIME": return "Overtime";
             case "ATTENDANCE_ADJUST": return "Attendance adjust";
+            case "SICK_LEAVE_REQUEST": return "Sick leave request";
             default: return this.type;
         }
     }
@@ -176,6 +177,7 @@ public class Request {
         type.put("POSITION_HANDOVER", "Position handover");
         type.put("OVERTIME", "Overtime");
         type.put("ATTENDANCE_ADJUST", "Attendance adjust");
+        type.put("SICK_LEAVE_REQUEST", "Sick leave request");
         return type;
     }
 }

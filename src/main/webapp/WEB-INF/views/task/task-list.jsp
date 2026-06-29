@@ -18,6 +18,9 @@
         .badge-paused { background: #f8fafc; color: #475569; }
         .badge-overdue { background: #fef2f2; color: #dc2626; }
         .actions a { margin-right: 8px; }
+        .task-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; }
+        .task-tab { padding: 10px 14px; color: #4b5563; text-decoration: none; border-bottom: 2px solid transparent; }
+        .task-tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
     </style>
 </head>
 <body class="dashboard-body">
@@ -30,7 +33,7 @@
             </div>
             <div class="header-right">
                 <c:if test="${sessionScope.userPermissions.contains('TASK_CREATE')}">
-                    <a href="${pageContext.request.contextPath}/tasks?action=create" class="btn-primary">Create Task</a>
+                    <a href="${pageContext.request.contextPath}/tasks/create" class="btn-primary">Create Task</a>
                 </c:if>
             </div>
         </div>
@@ -45,9 +48,31 @@
                 <c:remove var="error" scope="session"/>
             </c:if>
 
+            <c:url var="viewTasksUrl" value="/tasks">
+                <c:if test="${not empty keyword}">
+                    <c:param name="keyword" value="${keyword}"/>
+                </c:if>
+                <c:if test="${not empty status}">
+                    <c:param name="status" value="${status}"/>
+                </c:if>
+            </c:url>
+            <c:url var="viewAllUrl" value="/tasks/all">
+                <c:if test="${not empty keyword}">
+                    <c:param name="keyword" value="${keyword}"/>
+                </c:if>
+                <c:if test="${not empty status}">
+                    <c:param name="status" value="${status}"/>
+                </c:if>
+            </c:url>
+            <div class="task-tabs">
+                <a href="${viewTasksUrl}" class="task-tab ${activeView == 'mine' ? 'active' : ''}">View tasks</a>
+                <c:if test="${canViewAllTasks}">
+                    <a href="${viewAllUrl}" class="task-tab ${activeView == 'all' ? 'active' : ''}">View all</a>
+                </c:if>
+            </div>
+
             <div class="search-filter">
-                <form action="${pageContext.request.contextPath}/tasks" method="get">
-                    <input type="hidden" name="action" value="list">
+                <form action="${pageContext.request.contextPath}${listAction}" method="get">
                     <input type="text" name="keyword" placeholder="Search by task name" value="${keyword}">
                     <select name="status">
                         <option value="" ${empty status ? 'selected' : ''}>All statuses</option>
@@ -58,7 +83,7 @@
                         <option value="OVERDUE" ${status == 'OVERDUE' ? 'selected' : ''}>Overdue</option>
                     </select>
                     <button type="submit" class="search-btn">Search</button>
-                    <a href="${pageContext.request.contextPath}/tasks" class="btn-reset">Clear filters</a>
+                    <a href="${pageContext.request.contextPath}${listAction}" class="btn-reset">Clear filters</a>
                 </form>
             </div>
 
@@ -96,9 +121,9 @@
                                 </div>
                             </td>
                             <td class="actions">
-                                <a href="${pageContext.request.contextPath}/tasks?action=detail&id=${task.id}">View detail</a>
-                                <c:if test="${sessionScope.userPermissions.contains('TASK_UPDATE')}">
-                                    <a href="${pageContext.request.contextPath}/tasks?action=edit&id=${task.id}">Update</a>
+                                <a href="${pageContext.request.contextPath}/tasks/detail?id=${task.id}">View detail</a>
+                                <c:if test="${sessionScope.userPermissions.contains('TASK_UPDATE') and (canViewAllTasks or task.createdBy == sessionScope.userId)}">
+                                    <a href="${pageContext.request.contextPath}/tasks/edit?id=${task.id}">Update</a>
                                 </c:if>
                             </td>
                         </tr>
@@ -114,11 +139,29 @@
 
             <div class="pagination">
                 <c:if test="${currentPage > 1}">
-                    <a href="${pageContext.request.contextPath}/tasks?page=${currentPage - 1}&keyword=${keyword}&status=${status}">Previous</a>
+                    <c:url var="previousPageUrl" value="${listAction}">
+                        <c:param name="page" value="${currentPage - 1}"/>
+                        <c:if test="${not empty keyword}">
+                            <c:param name="keyword" value="${keyword}"/>
+                        </c:if>
+                        <c:if test="${not empty status}">
+                            <c:param name="status" value="${status}"/>
+                        </c:if>
+                    </c:url>
+                    <a href="${previousPageUrl}">Previous</a>
                 </c:if>
                 <span>Page ${currentPage} / ${totalPages} (${totalRecords} tasks)</span>
                 <c:if test="${currentPage < totalPages}">
-                    <a href="${pageContext.request.contextPath}/tasks?page=${currentPage + 1}&keyword=${keyword}&status=${status}">Next</a>
+                    <c:url var="nextPageUrl" value="${listAction}">
+                        <c:param name="page" value="${currentPage + 1}"/>
+                        <c:if test="${not empty keyword}">
+                            <c:param name="keyword" value="${keyword}"/>
+                        </c:if>
+                        <c:if test="${not empty status}">
+                            <c:param name="status" value="${status}"/>
+                        </c:if>
+                    </c:url>
+                    <a href="${nextPageUrl}">Next</a>
                 </c:if>
             </div>
         </div>

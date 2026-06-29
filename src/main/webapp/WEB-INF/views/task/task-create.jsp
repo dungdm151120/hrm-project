@@ -38,7 +38,7 @@
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>
             </c:if>
-            <form class="task-form" action="${pageContext.request.contextPath}/tasks?action=insert" method="post">
+            <form class="task-form" action="${pageContext.request.contextPath}/tasks/create" method="post">
                 <div class="form-row">
                     <label>Task name *</label>
                     <input type="text" name="title" required>

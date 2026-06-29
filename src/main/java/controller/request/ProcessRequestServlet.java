@@ -1,20 +1,15 @@
 package controller.request;
 
-import dao.AttendanceDAO;
-import dao.AttendanceChangeRequestDAO;
-import dao.LeaveRequestDAO;
-import dao.RequestDAO;
-import model.AttendanceChangeRequest;
-import model.AttendanceRecord;
-import model.LeaveRequest;
-import model.Request;
+import dao.*;
+import model.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import model.User;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @WebServlet("/process_request")
 public class ProcessRequestServlet extends HttpServlet {
@@ -22,6 +17,7 @@ public class ProcessRequestServlet extends HttpServlet {
     private final LeaveRequestDAO leaveRequestDAO = new LeaveRequestDAO();
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();
     private final AttendanceChangeRequestDAO attendanceChangeRequestDAO = new AttendanceChangeRequestDAO();
+    private final SickLeaveRequestDAO sickLeaveRequestDAO = new SickLeaveRequestDAO();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -107,6 +103,14 @@ public class ProcessRequestServlet extends HttpServlet {
                                     attendanceDAO.calculateWorkingHours(record);
                                     record.setStatus(attendanceDAO.determineStatus(record));
                                     attendanceDAO.saveAttendanceRecord(record);
+                                }
+                            } else if ("APPROVE".equals(action) && "SICK_LEAVE_REQUEST".equals(req.getType())) {
+                                SickLeaveRequest sickReq = sickLeaveRequestDAO.getByRequestId(requestId);
+                                if (sickReq != null) {
+                                    List<LocalDate> dates = sickLeaveRequestDAO.getDatesBySickRequestId(sickReq.getId());
+                                    for (LocalDate date : dates) {
+                                        attendanceDAO.markSickLeave(req.getUserId(), date);
+                                    }
                                 }
                             } else if ("OVERTIME".equals(req.getType())) {
                                 service.OvertimeService overtimeService = new service.OvertimeService();
