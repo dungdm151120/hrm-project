@@ -30,6 +30,7 @@
                             <c:when test="${param.error == 'missing_leave_date'}">Please select a leave date.</c:when>
                             <c:when test="${param.error == 'leave_date_past'}">Leave date cannot be in the past.</c:when>
                             <c:when test="${param.error == 'leave_date_weekend'}">Weekends are not allowed for leave requests.</c:when>
+                            <c:when test="${param.error == 'leave_date_holiday'}">Leave date cannot be a holiday.</c:when>
                             <c:when test="${param.error == 'leave_date_already_on_leave'}">You already have an approved leave on this date.</c:when>
                             <c:when test="${param.error == 'leave_date_already_marked'}">This date is already marked as leave or absent.</c:when>
                             <c:when test="${param.error == 'leave_date_duplicate_request'}">A leave request for this date already exists (pending or approved).</c:when>
@@ -42,6 +43,7 @@
                             <c:when test="${param.error == 'missing_date'}">Please select an overtime date.</c:when>
                             <c:when test="${param.error == 'date_past'}">Overtime date cannot be in the past.</c:when>
                             <c:when test="${param.error == 'date_weekend'}">Sick leave and overtime are only allowed from Monday to Friday.</c:when>
+                            <c:when test="${param.error == 'overtime_date_holiday'}">Overtime date cannot be a holiday.</c:when>
                             <c:when test="${param.error == 'reason_too_short'}">The reason must be at least 10 characters long.</c:when>
                             <c:when test="${param.error == 'missing_employees'}">Please select at least one employee to work overtime.</c:when>
                             <c:when test="${param.error == 'duplicate_overtime'}">One or more selected employees already have an overtime request (pending or approved) on this date.</c:when>
@@ -53,6 +55,7 @@
                             <c:when test="${param.error == 'invalid_date'}">Sick leave cannot be requested for future dates.</c:when>
                             <c:when test="${param.error == 'insufficient_sick_days'}">You do not have enough remaining sick leave days.</c:when>
                             <c:when test="${param.error == 'duplicate_sick_request'}">One or more selected dates are already covered by an existing sick leave request.</c:when>
+                            <c:when test="${param.error == 'sick_date_holiday'}">Sick leave dates cannot include holidays.</c:when>
                             <c:when test="${param.error == 'system_error'}">A system error occurred. Please try again later.</c:when>
                             <c:otherwise>${param.error}</c:otherwise>
                         </c:choose>

@@ -66,6 +66,12 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
                 return;
             }
 
+            dao.HolidayDAO holidayDAO = new dao.HolidayDAO();
+            if (holidayDAO.isHoliday(overtimeDate)) {
+                response.sendRedirect("create_request?error=overtime_date_holiday");
+                return;
+            }
+
             String reason = request.getParameter("reason");
             if (reason == null || reason.trim().length() < 10) {
                 response.sendRedirect("create_request?error=reason_too_short");
