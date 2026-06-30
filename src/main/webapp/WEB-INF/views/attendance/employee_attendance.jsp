@@ -112,10 +112,7 @@
                                                     <c:set var="record" value="${attendanceMap[recordKey]}" />
                                                     <c:choose>
                                                         <c:when test="${not empty record}">
-                                                            <c:url var="updateUrl" value="/attendance/update">
-                                                                <c:param name="id" value="${record.attendanceRecordId}"/>
-                                                            </c:url>
-                                                            <a href="${updateUrl}" class="record-chip ${record.cssClass}" title="${record.status}">
+                                                            <div class="record-chip ${record.cssClass}" title="${record.status}">
                                                                 <span class="chip-dot"></span>
                                                                 <c:choose>
                                                                     <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
@@ -123,7 +120,7 @@
                                                                     <c:when test="${record.status == 'HOLIDAY'}">Holiday</c:when>
                                                                     <c:otherwise>${record.checkInText} - ${record.checkOutText}</c:otherwise>
                                                                 </c:choose>
-                                                            </a>
+                                                            </div>
                                                             <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}">
                                                                 <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="record-chip chip-ot" style="text-decoration:none;" title="View OT Detail">OT</a>
                                                             </c:if>

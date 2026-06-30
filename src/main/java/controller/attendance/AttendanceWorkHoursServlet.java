@@ -16,11 +16,12 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet({"/attendance/records", "/attendance/view_all"})
-public class AttendanceRecordServlet extends HttpServlet {
+@WebServlet("/attendance/work-hours")
+public class AttendanceWorkHoursServlet extends HttpServlet {
     private static final int PAGE_SIZE = 5;
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM");
 
@@ -30,73 +31,71 @@ public class AttendanceRecordServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        boolean isUpdateMode = "/attendance/records".equals(request.getServletPath());
         String actionUrl = request.getContextPath() + request.getServletPath();
 
         LocalDate today = LocalDate.now();
-        int selectedMonth = parseIntInRange(
-                request.getParameter("month"),
-                today.getMonthValue(),
-                1,
-                12
-        );
-        int selectedYear = parseIntInRange(
-                request.getParameter("year"),
-                today.getYear(),
-                2000,
-                2100
-        );
+        int selectedMonth = parseIntInRange(request.getParameter("month"), today.getMonthValue(), 1, 12);
+        int selectedYear = parseIntInRange(request.getParameter("year"), today.getYear(), 2000, 2100);
         Integer selectedDepartmentId = parsePositiveInteger(request.getParameter("departmentId"));
         String keyword = normalizeKeyword(request.getParameter("keyword"));
         int currentPage = Math.max(1, parseInt(request.getParameter("page"), 1));
 
-        // Đảm bảo dữ liệu holiday đã có cho tất cả nhân viên trong tháng
         attendanceDAO.createHolidayRecordsForMonth(selectedYear, selectedMonth);
 
-        int totalEmployees = attendanceDAO.countEmployeesForAttendanceMatrix(
-                selectedMonth,
-                selectedYear,
-                selectedDepartmentId,
-                keyword
-        );
+        int totalEmployees = attendanceDAO.countEmployeesForAttendanceMatrix(selectedMonth, selectedYear, selectedDepartmentId, keyword);
         int totalPages = (int) Math.ceil((double) totalEmployees / PAGE_SIZE);
         if (totalPages > 0 && currentPage > totalPages) {
             currentPage = totalPages;
         }
 
-        List<AttendanceRecordDTO> records = attendanceDAO.getAttendanceRecordsForMatrix(
-                selectedMonth,
-                selectedYear,
-                selectedDepartmentId,
-                keyword,
-                currentPage,
-                PAGE_SIZE
-        );
+        List<AttendanceRecordDTO> records = attendanceDAO.getAttendanceRecordsForMatrix(selectedMonth, selectedYear, selectedDepartmentId, keyword, currentPage, PAGE_SIZE);
 
         Map<Integer, AttendanceRecordDTO> employeeMap = new LinkedHashMap<>();
         Map<String, AttendanceRecordDTO> attendanceMap = new LinkedHashMap<>();
+        Map<Integer, Double> employeeTotalWorkHours = new HashMap<>();
+        Map<Integer, Double> employeeTotalOT = new HashMap<>();
+
         for (AttendanceRecordDTO record : records) {
             employeeMap.putIfAbsent(record.getUserId(), record);
             attendanceMap.put(buildAttendanceKey(record.getUserId(), record.getWorkDate()), record);
+            
+            if (record.getTotalWorkHours() != null) {
+                employeeTotalWorkHours.merge(record.getUserId(), record.getTotalWorkHours(), Double::sum);
+            }
+            if (record.getOvertimeHours() != null) {
+                employeeTotalOT.merge(record.getUserId(), record.getOvertimeHours(), Double::sum);
+            }
         }
 
-        // Lấy danh sách ngày lễ trong tháng
         List<LocalDate> holidayDates = attendanceDAO.getHolidayDatesInMonth(selectedYear, selectedMonth);
 
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);
         List<LocalDate> daysInMonth = new ArrayList<>();
         List<String> dayLabels = new ArrayList<>();
+        int standardWorkingDays = 0;
+
         for (int day = 1; day <= selectedPeriod.lengthOfMonth(); day++) {
             LocalDate date = selectedPeriod.atDay(day);
             daysInMonth.add(date);
             dayLabels.add(formatDayLabel(date));
+            
+            if (date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                if (!holidayDates.contains(date)) {
+                    standardWorkingDays++;
+                }
+            }
         }
+        
+        double standardHours = standardWorkingDays * 8.0;
 
         request.setAttribute("records", records);
         request.setAttribute("employees", new ArrayList<>(employeeMap.values()));
         request.setAttribute("daysInMonth", daysInMonth);
         request.setAttribute("dayLabels", dayLabels);
         request.setAttribute("attendanceMap", attendanceMap);
+        request.setAttribute("employeeTotalWorkHours", employeeTotalWorkHours);
+        request.setAttribute("employeeTotalOT", employeeTotalOT);
+        request.setAttribute("standardHours", standardHours);
         request.setAttribute("departments", departmentDAO.getAllDepartments());
         request.setAttribute("years", buildYearOptions(today.getYear(), selectedYear));
         request.setAttribute("selectedMonth", selectedMonth);
@@ -107,11 +106,9 @@ public class AttendanceRecordServlet extends HttpServlet {
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalEmployees", totalEmployees);
         request.setAttribute("holidayDates", holidayDates);
-        request.setAttribute("isUpdateMode", isUpdateMode);
         request.setAttribute("actionUrl", actionUrl);
         request.setAttribute("servletPath", request.getServletPath());
-        request.getRequestDispatcher("/WEB-INF/views/attendance/attendance_records.jsp")
-                .forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/attendance/attendance_work_hours.jsp").forward(request, response);
     }
 
     private String buildAttendanceKey(int userId, LocalDate workDate) {
@@ -145,9 +142,7 @@ public class AttendanceRecordServlet extends HttpServlet {
     }
 
     private String normalizeKeyword(String keyword) {
-        if (keyword == null) {
-            return "";
-        }
+        if (keyword == null) return "";
         return keyword.trim().replaceAll("\\s+", " ");
     }
 

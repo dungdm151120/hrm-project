@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Records | HRM</title>
+    <title>${isUpdateMode ? 'Update Attendance' : 'All Attendance (View)'} | HRM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
     <main class="dashboard-main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Attendance records</h1>
+                <h1 class="header-title">${isUpdateMode ? 'Update Attendance' : 'All Attendance (View)'}</h1>
             </div>
         </header>
 
@@ -27,7 +27,7 @@
             <section class="attendance-records-card">
                 <div class="attendance-records-heading">
                     <div>
-                        <h2>Attendance records</h2>
+                        <h2>${isUpdateMode ? 'Update Attendance' : 'All Attendance (View)'}</h2>
                         <p>Showing all days of ${selectedMonth}/${selectedYear}.</p>
                     </div>
                 </div>
@@ -51,7 +51,7 @@
                 </c:if>
 
                 <form class="attendance-matrix-filters"
-                      action="${pageContext.request.contextPath}/attendance/records"
+                      action="${actionUrl}"
                       method="get">
                     <div class="matrix-filter-field">
                         <label for="matrixMonth">Month</label>
@@ -103,7 +103,7 @@
                     </div>
 
                     <button type="submit" class="matrix-btn matrix-search-btn">Search</button>
-                    <a href="${pageContext.request.contextPath}/attendance/records"
+                    <a href="${actionUrl}"
                        class="matrix-btn matrix-clear-btn">Clear</a>
 
                     <c:url var="exportUrl" value="/attendance/export">
@@ -186,9 +186,14 @@
                                                         <c:url var="updateUrl" value="/attendance/update">
                                                             <c:param name="id" value="${record.attendanceRecordId}"/>
                                                         </c:url>
-                                                        <a href="${updateUrl}"
-                                                           class="matrix-cell-link"
-                                                           title="${record.status}">
+                                                        <c:choose>
+                                                            <c:when test="${isUpdateMode}">
+                                                                <a href="${updateUrl}" class="matrix-cell-link" title="${record.status}">
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <div class="matrix-cell-link" title="${record.status}">
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                             <span class="matrix-status-dot"></span>
                                                             <span class="matrix-time">
                                                                 <c:choose>
@@ -206,7 +211,14 @@
                                                             <c:if test="${record.edited}">
                                                                 <span class="matrix-edited-badge">Edited</span>
                                                             </c:if>
-                                                        </a>
+                                                        <c:choose>
+                                                            <c:when test="${isUpdateMode}">
+                                                                </a>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                </div>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </td>
                                                 </c:when>
                                                 <c:otherwise>
@@ -235,7 +247,7 @@
                     <c:if test="${totalPages > 1}">
                         <nav class="matrix-pagination" aria-label="Attendance records pagination">
                             <c:forEach var="pageNumber" begin="1" end="${totalPages}">
-                                <c:url var="pageUrl" value="/attendance/records">
+                                <c:url var="pageUrl" value="${servletPath}">
                                     <c:param name="month" value="${selectedMonth}"/>
                                     <c:param name="year" value="${selectedYear}"/>
                                     <c:if test="${not empty selectedDepartmentId}">
