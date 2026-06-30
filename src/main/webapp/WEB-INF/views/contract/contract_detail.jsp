@@ -79,14 +79,6 @@
                     <span class="role-meta-label">Work Location</span>
                     <span class="role-meta-value">${contract.workLocation}</span>
                 </div>
-                <c:if test="${not empty contract.fileUrl}">
-                    <div class="role-meta">
-                        <span class="role-meta-label">File</span>
-                        <span class="role-meta-value">
-                            <a href="${contract.fileUrl}" target="_blank" rel="noopener">Open file</a>
-                        </span>
-                    </div>
-                </c:if>
             </div>
 
             <div class="role-detail">
@@ -95,6 +87,33 @@
                     <span class="role-meta-value">${contract.note}</span>
                 </div>
             </div>
+
+            <c:if test="${contract.status == 'TERMINATED'}">
+                <div class="role-detail">
+                    <div class="role-meta">
+                        <span class="role-meta-label">Terminated At</span>
+                        <span class="role-meta-value">${contract.terminatedAtDisplay}</span>
+                    </div>
+                    <div class="role-meta">
+                        <span class="role-meta-label">Terminated By</span>
+                        <span class="role-meta-value">
+                            <c:choose>
+                                <c:when test="${not empty contract.terminatedByName}">${contract.terminatedByName}</c:when>
+                                <c:otherwise>-</c:otherwise>
+                            </c:choose>
+                        </span>
+                    </div>
+                    <div class="role-meta" style="width: 100%;">
+                        <span class="role-meta-label">Termination Reason</span>
+                        <span class="role-meta-value">
+                            <c:choose>
+                                <c:when test="${not empty contract.terminationReason}">${contract.terminationReason}</c:when>
+                                <c:otherwise>-</c:otherwise>
+                            </c:choose>
+                        </span>
+                    </div>
+                </div>
+            </c:if>
 
             <c:if test="${canTerminateContract && contract.status == 'ACTIVE'}">
                 <form action="${pageContext.request.contextPath}/contracts/terminate" method="post"
