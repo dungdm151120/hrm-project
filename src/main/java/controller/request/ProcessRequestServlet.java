@@ -53,6 +53,7 @@ public class ProcessRequestServlet extends HttpServlet {
 
             boolean success = false;
             String returnUrl = "request_detail?id=" + requestId;
+            String notificationEventType = null;
 
             switch (action) {
                 case "APPROVE":
@@ -64,6 +65,7 @@ public class ProcessRequestServlet extends HttpServlet {
                         }
 
                         String newStatus = action.equals("APPROVE") ? "APPROVED" : "REJECTED";
+                        notificationEventType = newStatus;
                         if ("APPROVE".equals(action) && "OVERTIME".equals(req.getType())) {
                             success = dao.updateRequestStatusAndHandler(requestId, newStatus, comment, userId);
                         } else {
@@ -123,6 +125,7 @@ public class ProcessRequestServlet extends HttpServlet {
                 case "CANCEL":
                     if (String.valueOf(req.getUserId()).equals(String.valueOf(userId)) && "PENDING".equals(req.getStatus())) {
                         success = dao.updateRequestStatus(requestId, "CANCELLED", null);
+                        notificationEventType = "CANCELLED";
 
                         if (success && "OVERTIME".equals(req.getType())) {
                             service.OvertimeService overtimeService = new service.OvertimeService();
@@ -146,6 +149,9 @@ public class ProcessRequestServlet extends HttpServlet {
             }
 
             if (success) {
+                if (notificationEventType != null) {
+                    dao.notifyRequestChanged(requestId, userId, notificationEventType);
+                }
                 response.sendRedirect(returnUrl + "&success=true");
             } else {
                 String encodedComment = URLEncoder.encode(comment != null ? comment : "", "UTF-8");

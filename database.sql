@@ -203,6 +203,24 @@ CREATE TABLE request_observers (
                                    FOREIGN KEY (observer_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE request_notifications (
+                                       id INT PRIMARY KEY AUTO_INCREMENT,
+                                       request_id INT NOT NULL,
+                                       user_id INT NOT NULL,
+                                       actor_user_id INT NULL,
+                                       event_type VARCHAR(50) NOT NULL,
+                                       message VARCHAR(255) NOT NULL,
+                                       read_at DATETIME NULL,
+                                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                       CONSTRAINT fk_request_notifications_request
+                                           FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
+                                       CONSTRAINT fk_request_notifications_user
+                                           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                                       CONSTRAINT fk_request_notifications_actor
+                                           FOREIGN KEY (actor_user_id) REFERENCES users(id),
+                                       INDEX idx_request_notifications_user_read (user_id, read_at, created_at)
+);
+
 -- ============================================================
 -- 6. ANNOUNCEMENTS
 -- ============================================================
