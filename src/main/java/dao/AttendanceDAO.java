@@ -27,6 +27,8 @@ public class AttendanceDAO {
     private static final int LATE_GRACE_MINUTES = 5;
     private static final int PENALTY_BLOCK_MINUTES = 30;
 
+    // ==================== ATTENDANCE LOGS ====================
+
     public boolean saveAttendanceLog(AttendanceLog log) {
         String sql = "INSERT INTO attendance_logs (work_date, employee_id, check_in, check_out) " +
                 "VALUES (?, ?, ?, ?) " +
@@ -102,10 +104,23 @@ public class AttendanceDAO {
         }
     }
 
+    // ==================== ATTENDANCE RECORDS ====================
+
     public void calculateAndSaveRecord(int employeeId, LocalDate workDate) {
         AttendanceRecord existing = getRecordByUserAndDate(employeeId, workDate);
-        if (existing != null && ("ON_LEAVE".equals(existing.getStatus()) || "ABSENT".equals(existing.getStatus()) || "SICK_LEAVE".equals(existing.getStatus()))) {
+        if (existing != null && ("ON_LEAVE".equals(existing.getStatus()) ||
+                "ABSENT".equals(existing.getStatus()) ||
+                "SICK_LEAVE".equals(existing.getStatus()) ||
+                "HOLIDAY".equals(existing.getStatus()))) {
             return;
+        }
+
+        if (isHoliday(workDate)) {
+            AttendanceLog log = getLogByEmployeeAndDate(employeeId, workDate);
+            if (log == null || (log.getCheckIn() == null && log.getCheckOut() == null)) {
+                markHoliday(employeeId, workDate);
+                return;
+            }
         }
 
         AttendanceLog log = getLogByEmployeeAndDate(employeeId, workDate);
@@ -459,7 +474,7 @@ public class AttendanceDAO {
                         "COALESCE(SUM(CASE WHEN (check_in IS NULL) <> (check_out IS NULL) THEN 1 ELSE 0 END), 0) AS forgot_count, " +
                         "COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS leave_days, " +
                         "COALESCE(SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END), 0) AS absent_days, " +
-                        "COALESCE(SUM(CASE WHEN status = 'SICK_LEAVE' THEN 1 ELSE 0 END), 0) AS sick_days " +  // <-- thêm dòng này
+                        "COALESCE(SUM(CASE WHEN status = 'SICK_LEAVE' THEN 1 ELSE 0 END), 0) AS sick_days " +
                         "FROM attendance_records WHERE user_id = ? AND work_date BETWEEN ? AND ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -477,7 +492,7 @@ public class AttendanceDAO {
                     summary.setForgotCheckCount(rs.getInt("forgot_count"));
                     summary.setLeaveDaysInMonth(rs.getDouble("leave_days"));
                     summary.setAbsentDaysInMonth(rs.getDouble("absent_days"));
-                    summary.setSickLeaveDaysInMonth(rs.getDouble("sick_days"));  // <-- thêm dòng này
+                    summary.setSickLeaveDaysInMonth(rs.getDouble("sick_days"));
                 }
             }
 
@@ -495,7 +510,6 @@ public class AttendanceDAO {
         LocalDate startOfYear = LocalDate.of(year, 1, 1);
         LocalDate endOfMonth = LocalDate.of(year, month, YearMonth.of(year, month).lengthOfMonth());
 
-        // --- Phép năm (ON_LEAVE) ---
         String sqlLeave = "SELECT COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS used_days " +
                 "FROM attendance_records WHERE user_id = ? " +
                 "AND work_date BETWEEN ? AND ?";
@@ -532,9 +546,7 @@ public class AttendanceDAO {
         summary.setEntitledLeaveDays(entitled);
         summary.setRemainingLeaveDays(entitled - totalUsedLeave);
 
-        // --- Vắng không phép (LEAVE / ABSENT) ---
         double entitledAbsent = month;
-
         String sqlAbsent = "SELECT COALESCE(SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END), 0) AS used_days " +
                 "FROM attendance_records WHERE user_id = ? " +
                 "AND work_date BETWEEN ? AND ?";
@@ -571,7 +583,6 @@ public class AttendanceDAO {
         summary.setEntitledAbsentDays(entitledAbsent);
         summary.setRemainingAbsentDays(entitledAbsent - totalUsedAbsent);
 
-        // --- Sick leave ---
         double entitledSick = 30;
         String sqlSickUsed = "SELECT COALESCE(COUNT(*), 0) FROM attendance_records WHERE user_id = ? AND status = 'SICK_LEAVE' AND work_date BETWEEN ? AND ?";
         double usedSick = 0;
@@ -878,16 +889,14 @@ public class AttendanceDAO {
         Object value = rs.getObject(column);
         return value == null ? null : rs.getDouble(column);
     }
-
     private String resolveMatrixCssClass(String status) {
-        if (status == null) {
-            return "";
-        }
+        if (status == null) return "";
         return switch (status) {
             case "ON_TIME" -> "status-on-time";
             case "LATE", "EARLY_LEAVE", "LATE_AND_EARLY", "LATE_AND_EARLY_LEAVE" -> "status-late";
             case "ON_LEAVE" -> "status-leave";
-            case "SICK_LEAVE" -> "status-sick-leave";
+            case "SICK_LEAVE" -> "status-sick-leave";     // xanh nước biển nhạt
+            case "HOLIDAY" -> "status-holiday";           // tím
             case "ABSENT" -> "status-absent";
             case "FORGOT_CHECKIN", "FORGOT_CHECKOUT",
                  "FORGOT_CHECK_IN", "FORGOT_CHECK_OUT" -> "status-forgot";
@@ -907,6 +916,8 @@ public class AttendanceDAO {
             ps.setTimestamp(index, Timestamp.valueOf(value));
         }
     }
+
+    // ==================== SPECIAL STATUS MARKERS ====================
 
     public void markOnLeave(int userId, LocalDate date) {
         deleteAttendanceLog(userId, date);
@@ -950,6 +961,81 @@ public class AttendanceDAO {
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    // ==================== HOLIDAY METHODS ====================
+
+    private boolean isHoliday(LocalDate date) {
+        String sql = "SELECT COUNT(*) FROM holidays WHERE holiday_date = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public void markHoliday(int userId, LocalDate date) {
+        deleteAttendanceLog(userId, date);
+        String sql = "INSERT INTO attendance_records (user_id, work_date, check_in, check_out, total_work_hours, overtime_hours, late_hours, early_leave_hours, status, note, created_at) " +
+                "VALUES (?, ?, NULL, NULL, 8.0, 0.0, 0.0, 0.0, 'HOLIDAY', 'Ngày nghỉ lễ', NOW()) " +
+                "ON DUPLICATE KEY UPDATE check_in = NULL, check_out = NULL, total_work_hours = 8.0, overtime_hours = 0.0, late_hours = 0.0, early_leave_hours = 0.0, status = 'HOLIDAY', note = VALUES(note), updated_at = NOW()";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(date));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void createHolidayRecordsForDate(LocalDate holidayDate) {
+        String sql = "SELECT id FROM users WHERE active = TRUE AND role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN','SYSTEM ADMIN'))";
+        List<Integer> userIds = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                userIds.add(rs.getInt("id"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        for (int userId : userIds) {
+            markHoliday(userId, holidayDate);
+        }
+    }
+
+    public List<LocalDate> getHolidayDatesInMonth(int year, int month) {
+        List<LocalDate> dates = new ArrayList<>();
+        YearMonth ym = YearMonth.of(year, month);
+        String sql = "SELECT holiday_date FROM holidays WHERE holiday_date BETWEEN ? AND ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(ym.atDay(1)));
+            ps.setDate(2, Date.valueOf(ym.atEndOfMonth()));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    dates.add(rs.getDate("holiday_date").toLocalDate());
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return dates;
+    }
+
+    public void createHolidayRecordsForMonth(int year, int month) {
+        List<LocalDate> holidays = getHolidayDatesInMonth(year, month);
+        for (LocalDate holiday : holidays) {
+            createHolidayRecordsForDate(holiday);
         }
     }
 

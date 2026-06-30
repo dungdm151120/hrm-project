@@ -53,7 +53,6 @@
                 <form class="attendance-matrix-filters"
                       action="${pageContext.request.contextPath}/attendance/records"
                       method="get">
-                    <!-- filters giữ nguyên -->
                     <div class="matrix-filter-field">
                         <label for="matrixMonth">Month</label>
                         <select id="matrixMonth" name="month">
@@ -128,14 +127,16 @@
                     </a>
                 </form>
 
-                <div class="attendance-legend" aria-label="Attendance status legend">
-                    <span><i class="legend-dot status-on-time"></i>On time</span>
-                    <span><i class="legend-dot status-late"></i>Late or early leave</span>
-                    <span><i class="legend-dot status-absent"></i>Absent</span>
-                    <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
-                    <span><i class="legend-dot status-leave"></i>On leave</span>
-                    <span><span class="matrix-ot-badge" style="margin-right:4px;">OT</span>Overtime</span>
-                </div>
+<div class="attendance-legend" aria-label="Attendance status legend">
+    <span><i class="legend-dot status-on-time"></i>On time</span>
+    <span><i class="legend-dot status-late"></i>Late or early leave</span>
+    <span><i class="legend-dot status-absent"></i>Absent</span>
+    <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
+    <span><i class="legend-dot status-leave"></i>On leave</span>
+    <span><i class="legend-dot status-holiday"></i>Holiday</span>
+    <span><i class="legend-dot status-sick-leave"></i>Sick leave</span>
+    <span><span class="matrix-ot-badge" style="margin-right:4px;">OT</span>Overtime</span>
+</div>
 
                 <div class="attendance-matrix-wrapper">
                     <table class="attendance-matrix-table">
@@ -192,14 +193,16 @@
                                                             <span class="matrix-time">
                                                                 <c:choose>
                                                                     <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
+                                                                    <c:when test="${record.status == 'SICK_LEAVE'}">Sick leave</c:when>
+                                                                    <c:when test="${record.status == 'HOLIDAY'}">Holiday</c:when>
                                                                     <c:otherwise>
                                                                         ${record.checkInText} <b>-</b> ${record.checkOutText}
                                                                     </c:otherwise>
                                                                 </c:choose>
                                                             </span>
                                                             <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}">
-                                                            <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge" style="text-decoration:none;" title="View OT Detail">OT</a>
-                                                        </c:if>
+                                                                <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge" style="text-decoration:none;" title="View OT Detail">OT</a>
+                                                            </c:if>
                                                             <c:if test="${record.edited}">
                                                                 <span class="matrix-edited-badge">Edited</span>
                                                             </c:if>

@@ -23,9 +23,19 @@ public class AttendanceRecordDTO {
     private String cssClass;
     private boolean edited;
     private String otStatus;
-    // Thêm vào model AttendanceRecordDTO
     private String positionName;
+    private boolean holiday; // <-- Thêm thuộc tính này
 
+    // Getter & Setter cho holiday
+    public boolean isHoliday() {
+        return holiday;
+    }
+
+    public void setHoliday(boolean holiday) {
+        this.holiday = holiday;
+    }
+
+    // Các getter/setter khác giữ nguyên
     public String getOtStatus() {
         return otStatus;
     }

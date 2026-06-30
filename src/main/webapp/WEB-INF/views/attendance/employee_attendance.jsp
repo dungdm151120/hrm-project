@@ -76,6 +76,7 @@
                         <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
                         <span><i class="legend-dot status-leave"></i>On leave</span>
                         <span><i class="legend-dot status-sick-leave"></i>Sick leave</span>
+                        <span><i class="legend-dot status-holiday"></i>Holiday</span>
                         <span><span class="record-chip chip-ot" style="margin-right:4px;">OT</span>Overtime</span>
                     </div>
 
@@ -119,6 +120,7 @@
                                                                 <c:choose>
                                                                     <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
                                                                     <c:when test="${record.status == 'SICK_LEAVE'}">Sick leave</c:when>
+                                                                    <c:when test="${record.status == 'HOLIDAY'}">Holiday</c:when>
                                                                     <c:otherwise>${record.checkInText} - ${record.checkOutText}</c:otherwise>
                                                                 </c:choose>
                                                             </a>
