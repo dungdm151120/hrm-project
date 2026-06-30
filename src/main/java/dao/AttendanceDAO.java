@@ -145,16 +145,115 @@ public class AttendanceDAO {
     }
 
     public void processAllPendingLogs() {
-        String sql = "SELECT DISTINCT employee_id, work_date FROM attendance_logs " +
+        java.util.Set<LocalDate> holidays = new java.util.HashSet<>();
+        String sqlHolidays = "SELECT holiday_date FROM holidays";
+        String sqlLogs = "SELECT id, employee_id, work_date, check_in, check_out FROM attendance_logs " +
                 "WHERE (employee_id, work_date) NOT IN (SELECT user_id, work_date FROM attendance_records)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                int empId = rs.getInt("employee_id");
-                LocalDate date = rs.getDate("work_date").toLocalDate();
-                calculateAndSaveRecord(empId, date);
+        try (Connection conn = DBConnection.getConnection()) {
+            // 1. Load all holidays
+            try (PreparedStatement psH = conn.prepareStatement(sqlHolidays);
+                 ResultSet rsH = psH.executeQuery()) {
+                while (rsH.next()) {
+                    holidays.add(rsH.getDate("holiday_date").toLocalDate());
+                }
+            }
+
+            // 2. Fetch all pending logs
+            List<AttendanceLog> pendingLogs = new ArrayList<>();
+            try (PreparedStatement psL = conn.prepareStatement(sqlLogs);
+                 ResultSet rsL = psL.executeQuery()) {
+                while (rsL.next()) {
+                    AttendanceLog log = new AttendanceLog();
+                    log.setId(rsL.getInt("id"));
+                    log.setEmployeeId(rsL.getInt("employee_id"));
+                    log.setWorkDate(rsL.getDate("work_date").toLocalDate());
+                    log.setCheckIn(getNullableLocalDateTime(rsL, "check_in"));
+                    log.setCheckOut(getNullableLocalDateTime(rsL, "check_out"));
+                    pendingLogs.add(log);
+                }
+            }
+
+            if (pendingLogs.isEmpty()) return;
+
+            // 3. Batch process and save
+            String sqlInsertRecord = "INSERT INTO attendance_records (user_id, work_date, check_in, check_out, " +
+                    "total_work_hours, overtime_hours, late_hours, early_leave_hours, status, note, created_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
+                    "ON DUPLICATE KEY UPDATE " +
+                    "check_in = VALUES(check_in), check_out = VALUES(check_out), " +
+                    "total_work_hours = VALUES(total_work_hours), " +
+                    "overtime_hours = VALUES(overtime_hours), " +
+                    "late_hours = VALUES(late_hours), " +
+                    "early_leave_hours = VALUES(early_leave_hours), " +
+                    "status = VALUES(status), note = VALUES(note), updated_at = NOW()";
+
+            String sqlDeleteLog = "DELETE FROM attendance_logs WHERE employee_id = ? AND work_date = ?";
+
+            try (PreparedStatement psInsert = conn.prepareStatement(sqlInsertRecord);
+                 PreparedStatement psDelete = conn.prepareStatement(sqlDeleteLog)) {
+                
+                conn.setAutoCommit(false);
+                boolean hasDeletes = false;
+                boolean hasInserts = false;
+
+                for (AttendanceLog log : pendingLogs) {
+                    int employeeId = log.getEmployeeId();
+                    LocalDate workDate = log.getWorkDate();
+
+                    if (holidays.contains(workDate)) {
+                        if (log.getCheckIn() == null && log.getCheckOut() == null) {
+                            // Insert holiday record
+                            psInsert.setInt(1, employeeId);
+                            psInsert.setDate(2, Date.valueOf(workDate));
+                            psInsert.setNull(3, Types.TIMESTAMP);
+                            psInsert.setNull(4, Types.TIMESTAMP);
+                            psInsert.setDouble(5, 8.0);
+                            psInsert.setDouble(6, 0.0);
+                            psInsert.setDouble(7, 0.0);
+                            psInsert.setDouble(8, 0.0);
+                            psInsert.setString(9, "HOLIDAY");
+                            psInsert.setString(10, "Ngày nghỉ lễ");
+                            psInsert.addBatch();
+                            hasInserts = true;
+
+                            // Delete log
+                            psDelete.setInt(1, employeeId);
+                            psDelete.setDate(2, Date.valueOf(workDate));
+                            psDelete.addBatch();
+                            hasDeletes = true;
+                            continue;
+                        }
+                    }
+
+                    AttendanceRecord record = new AttendanceRecord();
+                    record.setUserId(employeeId);
+                    record.setWorkDate(workDate);
+                    record.setCheckIn(log.getCheckIn());
+                    record.setCheckOut(log.getCheckOut());
+
+                    calculateWorkingHours(record);
+                    String status = determineStatus(record);
+                    record.setStatus(status);
+                    record.setNote(null);
+
+                    psInsert.setInt(1, record.getUserId());
+                    psInsert.setDate(2, Date.valueOf(record.getWorkDate()));
+                    setNullableTimestamp(psInsert, 3, record.getCheckIn());
+                    setNullableTimestamp(psInsert, 4, record.getCheckOut());
+                    psInsert.setObject(5, record.getTotalWorkHours(), Types.DECIMAL);
+                    psInsert.setObject(6, record.getOvertimeHours() != null ? record.getOvertimeHours() : 0.0, Types.DECIMAL);
+                    psInsert.setObject(7, record.getLateHours() != null ? record.getLateHours() : 0.0, Types.DECIMAL);
+                    psInsert.setObject(8, record.getEarlyLeaveHours() != null ? record.getEarlyLeaveHours() : 0.0, Types.DECIMAL);
+                    psInsert.setString(9, record.getStatus());
+                    psInsert.setString(10, record.getNote());
+                    psInsert.addBatch();
+                    hasInserts = true;
+                }
+
+                if (hasInserts) psInsert.executeBatch();
+                if (hasDeletes) psDelete.executeBatch();
+                conn.commit();
             }
         } catch (Exception e) {
             e.printStackTrace();

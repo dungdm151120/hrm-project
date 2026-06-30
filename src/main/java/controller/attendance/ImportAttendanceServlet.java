@@ -50,6 +50,15 @@ public class ImportAttendanceServlet extends HttpServlet {
             List<AttendanceLog> logs = new ArrayList<>();
             UserDAO userDAO = new UserDAO();
 
+            java.util.Set<Integer> activeUserIds = new java.util.HashSet<>();
+            try (java.sql.Connection conn = util.DBConnection.getConnection();
+                 java.sql.PreparedStatement ps = conn.prepareStatement("SELECT id FROM users WHERE active = TRUE");
+                 java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    activeUserIds.add(rs.getInt("id"));
+                }
+            }
+
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
@@ -70,9 +79,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                 }
 
 
-                User user = userDAO.findById(employeeId);
-                if (user == null) {
-
+                if (!activeUserIds.contains(employeeId)) {
                     continue;
                 }
 
