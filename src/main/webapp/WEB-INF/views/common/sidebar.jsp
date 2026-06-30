@@ -64,6 +64,17 @@
   .nav-toggle.open + .submenu {
     display: flex;
   }
+  .sidebar-menu-label {
+    flex: 1;
+    min-width: 0;
+  }
+  .sidebar-unread-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #ef4444;
+    flex-shrink: 0;
+  }
   .notification-wrapper {
     position: relative;
   }
@@ -187,7 +198,10 @@
                             <path d="M8 10h8"/>
                             <path d="M8 14h5"/>
                         </svg>
-                        <span>Announcements</span>
+                        <span class="sidebar-menu-label">Announcements</span>
+                        <c:if test="${unreadAnnouncementCount > 0}">
+                            <span class="sidebar-unread-dot" title="Unread announcements"></span>
+                        </c:if>
                         <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
@@ -419,7 +433,10 @@
                         <line x1="16" y1="17" x2="8" y2="17"></line>
                         <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
-                    <span>Requests</span>
+                    <span class="sidebar-menu-label">Requests</span>
+                    <c:if test="${unreadRequestNotificationCount > 0}">
+                        <span class="sidebar-unread-dot" title="Unread request notifications"></span>
+                    </c:if>
                     <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 12 15 18 9"/>
                     </svg>
