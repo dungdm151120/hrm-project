@@ -205,11 +205,13 @@ CREATE TABLE attendance_lock_log (
     id INT PRIMARY KEY AUTO_INCREMENT,
     month INT NOT NULL,
     year INT NOT NULL,
+    department_id INT,
     action VARCHAR(50) NOT NULL COMMENT 'DEPT_CONFIRM, HR_SEND, BUSINESS_APPROVE, SNAPSHOT_CREATED',
     user_id INT NOT NULL,
     note TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 
 -- ============================================================

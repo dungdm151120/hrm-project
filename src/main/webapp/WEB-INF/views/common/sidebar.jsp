@@ -368,6 +368,9 @@
                 <c:if test="${userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}">
                     <a href="${ctx}/attendance/export" class="submenu-item ${currentPath == ctx.concat('/attendance/export') ? 'active' : ''}">Export Report</a>
                 </c:if>
+                <c:if test="${userPermissions.contains('ATTENDANCE_CONFIRM_DEPT') || userPermissions.contains('ATTENDANCE_SEND_TO_BUSINESS') || userPermissions.contains('ATTENDANCE_APPROVE_BUSINESS')}">
+                    <a href="${ctx}/attendance/confirm" class="submenu-item ${currentPath == ctx.concat('/attendance/confirm') ? 'active' : ''}">Confirm & Snapshot</a>
+                </c:if>
             </div>
         </div>
         </c:if>
