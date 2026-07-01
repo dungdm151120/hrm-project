@@ -1,12 +1,16 @@
 package dao;
 
 import model.Request;
+import model.RequestNotification;
 import model.User;
 import util.DBConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class RequestDAO {
 
@@ -57,6 +61,10 @@ public class RequestDAO {
                     }
                     psObs.executeBatch();
                 }
+            }
+
+            if (requestId != -1) {
+                createNotifications(conn, requestId, notificationRecipients(req, observerIds), req.getUserId(), "NEW_REQUEST");
             }
 
             conn.commit();
@@ -115,6 +123,10 @@ public class RequestDAO {
                     }
                     psObs.executeBatch();
                 }
+            }
+
+            if (requestId != -1) {
+                createNotifications(conn, requestId, notificationRecipients(req, observerIds), req.getUserId(), "NEW_REQUEST");
             }
 
             conn.commit();
@@ -674,5 +686,202 @@ public class RequestDAO {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public int countUnreadRequestNotifications(int userId) {
+        String sql = "SELECT COUNT(*) FROM request_notifications WHERE user_id = ? AND read_at IS NULL";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            if (!isMissingNotificationTable(e)) {
+                e.printStackTrace();
+            }
+        }
+
+        return 0;
+    }
+
+    public List<RequestNotification> getLatestUnreadRequestNotifications(int userId, int limit) {
+        List<RequestNotification> notifications = new ArrayList<>();
+        String sql = """
+                SELECT rn.*, u.full_name AS actor_name
+                FROM request_notifications rn
+                LEFT JOIN users u ON rn.actor_user_id = u.id
+                WHERE rn.user_id = ?
+                  AND rn.read_at IS NULL
+                ORDER BY rn.created_at DESC, rn.id DESC
+                LIMIT ?
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    notifications.add(mapNotification(rs));
+                }
+            }
+        } catch (SQLException e) {
+            if (!isMissingNotificationTable(e)) {
+                e.printStackTrace();
+            }
+        }
+
+        return notifications;
+    }
+
+    public void markRequestNotificationsRead(int requestId, int userId) {
+        String sql = """
+                UPDATE request_notifications
+                SET read_at = NOW()
+                WHERE request_id = ?
+                  AND user_id = ?
+                  AND read_at IS NULL
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, requestId);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            if (!isMissingNotificationTable(e)) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void notifyRequestChanged(int requestId, int actorUserId, String eventType) {
+        Request request = getRequestById(requestId);
+        if (request == null) {
+            return;
+        }
+
+        createNotifications(requestId, notificationRecipients(request, observerIds(request.getObserver())), actorUserId, eventType);
+    }
+
+    private Set<Integer> notificationRecipients(Request req, Collection<Integer> observerIds) {
+        Set<Integer> recipients = new LinkedHashSet<>();
+        if (req.getUserId() > 0) {
+            recipients.add(req.getUserId());
+        }
+        if (req.getApproverId() > 0) {
+            recipients.add(req.getApproverId());
+        }
+        if (req.getHandlerId() > 0) {
+            recipients.add(req.getHandlerId());
+        }
+        if (observerIds != null) {
+            for (Integer observerId : observerIds) {
+                if (observerId != null && observerId > 0) {
+                    recipients.add(observerId);
+                }
+            }
+        }
+        return recipients;
+    }
+
+    private List<Integer> observerIds(List<User> observers) {
+        List<Integer> ids = new ArrayList<>();
+        if (observers != null) {
+            for (User observer : observers) {
+                if (observer != null && observer.getId() > 0) {
+                    ids.add(observer.getId());
+                }
+            }
+        }
+        return ids;
+    }
+
+    private void createNotifications(int requestId, Collection<Integer> recipientIds, int actorUserId, String eventType) {
+        try (Connection conn = DBConnection.getConnection()) {
+            createNotifications(conn, requestId, recipientIds, actorUserId, eventType);
+        } catch (SQLException e) {
+            if (!isMissingNotificationTable(e)) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void createNotifications(Connection conn, int requestId, Collection<Integer> recipientIds,
+                                     int actorUserId, String eventType) {
+        if (recipientIds == null || recipientIds.isEmpty()) {
+            return;
+        }
+
+        String sql = """
+                INSERT INTO request_notifications (request_id, user_id, actor_user_id, event_type, message, created_at)
+                VALUES (?, ?, ?, ?, ?, NOW())
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            String message = notificationMessage(eventType, requestId);
+            for (Integer recipientId : recipientIds) {
+                if (recipientId == null || recipientId <= 0 || recipientId == actorUserId) {
+                    continue;
+                }
+                ps.setInt(1, requestId);
+                ps.setInt(2, recipientId);
+                if (actorUserId > 0) {
+                    ps.setInt(3, actorUserId);
+                } else {
+                    ps.setNull(3, Types.INTEGER);
+                }
+                ps.setString(4, eventType);
+                ps.setString(5, message);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException e) {
+            if (!isMissingNotificationTable(e)) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String notificationMessage(String eventType, int requestId) {
+        if ("NEW_REQUEST".equals(eventType)) {
+            return "New request #" + requestId + " needs your attention.";
+        }
+        if ("APPROVED".equals(eventType)) {
+            return "Request #" + requestId + " was approved.";
+        }
+        if ("REJECTED".equals(eventType)) {
+            return "Request #" + requestId + " was rejected.";
+        }
+        if ("CANCELLED".equals(eventType)) {
+            return "Request #" + requestId + " was cancelled.";
+        }
+        if ("CONFIRMED".equals(eventType)) {
+            return "Request #" + requestId + " was confirmed.";
+        }
+        return "Request #" + requestId + " was updated.";
+    }
+
+    private RequestNotification mapNotification(ResultSet rs) throws SQLException {
+        RequestNotification notification = new RequestNotification();
+        notification.setId(rs.getInt("id"));
+        notification.setRequestId(rs.getInt("request_id"));
+        notification.setUserId(rs.getInt("user_id"));
+        int actorUserId = rs.getInt("actor_user_id");
+        notification.setActorUserId(rs.wasNull() ? null : actorUserId);
+        notification.setActorName(rs.getString("actor_name"));
+        notification.setEventType(rs.getString("event_type"));
+        notification.setMessage(rs.getString("message"));
+        notification.setReadAt(rs.getTimestamp("read_at"));
+        notification.setCreatedAt(rs.getTimestamp("created_at"));
+        return notification;
+    }
+
+    private boolean isMissingNotificationTable(SQLException e) {
+        return e.getErrorCode() == 1146 || "42S02".equals(e.getSQLState());
     }
 }
