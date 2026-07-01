@@ -42,7 +42,7 @@ public class CreateRequestServlet extends HttpServlet {
 
         for (var entry : allTypes.entrySet()) {
             String key = entry.getKey();
-            if ("POSITION_HANDOVER".equals(key)) {
+            if ("POSITION_HANDOVER".equals(key) || "RECRUITMENT".equals(key)) {
                 String position = userDAO.getPositionNameByUserId(user.getId());
                 boolean isManager = (position != null && position.contains("Manager"));
                 boolean isSysAdmin = (position != null && position.contains("Admin"));

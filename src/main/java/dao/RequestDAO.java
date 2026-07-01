@@ -132,7 +132,8 @@ public class RequestDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT r.*, u.full_name as proposer_name, h.full_name as handler_name FROM requests r " +
                         "LEFT JOIN users u ON r.user_id = u.id " +
-                        "LEFT JOIN users h ON r.handler_id = h.id WHERE r.user_id = ?"
+                        "LEFT JOIN users h ON r.handler_id = h.id " +
+                        "WHERE r.user_id = ?"
         );
 
         if (status != null && !status.isEmpty()) {
