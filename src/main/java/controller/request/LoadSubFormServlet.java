@@ -35,12 +35,11 @@ public class LoadSubFormServlet extends HttpServlet {
         String type = request.getParameter("type");
         String jspPath = "/WEB-INF/views/request/subforms/default.jsp";
 
-        if ("POSITION_HANDOVER".equals(type)) {
+        if ("POSITION_HANDOVER".equals(type) || "RECRUITMENT".equals(type)) {
             String position = userDAO.getPositionNameByUserId(user.getId());
             boolean isManager = (position != null && position.contains("Manager"));
-            boolean isSysAdmin = (position != null && position.contains("Admin"));
 
-            if (!isManager && !isSysAdmin) {
+            if (!isManager) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền tạo loại đơn này.");
                 return;
             }
@@ -133,6 +132,8 @@ public class LoadSubFormServlet extends HttpServlet {
             jspPath = "/WEB-INF/views/request/subforms/position_handover.jsp";
         } else if ("EMP_MOVE_REMOVE".equals(type)) {
             jspPath = "/WEB-INF/views/request/subforms/move_remove.jsp";
+        } else if ("RECRUITMENT".equals(type)) {
+            jspPath = "/WEB-INF/views/request/subforms/recruitment.jsp";
         } else if ("OVERTIME".equals(type)) {
             User currentUser = userDAO.findById(user.getId());
             int deptId = currentUser != null && currentUser.getDepartmentId() != null ? currentUser.getDepartmentId() : 0;

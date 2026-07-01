@@ -233,23 +233,23 @@ CREATE TABLE holidays (
 -- ============================================================
 
 CREATE TABLE requests (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    department_id INT NULL,
-    type ENUM('LEAVE_REQUEST', 'LATE_EARLY_REQUEST', 'EMP_MOVE_REMOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST', 'SICK_LEAVE_REQUEST') NOT NULL,
-    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'CONFIRMED') DEFAULT 'PENDING',
-    reason TEXT,
-    approver_id INT,
-    approver_comment TEXT NULL,
-    observer_id INT,
-    handler_id INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    processed_at TIMESTAMP NULL,
-    CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_request_dept FOREIGN KEY (department_id) REFERENCES departments(id),
-    CONSTRAINT fk_request_approver FOREIGN KEY (approver_id) REFERENCES users(id),
-    CONSTRAINT fk_request_observer FOREIGN KEY (observer_id) REFERENCES users(id),
-    CONSTRAINT fk_request_handler FOREIGN KEY (handler_id) REFERENCES users(id)
+                          id INT AUTO_INCREMENT PRIMARY KEY,
+                          user_id INT NOT NULL,
+                          department_id INT NULL,
+                          type ENUM('LEAVE_REQUEST', 'LATE_EARLY_REQUEST', 'EMP_MOVE_REMOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST', 'SICK_LEAVE_REQUEST', 'RECRUITMENT') NOT NULL,
+                          status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'CONFIRMED') DEFAULT 'PENDING',
+                          reason TEXT,
+                          approver_id INT,
+                          approver_comment TEXT NULL,
+                          observer_id INT,
+                          handler_id INT,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          processed_at TIMESTAMP NULL,
+                          CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users(id),
+                          CONSTRAINT fk_request_dept FOREIGN KEY (department_id) REFERENCES departments(id),
+                          CONSTRAINT fk_request_approver FOREIGN KEY (approver_id) REFERENCES users(id),
+                          CONSTRAINT fk_request_observer FOREIGN KEY (observer_id) REFERENCES users(id),
+                          CONSTRAINT fk_request_handler FOREIGN KEY (handler_id) REFERENCES users(id)
 );
 
 CREATE TABLE request_observers (

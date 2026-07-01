@@ -178,6 +178,7 @@ public class Request {
         type.put("OVERTIME", "Overtime");
         type.put("ATTENDANCE_ADJUST", "Attendance adjust");
         type.put("SICK_LEAVE_REQUEST", "Sick leave request");
+        type.put("RECRUITMENT", "Recruitment");
         return type;
     }
 }
