@@ -1,11 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Department Attendance | HRM</title>
+    <title>Work Hours Summary | HRM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,7 +20,7 @@
     <main class="dashboard-main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Department attendance</h1>
+                <h1 class="header-title">Work Hours Summary</h1>
             </div>
         </header>
 
@@ -27,8 +28,8 @@
             <section class="attendance-records-card">
                 <div class="attendance-records-heading">
                     <div>
-                        <h2>Department attendance</h2>
-                        <p>Showing attendance records for members of ${departmentName}.</p>
+                        <h2>Work Hours Summary</h2>
+                        <p>Showing all days of ${selectedMonth}/${selectedYear}.</p>
                     </div>
                 </div>
 
@@ -37,14 +38,21 @@
                         Attendance record updated successfully.
                     </div>
                 </c:if>
-                <c:if test="${noDepartmentAssigned}">
+                <c:if test="${not empty param.error}">
                     <div class="attendance-matrix-message error" role="alert">
-                        Your account is not assigned to a department.
+                        <c:choose>
+                            <c:when test="${param.error == 'record_not_found'}">
+                                Attendance record was not found.
+                            </c:when>
+                            <c:otherwise>
+                                Invalid attendance record.
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </c:if>
 
-                <form class="attendance-matrix-filters department-attendance-filters"
-                      action="${pageContext.request.contextPath}/attendance/department"
+                <form class="attendance-matrix-filters"
+                      action="${actionUrl}"
                       method="get">
                     <div class="matrix-filter-field">
                         <label for="matrixMonth">Month</label>
@@ -73,6 +81,19 @@
                         </select>
                     </div>
 
+                    <div class="matrix-filter-field matrix-department-filter">
+                        <label for="matrixDepartment">Department</label>
+                        <select id="matrixDepartment" name="departmentId">
+                            <option value="">All departments</option>
+                            <c:forEach var="department" items="${departments}">
+                                <option value="${department.id}"
+                                        ${selectedDepartmentId == department.id ? 'selected' : ''}>
+                                    ${department.name}
+                                </option>
+                            </c:forEach>
+                        </select>
+                    </div>
+
                     <div class="matrix-filter-field matrix-keyword-filter">
                         <label for="matrixKeyword">Employee</label>
                         <input id="matrixKeyword"
@@ -83,28 +104,48 @@
                     </div>
 
                     <button type="submit" class="matrix-btn matrix-search-btn">Search</button>
-                    <a href="${pageContext.request.contextPath}/attendance/department"
+                    <a href="${actionUrl}"
                        class="matrix-btn matrix-clear-btn">Clear</a>
+
+                    <c:url var="exportUrl" value="/attendance/export">
+                        <c:param name="month" value="${selectedMonth}"/>
+                        <c:param name="year" value="${selectedYear}"/>
+                        <c:if test="${not empty selectedDepartmentId}">
+                            <c:param name="departmentId" value="${selectedDepartmentId}"/>
+                        </c:if>
+                        <c:if test="${not empty keyword}">
+                            <c:param name="keyword" value="${keyword}"/>
+                        </c:if>
+                    </c:url>
+                    <a href="${exportUrl}"
+                       style="display: inline-flex; align-items: center; gap: 6px; background: #4361ee; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                       Export
+                    </a>
                 </form>
 
-                <div class="attendance-legend" aria-label="Attendance status legend">
-                    <span><i class="legend-dot status-on-time"></i>On time</span>
-                    <span><i class="legend-dot status-late"></i>Late or early leave</span>
-                    <span><i class="legend-dot status-absent"></i>Absent</span>
-                    <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
-                    <span><i class="legend-dot status-leave"></i>On leave</span>
-                    <span><i class="legend-dot status-sick-leave"></i>Sick leave</span>
-                    <span><i class="legend-dot status-holiday"></i>Holiday</span>
-                    <span><span class="matrix-ot-badge" style="margin-right:4px;">OT</span>Overtime</span>
-                </div>
-
-                <c:set var="canUpdateAttendance" value="${sessionScope.userPermissions.contains('ATTENDANCE_UPDATE')}"/>
+<div class="attendance-legend" aria-label="Attendance status legend">
+    <span><i class="legend-dot status-on-time"></i>On time</span>
+    <span><i class="legend-dot status-late"></i>Late or early leave</span>
+    <span><i class="legend-dot status-absent"></i>Absent</span>
+    <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
+    <span><i class="legend-dot status-leave"></i>On leave</span>
+    <span><i class="legend-dot status-holiday"></i>Holiday</span>
+    <span><i class="legend-dot status-sick-leave"></i>Sick leave</span>
+    <span><span class="matrix-ot-badge" style="margin-right:4px;">OT</span>Overtime</span>
+</div>
 
                 <div class="attendance-matrix-wrapper">
                     <table class="attendance-matrix-table">
                         <thead>
                         <tr>
                             <th class="matrix-employee-column">Employee</th>
+                            <th>Total Work (hrs)</th>
+                            <th>Total OT (hrs)</th>
                             <c:forEach var="day" items="${daysInMonth}" varStatus="dayLoop">
                                 <th>${dayLabels[dayLoop.index]}</th>
                             </c:forEach>
@@ -114,8 +155,8 @@
                         <c:choose>
                             <c:when test="${empty employees}">
                                 <tr>
-                                    <td colspan="8" class="matrix-empty-state">
-                                        No attendance records found for your department.
+                                    <td colspan="${daysInMonth.size() + 3}" class="matrix-empty-state">
+                                        No attendance records found for the selected filters.
                                     </td>
                                 </tr>
                             </c:when>
@@ -133,10 +174,17 @@
                                                 <span>
                                                     <c:out value="${employee.employeeCode}" default="No code"/>
                                                     <c:if test="${not empty employee.departmentName}">
-                                                        - ${employee.departmentName}
+                                                        · ${employee.departmentName}
                                                     </c:if>
                                                 </span>
                                             </a>
+                                        </td>
+
+                                        <td style="text-align:center; font-weight: 600; vertical-align: middle;">
+                                            <c:out value="${employeeTotalWorkHours[employee.userId] != null ? employeeTotalWorkHours[employee.userId] : 0}"/> / <fmt:formatNumber value="${standardHours}" maxFractionDigits="1"/>
+                                        </td>
+                                        <td style="text-align:center; font-weight: 600; vertical-align: middle;">
+                                            <c:out value="${employeeTotalOT[employee.userId] != null ? employeeTotalOT[employee.userId] : 0}"/>
                                         </td>
 
                                         <c:forEach var="day" items="${daysInMonth}">
@@ -145,23 +193,22 @@
                                             <c:choose>
                                                 <c:when test="${not empty record}">
                                                     <td class="matrix-attendance-cell ${record.cssClass}">
-                                                                <div class="matrix-cell-link" title="${record.status}">
-                                                                    <span class="matrix-status-dot"></span>
-                                                                    <span class="matrix-time">
-                                                                        <c:choose>
-                                                                            <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
-                                                                            <c:when test="${record.status == 'SICK_LEAVE'}">Sick leave</c:when>
-                                                                            <c:when test="${record.status == 'HOLIDAY'}">Holiday</c:when>
-                                                                            <c:otherwise>
-                                                                                ${record.checkInText} <b>-</b> ${record.checkOutText}
-                                                                            </c:otherwise>
-                                                                        </c:choose>
-                                                                    </span>
-                                                                    <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}"><a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge" style="text-decoration:none;" title="View OT Detail">OT</a></c:if>
-                                                                    <c:if test="${record.edited}">
-                                                                        <span class="matrix-edited-badge">Edited</span>
-                                                                    </c:if>
-                                                                </div>
+                                                        <div class="matrix-cell-link" title="${record.status}">
+                                                            <span class="matrix-status-dot"></span>
+                                                            <span class="matrix-time">
+                                                                <c:choose>
+                                                                    <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
+                                                                    <c:when test="${record.status == 'SICK_LEAVE'}">Sick leave</c:when>
+                                                                    <c:when test="${record.status == 'HOLIDAY'}">Holiday</c:when>
+                                                                    <c:otherwise>
+                                                                        <c:out value="${record.totalWorkHours != null ? record.totalWorkHours : 0}"/> hrs
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </span>
+                                                            <c:if test="${not empty record.overtimeHours and record.overtimeHours > 0}">
+                                                                <div class="matrix-ot-badge" style="margin-top: 4px; display:inline-block; text-decoration:none;" title="OT Hours">OT: ${record.overtimeHours}</div>
+                                                            </c:if>
+                                                        </div>
                                                     </td>
                                                 </c:when>
                                                 <c:otherwise>
@@ -177,27 +224,6 @@
                     </table>
                 </div>
 
-                <c:if test="${currentUser.id == departmentManagerId}">
-                    <div style="margin-top: 20px; text-align: right;">
-                        <c:choose>
-                            <c:when test="${isConfirmed}">
-                                <div class="attendance-matrix-message success">
-                                    ✅ Department Attendance Confirmed
-                                </div>
-                            </c:when>
-                            <c:otherwise>
-                                <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" style="display:inline;">
-                                    <input type="hidden" name="month" value="${selectedMonth}">
-                                    <input type="hidden" name="year" value="${selectedYear}">
-                                    <input type="hidden" name="departmentId" value="${currentUser.departmentId}">
-                                    <input type="hidden" name="action" value="dept_confirm">
-                                    <button type="submit" class="matrix-btn matrix-search-btn">Confirm Department Attendance</button>
-                                </form>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-                </c:if>
-
                 <div class="matrix-pagination-wrapper">
                     <p>
                         <c:choose>
@@ -209,11 +235,14 @@
                     </p>
 
                     <c:if test="${totalPages > 1}">
-                        <nav class="matrix-pagination" aria-label="Department attendance pagination">
+                        <nav class="matrix-pagination" aria-label="Attendance records pagination">
                             <c:forEach var="pageNumber" begin="1" end="${totalPages}">
-                                <c:url var="pageUrl" value="/attendance/department">
+                                <c:url var="pageUrl" value="${servletPath}">
                                     <c:param name="month" value="${selectedMonth}"/>
                                     <c:param name="year" value="${selectedYear}"/>
+                                    <c:if test="${not empty selectedDepartmentId}">
+                                        <c:param name="departmentId" value="${selectedDepartmentId}"/>
+                                    </c:if>
                                     <c:if test="${not empty keyword}">
                                         <c:param name="keyword" value="${keyword}"/>
                                     </c:if>

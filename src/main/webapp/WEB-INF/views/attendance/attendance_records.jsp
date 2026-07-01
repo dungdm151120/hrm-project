@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Records | HRM</title>
+    <title>${isUpdateMode ? 'Update Attendance' : 'All Attendance (View)'} | HRM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
     <main class="dashboard-main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Attendance records</h1>
+                <h1 class="header-title">${isUpdateMode ? 'Update Attendance' : 'All Attendance (View)'}</h1>
             </div>
         </header>
 
@@ -27,7 +27,7 @@
             <section class="attendance-records-card">
                 <div class="attendance-records-heading">
                     <div>
-                        <h2>Attendance records</h2>
+                        <h2>${isUpdateMode ? 'Update Attendance' : 'All Attendance (View)'}</h2>
                         <p>Showing all days of ${selectedMonth}/${selectedYear}.</p>
                     </div>
                 </div>
@@ -51,9 +51,8 @@
                 </c:if>
 
                 <form class="attendance-matrix-filters"
-                      action="${pageContext.request.contextPath}/attendance/records"
+                      action="${actionUrl}"
                       method="get">
-                    <!-- filters giữ nguyên -->
                     <div class="matrix-filter-field">
                         <label for="matrixMonth">Month</label>
                         <select id="matrixMonth" name="month">
@@ -104,7 +103,7 @@
                     </div>
 
                     <button type="submit" class="matrix-btn matrix-search-btn">Search</button>
-                    <a href="${pageContext.request.contextPath}/attendance/records"
+                    <a href="${actionUrl}"
                        class="matrix-btn matrix-clear-btn">Clear</a>
 
                     <c:url var="exportUrl" value="/attendance/export">
@@ -128,14 +127,16 @@
                     </a>
                 </form>
 
-                <div class="attendance-legend" aria-label="Attendance status legend">
-                    <span><i class="legend-dot status-on-time"></i>On time</span>
-                    <span><i class="legend-dot status-late"></i>Late or early leave</span>
-                    <span><i class="legend-dot status-absent"></i>Absent</span>
-                    <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
-                    <span><i class="legend-dot status-leave"></i>On leave</span>
-                    <span><span class="matrix-ot-badge" style="margin-right:4px;">OT</span>Overtime</span>
-                </div>
+<div class="attendance-legend" aria-label="Attendance status legend">
+    <span><i class="legend-dot status-on-time"></i>On time</span>
+    <span><i class="legend-dot status-late"></i>Late or early leave</span>
+    <span><i class="legend-dot status-absent"></i>Absent</span>
+    <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
+    <span><i class="legend-dot status-leave"></i>On leave</span>
+    <span><i class="legend-dot status-holiday"></i>Holiday</span>
+    <span><i class="legend-dot status-sick-leave"></i>Sick leave</span>
+    <span><span class="matrix-ot-badge" style="margin-right:4px;">OT</span>Overtime</span>
+</div>
 
                 <div class="attendance-matrix-wrapper">
                     <table class="attendance-matrix-table">
@@ -185,25 +186,39 @@
                                                         <c:url var="updateUrl" value="/attendance/update">
                                                             <c:param name="id" value="${record.attendanceRecordId}"/>
                                                         </c:url>
-                                                        <a href="${updateUrl}"
-                                                           class="matrix-cell-link"
-                                                           title="${record.status}">
+                                                        <c:choose>
+                                                            <c:when test="${isUpdateMode}">
+                                                                <a href="${updateUrl}" class="matrix-cell-link" title="${record.status}">
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <div class="matrix-cell-link" title="${record.status}">
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                             <span class="matrix-status-dot"></span>
                                                             <span class="matrix-time">
                                                                 <c:choose>
                                                                     <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
+                                                                    <c:when test="${record.status == 'SICK_LEAVE'}">Sick leave</c:when>
+                                                                    <c:when test="${record.status == 'HOLIDAY'}">Holiday</c:when>
                                                                     <c:otherwise>
                                                                         ${record.checkInText} <b>-</b> ${record.checkOutText}
                                                                     </c:otherwise>
                                                                 </c:choose>
                                                             </span>
                                                             <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}">
-                                                            <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge" style="text-decoration:none;" title="View OT Detail">OT</a>
-                                                        </c:if>
+                                                                <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge" style="text-decoration:none;" title="View OT Detail">OT</a>
+                                                            </c:if>
                                                             <c:if test="${record.edited}">
                                                                 <span class="matrix-edited-badge">Edited</span>
                                                             </c:if>
-                                                        </a>
+                                                        <c:choose>
+                                                            <c:when test="${isUpdateMode}">
+                                                                </a>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                </div>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </td>
                                                 </c:when>
                                                 <c:otherwise>
@@ -232,7 +247,7 @@
                     <c:if test="${totalPages > 1}">
                         <nav class="matrix-pagination" aria-label="Attendance records pagination">
                             <c:forEach var="pageNumber" begin="1" end="${totalPages}">
-                                <c:url var="pageUrl" value="/attendance/records">
+                                <c:url var="pageUrl" value="${servletPath}">
                                     <c:param name="month" value="${selectedMonth}"/>
                                     <c:param name="year" value="${selectedYear}"/>
                                     <c:if test="${not empty selectedDepartmentId}">
