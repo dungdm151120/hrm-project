@@ -90,9 +90,9 @@ public class LaborContractDAO {
         String sql = """
                 INSERT INTO labor_contracts (
                     user_id, contract_code, contract_type, start_date, end_date,
-                    base_salary, working_time, work_location, status, file_url, note
+                    base_salary, working_time, work_location, status, note
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -119,7 +119,6 @@ public class LaborContractDAO {
                     working_time = ?,
                     work_location = ?,
                     status = ?,
-                    file_url = ?,
                     note = ?,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
@@ -128,7 +127,7 @@ public class LaborContractDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             fillEditableFields(ps, contract);
-            ps.setInt(12, contract.getId());
+            ps.setInt(11, contract.getId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -137,25 +136,20 @@ public class LaborContractDAO {
         return false;
     }
 
-    public boolean terminate(int id, String reason) {
+    public boolean terminate(int id, String reason, Integer terminatedBy) {
         expireEndedActiveContracts();
         LaborContract current = findById(id);
         if (current == null || !"ACTIVE".equals(current.getStatus())) {
             return false;
         }
 
-        String note = current.getNote();
-        String terminationNote = "Terminated";
-        if (reason != null && !reason.trim().isEmpty()) {
-            terminationNote += ": " + reason.trim();
-        }
-        note = (note == null || note.trim().isEmpty()) ? terminationNote : note + "\n" + terminationNote;
-
         String sql = """
                 UPDATE labor_contracts
                 SET status = 'TERMINATED',
                     end_date = CURRENT_DATE,
-                    note = ?,
+                    terminated_at = CURRENT_TIMESTAMP,
+                    terminated_by = ?,
+                    termination_reason = ?,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
                   AND status = 'ACTIVE'
@@ -163,8 +157,13 @@ public class LaborContractDAO {
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, note);
-            ps.setInt(2, id);
+            if (terminatedBy == null || terminatedBy <= 0) {
+                ps.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(1, terminatedBy);
+            }
+            ps.setString(2, trimToNull(reason));
+            ps.setInt(3, id);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -292,9 +291,11 @@ public class LaborContractDAO {
 
     private String baseSelect() {
         return """
-                SELECT lc.*, u.employee_code, u.full_name AS employee_name, u.email AS employee_email
+                SELECT lc.*, u.employee_code, u.full_name AS employee_name, u.email AS employee_email,
+                       terminated_by_user.full_name AS terminated_by_name
                 FROM labor_contracts lc
                 JOIN users u ON lc.user_id = u.id
+                LEFT JOIN users terminated_by_user ON lc.terminated_by = terminated_by_user.id
                 """;
     }
 
@@ -308,8 +309,7 @@ public class LaborContractDAO {
         ps.setString(7, contract.getWorkingTime());
         ps.setString(8, contract.getWorkLocation());
         ps.setString(9, contract.getStatus());
-        ps.setString(10, contract.getFileUrl());
-        ps.setString(11, contract.getNote());
+        ps.setString(10, contract.getNote());
     }
 
     private void appendSearchFilters(StringBuilder sql, List<Object> params, Integer userId, String keyword,
@@ -364,8 +364,12 @@ public class LaborContractDAO {
         contract.setWorkingTime(rs.getString("working_time"));
         contract.setWorkLocation(rs.getString("work_location"));
         contract.setStatus(rs.getString("status"));
-        contract.setFileUrl(rs.getString("file_url"));
         contract.setNote(rs.getString("note"));
+        contract.setTerminatedAt(getNullableLocalDateTime(rs, "terminated_at"));
+        int terminatedBy = rs.getInt("terminated_by");
+        contract.setTerminatedBy(rs.wasNull() ? null : terminatedBy);
+        contract.setTerminatedByName(rs.getString("terminated_by_name"));
+        contract.setTerminationReason(rs.getString("termination_reason"));
         contract.setCreatedAt(getNullableLocalDateTime(rs, "created_at"));
         contract.setUpdatedAt(getNullableLocalDateTime(rs, "updated_at"));
         return contract;
@@ -387,6 +391,13 @@ public class LaborContractDAO {
         } else {
             ps.setDate(parameterIndex, Date.valueOf(value));
         }
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 
     public java.math.BigDecimal findActiveSalaryByUserId(int userId) {

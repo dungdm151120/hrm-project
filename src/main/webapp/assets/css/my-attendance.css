@@ -1,3 +1,7 @@
+/* ============================================================
+   MY ATTENDANCE CSS (Lịch cá nhân)
+   ============================================================ */
+
 /* ========== Layout ========== */
 .my-attendance-layout {
     display: flex;
@@ -173,7 +177,7 @@
     flex-shrink: 0;
 }
 
-/* Status colors */
+/* Màu chấm tròn trên chip */
 .status-on-time .chip-dot,
 .chip-on-time .chip-dot { background: #22c55e; }
 .status-late .chip-dot,
@@ -184,6 +188,18 @@
 .chip-forgot .chip-dot { background: #ef4444; }
 .status-leave .chip-dot,
 .chip-leave .chip-dot { background: #facc15; }
+
+/* Holiday (tím) */
+.status-holiday .chip-dot,
+.chip-holiday .chip-dot {
+    background: #8b5cf6;
+}
+
+/* Sick Leave (xanh nước biển nhạt) */
+.status-sick-leave .chip-dot,
+.chip-sick-leave .chip-dot {
+    background: #38bdf8;
+}
 
 .chip-ot {
     background: #fae8ff;
@@ -211,7 +227,7 @@
     padding: 8px 0;
 }
 
-/* ========== Legend ========== */
+/* ========== Legend trong lịch cá nhân ========== */
 .attendance-legend {
     display: flex;
     align-items: center;
@@ -241,6 +257,16 @@
 .legend-dot.status-absent { background: #6b7280; }
 .legend-dot.status-forgot { background: #ef4444; }
 .legend-dot.status-leave { background: #facc15; }
+
+/* Holiday (tím) */
+.legend-dot.status-holiday {
+    background: #8b5cf6;
+}
+
+/* Sick Leave (xanh nước biển nhạt) */
+.legend-dot.status-sick-leave {
+    background: #38bdf8;
+}
 
 /* ========== Responsive ========== */
 @media (max-width: 900px) {

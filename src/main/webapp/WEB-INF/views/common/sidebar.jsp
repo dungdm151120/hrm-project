@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <c:set var="currentPath" value="${requestScope['jakarta.servlet.forward.request_uri']}" />
@@ -15,14 +16,30 @@
   model.User currentUser = (model.User) session.getAttribute("currentUser");
 
   int unreadAnnouncementCount = 0;
+  int unreadRequestNotificationCount = 0;
   java.util.List<model.Announcement> unreadAnnouncements = java.util.Collections.emptyList();
+  java.util.List<model.RequestNotification> unreadRequestNotifications = java.util.Collections.emptyList();
   if (currentUser != null && userPermissions != null && userPermissions.contains("ANNOUNCEMENT_VIEW_LIST")) {
     dao.AnnouncementDAO announcementDAO = new dao.AnnouncementDAO();
     unreadAnnouncementCount = announcementDAO.countUnread(currentUser.getId());
     unreadAnnouncements = announcementDAO.getLatestUnread(currentUser.getId(), 5);
   }
+  if (currentUser != null && userPermissions != null
+          && (userPermissions.contains("VIEW_MY_REQUEST")
+              || userPermissions.contains("VIEW_DEPARTMENT_REQUESTS")
+              || userPermissions.contains("VIEW_ALL_REQUEST")
+              || userPermissions.contains("PROCESS_REQUEST")
+              || userPermissions.contains("CREATE_REQUEST"))) {
+    dao.RequestDAO requestDAO = new dao.RequestDAO();
+    unreadRequestNotificationCount = requestDAO.countUnreadRequestNotifications(currentUser.getId());
+    unreadRequestNotifications = requestDAO.getLatestUnreadRequestNotifications(currentUser.getId(), 5);
+  }
+  int totalUnreadNotificationCount = unreadAnnouncementCount + unreadRequestNotificationCount;
   pageContext.setAttribute("unreadAnnouncementCount", unreadAnnouncementCount);
+  pageContext.setAttribute("unreadRequestNotificationCount", unreadRequestNotificationCount);
+  pageContext.setAttribute("totalUnreadNotificationCount", totalUnreadNotificationCount);
   pageContext.setAttribute("unreadAnnouncements", unreadAnnouncements);
+  pageContext.setAttribute("unreadRequestNotifications", unreadRequestNotifications);
 %>
 
 <c:set var="showEmployees"   value="${userPermissions.contains('USER_VIEW_LIST') or userPermissions.contains('USER_CREATE')}" />
@@ -46,6 +63,17 @@
   }
   .nav-toggle.open + .submenu {
     display: flex;
+  }
+  .sidebar-menu-label {
+    flex: 1;
+    min-width: 0;
+  }
+  .sidebar-unread-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #ef4444;
+    flex-shrink: 0;
   }
   .notification-wrapper {
     position: relative;
@@ -90,6 +118,13 @@
     max-height: 320px;
     overflow-y: auto;
   }
+  .notification-section-title {
+    padding: 10px 14px 6px;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
   .notification-item {
     display: block;
     padding: 12px 14px;
@@ -108,6 +143,10 @@
     margin: 0;
     font-size: 12px;
     color: #6b7280;
+  }
+  .notification-source {
+    color: #374151;
+    font-weight: 600;
   }
   .notification-empty {
     padding: 18px 14px;
@@ -159,7 +198,10 @@
                             <path d="M8 10h8"/>
                             <path d="M8 14h5"/>
                         </svg>
-                        <span>Announcements</span>
+                        <span class="sidebar-menu-label">Announcements</span>
+                        <c:if test="${unreadAnnouncementCount > 0}">
+                            <span class="sidebar-unread-dot" title="Unread announcements"></span>
+                        </c:if>
                         <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
@@ -358,14 +400,18 @@
                     <a href="${ctx}/attendance/department" class="submenu-item ${currentPath == ctx.concat('/attendance/department') ? 'active' : ''}">Department Attendance</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_ALL')}">
-                    <a href="${ctx}/attendance/records" class="submenu-item ${currentPath == ctx.concat('/attendance/records') ? 'active' : ''}">Attendance Records</a>
+                    <a href="${ctx}/attendance/view_all" class="submenu-item ${currentPath == ctx.concat('/attendance/view_all') ? 'active' : ''}">All Attendance (View)</a>
+                    <a href="${ctx}/attendance/work-hours" class="submenu-item ${currentPath == ctx.concat('/attendance/work-hours') ? 'active' : ''}">Work Hours Summary</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_UPDATE')}">
-                    <a href="${ctx}/attendance/update" class="submenu-item ${currentPath == ctx.concat('/attendance/update') ? 'active' : ''}">Update Attendance</a>
+                    <a href="${ctx}/attendance/records" class="submenu-item ${currentPath == ctx.concat('/attendance/records') || currentPath.startsWith(ctx.concat('/attendance/update')) ? 'active' : ''}">Update Attendance</a>
                     <a href="${ctx}/admin/attendance/import" class="submenu-item ${currentPath == ctx.concat('/admin/attendance/import') ? 'active' : ''}">Import Attendance</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}">
                     <a href="${ctx}/attendance/export" class="submenu-item ${currentPath == ctx.concat('/attendance/export') ? 'active' : ''}">Export Report</a>
+                </c:if>
+                <c:if test="${userPermissions.contains('ATTENDANCE_CONFIRM_DEPT') || userPermissions.contains('ATTENDANCE_SEND_TO_BUSINESS') || userPermissions.contains('ATTENDANCE_APPROVE_BUSINESS')}">
+                    <a href="${ctx}/attendance/confirm" class="submenu-item ${currentPath == ctx.concat('/attendance/confirm') ? 'active' : ''}">Confirm & Snapshot</a>
                 </c:if>
             </div>
         </div>
@@ -374,6 +420,9 @@
         <!-- Request Group -->
         <c:if test="${showRequests}">
             <c:set var="reqActive" value="${currentPath.startsWith(ctx.concat('/view_my_request')) ||
+                                    currentPath.startsWith(ctx.concat('/view_pending_request')) ||
+                                    currentPath.startsWith(ctx.concat('/view_observed_request')) ||
+                                    currentPath.startsWith(ctx.concat('/view_handled_request')) ||
                                     currentPath.startsWith(ctx.concat('/view_department_request')) ||
                                     currentPath.startsWith(ctx.concat('/view_all_request')) ||
                                     currentPath.startsWith(ctx.concat('/create_request')) ||
@@ -388,7 +437,10 @@
                         <line x1="16" y1="17" x2="8" y2="17"></line>
                         <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
-                    <span>Requests</span>
+                    <span class="sidebar-menu-label">Requests</span>
+                    <c:if test="${unreadRequestNotificationCount > 0}">
+                        <span class="sidebar-unread-dot" title="Unread request notifications"></span>
+                    </c:if>
                     <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 12 15 18 9"/>
                     </svg>
@@ -494,40 +546,67 @@
 
 <template id="globalHeaderActions">
   <div class="header-right global-header-actions">
-    <c:if test="${userPermissions.contains('ANNOUNCEMENT_VIEW_LIST')}">
+    <c:if test="${userPermissions.contains('ANNOUNCEMENT_VIEW_LIST')
+                  or userPermissions.contains('VIEW_MY_REQUEST')
+                  or userPermissions.contains('VIEW_DEPARTMENT_REQUESTS')
+                  or userPermissions.contains('VIEW_ALL_REQUEST')
+                  or userPermissions.contains('PROCESS_REQUEST')
+                  or userPermissions.contains('CREATE_REQUEST')}">
       <div class="notification-wrapper">
         <button type="button" class="header-icon" aria-label="Notifications" data-notification-toggle>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
-          <c:if test="${unreadAnnouncementCount > 0}">
+          <c:if test="${totalUnreadNotificationCount > 0}">
             <span class="notification-badge">
               <c:choose>
-                <c:when test="${unreadAnnouncementCount > 99}">99+</c:when>
-                <c:otherwise>${unreadAnnouncementCount}</c:otherwise>
+                <c:when test="${totalUnreadNotificationCount > 99}">99+</c:when>
+                <c:otherwise>${totalUnreadNotificationCount}</c:otherwise>
               </c:choose>
             </span>
           </c:if>
         </button>
         <div class="notification-dropdown" data-notification-dropdown>
-          <div class="notification-header">Unread announcements</div>
+          <div class="notification-header">Notifications</div>
           <div class="notification-list">
             <c:choose>
-              <c:when test="${empty unreadAnnouncements}">
-                <div class="notification-empty">No unread announcements.</div>
+              <c:when test="${empty unreadAnnouncements and empty unreadRequestNotifications}">
+                <div class="notification-empty">No unread notifications.</div>
               </c:when>
               <c:otherwise>
-                <c:forEach items="${unreadAnnouncements}" var="notification">
-                  <a class="notification-item" href="${ctx}/announcements/detail?id=${notification.id}">
-                    <p class="notification-title"><c:out value="${notification.title}"/></p>
-                    <p class="notification-meta"><c:out value="${notification.targetDisplay}"/> - ${notification.publishDateDisplay}</p>
-                  </a>
-                </c:forEach>
+                <c:if test="${not empty unreadRequestNotifications}">
+                  <div class="notification-section-title">Requests</div>
+                  <c:forEach items="${unreadRequestNotifications}" var="notification">
+                    <a class="notification-item" href="${ctx}/request_detail?id=${notification.requestId}">
+                      <p class="notification-title"><c:out value="${notification.message}"/></p>
+                      <p class="notification-meta">
+                        <c:if test="${not empty notification.actorName}">
+                          <span class="notification-source">By <c:out value="${notification.actorName}"/></span> -
+                        </c:if>
+                        <fmt:formatDate value="${notification.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                      </p>
+                    </a>
+                  </c:forEach>
+                </c:if>
+                <c:if test="${not empty unreadAnnouncements}">
+                  <div class="notification-section-title">Announcements</div>
+                  <c:forEach items="${unreadAnnouncements}" var="notification">
+                    <a class="notification-item" href="${ctx}/announcements/detail?id=${notification.id}">
+                      <p class="notification-title"><c:out value="${notification.title}"/></p>
+                      <p class="notification-meta"><c:out value="${notification.targetDisplay}"/> - ${notification.publishDateDisplay}</p>
+                    </a>
+                  </c:forEach>
+                </c:if>
               </c:otherwise>
             </c:choose>
           </div>
-          <a href="${ctx}/announcements?readStatus=UNREAD" class="notification-footer">View all unread</a>
+          <c:if test="${userPermissions.contains('VIEW_MY_REQUEST')}">
+            <a href="${ctx}/view_my_request" class="notification-footer">View requests</a>
+          </c:if>
+          <c:if test="${userPermissions.contains('ANNOUNCEMENT_VIEW_LIST')}">
+            <a href="${ctx}/announcements?readStatus=UNREAD" class="notification-footer">View announcements</a>
+          </c:if>
         </div>
       </div>
     </c:if>

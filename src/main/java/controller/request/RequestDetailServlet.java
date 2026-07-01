@@ -34,6 +34,12 @@ public class RequestDetailServlet extends HttpServlet {
         Request req = dao.getRequestById(id);
 
         if (req != null) {
+            HttpSession session = request.getSession(false);
+            User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+            if (currentUser != null) {
+                dao.markRequestNotificationsRead(id, currentUser.getId());
+            }
+
             List<User> observers = dao.getObserversByRequestId(id);
             req.setObserver(observers);
 

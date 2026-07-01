@@ -142,6 +142,12 @@ public class CreateRequestServlet extends HttpServlet {
                     return;
                 }
 
+                HolidayDAO holidayDAO = new HolidayDAO();
+                if (holidayDAO.isHoliday(leaveDate)) {
+                    response.sendRedirect("create_request?error=leave_date_holiday");
+                    return;
+                }
+
                 AttendanceRecord existingRecord = attendanceDAO.getRecordByUserAndDate(currentUser.getId(), leaveDate);
                 if (existingRecord != null && ("ON_LEAVE".equals(existingRecord.getStatus()) || "ABSENT".equals(existingRecord.getStatus()))) {
                     response.sendRedirect("create_request?error=leave_date_already_marked");
@@ -233,6 +239,7 @@ public class CreateRequestServlet extends HttpServlet {
                         .collect(Collectors.toList());
 
                 LocalDate today = LocalDate.now();
+                HolidayDAO holidayDAO = new HolidayDAO();
                 for (LocalDate date : dates) {
                     if (date.isAfter(today)) {
                         response.sendRedirect("create_request?error=invalid_date");
@@ -241,6 +248,10 @@ public class CreateRequestServlet extends HttpServlet {
                     DayOfWeek dayOfWeek = date.getDayOfWeek();
                     if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
                         response.sendRedirect("create_request?error=date_weekend");
+                        return;
+                    }
+                    if (holidayDAO.isHoliday(date)) {
+                        response.sendRedirect("create_request?error=sick_date_holiday");
                         return;
                     }
                 }

@@ -68,15 +68,22 @@ public class EmployeeAttendanceServlet extends HttpServlet {
         int selectedMonth = parseIntInRange(request.getParameter("month"), today.getMonthValue(), 1, 12);
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);
 
+        // Đảm bảo dữ liệu holiday đã có cho tất cả nhân viên trong tháng
+        attendanceDAO.createHolidayRecordsForMonth(selectedYear, selectedMonth);
+
         List<AttendanceRecordDTO> recordList = attendanceDAO.getAttendanceDetailByUserAndMonth(
                 employee.getId(),
                 selectedMonth,
                 selectedYear
         );
 
+        // Lấy danh sách ngày lễ trong tháng để view có thể sử dụng
+        List<LocalDate> holidayDates = attendanceDAO.getHolidayDatesInMonth(selectedYear, selectedMonth);
+
         Map<String, AttendanceRecordDTO> attendanceMap = new LinkedHashMap<>();
         for (AttendanceRecordDTO dto : recordList) {
             dto.setCssClass(resolveCssClass(dto.getStatus()));
+            dto.setHoliday("HOLIDAY".equals(dto.getStatus()));
             attendanceMap.put(dto.getUserId() + "_" + dto.getWorkDate(), dto);
         }
 
@@ -103,6 +110,7 @@ public class EmployeeAttendanceServlet extends HttpServlet {
         request.setAttribute("dayLabels", dayLabels);
         request.setAttribute("attendanceMap", attendanceMap);
         request.setAttribute("summary", summary);
+        request.setAttribute("holidayDates", holidayDates);
         request.setAttribute("summaryAction", request.getContextPath() + "/attendance/employee");
         request.setAttribute("summaryUserId", employee.getId());
         request.setAttribute("editable", true);
@@ -110,6 +118,7 @@ public class EmployeeAttendanceServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/attendance/employee_attendance.jsp").forward(request, response);
     }
 
+    // Phương thức này hiện không được sử dụng trong doGet nhưng vẫn giữ lại nếu cần sau này
     private AttendanceRecordDTO mapToDTO(AttendanceRecord record) {
         AttendanceRecordDTO dto = new AttendanceRecordDTO();
         dto.setAttendanceRecordId(record.getId());
@@ -127,6 +136,7 @@ public class EmployeeAttendanceServlet extends HttpServlet {
         dto.setNote(record.getNote());
         dto.setCssClass(resolveCssClass(record.getStatus()));
         dto.setEdited(record.getUpdatedAt() != null && !"ON_LEAVE".equals(record.getStatus()));
+        dto.setHoliday("HOLIDAY".equals(record.getStatus()));
         return dto;
     }
 
@@ -179,6 +189,8 @@ public class EmployeeAttendanceServlet extends HttpServlet {
             case "ON_TIME" -> "status-on-time";
             case "LATE", "EARLY_LEAVE", "LATE_AND_EARLY", "LATE_AND_EARLY_LEAVE" -> "status-late";
             case "ON_LEAVE" -> "status-leave";
+            case "HOLIDAY" -> "status-holiday";           // tím
+            case "SICK_LEAVE" -> "status-sick-leave";     // xanh nước biển nhạt
             case "ABSENT" -> "status-absent";
             case "FORGOT_CHECKIN", "FORGOT_CHECKOUT",
                  "FORGOT_CHECK_IN", "FORGOT_CHECK_OUT" -> "status-forgot";
