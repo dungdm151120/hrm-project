@@ -19,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet("/attendance/records")
+@WebServlet({"/attendance/records", "/attendance/view_all"})
 public class AttendanceRecordServlet extends HttpServlet {
     private static final int PAGE_SIZE = 5;
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM");
@@ -30,6 +30,9 @@ public class AttendanceRecordServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        boolean isUpdateMode = "/attendance/records".equals(request.getServletPath());
+        String actionUrl = request.getContextPath() + request.getServletPath();
+
         LocalDate today = LocalDate.now();
         int selectedMonth = parseIntInRange(
                 request.getParameter("month"),
@@ -46,6 +49,9 @@ public class AttendanceRecordServlet extends HttpServlet {
         Integer selectedDepartmentId = parsePositiveInteger(request.getParameter("departmentId"));
         String keyword = normalizeKeyword(request.getParameter("keyword"));
         int currentPage = Math.max(1, parseInt(request.getParameter("page"), 1));
+
+        // Đảm bảo dữ liệu holiday đã có cho tất cả nhân viên trong tháng
+        attendanceDAO.createHolidayRecordsForMonth(selectedYear, selectedMonth);
 
         int totalEmployees = attendanceDAO.countEmployeesForAttendanceMatrix(
                 selectedMonth,
@@ -74,10 +80,12 @@ public class AttendanceRecordServlet extends HttpServlet {
             attendanceMap.put(buildAttendanceKey(record.getUserId(), record.getWorkDate()), record);
         }
 
+        // Lấy danh sách ngày lễ trong tháng
+        List<LocalDate> holidayDates = attendanceDAO.getHolidayDatesInMonth(selectedYear, selectedMonth);
+
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);
         List<LocalDate> daysInMonth = new ArrayList<>();
         List<String> dayLabels = new ArrayList<>();
-        // Hiển thị tất cả các ngày trong tháng
         for (int day = 1; day <= selectedPeriod.lengthOfMonth(); day++) {
             LocalDate date = selectedPeriod.atDay(day);
             daysInMonth.add(date);
@@ -98,6 +106,10 @@ public class AttendanceRecordServlet extends HttpServlet {
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalEmployees", totalEmployees);
+        request.setAttribute("holidayDates", holidayDates);
+        request.setAttribute("isUpdateMode", isUpdateMode);
+        request.setAttribute("actionUrl", actionUrl);
+        request.setAttribute("servletPath", request.getServletPath());
         request.getRequestDispatcher("/WEB-INF/views/attendance/attendance_records.jsp")
                 .forward(request, response);
     }

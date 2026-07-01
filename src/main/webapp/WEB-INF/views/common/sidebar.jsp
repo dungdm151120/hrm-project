@@ -358,14 +358,18 @@
                     <a href="${ctx}/attendance/department" class="submenu-item ${currentPath == ctx.concat('/attendance/department') ? 'active' : ''}">Department Attendance</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_ALL')}">
-                    <a href="${ctx}/attendance/records" class="submenu-item ${currentPath == ctx.concat('/attendance/records') ? 'active' : ''}">Attendance Records</a>
+                    <a href="${ctx}/attendance/view_all" class="submenu-item ${currentPath == ctx.concat('/attendance/view_all') ? 'active' : ''}">All Attendance (View)</a>
+                    <a href="${ctx}/attendance/work-hours" class="submenu-item ${currentPath == ctx.concat('/attendance/work-hours') ? 'active' : ''}">Work Hours Summary</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_UPDATE')}">
-                    <a href="${ctx}/attendance/update" class="submenu-item ${currentPath == ctx.concat('/attendance/update') ? 'active' : ''}">Update Attendance</a>
+                    <a href="${ctx}/attendance/records" class="submenu-item ${currentPath == ctx.concat('/attendance/records') || currentPath.startsWith(ctx.concat('/attendance/update')) ? 'active' : ''}">Update Attendance</a>
                     <a href="${ctx}/admin/attendance/import" class="submenu-item ${currentPath == ctx.concat('/admin/attendance/import') ? 'active' : ''}">Import Attendance</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}">
                     <a href="${ctx}/attendance/export" class="submenu-item ${currentPath == ctx.concat('/attendance/export') ? 'active' : ''}">Export Report</a>
+                </c:if>
+                <c:if test="${userPermissions.contains('ATTENDANCE_CONFIRM_DEPT') || userPermissions.contains('ATTENDANCE_SEND_TO_BUSINESS') || userPermissions.contains('ATTENDANCE_APPROVE_BUSINESS')}">
+                    <a href="${ctx}/attendance/confirm" class="submenu-item ${currentPath == ctx.concat('/attendance/confirm') ? 'active' : ''}">Confirm & Snapshot</a>
                 </c:if>
             </div>
         </div>
