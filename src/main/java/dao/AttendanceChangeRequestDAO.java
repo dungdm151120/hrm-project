@@ -71,24 +71,6 @@ public class AttendanceChangeRequestDAO {
         }
     }
 
-    public int countCurrentMonthByUser(int userId, int month, int year) {
-        String sql = "SELECT COUNT(*) FROM attendance_change_requests acr " +
-                "JOIN requests r ON acr.request_id = r.id " +
-                "WHERE r.user_id = ? AND MONTH(acr.work_date) = ? AND YEAR(acr.work_date) = ? " +
-                "AND r.status IN ('PENDING', 'APPROVED')";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            ps.setInt(2, month);
-            ps.setInt(3, year);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
 
     public boolean existsRequestForDate(int userId, LocalDate workDate) {
         String sql = "SELECT COUNT(*) FROM attendance_change_requests acr " +

@@ -52,18 +52,6 @@ public class DepartmentDAO {
         }
         return departments;
     }
-    public boolean updateManager(int deptId, int managerUserId) {
-        String sql = "UPDATE departments SET manager_user_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, managerUserId);
-            ps.setInt(2, deptId);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     public boolean assignManager(int departmentId, int newManagerId, Integer currentManagerId,
                                  Integer oldManagerPositionId, int newManagerPositionId) {
@@ -343,20 +331,6 @@ public class DepartmentDAO {
         return false;
     }
 
-    public List<Department> getDepartmentsSortedByName(boolean ascending) {
-        List<Department> list = new ArrayList<>();
-        String sql = "SELECT d.*, u.full_name AS manager_name FROM departments d " +
-                "LEFT JOIN users u ON d.manager_user_id = u.id " +
-                "ORDER BY d.name " + (ascending ? "ASC" : "DESC");
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(mapRowWithManager(rs));
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
 
     public List<Department> getDepartmentsSortedByMemberCount(boolean mostFirst) {
         List<Department> list = new ArrayList<>();

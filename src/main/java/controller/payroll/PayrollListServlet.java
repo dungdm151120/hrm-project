@@ -101,6 +101,7 @@ public class PayrollListServlet extends HttpServlet {
         request.setAttribute("month", month);
         request.setAttribute("year", year);
         request.setAttribute("departmentId", departmentId);
+        request.setAttribute("departmentIdStr", departmentId != null ? String.valueOf(departmentId) : "all");
         request.setAttribute("currentYear", today.getYear());
         request.setAttribute("sort", sort);
 

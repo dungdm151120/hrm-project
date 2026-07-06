@@ -115,24 +115,6 @@ public class LeaveRequestDAO {
         return dates;
     }
 
-    public boolean existsLeaveRequestForDate(int userId, LocalDate leaveDate) {
-        String sql = "SELECT COUNT(*) FROM leave_requests lr " +
-                "JOIN requests r ON lr.request_id = r.id " +
-                "LEFT JOIN leave_dates ld ON ld.leave_request_id = lr.id " +
-                "WHERE r.user_id = ? AND (lr.leave_date = ? OR ld.leave_date = ?) AND r.status IN ('PENDING', 'APPROVED')";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(leaveDate));
-            ps.setDate(3, Date.valueOf(leaveDate));
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     public List<String> checkDateConflicts(int userId, List<LocalDate> dates) {
         List<String> conflicts = new ArrayList<>();

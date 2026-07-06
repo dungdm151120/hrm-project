@@ -27,23 +27,6 @@ public class AttendanceDAO {
 
     // ==================== ATTENDANCE LOGS ====================
 
-    public boolean saveAttendanceLog(AttendanceLog log) {
-        String sql = "INSERT INTO attendance_logs (work_date, employee_id, check_in, check_out) " +
-                "VALUES (?, ?, ?, ?) " +
-                "ON DUPLICATE KEY UPDATE check_in = VALUES(check_in), check_out = VALUES(check_out)";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setDate(1, Date.valueOf(log.getWorkDate()));
-            ps.setInt(2, log.getEmployeeId());
-            setNullableTimestamp(ps, 3, log.getCheckIn());
-            setNullableTimestamp(ps, 4, log.getCheckOut());
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 
     public int saveAllAttendanceLogs(List<AttendanceLog> logs) {
         String sql = "INSERT INTO attendance_logs (work_date, employee_id, check_in, check_out) " +
@@ -79,26 +62,6 @@ public class AttendanceDAO {
         }
     }
 
-    public List<AttendanceLog> getLogsByEmployee(int employeeId, LocalDate start, LocalDate end) {
-        List<AttendanceLog> list = new ArrayList<>();
-        String sql = "SELECT id, work_date, employee_id, check_in, check_out FROM attendance_logs " +
-                "WHERE employee_id = ? AND work_date BETWEEN ? AND ? ORDER BY work_date";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, employeeId);
-            ps.setDate(2, Date.valueOf(start));
-            ps.setDate(3, Date.valueOf(end));
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapLogResultSet(rs));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
 
     private void deleteAttendanceLog(int employeeId, LocalDate date) {
         String sql = "DELETE FROM attendance_logs WHERE employee_id = ? AND work_date = ?";
@@ -114,43 +77,6 @@ public class AttendanceDAO {
 
     // ==================== ATTENDANCE RECORDS ====================
 
-    public void calculateAndSaveRecord(int employeeId, LocalDate workDate) {
-        AttendanceRecord existing = getRecordByUserAndDate(employeeId, workDate);
-        if (existing != null && ("ON_LEAVE".equals(existing.getStatus()) ||
-                "ABSENT".equals(existing.getStatus()) ||
-                "SICK_LEAVE".equals(existing.getStatus()) ||
-                "HOLIDAY".equals(existing.getStatus()))) {
-            return;
-        }
-
-        if (isHoliday(workDate)) {
-            AttendanceLog log = getLogByEmployeeAndDate(employeeId, workDate);
-            if (log == null || (log.getCheckIn() == null && log.getCheckOut() == null)) {
-                markHoliday(employeeId, workDate);
-                return;
-            }
-        }
-
-        AttendanceLog log = getLogByEmployeeAndDate(employeeId, workDate);
-        if (log == null) return;
-
-        UserDAO userDAO = new UserDAO();
-        User user = userDAO.findById(employeeId);
-
-        AttendanceRecord record = new AttendanceRecord();
-        record.setUserId(employeeId);
-        record.setWorkDate(workDate);
-        record.setCheckIn(log.getCheckIn());
-        record.setCheckOut(log.getCheckOut());
-
-        calculateWorkingHours(record);
-
-        String status = determineStatus(record);
-        record.setStatus(status);
-
-        record.setNote(null);
-        saveAttendanceRecord(record);
-    }
 
     public void processAllPendingLogs() {
         Set<LocalDate> holidays = new HashSet<>();
@@ -417,40 +343,6 @@ public class AttendanceDAO {
         }
     }
 
-    public List<AttendanceRecord> getRecordsByUser(int userId, LocalDate start, LocalDate end) {
-        List<AttendanceRecord> list = new ArrayList<>();
-        String sql = "SELECT * FROM attendance_records WHERE user_id = ? AND work_date BETWEEN ? AND ? ORDER BY work_date";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(start));
-            ps.setDate(3, Date.valueOf(end));
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRecordResultSet(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    public List<AttendanceRecord> getRecordsByDepartment(int departmentId, LocalDate date) {
-        List<AttendanceRecord> list = new ArrayList<>();
-        String sql = "SELECT ar.* FROM attendance_records ar " +
-                "JOIN users u ON ar.user_id = u.id " +
-                "WHERE u.department_id = ? AND ar.work_date = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, departmentId);
-            ps.setDate(2, Date.valueOf(date));
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRecordResultSet(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
 
     public List<AttendanceRecordDTO> getAttendanceRecordsForMatrix(
             int month,
@@ -1086,15 +978,6 @@ public class AttendanceDAO {
         return Math.round(value * 100.0) / 100.0;
     }
 
-    private AttendanceLog mapLogResultSet(ResultSet rs) throws SQLException {
-        AttendanceLog log = new AttendanceLog();
-        log.setId(rs.getInt("id"));
-        log.setWorkDate(rs.getDate("work_date").toLocalDate());
-        log.setEmployeeId(rs.getInt("employee_id"));
-        log.setCheckIn(getNullableLocalDateTime(rs, "check_in"));
-        log.setCheckOut(getNullableLocalDateTime(rs, "check_out"));
-        return log;
-    }
 
     private AttendanceRecord mapRecordResultSet(ResultSet rs) throws SQLException {
         AttendanceRecord record = new AttendanceRecord();
@@ -1302,21 +1185,6 @@ public class AttendanceDAO {
         }
     }
 
-    private AttendanceLog getLogByEmployeeAndDate(int employeeId, LocalDate date) {
-        String sql = "SELECT id, work_date, employee_id, check_in, check_out FROM attendance_logs " +
-                "WHERE employee_id = ? AND work_date = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, employeeId);
-            ps.setDate(2, Date.valueOf(date));
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapLogResultSet(rs);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     public int countEmployeesWithAttendance(Integer departmentId, java.time.LocalDate startDate, java.time.LocalDate endDate) {
         StringBuilder sql = new StringBuilder("""

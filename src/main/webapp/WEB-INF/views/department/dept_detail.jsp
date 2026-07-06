@@ -48,7 +48,7 @@
 
                 <div class="department-actions">
                     <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${department.id}" class="btn-primary">View employee list</a>
-                    <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                    <c:if test="${sessionScope.roleName != 'EMPLOYEE' and sessionScope.roleName != 'PAYROLL_STAFF'}">
                         <a href="${pageContext.request.contextPath}/admin/departments/assign-manager?id=${department.id}" class="btn-primary">Assign Manager</a>
                         <a href="${pageContext.request.contextPath}/admin/departments/assign-positions?id=${department.id}" class="btn-primary">Assign Positions</a>
                     </c:if>
@@ -104,7 +104,7 @@
                         </tr>
                     </table>
 
-                    <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                    <c:if test="${sessionScope.roleName != 'EMPLOYEE' and sessionScope.roleName != 'PAYROLL_STAFF'}">
                         <div class="form-actions">
                             <a href="${pageContext.request.contextPath}/admin/departments/update?id=${department.id}" class="btn-primary">Update Info</a>
                             <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">

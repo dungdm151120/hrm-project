@@ -20,7 +20,7 @@
                 <h1 class="header-title">Department List</h1>
             </div>
             <div class="header-right">
-                <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                <c:if test="${sessionScope.roleName != 'EMPLOYEE' and sessionScope.roleName != 'PAYROLL_STAFF'}">
                     <a href="${pageContext.request.contextPath}/admin/departments/add" class="btn-primary">Add New Department</a>
                 </c:if>
             </div>
@@ -111,7 +111,7 @@
                             <td>
                                 <div class="actions">
                                     <a href="${pageContext.request.contextPath}/admin/departments/detail?id=${dept.id}">View Detail</a>
-                                    <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                                    <c:if test="${sessionScope.roleName != 'EMPLOYEE' and sessionScope.roleName != 'PAYROLL_STAFF'}">
                                         <a href="${pageContext.request.contextPath}/admin/departments/update?id=${dept.id}">Update</a>
                                         <form action="${pageContext.request.contextPath}/admin/departments/toggle-status" method="post" style="display:inline;">
                                             <input type="hidden" name="id" value="${dept.id}">

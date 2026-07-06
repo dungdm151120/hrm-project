@@ -57,28 +57,6 @@ public class PasswordResetRequestDAO {
         return false;
     }
 
-    public List<PasswordResetRequest> findAll() {
-        List<PasswordResetRequest> requests = new ArrayList<>();
-        String sql = """
-                SELECT prr.*, u.full_name
-                FROM password_reset_requests prr
-                JOIN users u ON prr.user_id = u.id
-                ORDER BY prr.created_at DESC
-                """;
-
-        try (Connection conn = DBConnection.getConnection();
-             Statement statement = conn.createStatement();
-             ResultSet rs = statement.executeQuery(sql)) {
-
-            while (rs.next()) {
-                requests.add(mapResultSetToRequest(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return requests;
-    }
 
     public List<PasswordResetRequest> search(String keyword, String status, int offset, int limit) {
         List<PasswordResetRequest> requests = new ArrayList<>();

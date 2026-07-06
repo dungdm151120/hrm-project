@@ -47,8 +47,8 @@ public class PayrollConfirmServlet extends HttpServlet {
         }
 
         StringBuilder redirectUrl = new StringBuilder(request.getContextPath() + "/payroll/list?");
-        if (redirectDept != null && !redirectDept.isEmpty()) {
-            redirectUrl.append("departmentId=").append(redirectDept).append("&");
+        if (deptId != null) {
+            redirectUrl.append("departmentId=").append(deptId).append("&");
         }
         if (redirectMonth != null && !redirectMonth.isEmpty()) {
             redirectUrl.append("month=").append(redirectMonth).append("&");
@@ -70,13 +70,13 @@ public class PayrollConfirmServlet extends HttpServlet {
                 } else {
                     request.getSession().setAttribute("error", "No draft payrolls found to confirm for this period.");
                 }
-                response.sendRedirect(redirectUrl.toString());
+                response.sendRedirect(finalRedirectUrl);
                 return;
             }
 
             if (idParam == null || idParam.trim().isEmpty()) {
                 request.getSession().setAttribute("error", "Invalid payroll request id.");
-                response.sendRedirect(redirectUrl.toString());
+                response.sendRedirect(finalRedirectUrl);
                 return;
             }
 
@@ -88,12 +88,12 @@ public class PayrollConfirmServlet extends HttpServlet {
             } else {
                 request.getSession().setAttribute("error", "Only draft payrolls can be confirmed.");
             }
-            response.sendRedirect(redirectUrl.toString());
+            response.sendRedirect(finalRedirectUrl);
 
         } catch (Exception e) {
             e.printStackTrace();
             request.getSession().setAttribute("error", "An error occurred during payroll processing.");
-            response.sendRedirect(redirectUrl.toString());
+            response.sendRedirect(finalRedirectUrl);
         }
     }
 }

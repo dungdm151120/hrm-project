@@ -14,33 +14,6 @@ import java.util.List;
 public class UserDAO {
 
 
-    public User findActiveUserByEmail(String email) {
-        String sql = """
-                SELECT u.*, r.name AS role_name
-                FROM users u
-                JOIN roles r ON u.role_id = r.id
-                WHERE u.email = ?
-                  AND u.active = TRUE
-                  AND r.active = TRUE
-                """;
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, email);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToUser(rs);
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
 
     public User findActiveUserWithPositionByEmail(String email) {
         String sql = """
@@ -397,27 +370,6 @@ public class UserDAO {
     }
 
 
-    public List<User> findAllUsers() {
-        List<User> users = new ArrayList<>();
-        String sql = """
-            SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
-            FROM users u
-            JOIN roles r ON u.role_id = r.id
-            LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN positions p ON u.position_id = p.id
-            ORDER BY u.id ASC
-            """;
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                users.add(mapResultSetToUser(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return users;
-    }
 
     public boolean addUser(User user) {
         String sql = """
@@ -609,10 +561,6 @@ public class UserDAO {
     }
 
 
-    public boolean checkOldPassword(int userId, String oldPassword) {
-        User user = findById(userId);
-        return user != null && PasswordUtil.verifyPassword(oldPassword, user.getPassword());
-    }
 
     public List<User> getAllActiveUsers() {
         List<User> users = new ArrayList<>();
@@ -771,54 +719,6 @@ public class UserDAO {
 //    }
 
 
-    public boolean existsByEmail(String email) {
-        String sql = """
-                SELECT id
-                FROM users
-                WHERE email = ?
-                """;
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, email);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-
-    public boolean existsByEmailExceptCurrentUser(String email, int userId) {
-        String sql = """
-                SELECT id
-                FROM users
-                WHERE email = ?
-                  AND id <> ?
-                """;
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, email);
-            ps.setInt(2, userId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
 
 
     public int countAllUsers() {
@@ -866,118 +766,6 @@ public class UserDAO {
     }
 
 
-    public int countInactiveUsers() {
-        String sql = """
-                SELECT COUNT(*) AS total
-                FROM users
-                WHERE active = FALSE
-                """;
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            if (rs.next()) {
-                return rs.getInt("total");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return 0;
-    }
-
-    public List<User> findUsersByDeptId(int id) {
-        String sql = """
-                    SELECT u.*, d.name AS department_name, r.name AS role_name
-                    FROM users u
-                    LEFT JOIN departments d ON u.department_id = d.id
-                    LEFT JOIN roles r ON u.role_id = r.id
-                    WHERE u.department_id = ?
-                    """;
-
-        List<User> list = new ArrayList<>();
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapResultSetToUser(rs));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    public void updateDepartmentMember(int userId, Integer newDeptId, Integer newPositionId, boolean activeStatus) {
-        String sql = "UPDATE users SET department_id = ?, position_id = ?, active = ? WHERE id = ?";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            // 1. Set department_id
-            if (newDeptId == null) {
-                ps.setNull(1, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(1, newDeptId);
-            }
-
-            // 2. Set position_id (Tự động đưa về vị trí Employee khi chuyển phòng)
-            if (newPositionId == null) {
-                ps.setNull(2, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(2, newPositionId);
-            }
-
-            // 3. Set active status
-            ps.setBoolean(3, activeStatus);
-
-            // 4. Set user ID
-            ps.setInt(4, userId);
-
-            ps.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public List<User> findUnassignedUsers() {
-        List<User> users = new ArrayList<>();
-        String sql = """
-        SELECT u.id,
-               u.full_name,
-               u.email,
-               u.phone,
-               u.active,
-               u.department_id,
-               u.position_id,
-               p.name AS position_name,
-               d.name AS department_name
-        FROM users u
-        LEFT JOIN departments d ON d.id = u.department_id
-        LEFT JOIN positions p ON p.id = u.position_id
-        WHERE u.department_id IS NULL
-          AND u.active = TRUE
-          AND u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN','SYSTEM ADMIN'))
-        ORDER BY u.full_name
-        """;
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                users.add(mapEmployeeResultSetToUser(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return users;
-    }
     private User mapResultSetToUser(ResultSet rs) throws Exception {
         User user = new User();
 
@@ -1021,76 +809,6 @@ public class UserDAO {
         return user;
     }
 
-    // Move
-    public String moveDepartmentMember(int userId, int newDeptId) {
-        String checkPositionSql = "SELECT p.name FROM users u " +
-                "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
-        String getDeptNameSql = "SELECT name FROM departments WHERE id = ?";
-        String getPositionIdSql = "SELECT id FROM positions WHERE name = ?";
-
-        try (Connection conn = DBConnection.getConnection()) {
-            try (PreparedStatement psCheck = conn.prepareStatement(checkPositionSql)) {
-                psCheck.setInt(1, userId);
-                try (ResultSet rs = psCheck.executeQuery()) {
-                    if (rs.next()) {
-                        String posName = rs.getString("name");
-                        if (posName != null && posName.toLowerCase().contains("manager")) {
-                            return "ERROR_IS_MANAGER";
-                        }
-                    } else {
-                        return "ERROR_USER_NOT_FOUND";
-                    }
-                }
-            }
-
-            String deptName = null;
-            try (PreparedStatement psDept = conn.prepareStatement(getDeptNameSql)) {
-                psDept.setInt(1, newDeptId);
-                try (ResultSet rs = psDept.executeQuery()) {
-                    if (rs.next()) deptName = rs.getString("name");
-                }
-            }
-
-            String defaultPositionName;
-            String roleName;
-            if ("Human Resources".equalsIgnoreCase(deptName)) {
-                defaultPositionName = "HR Staff";
-                roleName = "HR_STAFF";
-            } else if ("Finance".equalsIgnoreCase(deptName)) {
-                defaultPositionName = "Payroll Staff";
-                roleName = "PAYROLL_STAFF";
-            } else {
-                defaultPositionName = "Employee";
-                roleName = "EMPLOYEE";
-            }
-
-            int positionId = -1;
-            try (PreparedStatement psPos = conn.prepareStatement(getPositionIdSql)) {
-                psPos.setString(1, defaultPositionName);
-                try (ResultSet rs = psPos.executeQuery()) {
-                    if (rs.next()) positionId = rs.getInt("id");
-                }
-            }
-            if (positionId == -1) return "ERROR_FAILED";
-
-            int roleId = getRoleIdByName(conn, roleName);
-            if (roleId == -1) return "ERROR_FAILED";
-
-            String updateSql = "UPDATE users SET department_id = ?, position_id = ?, role_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-            try (PreparedStatement psUpdate = conn.prepareStatement(updateSql)) {
-                psUpdate.setInt(1, newDeptId);
-                psUpdate.setInt(2, positionId);
-                psUpdate.setInt(3, roleId);
-                psUpdate.setInt(4, userId);
-                int rows = psUpdate.executeUpdate();
-                if (rows > 0) return "SUCCESS";
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "ERROR_SYSTEM";
-        }
-        return "ERROR_FAILED";
-    }
 
     public String moveDepartmentMember2(int userId, int newDeptId) {
         String checkPositionSql = "SELECT p.name, u.department_id FROM users u " +
@@ -1511,72 +1229,6 @@ public class UserDAO {
         return list;
     }
 
-    // Add member vào Dept
-    public boolean addMembersToDept(int[] userIds, int deptId) {
-        String getDeptNameSql = "SELECT name FROM departments WHERE id = ?";
-        String getPositionIdSql = "SELECT id FROM positions WHERE name = ?";
-        String sql = "UPDATE users SET department_id = ?, position_id = ?, role_id = ?, active = 1 WHERE id = ?";
-
-        try (Connection conn = DBConnection.getConnection()) {
-            conn.setAutoCommit(false);
-
-            String deptName = null;
-            try (PreparedStatement psDept = conn.prepareStatement(getDeptNameSql)) {
-                psDept.setInt(1, deptId);
-                try (ResultSet rs = psDept.executeQuery()) {
-                    if (rs.next()) deptName = rs.getString("name");
-                }
-            }
-
-            String defaultPositionName;
-            String roleName;
-            if ("Human Resources".equalsIgnoreCase(deptName)) {
-                defaultPositionName = "HR Staff";
-                roleName = "HR_STAFF";
-            } else if ("Finance".equalsIgnoreCase(deptName)) {
-                defaultPositionName = "Payroll Staff";
-                roleName = "PAYROLL_STAFF";
-            } else {
-                defaultPositionName = "Employee";
-                roleName = "EMPLOYEE";
-            }
-
-            int positionId = -1;
-            try (PreparedStatement psPos = conn.prepareStatement(getPositionIdSql)) {
-                psPos.setString(1, defaultPositionName);
-                try (ResultSet rs = psPos.executeQuery()) {
-                    if (rs.next()) positionId = rs.getInt("id");
-                }
-            }
-            if (positionId == -1) {
-                conn.rollback();
-                return false;
-            }
-
-            int roleId = getRoleIdByName(conn, roleName);
-            if (roleId == -1) {
-                conn.rollback();
-                return false;
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                for (int userId : userIds) {
-                    ps.setInt(1, deptId);
-                    ps.setInt(2, positionId);
-                    ps.setInt(3, roleId);
-                    ps.setInt(4, userId);
-                    ps.addBatch();
-                }
-                ps.executeBatch();
-            }
-
-            conn.commit();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 
     public boolean addMembersToDept2(int[] userIds, int deptId) {
         String getDeptNameSql = "SELECT name FROM departments WHERE id = ?";
@@ -1696,18 +1348,6 @@ public class UserDAO {
         }
         return 0;
     }
-    public boolean removeDepartmentFromUsers(int departmentId) {
-        String sql = "UPDATE users SET department_id = NULL WHERE department_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, departmentId);
-            ps.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     public int countUsers(String keyword, Boolean active) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u " +
@@ -1824,18 +1464,6 @@ public class UserDAO {
         return user;
     }
 
-    public boolean deactivateUsersByDepartment(int departmentId) {
-        String sql = "UPDATE users SET active = 0 WHERE department_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, departmentId);
-            ps.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
     private LocalDateTime getNullableLocalDateTime(ResultSet rs, String columnName) throws Exception {
         Timestamp timestamp = rs.getTimestamp(columnName);
 

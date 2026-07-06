@@ -341,32 +341,6 @@ public class LaborContractDAO {
         return 0;
     }
 
-    public List<LaborContractChangeLog> findChangeLogsByContractId(int contractId) {
-        List<LaborContractChangeLog> logs = new ArrayList<>();
-        String sql = """
-                SELECT l.*, lc.contract_code, u.full_name AS employee_name, changed_user.full_name AS changed_by_name
-                FROM labor_contract_change_logs l
-                JOIN labor_contracts lc ON l.contract_id = lc.id
-                JOIN users u ON lc.user_id = u.id
-                LEFT JOIN users changed_user ON l.changed_by = changed_user.id
-                WHERE l.contract_id = ?
-                ORDER BY l.changed_at DESC, l.id DESC
-                """;
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, contractId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    logs.add(mapChangeLog(rs));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return logs;
-    }
 
     private String baseSelect() {
         return """
@@ -456,22 +430,6 @@ public class LaborContractDAO {
         return contract;
     }
 
-    private LaborContractChangeLog mapChangeLog(ResultSet rs) throws Exception {
-        LaborContractChangeLog log = new LaborContractChangeLog();
-        log.setId(rs.getInt("id"));
-        log.setContractId(rs.getInt("contract_id"));
-        log.setContractCode(rs.getString("contract_code"));
-        log.setEmployeeName(rs.getString("employee_name"));
-        log.setAction(rs.getString("action"));
-        log.setFieldName(rs.getString("field_name"));
-        log.setOldValue(rs.getString("old_value"));
-        log.setNewValue(rs.getString("new_value"));
-        int changedBy = rs.getInt("changed_by");
-        log.setChangedBy(rs.wasNull() ? null : changedBy);
-        log.setChangedByName(rs.getString("changed_by_name"));
-        log.setChangedAt(rs.getTimestamp("changed_at"));
-        return log;
-    }
 
     private void insertCreateLogs(Connection conn, LaborContract contract, Integer changedBy) throws Exception {
         insertLog(conn, contract.getId(), "CREATE", "user_id", null, String.valueOf(contract.getUserId()), changedBy);

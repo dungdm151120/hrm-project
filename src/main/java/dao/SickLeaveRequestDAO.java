@@ -136,24 +136,4 @@ public class SickLeaveRequestDAO {
         return 0;
     }
 
-    public boolean hasDuplicateRequest(int userId, List<LocalDate> dates) {
-        String sql = "SELECT COUNT(*) FROM sick_leave_dates sd " +
-                "JOIN sick_leave_requests sr ON sd.sick_leave_request_id = sr.id " +
-                "JOIN requests r ON sr.request_id = r.id " +
-                "WHERE r.user_id = ? AND sd.leave_date IN (" +
-                String.join(",", dates.stream().map(d -> "?").toArray(String[]::new)) + ") " +
-                "AND r.status IN ('PENDING', 'APPROVED')";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            for (int i = 0; i < dates.size(); i++) {
-                ps.setDate(i + 2, Date.valueOf(dates.get(i)));
-            }
-            ResultSet rs = ps.executeQuery();
-            return rs.next() && rs.getInt(1) > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return true;
-    }
 }
