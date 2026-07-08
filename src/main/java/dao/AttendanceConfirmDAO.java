@@ -2,6 +2,9 @@ package dao;
 
 import util.DBConnection;
 import model.DepartmentConfirmStatusDTO;
+import model.AttendanceConfirmedSummaryDTO;
+import model.AttendanceConfirmedDetailDTO;
+import model.AttendanceConfirmedMonthOverviewDTO;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -131,5 +134,198 @@ public class AttendanceConfirmDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<AttendanceConfirmedSummaryDTO> getConfirmedMonths(int year, Integer departmentId) {
+        List<AttendanceConfirmedSummaryDTO> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT s.snapshot_month AS month, s.snapshot_year AS year, " +
+            "MAX(s.confirmed_at_business) AS confirmed_at, " +
+            "(SELECT u2.full_name FROM users u2 WHERE u2.id = MAX(s.confirmed_by_business)) AS confirmed_by, " +
+            "COUNT(DISTINCT s.user_id) AS employee_count, " +
+            "SUM(s.total_work_hours) AS total_hours " +
+            "FROM attendance_snapshot s " +
+            "JOIN users emp ON s.user_id = emp.id " +
+            "WHERE s.snapshot_year = ? "
+        );
+
+        if (departmentId != null) {
+            sql.append("AND emp.department_id = ? ");
+        }
+
+        sql.append("GROUP BY s.snapshot_month, s.snapshot_year ORDER BY s.snapshot_month DESC");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            ps.setInt(1, year);
+            if (departmentId != null) {
+                ps.setInt(2, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AttendanceConfirmedSummaryDTO dto = new AttendanceConfirmedSummaryDTO();
+                    dto.setMonth(rs.getInt("month"));
+                    dto.setYear(rs.getInt("year"));
+                    dto.setConfirmedAt(rs.getTimestamp("confirmed_at"));
+                    dto.setConfirmedBy(rs.getString("confirmed_by"));
+                    dto.setEmployeeCount(rs.getInt("employee_count"));
+                    dto.setTotalHours(rs.getDouble("total_hours"));
+                    list.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public AttendanceConfirmedMonthOverviewDTO getConfirmedMonthOverview(int month, int year, Integer departmentId) {
+        AttendanceConfirmedMonthOverviewDTO overview = new AttendanceConfirmedMonthOverviewDTO();
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(DISTINCT s.user_id) AS total_employees, " +
+            "COUNT(s.work_date) AS total_work_days, " +
+            "SUM(s.total_work_hours) AS total_work_hours, " +
+            "SUM(s.overtime_hours) AS total_overtime_hours " +
+            "FROM attendance_snapshot s " +
+            "JOIN users emp ON s.user_id = emp.id " +
+            "WHERE s.snapshot_month = ? AND s.snapshot_year = ? "
+        );
+
+        if (departmentId != null) {
+            sql.append("AND emp.department_id = ? ");
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            if (departmentId != null) {
+                ps.setInt(3, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    overview.setTotalEmployees(rs.getInt("total_employees"));
+                    overview.setTotalWorkDays(rs.getInt("total_work_days"));
+                    overview.setTotalWorkHours(rs.getDouble("total_work_hours"));
+                    overview.setTotalOvertimeHours(rs.getDouble("total_overtime_hours"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return overview;
+    }
+
+    public int getConfirmedDetailsCount(int month, int year, String searchQuery, Integer departmentId) {
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(DISTINCT s.user_id) " +
+            "FROM attendance_snapshot s " +
+            "JOIN users emp ON s.user_id = emp.id " +
+            "WHERE s.snapshot_month = ? AND s.snapshot_year = ? "
+        );
+
+        if (departmentId != null) {
+            sql.append("AND emp.department_id = ? ");
+        }
+        
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            sql.append("AND (emp.employee_code LIKE ? OR emp.full_name LIKE ?) ");
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int paramIndex = 1;
+            ps.setInt(paramIndex++, month);
+            ps.setInt(paramIndex++, year);
+            
+            if (departmentId != null) {
+                ps.setInt(paramIndex++, departmentId);
+            }
+            
+            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                String likeQuery = "%" + searchQuery.trim() + "%";
+                ps.setString(paramIndex++, likeQuery);
+                ps.setString(paramIndex++, likeQuery);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<AttendanceConfirmedDetailDTO> getConfirmedDetails(int month, int year, String searchQuery, Integer departmentId, int offset, int limit) {
+        List<AttendanceConfirmedDetailDTO> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT emp.id AS employee_id, emp.employee_code, emp.full_name AS employee_name, " +
+            "d.name AS department_name, " +
+            "COUNT(s.work_date) AS work_days, " +
+            "SUM(s.total_work_hours) AS total_hours, " +
+            "SUM(s.overtime_hours) AS overtime_hours " +
+            "FROM attendance_snapshot s " +
+            "JOIN users emp ON s.user_id = emp.id " +
+            "LEFT JOIN departments d ON emp.department_id = d.id " +
+            "WHERE s.snapshot_month = ? AND s.snapshot_year = ? "
+        );
+
+        if (departmentId != null) {
+            sql.append("AND emp.department_id = ? ");
+        }
+        
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            sql.append("AND (emp.employee_code LIKE ? OR emp.full_name LIKE ?) ");
+        }
+
+        sql.append("GROUP BY emp.id, emp.employee_code, emp.full_name, d.name ");
+        sql.append("ORDER BY d.name, emp.employee_code ");
+        sql.append("LIMIT ? OFFSET ?");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int paramIndex = 1;
+            ps.setInt(paramIndex++, month);
+            ps.setInt(paramIndex++, year);
+            
+            if (departmentId != null) {
+                ps.setInt(paramIndex++, departmentId);
+            }
+            
+            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                String likeQuery = "%" + searchQuery.trim() + "%";
+                ps.setString(paramIndex++, likeQuery);
+                ps.setString(paramIndex++, likeQuery);
+            }
+            
+            ps.setInt(paramIndex++, limit);
+            ps.setInt(paramIndex++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AttendanceConfirmedDetailDTO dto = new AttendanceConfirmedDetailDTO();
+                    dto.setEmployeeId(rs.getInt("employee_id"));
+                    dto.setEmployeeCode(rs.getString("employee_code"));
+                    dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartmentName(rs.getString("department_name"));
+                    dto.setWorkDays(rs.getInt("work_days"));
+                    dto.setTotalHours(rs.getDouble("total_hours"));
+                    dto.setOvertimeHours(rs.getDouble("overtime_hours"));
+                    list.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

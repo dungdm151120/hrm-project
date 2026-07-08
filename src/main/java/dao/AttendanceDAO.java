@@ -643,7 +643,7 @@ public class AttendanceDAO {
 
     private void calculateLeaveBalance(Connection conn, int userId, int year, int month,
                                        AttendanceSummary summary) throws SQLException {
-        double entitled = month;
+        double entitled = 12.0;
         LocalDate startOfYear = LocalDate.of(year, 1, 1);
         LocalDate endOfMonth = LocalDate.of(year, month, YearMonth.of(year, month).lengthOfMonth());
 
