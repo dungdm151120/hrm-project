@@ -9,9 +9,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.AttendanceRecordDTO;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.awt.Color;
 import java.io.IOException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,6 +26,12 @@ public class ExportAttendanceServlet extends HttpServlet {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+    private static final String GREEN_HEX  = "#22c55e";
+    private static final String ORANGE_HEX = "#f59e0b";
+    private static final String RED_HEX    = "#ef4444";
+    private static final String BLUE_HEX   = "#38bdf8";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -40,16 +51,31 @@ public class ExportAttendanceServlet extends HttpServlet {
             }
 
             Workbook workbook = new XSSFWorkbook();
-            // Tạo style chung
             CellStyle companyStyle = createCompanyStyle(workbook);
             CellStyle reportTitleStyle = createReportTitleStyle(workbook);
             CellStyle headerStyle = createHeaderStyle(workbook);
-            CellStyle dataStyle = createDataStyle(workbook);
+            CellStyle weekdayHeaderStyle = createWeekdayHeaderStyle(workbook);
 
-            createAttendanceLogsSheet(workbook, records, month, year, companyStyle, reportTitleStyle, headerStyle, dataStyle);
-            createEmployeeDetailSheet(workbook, records, companyStyle, headerStyle, dataStyle);
-            createRuleSheet(workbook, companyStyle, headerStyle, dataStyle);
-            createSummarySheet(workbook, records, month, year, companyStyle, headerStyle, dataStyle);
+            // Style thường (cho sheet CHI TIẾT, CHÚ THÍCH, TỔNG HỢP)
+            CellStyle normalDataStyle = createDataStyle(workbook, false);
+            CellStyle normalGreenStyle  = createColoredDataStyle(workbook, GREEN_HEX, false);
+            CellStyle normalOrangeStyle = createColoredDataStyle(workbook, ORANGE_HEX, false);
+            CellStyle normalRedStyle    = createColoredDataStyle(workbook, RED_HEX, false);
+            CellStyle normalBlueStyle   = createColoredDataStyle(workbook, BLUE_HEX, false);
+
+            // Style bold (chỉ cho sheet ATTENDANCE_LOGS)
+            CellStyle boldDataStyle = createDataStyle(workbook, true);
+            CellStyle boldGreenStyle  = createColoredDataStyle(workbook, GREEN_HEX, true);
+            CellStyle boldOrangeStyle = createColoredDataStyle(workbook, ORANGE_HEX, true);
+            CellStyle boldRedStyle    = createColoredDataStyle(workbook, RED_HEX, true);
+            CellStyle boldBlueStyle   = createColoredDataStyle(workbook, BLUE_HEX, true);
+
+            createAttendanceLogsSheet(workbook, records, month, year, companyStyle, reportTitleStyle,
+                    headerStyle, weekdayHeaderStyle, boldDataStyle,
+                    boldGreenStyle, boldOrangeStyle, boldRedStyle, boldBlueStyle);
+            createEmployeeDetailSheet(workbook, records, companyStyle, headerStyle, normalDataStyle);
+            createRuleSheet(workbook, companyStyle, headerStyle, normalDataStyle);
+            createSummarySheet(workbook, records, month, year, companyStyle, headerStyle, normalDataStyle);
 
             resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             String filename = "attendance_report_" + year + "_" + month + ".xlsx";
@@ -62,7 +88,7 @@ public class ExportAttendanceServlet extends HttpServlet {
         }
     }
 
-    // ====== Các phương thức tạo style ======
+    // ====== Styles ======
     private CellStyle createCompanyStyle(Workbook workbook) {
         Font font = workbook.createFont();
         font.setBold(true);
@@ -104,8 +130,13 @@ public class ExportAttendanceServlet extends HttpServlet {
         return style;
     }
 
-    private CellStyle createDataStyle(Workbook workbook) {
+    private CellStyle createWeekdayHeaderStyle(Workbook workbook) {
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 10);
+        font.setColor(IndexedColors.DARK_BLUE.getIndex());
         CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
         style.setBorderBottom(BorderStyle.THIN);
@@ -115,13 +146,68 @@ public class ExportAttendanceServlet extends HttpServlet {
         return style;
     }
 
-    // ====== Sheet ATTENDANCE_LOGS (có cột employee_name + merge ô) ======
+    private CellStyle createDataStyle(Workbook workbook, boolean bold) {
+        Font font = workbook.createFont();
+        font.setBold(bold);
+        CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        return style;
+    }
+
+    private CellStyle createColoredDataStyle(Workbook workbook, String hexColor, boolean bold) {
+        Font font = workbook.createFont();
+        font.setBold(bold);
+        CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+
+        if (font instanceof XSSFFont xssfFont) {
+            xssfFont.setColor(hexToXSSFColor(hexColor));
+        }
+        style.setFont(font);
+        return style;
+    }
+
+    private XSSFColor hexToXSSFColor(String hex) {
+        String rgb = hex.startsWith("#") ? hex.substring(1) : hex;
+        int r = Integer.parseInt(rgb.substring(0, 2), 16);
+        int g = Integer.parseInt(rgb.substring(2, 4), 16);
+        int b = Integer.parseInt(rgb.substring(4, 6), 16);
+        return new XSSFColor(new Color(r, g, b), null);
+    }
+
+    // ====== Sheet ATTENDANCE_LOGS (dùng style BOLD) ======
     private void createAttendanceLogsSheet(Workbook workbook, List<AttendanceRecordDTO> records,
                                            int month, int year,
                                            CellStyle companyStyle, CellStyle reportTitleStyle,
-                                           CellStyle headerStyle, CellStyle dataStyle) {
+                                           CellStyle headerStyle, CellStyle weekdayHeaderStyle,
+                                           CellStyle dataStyle,
+                                           CellStyle greenStyle, CellStyle orangeStyle,
+                                           CellStyle redStyle, CellStyle blueStyle) {
+        List<LocalDate> dates = records.stream()
+                .map(AttendanceRecordDTO::getWorkDate)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        Map<Integer, List<AttendanceRecordDTO>> userRecordsMap = new LinkedHashMap<>();
+        for (AttendanceRecordDTO r : records) {
+            userRecordsMap.computeIfAbsent(r.getUserId(), k -> new ArrayList<>()).add(r);
+        }
+
         Sheet sheet = workbook.createSheet("ATTENDANCE_LOGS");
-        int colCount = 5; // employee_name, work_date, check_in, check_out, status
+        int colCount = 1 + dates.size();
         int rowIdx = 0;
 
         // Dòng 1: Tên công ty
@@ -140,91 +226,132 @@ public class ExportAttendanceServlet extends HttpServlet {
         titleCell.setCellStyle(reportTitleStyle);
         sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, colCount - 1));
 
-        // Dòng 3: Để trống
+        // Dòng 3: trống
         rowIdx++;
 
-        // Dòng 4: Header
+        // Dòng 4: Thứ trong tuần
+        Row weekdayRow = sheet.createRow(rowIdx++);
+        Cell blankCorner = weekdayRow.createCell(0);
+        blankCorner.setCellStyle(weekdayHeaderStyle);
+        for (int i = 0; i < dates.size(); i++) {
+            LocalDate date = dates.get(i);
+            DayOfWeek dayOfWeek = date.getDayOfWeek();
+            String weekday = vietnameseDayOfWeek(dayOfWeek);
+            Cell cell = weekdayRow.createCell(i + 1);
+            cell.setCellValue(weekday);
+            cell.setCellStyle(weekdayHeaderStyle);
+        }
+
+        // Dòng 5: Header ngày
         Row headerRow = sheet.createRow(rowIdx++);
-        String[] headers = {"employee_name", "work_date", "check_in", "check_out", "status"};
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
+        Cell headerName = headerRow.createCell(0);
+        headerName.setCellValue("employee_name");
+        headerName.setCellStyle(headerStyle);
+        for (int i = 0; i < dates.size(); i++) {
+            Cell cell = headerRow.createCell(i + 1);
+            cell.setCellValue(dates.get(i).format(DATE_FMT));
             cell.setCellStyle(headerStyle);
         }
 
-        // Sắp xếp records theo employee_name rồi đến work_date để merge dễ dàng
-        List<AttendanceRecordDTO> sortedRecords = records.stream()
-                .sorted(Comparator.comparing(AttendanceRecordDTO::getEmployeeName, Comparator.nullsLast(String::compareTo))
-                        .thenComparing(AttendanceRecordDTO::getWorkDate))
-                .collect(Collectors.toList());
+        // Dữ liệu
+        for (Map.Entry<Integer, List<AttendanceRecordDTO>> entry : userRecordsMap.entrySet()) {
+            List<AttendanceRecordDTO> userRecords = entry.getValue();
+            String employeeName = userRecords.get(0).getEmployeeName();
+            Map<LocalDate, AttendanceRecordDTO> recordMap = new HashMap<>();
+            for (AttendanceRecordDTO r : userRecords) {
+                recordMap.put(r.getWorkDate(), r);
+            }
 
-        // Ghi dữ liệu và merge ô employee_name
-        String lastEmployeeName = null;
-        int mergeStartRow = rowIdx; // dòng bắt đầu của nhóm nhân viên hiện tại
+            Row row = sheet.createRow(rowIdx++);
+            Cell nameCell = row.createCell(0);
+            nameCell.setCellValue(employeeName);
+            nameCell.setCellStyle(dataStyle);
 
-        for (AttendanceRecordDTO r : sortedRecords) {
-            Row row = sheet.createRow(rowIdx);
-            String currentEmployeeName = r.getEmployeeName() != null ? r.getEmployeeName() : "";
+            for (int i = 0; i < dates.size(); i++) {
+                LocalDate date = dates.get(i);
+                Cell cell = row.createCell(i + 1);
 
-            // Nếu tên nhân viên thay đổi so với dòng trước đó, thực hiện merge cho nhóm cũ
-            if (lastEmployeeName != null && !currentEmployeeName.equals(lastEmployeeName)) {
-                if (rowIdx - 1 > mergeStartRow) { // có nhiều hơn 1 dòng
-                    sheet.addMergedRegion(new CellRangeAddress(mergeStartRow, rowIdx - 1, 0, 0));
+                AttendanceRecordDTO record = recordMap.get(date);
+                if (record == null) {
+                    cell.setCellValue("null - null");
+                    cell.setCellStyle(dataStyle);
+                } else {
+                    String status = record.getStatus();
+                    String cellValue = "";
+                    CellStyle styleToUse = dataStyle;
+
+                    if ("ON_LEAVE".equals(status)) {
+                        cellValue = "On leave";
+                        styleToUse = blueStyle;
+                    } else if ("SICK_LEAVE".equals(status)) {
+                        cellValue = "Sick leave";
+                        styleToUse = blueStyle;
+                    } else if ("HOLIDAY".equals(status)) {
+                        cellValue = "Holiday";
+                        styleToUse = blueStyle;
+                    } else if ("ABSENT".equals(status)) {
+                        cellValue = "Absent";
+                        styleToUse = redStyle;
+                    } else if ("ON_TIME".equals(status)) {
+                        String checkInStr = record.getCheckIn() != null ?
+                                record.getCheckIn().format(TIME_FMT) : "null";
+                        String checkOutStr = record.getCheckOut() != null ?
+                                record.getCheckOut().format(TIME_FMT) : "null";
+                        cellValue = checkInStr + " - " + checkOutStr;
+                        styleToUse = greenStyle;
+                    } else if (status != null && (
+                            status.equals("LATE") ||
+                                    status.equals("EARLY_LEAVE") ||
+                                    status.equals("LATE_AND_EARLY") ||
+                                    status.equals("LATE_AND_EARLY_LEAVE") ||
+                                    status.equals("FORGOT_CHECKIN") ||
+                                    status.equals("FORGOT_CHECKOUT") ||
+                                    status.equals("FORGOT_CHECK_IN") ||
+                                    status.equals("FORGOT_CHECK_OUT"))) {
+                        String checkInStr = record.getCheckIn() != null ?
+                                record.getCheckIn().format(TIME_FMT) : "null";
+                        String checkOutStr = record.getCheckOut() != null ?
+                                record.getCheckOut().format(TIME_FMT) : "null";
+                        cellValue = checkInStr + " - " + checkOutStr;
+                        styleToUse = orangeStyle;
+                    } else {
+                        String checkInStr = record.getCheckIn() != null ?
+                                record.getCheckIn().format(TIME_FMT) : "null";
+                        String checkOutStr = record.getCheckOut() != null ?
+                                record.getCheckOut().format(TIME_FMT) : "null";
+                        cellValue = checkInStr + " - " + checkOutStr;
+                        styleToUse = dataStyle;
+                    }
+                    cell.setCellValue(cellValue);
+                    cell.setCellStyle(styleToUse);
                 }
-                mergeStartRow = rowIdx;
             }
-            // Nếu là lần đầu tiên
-            if (lastEmployeeName == null) {
-                mergeStartRow = rowIdx;
-            }
-
-            Cell cell0 = row.createCell(0);
-            cell0.setCellValue(currentEmployeeName);
-            cell0.setCellStyle(dataStyle);
-
-            Cell cell1 = row.createCell(1);
-            cell1.setCellValue(r.getWorkDate().format(DATE_FMT));
-            cell1.setCellStyle(dataStyle);
-
-            Cell cell2 = row.createCell(2);
-            if (r.getCheckIn() != null) {
-                cell2.setCellValue(r.getCheckIn().format(DATETIME_FMT));
-            }
-            cell2.setCellStyle(dataStyle);
-
-            Cell cell3 = row.createCell(3);
-            if (r.getCheckOut() != null) {
-                cell3.setCellValue(r.getCheckOut().format(DATETIME_FMT));
-            }
-            cell3.setCellStyle(dataStyle);
-
-            Cell cell4 = row.createCell(4);
-            cell4.setCellValue(r.getStatus() != null ? r.getStatus() : "");
-            cell4.setCellStyle(dataStyle);
-
-            lastEmployeeName = currentEmployeeName;
-            rowIdx++;
         }
 
-        // Merge cho nhóm cuối cùng
-        if (rowIdx - 1 > mergeStartRow && lastEmployeeName != null) {
-            sheet.addMergedRegion(new CellRangeAddress(mergeStartRow, rowIdx - 1, 0, 0));
-        }
-
-        // Auto size cột
         for (int i = 0; i < colCount; i++) {
             sheet.autoSizeColumn(i);
         }
     }
 
-    // ====== Sheet CHI TIẾT NHÂN VIÊN ======
+    private String vietnameseDayOfWeek(DayOfWeek dayOfWeek) {
+        return switch (dayOfWeek) {
+            case MONDAY -> "Thứ Hai";
+            case TUESDAY -> "Thứ Ba";
+            case WEDNESDAY -> "Thứ Tư";
+            case THURSDAY -> "Thứ Năm";
+            case FRIDAY -> "Thứ Sáu";
+            case SATURDAY -> "Thứ Bảy";
+            case SUNDAY -> "Chủ Nhật";
+        };
+    }
+
+    // ====== Sheet CHI TIẾT NHÂN VIÊN (style thường) ======
     private void createEmployeeDetailSheet(Workbook workbook, List<AttendanceRecordDTO> records,
                                            CellStyle companyStyle, CellStyle headerStyle, CellStyle dataStyle) {
         Sheet sheet = workbook.createSheet("CHI TIẾT NHÂN VIÊN");
-        int colCount = 4; // employee_id, employee_code, full_name, position
+        int colCount = 4;
         int rowIdx = 0;
 
-        // Dòng công ty
         Row companyRow = sheet.createRow(rowIdx++);
         companyRow.setHeight((short) 500);
         Cell companyCell = companyRow.createCell(0);
@@ -232,9 +359,8 @@ public class ExportAttendanceServlet extends HttpServlet {
         companyCell.setCellStyle(companyStyle);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
 
-        rowIdx++; // cách dòng
+        rowIdx++;
 
-        // Header
         Row headerRow = sheet.createRow(rowIdx++);
         String[] headers = {"employee_id", "employee_code", "full_name", "position"};
         for (int i = 0; i < headers.length; i++) {
@@ -243,7 +369,6 @@ public class ExportAttendanceServlet extends HttpServlet {
             cell.setCellStyle(headerStyle);
         }
 
-        // Lọc nhân viên duy nhất (giữ nguyên thứ tự xuất hiện)
         Map<Integer, AttendanceRecordDTO> uniqueEmployees = new LinkedHashMap<>();
         for (AttendanceRecordDTO r : records) {
             uniqueEmployees.putIfAbsent(r.getUserId(), r);
@@ -251,33 +376,23 @@ public class ExportAttendanceServlet extends HttpServlet {
 
         for (AttendanceRecordDTO emp : uniqueEmployees.values()) {
             Row row = sheet.createRow(rowIdx++);
-            Cell cell0 = row.createCell(0);
-            cell0.setCellValue(emp.getUserId());
-            cell0.setCellStyle(dataStyle);
-
-            Cell cell1 = row.createCell(1);
-            cell1.setCellValue(emp.getEmployeeCode());
-            cell1.setCellStyle(dataStyle);
-
-            Cell cell2 = row.createCell(2);
-            cell2.setCellValue(emp.getEmployeeName());
-            cell2.setCellStyle(dataStyle);
-
-            Cell cell3 = row.createCell(3);
-            cell3.setCellValue(emp.getPositionName() != null ? emp.getPositionName() : "");
-            cell3.setCellStyle(dataStyle);
+            row.createCell(0).setCellValue(emp.getUserId());
+            row.createCell(1).setCellValue(emp.getEmployeeCode());
+            row.createCell(2).setCellValue(emp.getEmployeeName());
+            row.createCell(3).setCellValue(emp.getPositionName() != null ? emp.getPositionName() : "");
+            for (int i = 0; i < colCount; i++) {
+                row.getCell(i).setCellStyle(dataStyle);
+            }
         }
-
         for (int i = 0; i < colCount; i++) sheet.autoSizeColumn(i);
     }
 
-    // ====== Sheet CHÚ THÍCH ======
+    // ====== Sheet CHÚ THÍCH (style thường) ======
     private void createRuleSheet(Workbook workbook, CellStyle companyStyle, CellStyle headerStyle, CellStyle dataStyle) {
         Sheet sheet = workbook.createSheet("CHÚ THÍCH");
         int colCount = 3;
         int rowIdx = 0;
 
-        // Dòng công ty
         Row companyRow = sheet.createRow(rowIdx++);
         companyRow.setHeight((short) 500);
         Cell companyCell = companyRow.createCell(0);
@@ -287,7 +402,6 @@ public class ExportAttendanceServlet extends HttpServlet {
 
         rowIdx++;
 
-        // Header
         Row headerRow = sheet.createRow(rowIdx++);
         String[] headers = {"Rule", "Mô tả", "Trạng thái"};
         for (int i = 0; i < headers.length; i++) {
@@ -316,15 +430,14 @@ public class ExportAttendanceServlet extends HttpServlet {
         for (int i = 0; i < colCount; i++) sheet.autoSizeColumn(i);
     }
 
-    // ====== Sheet TỔNG HỢP ======
+    // ====== Sheet TỔNG HỢP (style thường) ======
     private void createSummarySheet(Workbook workbook, List<AttendanceRecordDTO> records,
                                     int month, int year,
                                     CellStyle companyStyle, CellStyle headerStyle, CellStyle dataStyle) {
         Sheet sheet = workbook.createSheet("TỔNG HỢP");
-        int colCount = 11; // Mã NV, Họ tên, Chức vụ, Phòng ban, Tổng ngày công, Ngày có mặt, Ngày vắng, Đi muộn, Về sớm, Quên check-in, Quên check-out
+        int colCount = 11;
         int rowIdx = 0;
 
-        // Tiêu đề "TỔNG HỢP CHẤM CÔNG"
         Row titleRow = sheet.createRow(rowIdx++);
         titleRow.setHeight((short) 500);
         Cell titleCell = titleRow.createCell(0);
@@ -332,9 +445,8 @@ public class ExportAttendanceServlet extends HttpServlet {
         titleCell.setCellStyle(companyStyle);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
 
-        rowIdx++; // cách dòng
+        rowIdx++;
 
-        // Header
         Row headerRow = sheet.createRow(rowIdx++);
         String[] headers = {"Mã NV", "Họ tên", "Chức vụ", "Phòng ban", "Tổng ngày công",
                 "Ngày có mặt", "Ngày vắng", "Đi muộn", "Về sớm", "Quên check-in", "Quên check-out"};
@@ -344,7 +456,6 @@ public class ExportAttendanceServlet extends HttpServlet {
             cell.setCellStyle(headerStyle);
         }
 
-        // Gom nhóm theo userId
         Map<Integer, List<AttendanceRecordDTO>> grouped = records.stream()
                 .collect(Collectors.groupingBy(AttendanceRecordDTO::getUserId, LinkedHashMap::new, Collectors.toList()));
 
@@ -365,39 +476,20 @@ public class ExportAttendanceServlet extends HttpServlet {
             long forgotCheckout = userRecords.stream().filter(r -> "FORGOT_CHECK_OUT".equals(r.getStatus())).count();
 
             Row row = sheet.createRow(rowIdx++);
-            Cell c0 = row.createCell(0);
-            c0.setCellValue(first.getEmployeeCode());
-            c0.setCellStyle(dataStyle);
-            Cell c1 = row.createCell(1);
-            c1.setCellValue(first.getEmployeeName());
-            c1.setCellStyle(dataStyle);
-            Cell c2 = row.createCell(2);
-            c2.setCellValue(first.getPositionName() != null ? first.getPositionName() : "");
-            c2.setCellStyle(dataStyle);
-            Cell c3 = row.createCell(3);
-            c3.setCellValue(first.getDepartmentName() != null ? first.getDepartmentName() : "");
-            c3.setCellStyle(dataStyle);
-            Cell c4 = row.createCell(4);
-            c4.setCellValue(totalDays);
-            c4.setCellStyle(dataStyle);
-            Cell c5 = row.createCell(5);
-            c5.setCellValue(presentDays);
-            c5.setCellStyle(dataStyle);
-            Cell c6 = row.createCell(6);
-            c6.setCellValue(absentDays);
-            c6.setCellStyle(dataStyle);
-            Cell c7 = row.createCell(7);
-            c7.setCellValue(lateCount);
-            c7.setCellStyle(dataStyle);
-            Cell c8 = row.createCell(8);
-            c8.setCellValue(earlyCount);
-            c8.setCellStyle(dataStyle);
-            Cell c9 = row.createCell(9);
-            c9.setCellValue(forgotCheckin);
-            c9.setCellStyle(dataStyle);
-            Cell c10 = row.createCell(10);
-            c10.setCellValue(forgotCheckout);
-            c10.setCellStyle(dataStyle);
+            row.createCell(0).setCellValue(first.getEmployeeCode());
+            row.createCell(1).setCellValue(first.getEmployeeName());
+            row.createCell(2).setCellValue(first.getPositionName() != null ? first.getPositionName() : "");
+            row.createCell(3).setCellValue(first.getDepartmentName() != null ? first.getDepartmentName() : "");
+            row.createCell(4).setCellValue(totalDays);
+            row.createCell(5).setCellValue(presentDays);
+            row.createCell(6).setCellValue(absentDays);
+            row.createCell(7).setCellValue(lateCount);
+            row.createCell(8).setCellValue(earlyCount);
+            row.createCell(9).setCellValue(forgotCheckin);
+            row.createCell(10).setCellValue(forgotCheckout);
+            for (int i = 0; i < colCount; i++) {
+                row.getCell(i).setCellStyle(dataStyle);
+            }
         }
 
         for (int i = 0; i < colCount; i++) {
