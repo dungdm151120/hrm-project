@@ -1,10 +1,6 @@
 package dao;
 
-import model.AttendanceLog;
-import model.AttendanceRecord;
-import model.AttendanceRecordDTO;
-import model.AttendanceSummary;
-import model.User;
+import model.*;
 import util.DBConnection;
 
 import java.sql.*;
@@ -601,6 +597,48 @@ public class AttendanceDAO {
             e.printStackTrace();
         }
         return summary;
+    }
+    public AttendanceConfirmedSummary getSummaryConfirmedAttendanceByUser(int userId, LocalDate start, LocalDate end) {
+        AttendanceConfirmedSummary summary = new AttendanceConfirmedSummary();
+        String sql = """
+                        SELECT
+                            COALESCE(SUM(total_work_hours), 0) AS total_work_hours,
+                            COALESCE(SUM(overtime_hours), 0) AS overtime_hours
+                        FROM attendance_snapshot
+                        WHERE user_id = ? AND work_date BETWEEN ? AND ?
+                    """;
+        try (Connection connection = DBConnection.getConnection();
+            PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(start));
+            ps.setDate(3, Date.valueOf(end));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    summary.setTotalWorkHours(rs.getDouble("total_work_hours"));
+                    summary.setOvertimeHours(rs.getDouble("overtime_hours"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return summary;
+    }
+
+    public boolean hasAttendanceSnapshot(int month, int year) {
+        String sql = "SELECT COUNT(*) FROM attendance_snapshot WHERE MONTH(work_date) = ? AND YEAR(work_date) = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private void calculateLeaveBalance(Connection conn, int userId, int year, int month,

@@ -1,16 +1,12 @@
 package service;
 
 import dao.*;
-import model.AttendanceSummary;
-import model.Payroll;
-import model.Position;
-import model.User;
+import model.*;
 import util.PayrollCalculator;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PayrollService {
@@ -21,19 +17,24 @@ public class PayrollService {
     private PayrollDAO payrollDAO = new PayrollDAO();
     private UserDAO userDAO = new UserDAO();
 
-    public Payroll generateMonthlyPayroll(User user, int month, int year, double basicSalary, double expectedHours) {
+    public Payroll generateMonthlyPayroll(User user, int month, int year, long basicSalary) {
 
+        double expectedHours = calculateExpectedHours(month, year);
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
         AttendanceSummary summary = attendanceDAO.getSummaryByUser(user.getId(), startDate, endDate);
+        PayrollSetting setting = payrollDAO.getPayrollSetting();
+        List<PitBracket> brackets = payrollDAO.getPitBrackets();
 
         String positionName = (user.getPositionName() != null) ? user.getPositionName().toLowerCase() : "";
+        int numberOfDependents = payrollDAO.countDependentByUserId(user.getId(), month, year);
 
         double rateMultiplier = 1.0;
-        double bonus = 0.0;
+        long bonus = 0;
         String description = null;
+
         if (positionName.contains("manager") || positionName.equals("System Administrator")) {
             rateMultiplier = 2.0;
             bonus = 2000000;
@@ -45,26 +46,42 @@ public class PayrollService {
         // Get Actual Working Hours
         double totalActualHours = summary.getTotalWorkHours();
 
-        // Calculate Total Income
-        double totalIncome = ((basicSalary * rateMultiplier) / expectedHours) * totalActualHours;
+        // Calculate Gross Income
+        long grossIncome = Math.round(((basicSalary * rateMultiplier) / expectedHours) * totalActualHours);
 
-        // Calculate Insurance
-        double socialInsurance = calculator.calculateSocialInsurance(totalIncome);
-        double healthInsurance = calculator.calculateHealthInsurance(totalIncome);
-        double unemploymentInsurance = calculator.calculateUnemploymentInsurance(totalIncome);
-        double totalInsurance = socialInsurance + healthInsurance + unemploymentInsurance;
+        // Calculate Insurance for Employee
+        long employeeSocialInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getEmployeeSocialInsurance()));
+        long employeeHealthInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getEmployeeHealthInsurance()));
+        long employeeUnemploymentInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getEmployeeUnemploymentInsurance()));
+        boolean isUnionMember = payrollDAO.isUnionMember(user.getId());
+        long employeeUnionFee = 0;
+        if (isUnionMember) {
+            employeeUnionFee = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getEmployeeUnion()));
+        }
+        long employeeTotalInsurance = employeeSocialInsurance + employeeHealthInsurance + employeeUnemploymentInsurance + employeeUnionFee;
 
         // Calculate Income Before Tax
-        double incomeBeforeTax = totalIncome - totalInsurance;
+        long incomeBeforeTax = grossIncome - employeeTotalInsurance;
 
         // Get Taxable Income
-        double taxableIncome = Math.max(0.0, incomeBeforeTax - 15500000.0);
+        long totalDeductionAmount = (long) (setting.getSelfDeduction() + (setting.getDependentDeduction() * numberOfDependents));
+        long taxableIncome = Math.max(0, Math.round(incomeBeforeTax - totalDeductionAmount));
 
         // Income Tax
-        double incomeTax = calculator.calculateIncomeTax(taxableIncome);
+        long incomeTax = Math.round(calculator.calculateIncomeTax(taxableIncome, brackets));
+
+        // Overtime Pay
+        double hourlyRate = (expectedHours > 0) ? ((double) basicSalary / expectedHours) : 0;
+        long overtimePay = Math.round(summary.getOvertimeHours() * hourlyRate * 1.5);
 
         // Net Income
-        double netPay = incomeBeforeTax - incomeTax + bonus;
+        long netPay = incomeBeforeTax - incomeTax + bonus + overtimePay;
+
+        // Calculate Insurance Employer pay for each Employee
+        long companySocialInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getCompanySocialInsurance()));
+        long companyHealthInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getCompanyHealthInsurance()));
+        long companyUnemploymentInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getCompanyUnemploymentInsurance()));
+        long companyUnionFee = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getCompanyUnion()));
 
         Payroll payroll = new Payroll();
         payroll.setUserId(user.getId());
@@ -74,23 +91,32 @@ public class PayrollService {
         payroll.setActualHours(totalActualHours);
         payroll.setBasicSalary(basicSalary);
         payroll.setRateMultiplier(rateMultiplier);
-        payroll.setTotalIncome(totalIncome);
+        payroll.setTotalIncome(grossIncome);
         payroll.setBonus(bonus);
         payroll.setDescription(description);
-        payroll.setSocialInsurance(socialInsurance);
-        payroll.setHealthInsurance(healthInsurance);
-        payroll.setUnemploymentInsurance(unemploymentInsurance);
+
+        payroll.setSocialInsurance(employeeSocialInsurance);
+        payroll.setHealthInsurance(employeeHealthInsurance);
+        payroll.setUnemploymentInsurance(employeeUnemploymentInsurance);
+        payroll.setUnionFee(employeeUnionFee);
+
         payroll.setIncomeBeforeTax(incomeBeforeTax);
         payroll.setTaxableIncome(taxableIncome);
         payroll.setIncomeTax(incomeTax);
+        payroll.setOvertimePay(overtimePay);
         payroll.setNetPay(netPay);
+
+        payroll.setCompanySocialInsurance(companySocialInsurance);
+        payroll.setCompanyHealthInsurance(companyHealthInsurance);
+        payroll.setCompanyUnemploymentInsurance(companyUnemploymentInsurance);
+        payroll.setCompanyUnionFee(companyUnionFee);
         payroll.setStatus("DRAFT");
 
         boolean isSaved = payrollDAO.savePayroll(payroll);
         return isSaved ? payroll : null;
     }
 
-    public int generateBulkPayroll(List<User> users, int month, int year, double expectedHours, Integer departmentId) throws Exception{
+    public int generateBulkPayroll(List<User> users, int month, int year, Integer departmentId) throws Exception{
         int totalUsersInDept = users.size();
 
         if (totalUsersInDept == 0) {
@@ -119,13 +145,25 @@ public class PayrollService {
             }
 
             BigDecimal activeSalary = laborContractDAO.findActiveSalaryByUserId(userId);
-            double basicSalary = activeSalary.doubleValue();
+            long basicSalary = activeSalary.longValue();
 
-            Payroll payroll = this.generateMonthlyPayroll(detailedUser, month, year, basicSalary, expectedHours);
+            Payroll payroll = this.generateMonthlyPayroll(detailedUser, month, year, basicSalary);
             if (payroll != null) {
                 successCount++;
             }
         }
         return successCount;
+    }
+
+    private double calculateExpectedHours(int month, int year) {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int weekdays = 0;
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+            LocalDate date = yearMonth.atDay(day);
+            if (date.getDayOfWeek().getValue() < 6) {
+                weekdays++;
+            }
+        }
+        return weekdays * 8.0;
     }
 }
