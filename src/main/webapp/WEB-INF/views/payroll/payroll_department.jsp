@@ -62,7 +62,7 @@
     <div class="dashboard-main">
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Payroll List</h1>
+                <h1 class="header-title">Payroll Department</h1>
             </div>
         </div>
 

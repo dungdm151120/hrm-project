@@ -1,8 +1,6 @@
 package model;
 
-import java.text.DateFormatSymbols;
 import java.time.LocalDateTime;
-import java.util.Locale;
 
 public class Payroll {
     private int id;
@@ -14,44 +12,63 @@ public class Payroll {
     private int year;
     private double expectedHours;
     private double actualHours;
-    private double basicSalary;
+    private long basicSalary;
     private double rateMultiplier;
-    private double totalIncome;
-    private double bonus;
+    private long totalIncome;
+    private long bonus;
     private String description;
-    private double socialInsurance;
-    private double healthInsurance;
-    private double unemploymentInsurance;
-    private double incomeBeforeTax;
-    private double taxableIncome;
-    private double incomeTax;
-    private double netPay;
+    private long socialInsurance;
+    private long healthInsurance;
+    private long unemploymentInsurance;
+    private long unionFee;
+    private long incomeBeforeTax;
+    private long taxableIncome;
+    private long incomeTax;
+    private long overtimePay;
+    private long netPay;
+    private long companySocialInsurance;
+    private long companyHealthInsurance;
+    private long companyUnemploymentInsurance;
+    private long companyUnionFee;
     private String status;
     private LocalDateTime createdAt;
 
     public Payroll() {}
 
-    public Payroll(LocalDateTime createdAt, String status, double netPay, double incomeTax, double taxableIncome, double incomeBeforeTax, double unemploymentInsurance, double healthInsurance, double socialInsurance, double totalIncome, double basicSalary, double actualHours, double expectedHours, int year, int month, String positionName, String departmentName, String employeeName, int userId, int id) {
-        this.createdAt = createdAt;
-        this.status = status;
-        this.netPay = netPay;
-        this.incomeTax = incomeTax;
-        this.taxableIncome = taxableIncome;
-        this.incomeBeforeTax = incomeBeforeTax;
-        this.unemploymentInsurance = unemploymentInsurance;
-        this.healthInsurance = healthInsurance;
-        this.socialInsurance = socialInsurance;
-        this.totalIncome = totalIncome;
-        this.basicSalary = basicSalary;
-        this.actualHours = actualHours;
-        this.expectedHours = expectedHours;
-        this.year = year;
-        this.month = month;
-        this.positionName = positionName;
-        this.departmentName = departmentName;
-        this.employeeName = employeeName;
-        this.userId = userId;
+    public Payroll(int id, int userId, String employeeName, String departmentName, String positionName, int month, int year, 
+                   double expectedHours, double actualHours, long basicSalary, double rateMultiplier, long totalIncome, long bonus, 
+                   String description, long socialInsurance, long healthInsurance, long unemploymentInsurance,
+                   long unionFee, long incomeBeforeTax, long taxableIncome, long incomeTax, long netPay,
+                   long companySocialInsurance, long companyHealthInsurance, long companyUnemploymentInsurance, long companyUnionFee,
+                   String status, LocalDateTime createdAt) {
         this.id = id;
+        this.userId = userId;
+        this.employeeName = employeeName;
+        this.departmentName = departmentName;
+        this.positionName = positionName;
+        this.month = month;
+        this.year = year;
+        this.expectedHours = expectedHours;
+        this.actualHours = actualHours;
+        this.basicSalary = basicSalary;
+        this.rateMultiplier = rateMultiplier;
+        this.totalIncome = totalIncome;
+        this.bonus = bonus;
+        this.description = description;
+        this.socialInsurance = socialInsurance;
+        this.healthInsurance = healthInsurance;
+        this.unemploymentInsurance = unemploymentInsurance;
+        this.unionFee = unionFee;
+        this.incomeBeforeTax = incomeBeforeTax;
+        this.taxableIncome = taxableIncome;
+        this.incomeTax = incomeTax;
+        this.netPay = netPay;
+        this.companySocialInsurance = companySocialInsurance;
+        this.companyHealthInsurance = companyHealthInsurance;
+        this.companyUnemploymentInsurance = companyUnemploymentInsurance;
+        this.companyUnionFee = companyUnionFee;
+        this.status = status;
+        this.createdAt = createdAt;
     }
 
     public int getId() {
@@ -90,7 +107,7 @@ public class Payroll {
         return actualHours;
     }
 
-    public double getBasicSalary() {
+    public long getBasicSalary() {
         return basicSalary;
     }
 
@@ -98,11 +115,11 @@ public class Payroll {
         return rateMultiplier;
     }
 
-    public double getTotalIncome() {
+    public long getTotalIncome() {
         return totalIncome;
     }
 
-    public double getBonus() {
+    public long getBonus() {
         return bonus;
     }
 
@@ -110,44 +127,56 @@ public class Payroll {
         return description;
     }
 
-    public double getSocialInsurance() {
+    public long getSocialInsurance() {
         return socialInsurance;
     }
 
-    public double getHealthInsurance() {
+    public long getHealthInsurance() {
         return healthInsurance;
     }
 
-    public double getUnemploymentInsurance() {
+    public long getUnemploymentInsurance() {
         return unemploymentInsurance;
     }
 
-    public double getIncomeBeforeTax() {
+    public long getUnionFee() {
+        return unionFee;
+    }
+
+    public long getIncomeBeforeTax() {
         return incomeBeforeTax;
     }
 
-    public double getTaxableIncome() {
+    public long getTaxableIncome() {
         return taxableIncome;
     }
 
-    public double getIncomeTax() {
+    public long getIncomeTax() {
         return incomeTax;
     }
 
-    public double getNetPay() {
+    public long getNetPay() {
         return netPay;
+    }
+
+    public long getCompanySocialInsurance() {
+        return companySocialInsurance;
+    }
+
+    public long getCompanyHealthInsurance() {
+        return companyHealthInsurance;
+    }
+
+    public long getCompanyUnemploymentInsurance() {
+        return companyUnemploymentInsurance;
+    }
+
+    public long getCompanyUnionFee() {
+        return companyUnionFee;
     }
 
     public String getStatus() {
         return status;
-    }
-
-    public String getMonthName() {
-        if (this.month >= 1 && this.month <= 12) {
-            String name = new DateFormatSymbols(Locale.ENGLISH).getMonths()[this.month - 1];
-            return name;
-        }
-        return "";
     }
 
     public LocalDateTime getCreatedAt() {
@@ -190,7 +219,7 @@ public class Payroll {
         this.actualHours = actualHours;
     }
 
-    public void setBasicSalary(double basicSalary) {
+    public void setBasicSalary(long basicSalary) {
         this.basicSalary = basicSalary;
     }
 
@@ -198,11 +227,11 @@ public class Payroll {
         this.rateMultiplier = rateMultiplier;
     }
 
-    public void setTotalIncome(double totalIncome) {
+    public void setTotalIncome(long totalIncome) {
         this.totalIncome = totalIncome;
     }
 
-    public void setBonus(double bonus) {
+    public void setBonus(long bonus) {
         this.bonus = bonus;
     }
 
@@ -210,32 +239,52 @@ public class Payroll {
         this.description = description;
     }
 
-    public void setSocialInsurance(double socialInsurance) {
+    public void setSocialInsurance(long socialInsurance) {
         this.socialInsurance = socialInsurance;
     }
 
-    public void setHealthInsurance(double healthInsurance) {
+    public void setHealthInsurance(long healthInsurance) {
         this.healthInsurance = healthInsurance;
     }
 
-    public void setUnemploymentInsurance(double unemploymentInsurance) {
+    public void setUnemploymentInsurance(long unemploymentInsurance) {
         this.unemploymentInsurance = unemploymentInsurance;
     }
 
-    public void setIncomeBeforeTax(double incomeBeforeTax) {
+    public void setUnionFee(long unionFee) {
+        this.unionFee = unionFee;
+    }
+
+    public void setIncomeBeforeTax(long incomeBeforeTax) {
         this.incomeBeforeTax = incomeBeforeTax;
     }
 
-    public void setTaxableIncome(double taxableIncome) {
+    public void setTaxableIncome(long taxableIncome) {
         this.taxableIncome = taxableIncome;
     }
 
-    public void setIncomeTax(double incomeTax) {
+    public void setIncomeTax(long incomeTax) {
         this.incomeTax = incomeTax;
     }
 
-    public void setNetPay(double netPay) {
+    public void setNetPay(long netPay) {
         this.netPay = netPay;
+    }
+
+    public void setCompanySocialInsurance(long companySocialInsurance) {
+        this.companySocialInsurance = companySocialInsurance;
+    }
+
+    public void setCompanyHealthInsurance(long companyHealthInsurance) {
+        this.companyHealthInsurance = companyHealthInsurance;
+    }
+
+    public void setCompanyUnemploymentInsurance(long companyUnemploymentInsurance) {
+        this.companyUnemploymentInsurance = companyUnemploymentInsurance;
+    }
+
+    public void setCompanyUnionFee(long companyUnionFee) {
+        this.companyUnionFee = companyUnionFee;
     }
 
     public void setStatus(String status) {
@@ -244,5 +293,13 @@ public class Payroll {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public long getOvertimePay() {
+        return overtimePay;
+    }
+
+    public void setOvertimePay(long overtimePay) {
+        this.overtimePay = overtimePay;
     }
 }

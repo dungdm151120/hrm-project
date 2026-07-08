@@ -13,10 +13,9 @@ import model.PayrollSetting;
 import model.User;
 
 import java.io.IOException;
-import java.util.Set;
 
-@WebServlet("/payroll/detail")
-public class PayrollDetailServlet extends HttpServlet {
+@WebServlet("/payroll/my/detail")
+public class PayrollMyDetailServlet extends HttpServlet {
 
     private final PayrollDAO payrollDAO = new PayrollDAO();
     private final UserDAO userDAO = new UserDAO();
@@ -24,13 +23,15 @@ public class PayrollDetailServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         try {
+            HttpSession session = request.getSession();
+            User currentUser = (User) session.getAttribute("currentUser");
+
             String idParam = request.getParameter("id");
 
             if (idParam == null || idParam.trim().isEmpty()) {
                 request.getSession().setAttribute("error", "Invalid payroll request id.");
-                response.sendRedirect(request.getContextPath() + "/payroll/department");
+                response.sendRedirect(request.getContextPath() + "/payroll/my");
                 return;
             }
 
@@ -39,7 +40,14 @@ public class PayrollDetailServlet extends HttpServlet {
 
             if (payroll == null) {
                 request.getSession().setAttribute("error", "Payroll record not found.");
-                response.sendRedirect(request.getContextPath() + "/payroll/department");
+                response.sendRedirect(request.getContextPath() + "/payroll/my");
+                return;
+            }
+
+            if (!Integer.valueOf(payroll.getUserId()).equals(currentUser.getId())) {
+                request.getSession().setAttribute("error", "You do not have access to this payroll detail");
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.sendRedirect(request.getContextPath() + "/payroll/my");
                 return;
             }
 
@@ -64,15 +72,15 @@ public class PayrollDetailServlet extends HttpServlet {
             request.setAttribute("payroll", payroll);
             request.setAttribute("employee", employeeInfo);
 
-            request.getRequestDispatcher("/WEB-INF/views/payroll/payroll_detail.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/payroll/my_payslip.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
             request.getSession().setAttribute("error", "Payroll ID must be a valid number.");
-            response.sendRedirect(request.getContextPath() + "/payroll/list");
+            response.sendRedirect(request.getContextPath() + "/payroll/my");
         } catch (Exception e) {
             e.printStackTrace();
             request.getSession().setAttribute("error", "An error occurred while loading details.");
-            response.sendRedirect(request.getContextPath() + "/payroll/list");
+            response.sendRedirect(request.getContextPath() + "/payroll/my");
         }
     }
 

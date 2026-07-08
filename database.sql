@@ -61,8 +61,6 @@ CREATE TABLE users (
     hire_date DATE,
     employment_status VARCHAR(30) NOT NULL DEFAULT 'WORKING',
     active BOOLEAN NOT NULL DEFAULT TRUE,
-    reset_token VARCHAR(255),
-    reset_token_expired_at DATETIME,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME,
     CONSTRAINT fk_users_roles FOREIGN KEY (role_id) REFERENCES roles(id),
@@ -120,26 +118,26 @@ CREATE TABLE password_reset_requests (
 -- ============================================================
 
 CREATE TABLE labor_contracts (
-                                 id INT PRIMARY KEY AUTO_INCREMENT,
-                                 user_id INT NOT NULL,
-                                 contract_code VARCHAR(50) NOT NULL UNIQUE,
-                                 contract_type VARCHAR(50) NOT NULL,
-                                 start_date DATE NOT NULL,
-                                 end_date DATE,
-                                 base_salary DECIMAL(15,2),
-                                 working_time VARCHAR(100),
-                                 work_location VARCHAR(255),
-                                 status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
-                                 note TEXT,
-                                 terminated_at DATETIME,
-                                 terminated_by INT,
-                                 termination_reason TEXT,
-                                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                 updated_at DATETIME,
-                                 CONSTRAINT fk_labor_contracts_users
-                                     FOREIGN KEY (user_id) REFERENCES users(id),
-                                 CONSTRAINT fk_labor_contracts_terminated_by
-                                     FOREIGN KEY (terminated_by) REFERENCES users(id)
+	 id INT PRIMARY KEY AUTO_INCREMENT,
+	 user_id INT NOT NULL,
+	 contract_code VARCHAR(50) NOT NULL UNIQUE,
+	 contract_type VARCHAR(50) NOT NULL,
+	 start_date DATE NOT NULL,
+	 end_date DATE,
+	 base_salary DECIMAL(15,2),
+	 working_time VARCHAR(100),
+	 work_location VARCHAR(255),
+	 status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+	 note TEXT,
+	 terminated_at DATETIME,
+	 terminated_by INT,
+	 termination_reason TEXT,
+	 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	 updated_at DATETIME,
+	 CONSTRAINT fk_labor_contracts_users
+		 FOREIGN KEY (user_id) REFERENCES users(id),
+	 CONSTRAINT fk_labor_contracts_terminated_by
+		 FOREIGN KEY (terminated_by) REFERENCES users(id)
 );
 
 -- ============================================================
@@ -261,21 +259,21 @@ CREATE TABLE request_observers (
 );
 
 CREATE TABLE request_notifications (
-                                       id INT PRIMARY KEY AUTO_INCREMENT,
-                                       request_id INT NOT NULL,
-                                       user_id INT NOT NULL,
-                                       actor_user_id INT NULL,
-                                       event_type VARCHAR(50) NOT NULL,
-                                       message VARCHAR(255) NOT NULL,
-                                       read_at DATETIME NULL,
-                                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                       CONSTRAINT fk_request_notifications_request
-                                           FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
-                                       CONSTRAINT fk_request_notifications_user
-                                           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                                       CONSTRAINT fk_request_notifications_actor
-                                           FOREIGN KEY (actor_user_id) REFERENCES users(id),
-                                       INDEX idx_request_notifications_user_read (user_id, read_at, created_at)
+   id INT PRIMARY KEY AUTO_INCREMENT,
+   request_id INT NOT NULL,
+   user_id INT NOT NULL,
+   actor_user_id INT NULL,
+   event_type VARCHAR(50) NOT NULL,
+   message VARCHAR(255) NOT NULL,
+   read_at DATETIME NULL,
+   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   CONSTRAINT fk_request_notifications_request
+	   FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
+   CONSTRAINT fk_request_notifications_user
+	   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+   CONSTRAINT fk_request_notifications_actor
+	   FOREIGN KEY (actor_user_id) REFERENCES users(id),
+   INDEX idx_request_notifications_user_read (user_id, read_at, created_at)
 );
 
 -- ============================================================
@@ -350,27 +348,71 @@ CREATE TABLE messages (
 -- ============================================================
 
 CREATE TABLE payrolls (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+	id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     month INT NOT NULL,
     year INT NOT NULL,
     expected_hours DOUBLE NOT NULL,
     actual_hours DOUBLE NOT NULL,
-    basic_salary DOUBLE NOT NULL,
+    basic_salary BIGINT NOT NULL,
     rate_multiplier DOUBLE NOT NULL,
-    total_income DOUBLE NOT NULL,
-    bonus DOUBLE,
+    total_income BIGINT NOT NULL,
+    bonus BIGINT DEFAULT 0,
     description NVARCHAR(200),
-    social_insurance DOUBLE NOT NULL,
-    health_insurance DOUBLE NOT NULL,
-    unemployment_insurance DOUBLE NOT NULL,
-    income_before_tax DOUBLE NOT NULL,
-    taxable_income DOUBLE NOT NULL,
-    income_tax DOUBLE NOT NULL,
-    net_pay DOUBLE NOT NULL,
+    social_insurance BIGINT NOT NULL,
+    health_insurance BIGINT NOT NULL,
+    unemployment_insurance BIGINT NOT NULL,
+    union_fee BIGINT NOT NULL,
+    income_before_tax BIGINT NOT NULL,
+    taxable_income BIGINT NOT NULL,
+    income_tax BIGINT NOT NULL,
+    net_pay BIGINT NOT NULL,
+    company_social_insurance BIGINT NOT NULL DEFAULT 0,
+    company_health_insurance BIGINT NOT NULL DEFAULT 0,
+    company_unemployment_insurance BIGINT NOT NULL DEFAULT 0,
+    company_union_fee BIGINT NOT NULL DEFAULT 0,
     status VARCHAR(20) DEFAULT 'DRAFT',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_user_month_year UNIQUE (user_id, month, year)
+);
+
+CREATE TABLE payroll_settings (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_social_insurance DOUBLE DEFAULT 8.0,
+    employee_health_insurance DOUBLE DEFAULT 1.5,
+    employee_unemployment_insurance DOUBLE DEFAULT 1.0,
+    employee_union DOUBLE DEFAULT 1.0,
+    company_social_insurance DOUBLE DEFAULT 17.5,
+    company_health_insurance DOUBLE DEFAULT 3.0,
+    company_unemployment_insurance DOUBLE DEFAULT 1.0,
+    company_union DOUBLE DEFAULT 2.0,
+    self_deduction BIGINT DEFAULT 15500000,
+    dependent_deduction BIGINT DEFAULT 6200000,
+    effective_date DATE DEFAULT '2025-07-01'
+);
+
+CREATE TABLE pit_brackets (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+    bracket_level INT NOT NULL,
+    min_value BIGINT NOT NULL,
+    max_value BIGINT,
+    tax_rate DOUBLE NOT NULL,
+    effective_date DATE DEFAULT '2025-07-01'
+);
+
+CREATE TABLE dependent_number (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	user_id INT NOT NULL,
+    dependent INT NOT NULL DEFAULT 0,
+    effective_date DATE NOT NULL DEFAULT '2026-01-01',
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE user_union_membership (
+    user_id INT PRIMARY KEY,
+    is_member TINYINT(1) DEFAULT 0, 
+    joined_date DATE NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- ============================================================
@@ -628,25 +670,87 @@ UPDATE departments SET manager_user_id = (SELECT id FROM users WHERE email = 'sa
 
 -- 13.7. HỢP ĐỒNG LAO ĐỘNG
 INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, end_date, base_salary, working_time, work_location, status, note) VALUES
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'admin@company.com'), 'HDLD-2024-001', 'FIXED_TERM', '2024-01-01', '2027-01-01', 30000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for System Admin'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'minhquan.it@company.com'), 'HDLD-2024-018', 'FIXED_TERM', '2024-05-01', '2027-05-01', 28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for IT Dept Manager'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'hrmanager@company.com'), 'HDLD-2024-002', 'FIXED_TERM', '2024-01-15', '2027-01-15', 25000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for HR Manager'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'maianh.hr@company.com'), 'HDLD-2024-003', 'FIXED_TERM', '2024-02-01', '2027-02-01', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for HR Staff'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'), 'HDLD-2024-004', 'FIXED_TERM', '2024-02-20', '2027-02-20', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for HR Staff'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'haiyen.hr@company.com'), 'HDLD-2024-005', 'FIXED_TERM', '2024-03-01', '2027-03-01', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for HR Staff'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'ducanh.it@company.com'), 'HDLD-2024-006', 'FIXED_TERM', '2024-01-10', '2027-01-10', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for IT Employee'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'giahuy.it@company.com'), 'HDLD-2024-007', 'FIXED_TERM', '2024-02-01', '2027-02-01', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for IT Employee'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'hoangnam.it@company.com'), 'HDLD-2024-008', 'FIXED_TERM', '2024-02-15', '2027-02-15', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for IT Employee'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'payrollmanager@company.com'), 'HDLD-2024-009', 'FIXED_TERM', '2024-01-20', '2027-01-20', 22000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Manager'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'thaovy.payroll@company.com'), 'HDLD-2024-010', 'FIXED_TERM', '2024-02-10', '2027-02-10', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Staff'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'minhkhang.payroll@company.com'), 'HDLD-2024-011', 'FIXED_TERM', '2024-03-05', '2027-03-05', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Payroll Staff'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'phuonganh.payroll@company.com'), 'HDLD-2024-012', 'FIXED_TERM', '2024-03-18', '2027-03-18', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for Payroll Staff'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'payroll@company.com'), 'HDLD-2024-013', 'FIXED_TERM', '2024-04-10', '2027-04-10', 16000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Staff'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'salesmanager@company.com'), 'HDLD-2024-014', 'FIXED_TERM', '2024-01-25', '2027-01-25', 20000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Sales Manager'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'khanhly.sales@company.com'), 'HDLD-2024-015', 'FIXED_TERM', '2024-02-12', '2027-02-12', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Sales Employee'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'quocbao.sales@company.com'), 'HDLD-2024-016', 'FIXED_TERM', '2024-03-08', '2027-03-08', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for Sales Employee'),
-                                                                                                                                                                ((SELECT id FROM users WHERE email = 'businessadmin@company.com'), 'HDLD-2024-017', 'FIXED_TERM', '2024-04-01', '2027-04-01', 28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Business Admin');
+	((SELECT id FROM users WHERE email = 'admin@company.com'), 'HDLD-2024-001', 'FIXED_TERM', '2024-01-01', '2027-01-01', 30000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for System Admin'),
+	((SELECT id FROM users WHERE email = 'minhquan.it@company.com'), 'HDLD-2024-018', 'FIXED_TERM', '2024-05-01', '2027-05-01', 28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for IT Dept Manager'),
+	((SELECT id FROM users WHERE email = 'hrmanager@company.com'), 'HDLD-2024-002', 'FIXED_TERM', '2024-01-15', '2027-01-15', 25000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for HR Manager'),
+	((SELECT id FROM users WHERE email = 'maianh.hr@company.com'), 'HDLD-2024-003', 'FIXED_TERM', '2024-02-01', '2027-02-01', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for HR Staff'),
+	((SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'), 'HDLD-2024-004', 'FIXED_TERM', '2024-02-20', '2027-02-20', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for HR Staff'),
+	((SELECT id FROM users WHERE email = 'haiyen.hr@company.com'), 'HDLD-2024-005', 'FIXED_TERM', '2024-03-01', '2027-03-01', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for HR Staff'),
+	((SELECT id FROM users WHERE email = 'ducanh.it@company.com'), 'HDLD-2024-006', 'FIXED_TERM', '2024-01-10', '2027-01-10', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for IT Employee'),
+	((SELECT id FROM users WHERE email = 'giahuy.it@company.com'), 'HDLD-2024-007', 'FIXED_TERM', '2024-02-01', '2027-02-01', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for IT Employee'),
+	((SELECT id FROM users WHERE email = 'hoangnam.it@company.com'), 'HDLD-2024-008', 'FIXED_TERM', '2024-02-15', '2027-02-15', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for IT Employee'),
+	((SELECT id FROM users WHERE email = 'payrollmanager@company.com'), 'HDLD-2024-009', 'FIXED_TERM', '2024-01-20', '2027-01-20', 22000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Manager'),
+	((SELECT id FROM users WHERE email = 'thaovy.payroll@company.com'), 'HDLD-2024-010', 'FIXED_TERM', '2024-02-10', '2027-02-10', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Staff'),
+	((SELECT id FROM users WHERE email = 'minhkhang.payroll@company.com'), 'HDLD-2024-011', 'FIXED_TERM', '2024-03-05', '2027-03-05', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Payroll Staff'),
+	((SELECT id FROM users WHERE email = 'phuonganh.payroll@company.com'), 'HDLD-2024-012', 'FIXED_TERM', '2024-03-18', '2027-03-18', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for Payroll Staff'),
+	((SELECT id FROM users WHERE email = 'payroll@company.com'), 'HDLD-2024-013', 'FIXED_TERM', '2024-04-10', '2027-04-10', 16000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Staff'),
+	((SELECT id FROM users WHERE email = 'salesmanager@company.com'), 'HDLD-2024-014', 'FIXED_TERM', '2024-01-25', '2027-01-25', 20000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Sales Manager'),
+	((SELECT id FROM users WHERE email = 'khanhly.sales@company.com'), 'HDLD-2024-015', 'FIXED_TERM', '2024-02-12', '2027-02-12', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Sales Employee'),
+	((SELECT id FROM users WHERE email = 'quocbao.sales@company.com'), 'HDLD-2024-016', 'FIXED_TERM', '2024-03-08', '2027-03-08', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for Sales Employee'),
+	((SELECT id FROM users WHERE email = 'businessadmin@company.com'), 'HDLD-2024-017', 'FIXED_TERM', '2024-04-01', '2027-04-01', 28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Business Admin');
 
+
+INSERT INTO holidays (holiday_date, holiday_name) VALUES
+	('2026-01-01', 'Tết Dương lịch'),
+    ('2026-02-16', 'Tết Nguyên Đán Bính Ngọ'),
+    ('2026-02-17', 'Tết Nguyên Đán'),
+    ('2026-02-18', 'Tết Nguyên Đán'),
+    ('2026-02-19', 'Tết Nguyên Đán'),
+    ('2026-02-20', 'Tết Nguyên Đán'),
+    ('2026-04-27', 'Giỗ Tổ Hùng Vương (nghỉ bù)'),
+    ('2026-04-30', 'Ngày Chiến thắng'),
+    ('2026-05-01', 'Ngày Quốc tế Lao động'),
+    ('2026-08-31', 'Quốc khánh (nghỉ hoán đổi)'),
+    ('2026-09-01', 'Quốc khánh (nghỉ)'),
+    ('2026-09-02', 'Quốc khánh'),
+    ('2027-01-01', 'Tết Dương lịch'),
+    ('2027-02-06', 'Tết Nguyên Đán Đinh Mùi'),
+    ('2027-02-07', 'Tết Nguyên Đán'),
+    ('2027-02-08', 'Tết Nguyên Đán'),
+    ('2027-02-09', 'Tết Nguyên Đán'),
+    ('2027-02-10', 'Tết Nguyên Đán'),
+    ('2027-04-17', 'Giỗ Tổ Hùng Vương'),
+    ('2027-04-30', 'Ngày Chiến thắng'),
+    ('2027-05-01', 'Ngày Quốc tế Lao động');
+
+-- Payroll
+INSERT INTO payroll_settings (effective_date) VALUES ('2025-07-01');
+
+INSERT INTO pit_brackets (bracket_level, min_value, max_value, tax_rate, effective_date) VALUES
+	(1, 0, 10000000, 5.0, '2025-07-01'),
+	(2, 10000001, 30000000, 10.0, '2025-07-01'),
+	(3, 30000001, 60000000, 20.0, '2025-07-01'),
+	(4, 60000001, 100000000, 30.0, '2025-07-01'),
+	(5, 100000000, NULL, 35.0, '2025-07-01');
+
+INSERT INTO user_union_membership (user_id, is_member, joined_date) VALUES
+	(2, 1, '2024-03-15'),
+	(3, 1, '2023-05-20'),
+	(4, 0, NULL),
+	(5, 1, '2025-01-10'),
+	(6, 1, '2022-11-01'),
+	(7, 1, '2023-02-15'),
+	(8, 0, NULL),
+	(9, 1, '2024-06-18'),
+	(10, 1, '2021-08-25'),
+	(11, 1, '2024-09-10'),
+	(12, 0, NULL),
+	(13, 1, '2023-11-12'),
+	(14, 0, NULL),
+	(15, 1, '2024-01-05'),
+	(16, 1, '2024-07-19'),
+	(17, 1, '2025-02-11'),
+	(18, 0, NULL);
+    
+INSERT INTO dependent_number (user_id, depedent, effective_date) VALUES
+	(2, 1, '2026-01-01'),
+	(3, 2, '2026-01-01'),
+	(6, 2, '2026-01-01'),
+	(10, 1, '2026-01-01'),
+	(11, 0, '2026-01-01'),
+	(14, 3, '2026-01-01'),
+	(15, 1, '2026-02-15');
+    
 -- ============================================================
 -- 14. PERMISSIONS
 -- ============================================================
@@ -702,7 +806,9 @@ INSERT INTO permissions (code, name, description) VALUES
     ('ATTENDANCE_UPDATE', 'Update attendance', 'Can update attendance records'),
     ('ATTENDANCE_EXPORT_REPORT', 'Export attendance report', 'Can export attendance report'),
     ('PAYROLL_VIEW_OWN', 'View own salary', 'Can view own salary'),
+    ('PAYROLL_VIEW_DEPARTMENT', 'View payroll department', 'Can view payroll summary of all departments'), #new
     ('PAYROLL_VIEW_LIST', 'View payroll list', 'Can view payroll list'),
+    ('PAYROLL_OVERVIEW', 'View overview money flow', 'Can view money flow and summary'), #new
     ('PAYROLL_VIEW_DETAIL', 'View employee salary detail', 'Can view employee salary detail'),
     ('PAYROLL_GENERATE', 'Generate payroll', 'Can generate monthly payroll'),
     ('PAYROLL_UPDATE_COMPONENT', 'Update salary component', 'Can update salary components'),
@@ -757,7 +863,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AN
     'POSITION_VIEW_LIST',
     'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE',
     'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
-    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_UPDATE_COMPONENNT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
+    'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT', 
     'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
     'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
     'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
@@ -788,7 +895,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_MANAGE
     'POSITION_VIEW_LIST',
     'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN',
     'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
-    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 
+    'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
     'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
     'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
     'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
@@ -804,7 +912,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_STAFF'
     'POSITION_VIEW_LIST',
     'CONTRACT_VIEW_OWN',
     'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_EXPORT_REPORT', 'ATTENDANCE_VIEW_OWN',
-    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL', 
+    'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT',
     'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
     'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
     'TASK_VIEW'
@@ -835,7 +944,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'EMPLOYEE' AND 
     'POSITION_VIEW_LIST',
     'CONTRACT_VIEW_OWN',
     'ATTENDANCE_VIEW_OWN',
-    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DETAIL',
+    'PAYROLL_VIEW_OWN',
     'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST',
     'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL','PROCESS_REQUEST',
     'TASK_VIEW'
