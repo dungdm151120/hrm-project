@@ -114,9 +114,9 @@ public class AttendanceConfirmServlet extends HttpServlet {
                     }
                     if (isManager) {
                         confirmDAO.logAction(month, year, "DEPT_CONFIRM", currentUser.getId(), deptId, "Confirmed by Dept Manager");
-                        session.setAttribute("successMsg", "Department attendance confirmed successfully.");
+                        session.setAttribute("successMsg", "Department attendance was confirmed.");
                     } else {
-                        session.setAttribute("errorMsg", "You are not the manager of this department.");
+                        session.setAttribute("errorMsg", "Only the department manager can confirm this attendance.");
                     }
                 }
             } else if ("hr_finalize".equals(action)) {
@@ -130,9 +130,9 @@ public class AttendanceConfirmServlet extends HttpServlet {
                         boolean allConfirmed = !deptStatuses.isEmpty()
                                 && deptStatuses.stream().allMatch(dept -> "CONFIRMED".equals(dept.getStatus()));
                         if (!allConfirmed) {
-                            session.setAttribute("errorMsg", "All departments must confirm attendance before HR can finalize it.");
+                            session.setAttribute("errorMsg", "All departments must be confirmed before attendance can be finalized.");
                         } else if (confirmDAO.finalizeAttendance(month, year, currentUser.getId())) {
-                            session.setAttribute("successMsg", "Attendance finalized and snapshot created successfully.");
+                            session.setAttribute("successMsg", "Attendance was finalized successfully.");
                         } else {
                             session.setAttribute("errorMsg", "Attendance has already been finalized for this month.");
                         }
@@ -143,7 +143,7 @@ public class AttendanceConfirmServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("errorMsg", "An error occurred: " + e.getMessage());
+            session.setAttribute("errorMsg", "Unable to process the attendance confirmation.");
         }
 
         response.sendRedirect(request.getContextPath() + "/attendance/confirm?month=" + month + "&year=" + year);

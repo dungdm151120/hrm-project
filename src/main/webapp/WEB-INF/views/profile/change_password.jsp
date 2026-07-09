@@ -28,8 +28,8 @@
                 <div class="alert alert-error"><c:out value="${passwordErrors.global}"/></div>
             </c:if>
 
-            <div class="detail-wrapper">
-                <form action="${pageContext.request.contextPath}/change_password" method="post">
+            <div class="detail-wrapper change-password-wrapper">
+                <form class="change-password-form" action="${pageContext.request.contextPath}/change_password" method="post">
                     <div class="form-group">
                         <label for="oldPassword">Old Password <span class="required-star">*</span></label>
                         <input type="password" id="oldPassword" name="oldPassword"

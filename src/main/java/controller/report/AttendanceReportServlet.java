@@ -103,7 +103,7 @@ public class AttendanceReportServlet extends HttpServlet {
         int selectedYear = today.getYear();
         Integer requestedYear = parseInteger(request.getParameter("year"));
         if (request.getParameter("year") != null && !request.getParameter("year").isBlank()) {
-            if (requestedYear == null || requestedYear < 2000 || requestedYear > today.getYear() + 1) {
+            if (requestedYear == null || requestedYear < 2000 || requestedYear > today.getYear()) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid year.");
                 return;
             }
@@ -211,9 +211,8 @@ public class AttendanceReportServlet extends HttpServlet {
             request.setAttribute("leastPunctual", leastPunctual);
         }
 
-        // Available years for dropdown option (e.g. current year +/- 3 years)
         List<Integer> years = new ArrayList<>();
-        for (int y = today.getYear() - 3; y <= today.getYear() + 3; y++) {
+        for (int y = today.getYear(); y >= today.getYear() - 3; y--) {
             years.add(y);
         }
 
