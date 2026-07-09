@@ -46,7 +46,9 @@ public class PermissionFilter implements Filter {
                 ? canViewAttendanceSummary(req, session, userPermissions)
                 : ("ATTENDANCE_CONFIRM_ACCESS".equals(requiredPermission)
                 ? (userPermissions.contains("ATTENDANCE_CONFIRM_DEPT") || userPermissions.contains("ATTENDANCE_SEND_TO_BUSINESS") || userPermissions.contains("ATTENDANCE_APPROVE_BUSINESS"))
-                : userPermissions.contains(requiredPermission)));
+                : ("ATTENDANCE_REPORT_ACCESS".equals(requiredPermission)
+                ? (userPermissions.contains("ATTENDANCE_VIEW_ALL") || userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT") || userPermissions.contains("ATTENDANCE_EXPORT_REPORT"))
+                : userPermissions.contains(requiredPermission))));
 
         if (!permitted) {
             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -130,6 +132,7 @@ public class PermissionFilter implements Filter {
         if (path.equals("/attendance/update")) return "ATTENDANCE_UPDATE";
         if (path.equals("/attendance/export")) return "ATTENDANCE_EXPORT_REPORT";
         if (path.equals("/attendance/confirm")) return "ATTENDANCE_CONFIRM_ACCESS";
+        if (path.equals("/reports/attendance")) return "ATTENDANCE_REPORT_ACCESS";
 
         // Payroll
         if (path.equals("/payroll/my") && "GET".equals(method)) return "PAYROLL_VIEW_OWN";
