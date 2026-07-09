@@ -103,7 +103,7 @@ public class CreateRequestServlet extends HttpServlet {
                 }
             } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
                 req.setHandlerId(req.getApproverId());
-            } else if ("SICK_LEAVE_REQUEST".equals(req.getType())) {
+            } else if ("SICK_LEAVE_REQUEST".equals(req.getType()) || "DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
                 req.setHandlerId(req.getApproverId());
             } else {
                 String handlerIdParam = request.getParameter("handlerId");
@@ -224,6 +224,49 @@ public class CreateRequestServlet extends HttpServlet {
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
                 acr.setRequestId(requestId);
                 acrDAO.create(acr);
+            } else if ("DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
+                Part filePart = request.getPart("dependentFile");
+                if (filePart == null || filePart.getSize() == 0) {
+                    response.sendRedirect("create_request?error=missing_evidence_file");
+                    return;
+                }
+
+                String numberOfDependentsStr = request.getParameter("numberOfDependents");
+                if (numberOfDependentsStr == null || numberOfDependentsStr.trim().isEmpty()) {
+                    response.sendRedirect("create_request?error=missing_dependents_count");
+                    return;
+                }
+
+                int numberOfDependents;
+                try {
+                    numberOfDependents = Integer.parseInt(numberOfDependentsStr);
+                    if (numberOfDependents < 0) {
+                        throw new NumberFormatException();
+                    }
+                } catch (NumberFormatException e) {
+                    response.sendRedirect("create_request?error=invalid_dependents_count");
+                    return;
+                }
+
+                String fileName = System.currentTimeMillis() + "_" + filePart.getSubmittedFileName();
+                String uploadDir = getServletContext().getRealPath("/uploads/dependent_change");
+                File uploadFolder = new File(uploadDir);
+                if (!uploadFolder.exists()) {
+                    uploadFolder.mkdirs();
+                }
+                String filePath = uploadDir + File.separator + fileName;
+                filePart.write(filePath);
+                String relativePath = "/uploads/dependent_change/" + fileName;
+
+                int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
+
+                DependentChangeRequest dcr = new DependentChangeRequest();
+                dcr.setRequestId(requestId);
+                dcr.setNumberOfDependents(numberOfDependents);
+                dcr.setDocumentPath(relativePath);
+
+                DependentChangeRequestDAO dcrDAO = new DependentChangeRequestDAO();
+                dcrDAO.create(dcr);
             } else if ("SICK_LEAVE_REQUEST".equals(req.getType())) {
                 Part filePart = request.getPart("sickFile");
                 if (filePart == null || filePart.getSize() == 0) {

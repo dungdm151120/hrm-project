@@ -76,6 +76,9 @@
                                             adjustment requests between the 6th and 10th day of the month.</c:when>
                                         <c:when test="${param.error == 'adjustment_limit_exceeded'}">You have reached
                                             the maximum of 2 adjustment requests for this month.</c:when>
+                                        <c:when test="${param.error == 'missing_evidence_file'}">Please upload a proof document (image).</c:when>
+                                        <c:when test="${param.error == 'missing_dependents_count'}">Please enter the number of dependents.</c:when>
+                                        <c:when test="${param.error == 'invalid_dependents_count'}">Invalid number of dependents.</c:when>
                                         <c:when test="${param.error == 'missing_file'}">Please attach a medical
                                             certificate.</c:when>
                                         <c:when test="${param.error == 'missing_sick_dates'}">Please select at least one
@@ -136,7 +139,7 @@
                                     } else {
                                         $('form').attr('action', 'create_request');
                                     }
-                                    if (selectedType === 'SICK_LEAVE_REQUEST') {
+                                    if (selectedType === 'SICK_LEAVE_REQUEST' || selectedType === 'DEPENDENT_CHANGE_REQUEST') {
                                         $('form').attr('enctype', 'multipart/form-data');
                                     } else {
                                         $('form').removeAttr('enctype');

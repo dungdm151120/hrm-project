@@ -114,6 +114,12 @@ public class ProcessRequestServlet extends HttpServlet {
                                         attendanceDAO.markSickLeave(req.getUserId(), date);
                                     }
                                 }
+                            } else if ("APPROVE".equals(action) && "DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
+                                DependentChangeRequestDAO dcrDAO = new DependentChangeRequestDAO();
+                                DependentChangeRequest dcr = dcrDAO.getByRequestId(requestId);
+                                if (dcr != null) {
+                                    dcrDAO.updateUserDependentNumber(req.getUserId(), dcr.getNumberOfDependents());
+                                }
                             } else if ("OVERTIME".equals(req.getType())) {
                                 service.OvertimeService overtimeService = new service.OvertimeService();
                                 overtimeService.handleProcessAction(requestId, action);

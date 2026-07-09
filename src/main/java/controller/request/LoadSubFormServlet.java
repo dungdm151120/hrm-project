@@ -272,6 +272,30 @@ public class LoadSubFormServlet extends HttpServlet {
             request.setAttribute("now", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
 
             jspPath = "/WEB-INF/views/request/subforms/sick_leave.jsp";
+        } else if ("DEPENDENT_CHANGE_REQUEST".equals(type)) {
+            User currentUser = userDAO.findById(user.getId());
+
+            List<User> payrollStaffList = userDAO.getUserByPosition("Payroll Staff");
+            request.setAttribute("payrollStaffList", payrollStaffList);
+
+            List<User> observers = new ArrayList<>();
+            List<User> deptManagers = userDAO.getAllDeptManager();
+            if (deptManagers != null) observers.addAll(deptManagers);
+            List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
+            if (hrManagers != null) observers.addAll(hrManagers);
+            List<User> payrollManagers = userDAO.getUserByPosition("Payroll Manager");
+            if (payrollManagers != null) observers.addAll(payrollManagers);
+
+            observers.removeIf(u -> u.getId() == currentUser.getId());
+
+            Set<User> uniqueObservers = new HashSet<>(observers);
+            request.setAttribute("observerList", new ArrayList<>(uniqueObservers));
+
+            request.setAttribute("proposer", currentUser);
+            request.setAttribute("today", LocalDate.now().toString());
+            request.setAttribute("now", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+
+            jspPath = "/WEB-INF/views/request/subforms/dependent_change.jsp";
         }
 
         try {
