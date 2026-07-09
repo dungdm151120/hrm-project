@@ -25,7 +25,8 @@ public class CreateRequestServlet extends HttpServlet {
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.sendRedirect("login.jsp");
@@ -35,7 +36,8 @@ public class CreateRequestServlet extends HttpServlet {
         User user = (User) session.getAttribute("currentUser");
 
         String roleName = user.getRoleName();
-        boolean isManagerRole = roleName != null && (roleName.contains("MANAGER") || "SYSTEM ADMIN".equals(roleName) || "BUSINESS ADMIN".equals(roleName));
+        boolean isManagerRole = roleName != null && (roleName.contains("MANAGER") || "SYSTEM ADMIN".equals(roleName)
+                || "BUSINESS ADMIN".equals(roleName));
 
         Map<String, String> allTypes = Request.getAllType();
         Map<String, String> filteredTypes = new LinkedHashMap<>();
@@ -124,7 +126,8 @@ public class CreateRequestServlet extends HttpServlet {
                 String leaveDateStr = request.getParameter("leaveDate");
                 String leaveType = request.getParameter("leaveType");
 
-                if (leaveDateStr == null || leaveDateStr.trim().isEmpty() || leaveType == null || leaveType.trim().isEmpty()) {
+                if (leaveDateStr == null || leaveDateStr.trim().isEmpty() || leaveType == null
+                        || leaveType.trim().isEmpty()) {
                     response.sendRedirect("create_request?error=missing_leave_info");
                     return;
                 }
@@ -149,7 +152,8 @@ public class CreateRequestServlet extends HttpServlet {
                 }
 
                 AttendanceRecord existingRecord = attendanceDAO.getRecordByUserAndDate(currentUser.getId(), leaveDate);
-                if (existingRecord != null && ("ON_LEAVE".equals(existingRecord.getStatus()) || "ABSENT".equals(existingRecord.getStatus()))) {
+                if (existingRecord != null && ("ON_LEAVE".equals(existingRecord.getStatus())
+                        || "ABSENT".equals(existingRecord.getStatus()))) {
                     response.sendRedirect("create_request?error=leave_date_already_marked");
                     return;
                 }
@@ -162,8 +166,7 @@ public class CreateRequestServlet extends HttpServlet {
                 AttendanceSummary summary = attendanceDAO.getSummaryByUser(
                         currentUser.getId(),
                         LocalDate.of(LocalDate.now().getYear(), 1, 1),
-                        LocalDate.now()
-                );
+                        LocalDate.now());
 
                 if ("ON_LEAVE".equals(leaveType)) {
                     if (summary.getRemainingLeaveDays() <= 0) {
@@ -200,8 +203,7 @@ public class CreateRequestServlet extends HttpServlet {
                 int count = acrDAO.countCurrentMonthByUser(
                         currentUser.getId(),
                         workDate.getMonthValue(),
-                        workDate.getYear()
-                );
+                        workDate.getYear());
                 if (count >= 2) {
                     response.sendRedirect("create_request?error=adjustment_limit_exceeded");
                     return;
@@ -275,7 +277,8 @@ public class CreateRequestServlet extends HttpServlet {
                 String fileName = System.currentTimeMillis() + "_" + filePart.getSubmittedFileName();
                 String uploadDir = getServletContext().getRealPath("/uploads/sick_leave");
                 File uploadFolder = new File(uploadDir);
-                if (!uploadFolder.exists()) uploadFolder.mkdirs();
+                if (!uploadFolder.exists())
+                    uploadFolder.mkdirs();
                 String filePath = uploadDir + File.separator + fileName;
                 filePart.write(filePath);
                 String relativePath = "/uploads/sick_leave/" + fileName;
