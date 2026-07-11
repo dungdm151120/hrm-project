@@ -43,6 +43,9 @@
                             <c:when test="${param.error == 'record_not_found'}">
                                 Attendance record was not found.
                             </c:when>
+                            <c:when test="${param.error == 'record_locked'}">
+                                This attendance record has been confirmed and cannot be updated.
+                            </c:when>
                             <c:otherwise>
                                 Invalid attendance record.
                             </c:otherwise>
@@ -187,7 +190,7 @@
                                                             <c:param name="id" value="${record.attendanceRecordId}"/>
                                                         </c:url>
                                                         <c:choose>
-                                                            <c:when test="${isUpdateMode}">
+                                                            <c:when test="${isUpdateMode and not record.locked}">
                                                                 <a href="${updateUrl}" class="matrix-cell-link" title="${record.status}">
                                                             </c:when>
                                                             <c:otherwise>
@@ -212,7 +215,7 @@
                                                                 <span class="matrix-edited-badge">Edited</span>
                                                             </c:if>
                                                         <c:choose>
-                                                            <c:when test="${isUpdateMode}">
+                                                            <c:when test="${isUpdateMode and not record.locked}">
                                                                 </a>
                                                             </c:when>
                                                             <c:otherwise>

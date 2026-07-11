@@ -321,7 +321,7 @@ public class AttendanceDAO {
     public AttendanceRecordDTO getAttendanceRecordDetailById(int id) {
         String sql =
                 "SELECT ar.id AS attendance_record_id, ar.user_id, u.employee_code, " +
-                        "u.full_name AS employee_name, d.name AS department_name, ar.work_date, " +
+                        "u.full_name AS employee_name, u.department_id, d.name AS department_name, ar.work_date, " +
                         "ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
                         "ar.late_hours, ar.early_leave_hours, ar.status, ar.note " +
                         "FROM attendance_records ar " +
@@ -342,6 +342,7 @@ public class AttendanceDAO {
                     dto.setUserId(rs.getInt("user_id"));
                     dto.setEmployeeCode(rs.getString("employee_code"));
                     dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartmentId((Integer) rs.getObject("department_id"));
                     dto.setDepartmentName(rs.getString("department_name"));
                     dto.setWorkDate(rs.getDate("work_date").toLocalDate());
                     dto.setCheckIn(checkIn);
@@ -468,7 +469,7 @@ public class AttendanceDAO {
 
         String sql =
                 "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
-                        "u.full_name AS employee_name, d.name AS department_name, ar.work_date, " +
+                        "u.full_name AS employee_name, u.department_id, d.name AS department_name, ar.work_date, " +
                         "ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
                         "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ar.updated_at, " +
                         "ot.status AS ot_status " +
@@ -1004,6 +1005,7 @@ public class AttendanceDAO {
         dto.setUserId(rs.getInt("user_id"));
         dto.setEmployeeCode(rs.getString("employee_code"));
         dto.setEmployeeName(rs.getString("employee_name"));
+        dto.setDepartmentId((Integer) rs.getObject("department_id"));
         dto.setDepartmentName(rs.getString("department_name"));
         dto.setWorkDate(rs.getDate("work_date").toLocalDate());
         dto.setCheckIn(checkIn);
