@@ -11,7 +11,9 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class AttendanceDAO {
     private static final DateTimeFormatter MATRIX_TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
@@ -141,7 +143,7 @@ public class AttendanceDAO {
     }
 
     public void processAllPendingLogs() {
-        java.util.Set<LocalDate> holidays = new java.util.HashSet<>();
+        Set<LocalDate> holidays = new HashSet<>();
         String sqlHolidays = "SELECT holiday_date FROM holidays";
         String sqlLogs = "SELECT id, employee_id, work_date, check_in, check_out FROM attendance_logs " +
                 "WHERE (employee_id, work_date) NOT IN (SELECT user_id, work_date FROM attendance_records)";
@@ -1209,8 +1211,8 @@ public class AttendanceDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            ps.setDate(1, java.sql.Date.valueOf(startDate));
-            ps.setDate(2, java.sql.Date.valueOf(endDate));
+            ps.setDate(1, Date.valueOf(startDate));
+            ps.setDate(2, Date.valueOf(endDate));
 
             if (departmentId != null && departmentId > 0) {
                 ps.setInt(3, departmentId);
