@@ -11,7 +11,9 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class AttendanceDAO {
     private static final DateTimeFormatter MATRIX_TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
@@ -141,7 +143,7 @@ public class AttendanceDAO {
     }
 
     public void processAllPendingLogs() {
-        java.util.Set<LocalDate> holidays = new java.util.HashSet<>();
+        Set<LocalDate> holidays = new HashSet<>();
         String sqlHolidays = "SELECT holiday_date FROM holidays";
         String sqlLogs = "SELECT id, employee_id, work_date, check_in, check_out FROM attendance_logs " +
                 "WHERE (employee_id, work_date) NOT IN (SELECT user_id, work_date FROM attendance_records)";
@@ -321,7 +323,7 @@ public class AttendanceDAO {
     public AttendanceRecordDTO getAttendanceRecordDetailById(int id) {
         String sql =
                 "SELECT ar.id AS attendance_record_id, ar.user_id, u.employee_code, " +
-                        "u.full_name AS employee_name, d.name AS department_name, ar.work_date, " +
+                        "u.full_name AS employee_name, u.department_id, d.name AS department_name, ar.work_date, " +
                         "ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
                         "ar.late_hours, ar.early_leave_hours, ar.status, ar.note " +
                         "FROM attendance_records ar " +
@@ -342,6 +344,7 @@ public class AttendanceDAO {
                     dto.setUserId(rs.getInt("user_id"));
                     dto.setEmployeeCode(rs.getString("employee_code"));
                     dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartmentId((Integer) rs.getObject("department_id"));
                     dto.setDepartmentName(rs.getString("department_name"));
                     dto.setWorkDate(rs.getDate("work_date").toLocalDate());
                     dto.setCheckIn(checkIn);
@@ -468,7 +471,7 @@ public class AttendanceDAO {
 
         String sql =
                 "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
-                        "u.full_name AS employee_name, d.name AS department_name, ar.work_date, " +
+                        "u.full_name AS employee_name, u.department_id, d.name AS department_name, ar.work_date, " +
                         "ar.check_in, ar.check_out, ar.total_work_hours, ar.overtime_hours, " +
                         "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ar.updated_at, " +
                         "ot.status AS ot_status " +
@@ -1004,6 +1007,7 @@ public class AttendanceDAO {
         dto.setUserId(rs.getInt("user_id"));
         dto.setEmployeeCode(rs.getString("employee_code"));
         dto.setEmployeeName(rs.getString("employee_name"));
+        dto.setDepartmentId((Integer) rs.getObject("department_id"));
         dto.setDepartmentName(rs.getString("department_name"));
         dto.setWorkDate(rs.getDate("work_date").toLocalDate());
         dto.setCheckIn(checkIn);
@@ -1207,8 +1211,8 @@ public class AttendanceDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            ps.setDate(1, java.sql.Date.valueOf(startDate));
-            ps.setDate(2, java.sql.Date.valueOf(endDate));
+            ps.setDate(1, Date.valueOf(startDate));
+            ps.setDate(2, Date.valueOf(endDate));
 
             if (departmentId != null && departmentId > 0) {
                 ps.setInt(3, departmentId);

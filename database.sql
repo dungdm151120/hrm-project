@@ -61,6 +61,8 @@ CREATE TABLE users (
     hire_date DATE,
     employment_status VARCHAR(30) NOT NULL DEFAULT 'WORKING',
     active BOOLEAN NOT NULL DEFAULT TRUE,
+    reset_token VARCHAR(255),
+    reset_token_expired_at DATETIME,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME,
     CONSTRAINT fk_users_roles FOREIGN KEY (role_id) REFERENCES roles(id),
@@ -118,26 +120,26 @@ CREATE TABLE password_reset_requests (
 -- ============================================================
 
 CREATE TABLE labor_contracts (
-	 id INT PRIMARY KEY AUTO_INCREMENT,
-	 user_id INT NOT NULL,
-	 contract_code VARCHAR(50) NOT NULL UNIQUE,
-	 contract_type VARCHAR(50) NOT NULL,
-	 start_date DATE NOT NULL,
-	 end_date DATE,
-	 base_salary DECIMAL(15,2),
-	 working_time VARCHAR(100),
-	 work_location VARCHAR(255),
-	 status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
-	 note TEXT,
-	 terminated_at DATETIME,
-	 terminated_by INT,
-	 termination_reason TEXT,
-	 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	 updated_at DATETIME,
-	 CONSTRAINT fk_labor_contracts_users
-		 FOREIGN KEY (user_id) REFERENCES users(id),
-	 CONSTRAINT fk_labor_contracts_terminated_by
-		 FOREIGN KEY (terminated_by) REFERENCES users(id)
+                                 id INT PRIMARY KEY AUTO_INCREMENT,
+                                 user_id INT NOT NULL,
+                                 contract_code VARCHAR(50) NOT NULL UNIQUE,
+                                 contract_type VARCHAR(50) NOT NULL,
+                                 start_date DATE NOT NULL,
+                                 end_date DATE,
+                                 base_salary DECIMAL(15,2),
+                                 working_time VARCHAR(100),
+                                 work_location VARCHAR(255),
+                                 status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+                                 note TEXT,
+                                 terminated_at DATETIME,
+                                 terminated_by INT,
+                                 termination_reason TEXT,
+                                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                 updated_at DATETIME,
+                                 CONSTRAINT fk_labor_contracts_users
+                                     FOREIGN KEY (user_id) REFERENCES users(id),
+                                 CONSTRAINT fk_labor_contracts_terminated_by
+                                     FOREIGN KEY (terminated_by) REFERENCES users(id)
 );
 
 -- ============================================================
@@ -259,21 +261,21 @@ CREATE TABLE request_observers (
 );
 
 CREATE TABLE request_notifications (
-   id INT PRIMARY KEY AUTO_INCREMENT,
-   request_id INT NOT NULL,
-   user_id INT NOT NULL,
-   actor_user_id INT NULL,
-   event_type VARCHAR(50) NOT NULL,
-   message VARCHAR(255) NOT NULL,
-   read_at DATETIME NULL,
-   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   CONSTRAINT fk_request_notifications_request
-	   FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
-   CONSTRAINT fk_request_notifications_user
-	   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-   CONSTRAINT fk_request_notifications_actor
-	   FOREIGN KEY (actor_user_id) REFERENCES users(id),
-   INDEX idx_request_notifications_user_read (user_id, read_at, created_at)
+                                       id INT PRIMARY KEY AUTO_INCREMENT,
+                                       request_id INT NOT NULL,
+                                       user_id INT NOT NULL,
+                                       actor_user_id INT NULL,
+                                       event_type VARCHAR(50) NOT NULL,
+                                       message VARCHAR(255) NOT NULL,
+                                       read_at DATETIME NULL,
+                                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                       CONSTRAINT fk_request_notifications_request
+                                           FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
+                                       CONSTRAINT fk_request_notifications_user
+                                           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                                       CONSTRAINT fk_request_notifications_actor
+                                           FOREIGN KEY (actor_user_id) REFERENCES users(id),
+                                       INDEX idx_request_notifications_user_read (user_id, read_at, created_at)
 );
 
 -- ============================================================
@@ -712,8 +714,8 @@ INSERT INTO holidays (holiday_date, holiday_name) VALUES
     ('2027-04-17', 'Giỗ Tổ Hùng Vương'),
     ('2027-04-30', 'Ngày Chiến thắng'),
     ('2027-05-01', 'Ngày Quốc tế Lao động');
-
--- Payroll
+    
+    -- Payroll
 INSERT INTO payroll_settings (effective_date) VALUES ('2025-07-01');
 
 INSERT INTO pit_brackets (bracket_level, min_value, max_value, tax_rate, effective_date) VALUES
@@ -750,7 +752,7 @@ INSERT INTO dependent_number (user_id, depedent, effective_date) VALUES
 	(11, 0, '2026-01-01'),
 	(14, 3, '2026-01-01'),
 	(15, 1, '2026-02-15');
-    
+
 -- ============================================================
 -- 14. PERMISSIONS
 -- ============================================================
@@ -863,7 +865,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AN
     'POSITION_VIEW_LIST',
     'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE',
     'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
-    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_UPDATE_COMPONENNT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
     'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT', 
     'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
     'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
@@ -944,7 +946,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'EMPLOYEE' AND 
     'POSITION_VIEW_LIST',
     'CONTRACT_VIEW_OWN',
     'ATTENDANCE_VIEW_OWN',
-    'PAYROLL_VIEW_OWN',
+    'PAYROLL_VIEW_OWN', -- 'PAYROLL_VIEW_DETAIL',
     'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST',
     'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL','PROCESS_REQUEST',
     'TASK_VIEW'

@@ -6,10 +6,15 @@ import dao.OvertimeRequestDAO;
 import model.AttendanceRecord;
 import model.OvertimeParticipant;
 import model.OvertimeRequest;
+import model.User;
+import model.Request;
+import model.OvertimeDetail;
+import dao.RequestDAO;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OvertimeService {
@@ -17,10 +22,10 @@ public class OvertimeService {
     private final OvertimeParticipantDAO overtimeParticipantDAO = new OvertimeParticipantDAO();
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();
 
-    public boolean createOvertimeRequest(model.User currentUser, LocalDate overtimeDate, String reason, String[] employeeIds, List<Integer> observerIds, int approverId) {
-        dao.RequestDAO requestDAO = new dao.RequestDAO();
+    public boolean createOvertimeRequest(User currentUser, LocalDate overtimeDate, String reason, String[] employeeIds, List<Integer> observerIds, int approverId) {
+        RequestDAO requestDAO = new RequestDAO();
         try {
-            model.Request req = new model.Request();
+            Request req = new Request();
             req.setUserId(currentUser.getId());
             req.setDepartmentId(currentUser.getDepartmentId());
             req.setType("OVERTIME");
@@ -44,7 +49,7 @@ public class OvertimeService {
                 int otReqId = overtimeRequestDAO.createOvertimeRequest(otReq);
 
                 if (otReqId > 0) {
-                    List<OvertimeParticipant> participants = new java.util.ArrayList<>();
+                    List<OvertimeParticipant> participants = new ArrayList<>();
                     for (String empIdStr : employeeIds) {
                         OvertimeParticipant p = new OvertimeParticipant();
                         p.setOvertimeRequestId(otReqId);
@@ -134,7 +139,7 @@ public class OvertimeService {
         }
 
         if (hasUpdates) {
-            dao.RequestDAO requestDAO = new dao.RequestDAO();
+            RequestDAO requestDAO = new RequestDAO();
             boolean success = requestDAO.updateRequestStatusOnly(requestId, "CONFIRMED");
             if (!success) {
                 // If the update fails (e.g. because of ENUM constraints), return false
@@ -145,7 +150,7 @@ public class OvertimeService {
         return hasUpdates;
     }
 
-    public model.OvertimeDetail getOvertimeDetailByUserAndDate(int userId, LocalDate date) {
+    public OvertimeDetail getOvertimeDetailByUserAndDate(int userId, LocalDate date) {
         return overtimeRequestDAO.getOvertimeDetailByUserAndDate(userId, date);
     }
 }

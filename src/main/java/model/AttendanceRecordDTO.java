@@ -8,6 +8,7 @@ public class AttendanceRecordDTO {
     private int userId;
     private String employeeCode;
     private String employeeName;
+    private Integer departmentId;
     private String departmentName;
     private LocalDate workDate;
     private LocalDateTime checkIn;
@@ -25,6 +26,25 @@ public class AttendanceRecordDTO {
     private String otStatus;
     private String positionName;
     private boolean holiday; // <-- Thêm thuộc tính này
+    private boolean locked; // <-- Thêm thuộc tính này
+
+    // Getter & Setter cho locked
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    // Getter & Setter cho departmentId
+    public Integer getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Integer departmentId) {
+        this.departmentId = departmentId;
+    }
 
     // Getter & Setter cho holiday
     public boolean isHoliday() {

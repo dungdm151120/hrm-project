@@ -164,6 +164,7 @@ public class Request {
             case "OVERTIME": return "Overtime";
             case "ATTENDANCE_ADJUST": return "Attendance adjust";
             case "SICK_LEAVE_REQUEST": return "Sick leave request";
+            case "DEPENDENT_CHANGE_REQUEST": return "Dependent change request";
             default: return this.type;
         }
     }
@@ -178,6 +179,7 @@ public class Request {
         type.put("OVERTIME", "Overtime");
         type.put("ATTENDANCE_ADJUST", "Attendance adjust");
         type.put("SICK_LEAVE_REQUEST", "Sick leave request");
+        type.put("DEPENDENT_CHANGE_REQUEST", "Dependent change request");
         return type;
     }
 }
