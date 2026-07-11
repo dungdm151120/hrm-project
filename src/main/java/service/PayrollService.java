@@ -24,7 +24,7 @@ public class PayrollService {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
-        AttendanceSummary summary = attendanceDAO.getSummaryByUser(user.getId(), startDate, endDate);
+        AttendanceConfirmedSummary summary = attendanceDAO.getSummaryConfirmedAttendanceByUser(user.getId(), startDate, endDate);
         PayrollSetting setting = payrollDAO.getPayrollSetting();
         List<PitBracket> brackets = payrollDAO.getPitBrackets();
 
@@ -35,7 +35,7 @@ public class PayrollService {
         long bonus = 0;
         String description = null;
 
-        if (positionName.contains("manager") || positionName.equals("System Administrator")) {
+        if (positionName.contains("manager") || positionName.equals("system administrator")) {
             rateMultiplier = 2.0;
             bonus = 2000000;
             description = "Lương thưởng cho Manager";
@@ -71,8 +71,7 @@ public class PayrollService {
         long incomeTax = Math.round(calculator.calculateIncomeTax(taxableIncome, brackets));
 
         // Overtime Pay
-        double hourlyRate = (expectedHours > 0) ? ((double) basicSalary / expectedHours) : 0;
-        long overtimePay = Math.round(summary.getOvertimeHours() * hourlyRate * 1.5);
+        long overtimePay = calculateOvertimePay(summary.getOvertimeHours(), expectedHours, basicSalary);
 
         // Net Income
         long netPay = incomeBeforeTax - incomeTax + bonus + overtimePay;
@@ -116,7 +115,21 @@ public class PayrollService {
         return isSaved ? payroll : null;
     }
 
+    private long calculateOvertimePay(double overtimeHours, double expectedHours, long basicSalary) {
+        double hourlyRate = (expectedHours > 0) ? ((double) basicSalary / expectedHours) : 0;
+        return Math.round(overtimeHours * hourlyRate * 1.5);
+    }
+
     public int generateBulkPayroll(List<User> users, int month, int year, Integer departmentId) throws Exception{
+
+        Integer queryDeptId = (departmentId != null && departmentId == 0) ? null : departmentId;
+
+        boolean hasSnapshot = attendanceDAO.hasAttendanceSnapshot(month, year, queryDeptId);
+
+        if (!hasSnapshot) {
+            throw new Exception("There is no confirmed attendance for this period in this department");
+        }
+
         int totalUsersInDept = users.size();
 
         if (totalUsersInDept == 0) {
@@ -127,7 +140,7 @@ public class PayrollService {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
-        int employeesWithAttendance = attendanceDAO.countEmployeesWithAttendance(departmentId, startDate, endDate);
+        int employeesWithAttendance = attendanceDAO.countEmployeesWithAttendance(queryDeptId, startDate, endDate);
 
         if (employeesWithAttendance < totalUsersInDept) {
             int missingCount = totalUsersInDept - employeesWithAttendance;

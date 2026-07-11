@@ -38,7 +38,7 @@ public class Payroll {
     public Payroll(int id, int userId, String employeeName, String departmentName, String positionName, int month, int year, 
                    double expectedHours, double actualHours, long basicSalary, double rateMultiplier, long totalIncome, long bonus, 
                    String description, long socialInsurance, long healthInsurance, long unemploymentInsurance,
-                   long unionFee, long incomeBeforeTax, long taxableIncome, long incomeTax, long netPay,
+                   long unionFee, long incomeBeforeTax, long taxableIncome, long incomeTax, long overtimePay, long netPay,
                    long companySocialInsurance, long companyHealthInsurance, long companyUnemploymentInsurance, long companyUnionFee,
                    String status, LocalDateTime createdAt) {
         this.id = id;
@@ -62,6 +62,7 @@ public class Payroll {
         this.incomeBeforeTax = incomeBeforeTax;
         this.taxableIncome = taxableIncome;
         this.incomeTax = incomeTax;
+        this.overtimePay = overtimePay;
         this.netPay = netPay;
         this.companySocialInsurance = companySocialInsurance;
         this.companyHealthInsurance = companyHealthInsurance;

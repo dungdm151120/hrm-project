@@ -70,10 +70,4 @@ public class PayrollConfirmServlet extends HttpServlet {
             response.sendRedirect(redirectUrl.toString());
         }
     }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.sendRedirect(request.getContextPath() + "/payroll/list");
-    }
 }

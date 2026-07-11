@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpSession;
 import model.Payroll;
 import model.PayrollSetting;
 import model.User;
+import service.PayrollService;
 
 import java.io.IOException;
 import java.util.Set;
@@ -27,6 +28,9 @@ public class PayrollDetailServlet extends HttpServlet {
 
         try {
             String idParam = request.getParameter("id");
+            String month = request.getParameter("month");
+            String year = request.getParameter("year");
+            String departmentId = request.getParameter("departmentId");
 
             if (idParam == null || idParam.trim().isEmpty()) {
                 request.getSession().setAttribute("error", "Invalid payroll request id.");
@@ -59,6 +63,9 @@ public class PayrollDetailServlet extends HttpServlet {
                     payroll.getYear()
             );
 
+            request.setAttribute("month", month);
+            request.setAttribute("year", year);
+            request.setAttribute("departmentId", departmentId);
             request.setAttribute("numberOfDependents", numberOfDependents);
             request.setAttribute("setting", setting);
             request.setAttribute("payroll", payroll);

@@ -20,10 +20,10 @@ public class PayrollDAO {
             user_id, month, year, expected_hours, actual_hours, 
             basic_salary, rate_multiplier, total_income, bonus, description, 
             social_insurance, health_insurance, unemployment_insurance, 
-            union_fee, income_before_tax, taxable_income, income_tax, net_pay, 
+            union_fee, income_before_tax, taxable_income, income_tax, overtime_pay, net_pay, 
             company_social_insurance, company_health_insurance, company_unemployment_insurance, 
             company_union_fee, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
             expected_hours = VALUES(expected_hours),
             actual_hours = VALUES(actual_hours),
@@ -39,6 +39,7 @@ public class PayrollDAO {
             income_before_tax = VALUES(income_before_tax),
             taxable_income = VALUES(taxable_income),
             income_tax = VALUES(income_tax),
+            overtime_pay = VALUES(overtime_pay),
             net_pay = VALUES(net_pay),
             company_social_insurance = VALUES(company_social_insurance),
             company_health_insurance = VALUES(company_health_insurance),
@@ -71,20 +72,21 @@ public class PayrollDAO {
             ps.setLong(14, payroll.getUnionFee());
 
             // 15-18: Thuế và Net
-            ps.setDouble(15, payroll.getIncomeBeforeTax());
-            ps.setDouble(16, payroll.getTaxableIncome());
-            ps.setDouble(17, payroll.getIncomeTax());
-            ps.setDouble(18, payroll.getNetPay());
+            ps.setLong(15, payroll.getIncomeBeforeTax());
+            ps.setLong(16, payroll.getTaxableIncome());
+            ps.setLong(17, payroll.getIncomeTax());
+            ps.setLong(18, payroll.getOvertimePay());
+            ps.setLong(19, payroll.getNetPay());
 
             // 19-22: Các khoản công ty đóng
-            ps.setDouble(19, payroll.getCompanySocialInsurance());
-            ps.setDouble(20, payroll.getCompanyHealthInsurance());
-            ps.setLong(21, payroll.getCompanyUnemploymentInsurance());
-            ps.setLong(22, payroll.getCompanyUnionFee());
+            ps.setLong(20, payroll.getCompanySocialInsurance());
+            ps.setLong(21, payroll.getCompanyHealthInsurance());
+            ps.setLong(22, payroll.getCompanyUnemploymentInsurance());
+            ps.setLong(23, payroll.getCompanyUnionFee());
 
             // 23-24: Trạng thái và Ngày tạo
-            ps.setString(23, payroll.getStatus());
-            ps.setTimestamp(24, Timestamp.valueOf(payroll.getCreatedAt() != null ? payroll.getCreatedAt() : java.time.LocalDateTime.now()));
+            ps.setString(24, payroll.getStatus());
+            ps.setTimestamp(25, Timestamp.valueOf(payroll.getCreatedAt() != null ? payroll.getCreatedAt() : java.time.LocalDateTime.now()));
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
@@ -125,6 +127,7 @@ public class PayrollDAO {
                     payroll.setIncomeBeforeTax(rs.getLong("income_before_tax"));
                     payroll.setTaxableIncome(rs.getLong("taxable_income"));
                     payroll.setIncomeTax(rs.getLong("income_tax"));
+                    payroll.setOvertimePay(rs.getLong("overtime_pay"));
                     payroll.setNetPay(rs.getLong("net_pay"));
                     payroll.setCompanySocialInsurance(rs.getLong("company_social_insurance"));
                     payroll.setCompanyHealthInsurance(rs.getLong("company_health_insurance"));
@@ -489,6 +492,7 @@ public class PayrollDAO {
                     p.setIncomeBeforeTax(rs.getLong("income_before_tax"));
                     p.setTaxableIncome(rs.getLong("taxable_income"));
                     p.setIncomeTax(rs.getLong("income_tax"));
+                    p.setOvertimePay(rs.getLong("overtime_pay"));
                     p.setNetPay(rs.getLong("net_pay"));
                     p.setStatus(rs.getString("status"));
 
