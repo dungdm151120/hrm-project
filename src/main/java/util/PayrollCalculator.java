@@ -1,52 +1,38 @@
 package util;
 
+import model.PitBracket;
+import java.util.List;
+
 public class PayrollCalculator {
 
-    private static final double SOCIAL_INSURANCE_RATE = 0.08;
-    private static final double HEALTH_INSURANCE_RATE = 0.015;
-    private static final double UNEMPLOYMENT_INSURANCE_RATE = 0.01;
-
-    public double calculateSocialInsurance(double totalIncome) {
-        return totalIncome * SOCIAL_INSURANCE_RATE;
+    public Long calculateInsuranceAmount(long grossIncome, double ratePercentage) {
+        return Math.round(grossIncome * (ratePercentage / 100.0));
     }
 
-    public double calculateHealthInsurance(double totalIncome) {
-        return totalIncome * HEALTH_INSURANCE_RATE;
-    }
-
-    public double calculateUnemploymentInsurance(double totalIncome) {
-        return totalIncome * UNEMPLOYMENT_INSURANCE_RATE;
-    }
-
-    public double calculateIncomeTax(double taxableIncome) {
-        if (taxableIncome <= 0) return 0.0;
+    public double calculateIncomeTax(long taxableIncome, List<PitBracket> brackets) {
+        if (taxableIncome <= 0 || brackets == null || brackets.isEmpty()) return 0.0;
 
         double tax = 0.0;
 
-        if (taxableIncome <= 10000000) {
-            tax = taxableIncome * 0.05;
-        }
-        else if (taxableIncome <= 30000000) {
-            tax = (10000000 * 0.05)
-                    + ((taxableIncome - 10000000) * 0.10);
-        }
-        else if (taxableIncome <= 60000000) {
-            tax = (10000000 * 0.05)
-                    + (20000000 * 0.10)
-                    + ((taxableIncome - 30000000) * 0.20);
-        }
-        else if (taxableIncome <= 100000000) {
-            tax = (10000000 * 0.05)
-                    + (20000000 * 0.10)
-                    + (30000000 * 0.20)
-                    + ((taxableIncome - 60000000) * 0.30);
-        }
-        else {
-            tax = (10000000 * 0.05)
-                    + (20000000 * 0.10)
-                    + (30000000 * 0.20)
-                    + (40000000 * 0.30)
-                    + ((taxableIncome - 100000000) * 0.35);
+        for (PitBracket bracket : brackets) {
+            long min = bracket.getMinValue();
+            Long max = bracket.getMaxValue();
+            double rate = bracket.getTaxRate() / 100.0;
+
+            if (taxableIncome <= min) {
+                break;
+            }
+
+            long taxableAmountInBracket = 0;
+
+            if (max == null || taxableIncome < max) {
+                taxableAmountInBracket = (long) (taxableIncome - min);
+                tax += Math.round(taxableAmountInBracket * rate);
+                break;
+            } else {
+                taxableAmountInBracket = max - min;
+                tax += Math.round(taxableAmountInBracket * rate);
+            }
         }
 
         return tax;

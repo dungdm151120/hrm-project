@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.time.Year;
 import java.util.List;
 
-@WebServlet({"/payroll/list", "/payroll/my"})
+@WebServlet("/payroll/list")
 public class PayrollListServlet extends HttpServlet {
 
     @Override
@@ -28,22 +28,12 @@ public class PayrollListServlet extends HttpServlet {
         String deptParam = request.getParameter("departmentId");
         String sort = request.getParameter("sort");
         String pageParam = request.getParameter("page");
-        boolean isMyPayroll = "/payroll/my".equals(request.getServletPath());
         Integer userId = null;
         Integer month = parseIntegerInRange(monthParam, 1, 12);
         Integer year = parseIntegerInRange(yearParam, 1900, 9999);
         Integer departmentId = null;
 
-        if (isMyPayroll) {
-            HttpSession session = request.getSession(false);
-            User currentUser = session == null ? null : (User) session.getAttribute("currentUser");
-            if (currentUser == null) {
-                response.sendRedirect(request.getContextPath() + "/login");
-                return;
-            }
-            userId = currentUser.getId();
-            statusParam = "confirmed";
-        } else if (statusParam == null || statusParam.trim().isEmpty()) {
+        if (statusParam == null || statusParam.trim().isEmpty()) {
             statusParam = "all";
         }
 
@@ -85,7 +75,6 @@ public class PayrollListServlet extends HttpServlet {
         request.setAttribute("departmentId", departmentId);
         request.setAttribute("currentYear", Year.now().getValue());
         request.setAttribute("sort", sort);
-        request.setAttribute("isMyPayroll", isMyPayroll);
 
         request.getRequestDispatcher("/WEB-INF/views/payroll/payroll_list.jsp").forward(request, response);
     }

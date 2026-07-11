@@ -3,6 +3,7 @@ package dao;
 import model.LaborContract;
 import util.DBConnection;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -400,7 +401,7 @@ public class LaborContractDAO {
         return value.trim();
     }
 
-    public java.math.BigDecimal findActiveSalaryByUserId(int userId) {
+    public BigDecimal findActiveSalaryByUserId(int userId) {
         expireEndedActiveContracts();
         String sql = "SELECT base_salary FROM labor_contracts WHERE user_id = ? AND status = 'ACTIVE' LIMIT 1";
 
@@ -415,6 +416,6 @@ public class LaborContractDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return java.math.BigDecimal.ZERO;
+        return BigDecimal.ZERO;
     }
 }

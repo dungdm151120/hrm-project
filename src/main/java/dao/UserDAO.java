@@ -125,9 +125,7 @@ public class UserDAO {
                     user.setId(rs.getInt("id"));
                     user.setFullName(rs.getString("full_name"));
                     user.setEmail(rs.getString("email"));
-
                     user.setEmployeeCode(rs.getString("employee_code"));
-
                     user.setRoleName(rs.getString("role_name"));
                     user.setDepartmentName(rs.getString("department_name"));
                     user.setPositionName(rs.getString("position_name"));

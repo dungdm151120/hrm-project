@@ -2,9 +2,13 @@ package dao;
 
 import model.DepartmentPayrollSummary;
 import model.Payroll;
+import model.PayrollSetting;
+import model.PitBracket;
 import util.DBConnection;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,53 +16,75 @@ public class PayrollDAO {
 
     public boolean savePayroll(Payroll payroll) {
         String sql = """
-            INSERT INTO payrolls (
-                user_id, month, year, expected_hours, actual_hours, 
-                basic_salary, rate_multiplier, total_income, bonus, description, social_insurance, health_insurance, 
-                unemployment_insurance, income_before_tax, taxable_income, income_tax, 
-                net_pay, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                expected_hours = VALUES(expected_hours),
-                actual_hours = VALUES(actual_hours),
-                basic_salary = VALUES(basic_salary),
-                rate_multiplier = VALUES(rate_multiplier),
-                total_income = VALUES(total_income),
-                bonus = VALUES(bonus), 
-                description = VALUES(description),
-                social_insurance = VALUES(social_insurance),
-                health_insurance = VALUES(health_insurance),
-                unemployment_insurance = VALUES(unemployment_insurance),
-                income_before_tax = VALUES(income_before_tax),
-                taxable_income = VALUES(taxable_income),
-                income_tax = VALUES(income_tax),
-                net_pay = VALUES(net_pay),
-                status = VALUES(status);
-            """;
+        INSERT INTO payrolls (
+            user_id, month, year, expected_hours, actual_hours, 
+            basic_salary, rate_multiplier, total_income, bonus, description, 
+            social_insurance, health_insurance, unemployment_insurance, 
+            union_fee, income_before_tax, taxable_income, income_tax, net_pay, 
+            company_social_insurance, company_health_insurance, company_unemployment_insurance, 
+            company_union_fee, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            expected_hours = VALUES(expected_hours),
+            actual_hours = VALUES(actual_hours),
+            basic_salary = VALUES(basic_salary),
+            rate_multiplier = VALUES(rate_multiplier),
+            total_income = VALUES(total_income),
+            bonus = VALUES(bonus), 
+            description = VALUES(description),
+            social_insurance = VALUES(social_insurance),
+            health_insurance = VALUES(health_insurance),
+            unemployment_insurance = VALUES(unemployment_insurance),
+            union_fee = VALUES(union_fee),
+            income_before_tax = VALUES(income_before_tax),
+            taxable_income = VALUES(taxable_income),
+            income_tax = VALUES(income_tax),
+            net_pay = VALUES(net_pay),
+            company_social_insurance = VALUES(company_social_insurance),
+            company_health_insurance = VALUES(company_health_insurance),
+            company_unemployment_insurance = VALUES(company_unemployment_insurance),
+            company_union_fee = VALUES(company_union_fee),                      
+            status = VALUES(status);
+        """;
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            // 1-5: Thông tin cơ bản
             ps.setInt(1, payroll.getUserId());
             ps.setInt(2, payroll.getMonth());
             ps.setInt(3, payroll.getYear());
             ps.setDouble(4, payroll.getExpectedHours());
             ps.setDouble(5, payroll.getActualHours());
-            ps.setDouble(6, payroll.getBasicSalary());
-            ps.setDouble(7, payroll.getRateMultiplier());
-            ps.setDouble(8, payroll.getTotalIncome());
-            ps.setDouble(9, payroll.getBonus());
-            ps.setString(10, payroll.getDescription());
-            ps.setDouble(11, payroll.getSocialInsurance());
-            ps.setDouble(12, payroll.getHealthInsurance());
-            ps.setDouble(13, payroll.getUnemploymentInsurance());
-            ps.setDouble(14, payroll.getIncomeBeforeTax());
-            ps.setDouble(15, payroll.getTaxableIncome());
-            ps.setDouble(16, payroll.getIncomeTax());
-            ps.setDouble(17, payroll.getNetPay());
-            ps.setString(18, payroll.getStatus());
 
-            ps.setTimestamp(19, Timestamp.valueOf(java.time.LocalDateTime.now()));
+            // 6-10: Thu nhập
+            ps.setLong(6, payroll.getBasicSalary());
+            ps.setDouble(7, payroll.getRateMultiplier());
+            ps.setLong(8, payroll.getTotalIncome());
+            ps.setLong(9, payroll.getBonus());
+            ps.setString(10, payroll.getDescription());
+
+            // 11-14: Các khoản trừ của nhân viên
+            ps.setLong(11, payroll.getSocialInsurance());
+            ps.setLong(12, payroll.getHealthInsurance());
+            ps.setLong(13, payroll.getUnemploymentInsurance());
+            ps.setLong(14, payroll.getUnionFee());
+
+            // 15-18: Thuế và Net
+            ps.setDouble(15, payroll.getIncomeBeforeTax());
+            ps.setDouble(16, payroll.getTaxableIncome());
+            ps.setDouble(17, payroll.getIncomeTax());
+            ps.setDouble(18, payroll.getNetPay());
+
+            // 19-22: Các khoản công ty đóng
+            ps.setDouble(19, payroll.getCompanySocialInsurance());
+            ps.setDouble(20, payroll.getCompanyHealthInsurance());
+            ps.setLong(21, payroll.getCompanyUnemploymentInsurance());
+            ps.setLong(22, payroll.getCompanyUnionFee());
+
+            // 23-24: Trạng thái và Ngày tạo
+            ps.setString(23, payroll.getStatus());
+            ps.setTimestamp(24, Timestamp.valueOf(payroll.getCreatedAt() != null ? payroll.getCreatedAt() : java.time.LocalDateTime.now()));
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
@@ -87,18 +113,24 @@ public class PayrollDAO {
                     payroll.setYear(rs.getInt("year"));
                     payroll.setExpectedHours(rs.getDouble("expected_hours"));
                     payroll.setActualHours(rs.getDouble("actual_hours"));
-                    payroll.setBasicSalary(rs.getDouble("basic_salary"));
+                    payroll.setBasicSalary(rs.getLong("basic_salary"));
                     payroll.setRateMultiplier(rs.getDouble("rate_multiplier"));
-                    payroll.setTotalIncome(rs.getDouble("total_income"));
-                    payroll.setBonus(rs.getDouble("bonus"));
+                    payroll.setTotalIncome(rs.getLong("total_income"));
+                    payroll.setBonus(rs.getLong("bonus"));
                     payroll.setDescription(rs.getString("description"));
-                    payroll.setSocialInsurance(rs.getDouble("social_insurance"));
-                    payroll.setHealthInsurance(rs.getDouble("health_insurance"));
-                    payroll.setUnemploymentInsurance(rs.getDouble("unemployment_insurance"));
-                    payroll.setIncomeBeforeTax(rs.getDouble("income_before_tax"));
-                    payroll.setTaxableIncome(rs.getDouble("taxable_income"));
-                    payroll.setIncomeTax(rs.getDouble("income_tax"));
-                    payroll.setNetPay(rs.getDouble("net_pay"));
+                    payroll.setSocialInsurance(rs.getLong("social_insurance"));
+                    payroll.setHealthInsurance(rs.getLong("health_insurance"));
+                    payroll.setUnemploymentInsurance(rs.getLong("unemployment_insurance"));
+                    payroll.setUnionFee(rs.getLong("union_fee"));
+                    payroll.setIncomeBeforeTax(rs.getLong("income_before_tax"));
+                    payroll.setTaxableIncome(rs.getLong("taxable_income"));
+                    payroll.setIncomeTax(rs.getLong("income_tax"));
+                    payroll.setNetPay(rs.getLong("net_pay"));
+                    payroll.setCompanySocialInsurance(rs.getLong("company_social_insurance"));
+                    payroll.setCompanyHealthInsurance(rs.getLong("company_health_insurance"));
+                    payroll.setCompanyUnemploymentInsurance(rs.getLong("company_unemployment_insurance"));
+                    payroll.setCompanyUnionFee(rs.getLong("company_unemployment_insurance"));
+                    payroll.setCompanyUnionFee(rs.getLong("company_union_fee"));
                     payroll.setStatus(rs.getString("status"));
 
                     if (rs.getTimestamp("created_at") != null) {
@@ -116,8 +148,8 @@ public class PayrollDAO {
         List<Payroll> list = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder("""
-            SELECT p.*, u.full_name AS employee_name, 
-                   d.name AS department_name, 
+            SELECT p.*, u.full_name AS employee_name,
+                   d.name AS department_name,
                    pos.name AS position_name
             FROM payrolls p
             JOIN users u ON p.user_id = u.id
@@ -203,9 +235,9 @@ public class PayrollDAO {
                     payroll.setUserId(rs.getInt("user_id"));
                     payroll.setMonth(rs.getInt("month"));
                     payroll.setYear(rs.getInt("year"));
-                    payroll.setBasicSalary(rs.getDouble("basic_salary"));
-                    payroll.setTotalIncome(rs.getDouble("total_income"));
-                    payroll.setNetPay(rs.getDouble("net_pay"));
+                    payroll.setBasicSalary(rs.getLong("basic_salary"));
+                    payroll.setTotalIncome(rs.getLong("total_income"));
+                    payroll.setNetPay(rs.getLong("net_pay"));
                     payroll.setStatus(rs.getString("status"));
                     payroll.setEmployeeName(rs.getString("employee_name"));
                     payroll.setDepartmentName(rs.getString("department_name"));
@@ -446,18 +478,18 @@ public class PayrollDAO {
                     p.setYear(rs.getInt("year"));
                     p.setExpectedHours(rs.getDouble("expected_hours"));
                     p.setActualHours(rs.getDouble("actual_hours"));
-                    p.setBasicSalary(rs.getDouble("basic_salary"));
+                    p.setBasicSalary(rs.getLong("basic_salary"));
                     p.setRateMultiplier(rs.getDouble("rate_multiplier"));
-                    p.setTotalIncome(rs.getDouble("total_income"));
-                    p.setBonus(rs.getDouble("bonus"));
+                    p.setTotalIncome(rs.getLong("total_income"));
+                    p.setBonus(rs.getLong("bonus"));
                     p.setDescription(rs.getString("description"));
-                    p.setSocialInsurance(rs.getDouble("social_insurance"));
-                    p.setHealthInsurance(rs.getDouble("health_insurance"));
-                    p.setUnemploymentInsurance(rs.getDouble("unemployment_insurance"));
-                    p.setIncomeBeforeTax(rs.getDouble("income_before_tax"));
-                    p.setTaxableIncome(rs.getDouble("taxable_income"));
-                    p.setIncomeTax(rs.getDouble("income_tax"));
-                    p.setNetPay(rs.getDouble("net_pay"));
+                    p.setSocialInsurance(rs.getLong("social_insurance"));
+                    p.setHealthInsurance(rs.getLong("health_insurance"));
+                    p.setUnemploymentInsurance(rs.getLong("unemployment_insurance"));
+                    p.setIncomeBeforeTax(rs.getLong("income_before_tax"));
+                    p.setTaxableIncome(rs.getLong("taxable_income"));
+                    p.setIncomeTax(rs.getLong("income_tax"));
+                    p.setNetPay(rs.getLong("net_pay"));
                     p.setStatus(rs.getString("status"));
 
                     // Set thêm các thuộc tính phụ phục vụ hiển thị báo cáo Excel
@@ -504,5 +536,188 @@ public class PayrollDAO {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public int countDependentByUserId(Integer userId, int month, int year) {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        String sql = """
+                        SELECT dependent FROM dependent_number
+                        WHERE user_id = ? AND effective_date <= ? 
+                        ORDER BY effective_date LIMIT 1
+                    """;
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(endDate));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("dependent");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public PayrollSetting getPayrollSetting() {
+        String sql = """
+                    SELECT * FROM payroll_settings
+                    WHERE effective_date <= ?
+                    ORDER BY effective_date DESC
+                    LIMIT 1
+                    """;
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(LocalDate.now()));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    PayrollSetting setting = new PayrollSetting();
+                    setting.setId(rs.getInt("id"));
+                    setting.setEmployeeSocialInsurance(rs.getDouble("employee_social_insurance"));
+                    setting.setEmployeeHealthInsurance(rs.getDouble("employee_health_insurance"));
+                    setting.setEmployeeUnemploymentInsurance(rs.getDouble("employee_unemployment_insurance"));
+                    setting.setEmployeeUnion(rs.getDouble("employee_union"));
+                    setting.setCompanySocialInsurance(rs.getDouble("company_social_insurance"));
+                    setting.setCompanyHealthInsurance(rs.getDouble("company_health_insurance"));
+                    setting.setCompanyUnemploymentInsurance(rs.getDouble("company_unemployment_insurance"));
+                    setting.setCompanyUnion(rs.getDouble("company_union"));
+                    setting.setSelfDeduction(rs.getLong("self_deduction"));
+                    setting.setDependentDeduction(rs.getLong("dependent_deduction"));
+
+                    return setting;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public List<PitBracket> getPitBrackets() {
+        String sql = """ 
+                    SELECT * FROM pit_brackets\s
+                    WHERE effective_date = (
+                        SELECT MAX(effective_date)\s
+                        FROM pit_brackets\s
+                        WHERE effective_date <= ?
+                    )
+                    ORDER BY bracket_level ASC
+                    """;
+
+        List<PitBracket> brackets = new ArrayList<>();
+        try (Connection connection = DBConnection.getConnection();
+            PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(LocalDate.now()));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PitBracket bracket = new PitBracket();
+                    bracket.setId(rs.getInt("id"));
+                    bracket.setBracketLevel(rs.getInt("bracket_level"));
+                    bracket.setMinValue(rs.getLong("min_value"));
+                    bracket.setMaxValue(rs.getObject("max_value", Long.class));
+                    bracket.setTaxRate(rs.getDouble("tax_rate"));
+
+                    brackets.add(bracket);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return brackets;
+    }
+
+    public boolean isUnionMember(int userId) {
+        String sql = "SELECT is_member FROM user_union_membership WHERE user_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("is_member");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updatePayrollSetting(PayrollSetting setting) {
+        String sql = "UPDATE payroll_settings SET " +
+                "employee_social_insurance = ?, " +
+                "employee_health_insurance = ?, " +
+                "employee_unemployment_insurance = ?, " +
+                "employee_union = ?, " +
+                "company_social_insurance = ?, " +
+                "company_health_insurance = ?, " +
+                "company_unemployment_insurance = ?, " +
+                "company_union = ?, " +
+                "self_deduction = ?, " +
+                "dependent_deduction = ?, " +
+                "effective_date = ? " +
+                "WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDouble(1, setting.getEmployeeSocialInsurance());
+            ps.setDouble(2, setting.getEmployeeHealthInsurance());
+            ps.setDouble(3, setting.getEmployeeUnemploymentInsurance());
+            ps.setDouble(4, setting.getEmployeeUnion());
+            ps.setDouble(5, setting.getCompanySocialInsurance());
+            ps.setDouble(6, setting.getCompanyHealthInsurance());
+            ps.setDouble(7, setting.getCompanyUnemploymentInsurance());
+            ps.setDouble(8, setting.getCompanyUnion());
+            ps.setLong(9, setting.getSelfDeduction());
+            ps.setLong(10, setting.getDependentDeduction());
+            ps.setDate(11, Date.valueOf(setting.getEffectiveDate()));
+            ps.setInt(12, setting.getId());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updatePitBrackets(java.util.List<model.PitBracket> bracketList, java.time.LocalDate effectiveDate) {
+        String sql = "UPDATE pit_brackets SET min_value = ?, max_value = ?, tax_rate = ?, effective_date = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            conn.setAutoCommit(false);
+
+            for (model.PitBracket b : bracketList) {
+                ps.setLong(1, b.getMinValue());
+
+                if (b.getMaxValue() != null) {
+                    ps.setLong(2, b.getMaxValue());
+                } else {
+                    ps.setNull(2, java.sql.Types.BIGINT);
+                }
+
+                ps.setDouble(3, b.getTaxRate());
+                ps.setDate(4, java.sql.Date.valueOf(effectiveDate));
+                ps.setInt(5, b.getId());
+
+                ps.addBatch();
+            }
+
+            ps.executeBatch();
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }
