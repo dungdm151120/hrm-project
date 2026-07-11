@@ -61,7 +61,7 @@
 <c:if test="${blocked}">
     <div class="request-group" style="grid-column: 1 / -1;">
         <div class="request-info-box" style="color: #d32f2f;">
-            Attendance adjustment requests cannot be submitted during the first 5 days of the month.
+            Attendance adjustment requests cannot be submitted from the 6th to the 10th day of the month.
         </div>
     </div>
 </c:if>

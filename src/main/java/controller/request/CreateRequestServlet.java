@@ -183,8 +183,9 @@ public class CreateRequestServlet extends HttpServlet {
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
                 leaveRequestDAO.createLeaveRequest(requestId, leaveDate, leaveType);
             } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
-                if (LocalDate.now().getDayOfMonth() <= 5) {
-                    response.sendRedirect("create_request?error=adjustment_blocked_first_5_days");
+                int currentDay = LocalDate.now().getDayOfMonth();
+                if (currentDay > 5 && currentDay <= 10) {
+                    response.sendRedirect("create_request?error=adjustment_blocked_days_6_to_10");
                     return;
                 }
 

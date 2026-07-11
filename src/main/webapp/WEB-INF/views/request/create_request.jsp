@@ -48,7 +48,7 @@
                             <c:when test="${param.error == 'missing_employees'}">Please select at least one employee to work overtime.</c:when>
                             <c:when test="${param.error == 'duplicate_overtime'}">One or more selected employees already have an overtime request (pending or approved) on this date.</c:when>
                             <c:when test="${param.error == 'missing_work_date'}">Please select a work date.</c:when>
-                            <c:when test="${param.error == 'adjustment_blocked_first_5_days'}">Cannot submit adjustment requests during the first 5 days of the month.</c:when>
+                            <c:when test="${param.error == 'adjustment_blocked_days_6_to_10'}">Cannot submit adjustment requests between the 6th and 10th day of the month.</c:when>
                             <c:when test="${param.error == 'adjustment_limit_exceeded'}">You have reached the maximum of 2 adjustment requests for this month.</c:when>
                             <c:when test="${param.error == 'missing_file'}">Please attach a medical certificate.</c:when>
                             <c:when test="${param.error == 'missing_sick_dates'}">Please select at least one sick date.</c:when>
