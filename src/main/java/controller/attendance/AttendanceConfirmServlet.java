@@ -13,6 +13,7 @@ import model.User;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @WebServlet("/attendance/confirm")
 public class AttendanceConfirmServlet extends HttpServlet {
@@ -50,7 +51,7 @@ public class AttendanceConfirmServlet extends HttpServlet {
         boolean isHR = false;
         boolean isBusinessAdmin = false;
 
-        java.util.Set<String> userPermissions = (java.util.Set<String>) session.getAttribute("userPermissions");
+        Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
         if (userPermissions != null) {
             isHR = userPermissions.contains("ATTENDANCE_SEND_TO_BUSINESS");
             isBusinessAdmin = userPermissions.contains("ATTENDANCE_APPROVE_BUSINESS");
@@ -100,7 +101,7 @@ public class AttendanceConfirmServlet extends HttpServlet {
                     session.setAttribute("errorMsg", "You are not the manager of this department.");
                 }
             } else if ("hr_send".equals(action)) {
-                java.util.Set<String> userPermissions = (java.util.Set<String>) session.getAttribute("userPermissions");
+                Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
                 if (userPermissions != null && userPermissions.contains("ATTENDANCE_SEND_TO_BUSINESS")) {
                     confirmDAO.logAction(month, year, "HR_SEND", currentUser.getId(), null, "Sent to Business Admin by HR");
                     session.setAttribute("successMsg", "Request sent to Business Admin successfully.");
@@ -108,7 +109,7 @@ public class AttendanceConfirmServlet extends HttpServlet {
                     session.setAttribute("errorMsg", "Permission denied.");
                 }
             } else if ("business_approve".equals(action)) {
-                java.util.Set<String> userPermissions = (java.util.Set<String>) session.getAttribute("userPermissions");
+                Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
                 if (userPermissions != null && userPermissions.contains("ATTENDANCE_APPROVE_BUSINESS")) {
                     confirmDAO.logAction(month, year, "BUSINESS_APPROVE", currentUser.getId(), null, "Approved by Business Admin");
                     confirmDAO.createSnapshot(month, year, currentUser.getId());

@@ -302,6 +302,34 @@
                         </div>
                     </c:if>
 
+                    <%-- ══════════════ DEPENDENT CHANGE REQUEST ══════════════ --%>
+                    <c:if test="${request.type == 'DEPENDENT_CHANGE_REQUEST' && not empty dependentChangeRequest}">
+                        <div class="detail-row">
+                            <span class="detail-label">New Number of Dependents:</span>
+                            <span class="detail-value"><strong>${dependentChangeRequest.numberOfDependents}</strong></span>
+                        </div>
+                        <div class="detail-row" style="grid-column: 1 / -1;">
+                            <span class="detail-label">Evidence Image:</span>
+                            <span class="detail-value">
+                                <c:choose>
+                                    <c:when test="${not empty dependentChangeRequest.documentPath}">
+                                        <c:set var="fullUrl" value="${pageContext.request.contextPath}${dependentChangeRequest.documentPath}"/>
+                                        <div class="attachment-preview-wrap" style="margin-top: 10px;">
+                                            <img src="${fullUrl}" alt="Evidence Image"
+                                                 onclick="window.open('${fullUrl}','_blank')"
+                                                 title="Click to open full size"
+                                                 style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: contain;"/>
+                                            <div class="att-open-hint" style="font-size: 12px; color: #666; margin-top: 5px;">Click image to open full size</div>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span style="color:#999;">No image uploaded.</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </span>
+                        </div>
+                    </c:if>
+
                     <%-- ══════════════ OVERTIME ══════════════ --%>
                     <c:if test="${request.type == 'OVERTIME' && not empty overtimeRequest}">
                         <div class="detail-row">

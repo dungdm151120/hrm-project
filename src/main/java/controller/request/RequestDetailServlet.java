@@ -8,7 +8,9 @@ import model.AttendanceChangeRequest;
 import model.LeaveRequest;
 import model.Request;
 import model.SickLeaveRequest;
+import model.DependentChangeRequest;
 import model.User;
+import dao.DependentChangeRequestDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -67,6 +69,10 @@ public class RequestDetailServlet extends HttpServlet {
                     request.setAttribute("overtimeRequest", oreq);
                     request.setAttribute("overtimeParticipants", overtimeParticipantDAO.getByOvertimeRequestId(oreq.getId()));
                 }
+            } else if ("DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
+                DependentChangeRequestDAO dcrDAO = new DependentChangeRequestDAO();
+                DependentChangeRequest dcr = dcrDAO.getByRequestId(id);
+                request.setAttribute("dependentChangeRequest", dcr);
             }
 
             request.setAttribute("request", req);
