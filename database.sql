@@ -45,32 +45,32 @@ CREATE TABLE department_positions (
 );
 
 CREATE TABLE users (
-                       id INT PRIMARY KEY AUTO_INCREMENT,
-                       employee_code VARCHAR(50) UNIQUE,
-                       full_name VARCHAR(100) NOT NULL,
-                       email VARCHAR(100) NOT NULL UNIQUE,
-                       password VARCHAR(255) NOT NULL,
-                       phone VARCHAR(20),
-                       gender VARCHAR(10),
-                       date_of_birth DATETIME,
-                       address VARCHAR(255),
-                       avatar_url VARCHAR(255),
-                       role_id INT NOT NULL,
-                       department_id INT,
-                       position_id INT,
-                       hire_date DATE,
-                       employment_status VARCHAR(30) NOT NULL DEFAULT 'WORKING',
-                       active BOOLEAN NOT NULL DEFAULT TRUE,
-                       reset_token VARCHAR(255),
-                       reset_token_expired_at DATETIME,
-                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       updated_at DATETIME,
-                       CONSTRAINT fk_users_roles FOREIGN KEY (role_id) REFERENCES roles(id),
-                       CONSTRAINT fk_users_departments FOREIGN KEY (department_id) REFERENCES departments(id),
-                       CONSTRAINT fk_users_positions FOREIGN KEY (position_id) REFERENCES positions(id),
-                       CONSTRAINT fk_users_department_positions
-                           FOREIGN KEY (department_id, position_id)
-                               REFERENCES department_positions(department_id, position_id)
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_code VARCHAR(50) UNIQUE,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    gender VARCHAR(10),
+    date_of_birth DATETIME,
+    address VARCHAR(255),
+    avatar_url VARCHAR(255),
+    role_id INT NOT NULL,
+    department_id INT,
+    position_id INT,
+    hire_date DATE,
+    employment_status VARCHAR(30) NOT NULL DEFAULT 'WORKING',
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    reset_token VARCHAR(255),
+    reset_token_expired_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    CONSTRAINT fk_users_roles FOREIGN KEY (role_id) REFERENCES roles(id),
+    CONSTRAINT fk_users_departments FOREIGN KEY (department_id) REFERENCES departments(id),
+    CONSTRAINT fk_users_positions FOREIGN KEY (position_id) REFERENCES positions(id),
+    CONSTRAINT fk_users_department_positions
+        FOREIGN KEY (department_id, position_id)
+        REFERENCES department_positions(department_id, position_id)
 );
 
 ALTER TABLE departments
@@ -707,29 +707,29 @@ INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, 
 
 
 INSERT INTO holidays (holiday_date, holiday_name) VALUES
-                                                      ('2026-01-01', 'Tết Dương lịch'),
-                                                      ('2026-02-16', 'Tết Nguyên Đán Bính Ngọ'),
-                                                      ('2026-02-17', 'Tết Nguyên Đán'),
-                                                      ('2026-02-18', 'Tết Nguyên Đán'),
-                                                      ('2026-02-19', 'Tết Nguyên Đán'),
-                                                      ('2026-02-20', 'Tết Nguyên Đán'),
-                                                      ('2026-04-27', 'Giỗ Tổ Hùng Vương (nghỉ bù)'),
-                                                      ('2026-04-30', 'Ngày Chiến thắng'),
-                                                      ('2026-05-01', 'Ngày Quốc tế Lao động'),
-                                                      ('2026-08-31', 'Quốc khánh (nghỉ hoán đổi)'),
-                                                      ('2026-09-01', 'Quốc khánh (nghỉ)'),
-                                                      ('2026-09-02', 'Quốc khánh'),
-                                                      ('2027-01-01', 'Tết Dương lịch'),
-                                                      ('2027-02-06', 'Tết Nguyên Đán Đinh Mùi'),
-                                                      ('2027-02-07', 'Tết Nguyên Đán'),
-                                                      ('2027-02-08', 'Tết Nguyên Đán'),
-                                                      ('2027-02-09', 'Tết Nguyên Đán'),
-                                                      ('2027-02-10', 'Tết Nguyên Đán'),
-                                                      ('2027-04-17', 'Giỗ Tổ Hùng Vương'),
-                                                      ('2027-04-30', 'Ngày Chiến thắng'),
-                                                      ('2027-05-01', 'Ngày Quốc tế Lao động');
-
--- Payroll
+	('2026-01-01', 'Tết Dương lịch'),
+    ('2026-02-16', 'Tết Nguyên Đán Bính Ngọ'),
+    ('2026-02-17', 'Tết Nguyên Đán'),
+    ('2026-02-18', 'Tết Nguyên Đán'),
+    ('2026-02-19', 'Tết Nguyên Đán'),
+    ('2026-02-20', 'Tết Nguyên Đán'),
+    ('2026-04-27', 'Giỗ Tổ Hùng Vương (nghỉ bù)'),
+    ('2026-04-30', 'Ngày Chiến thắng'),
+    ('2026-05-01', 'Ngày Quốc tế Lao động'),
+    ('2026-08-31', 'Quốc khánh (nghỉ hoán đổi)'),
+    ('2026-09-01', 'Quốc khánh (nghỉ)'),
+    ('2026-09-02', 'Quốc khánh'),
+    ('2027-01-01', 'Tết Dương lịch'),
+    ('2027-02-06', 'Tết Nguyên Đán Đinh Mùi'),
+    ('2027-02-07', 'Tết Nguyên Đán'),
+    ('2027-02-08', 'Tết Nguyên Đán'),
+    ('2027-02-09', 'Tết Nguyên Đán'),
+    ('2027-02-10', 'Tết Nguyên Đán'),
+    ('2027-04-17', 'Giỗ Tổ Hùng Vương'),
+    ('2027-04-30', 'Ngày Chiến thắng'),
+    ('2027-05-01', 'Ngày Quốc tế Lao động');
+    
+    -- Payroll
 INSERT INTO payroll_settings (effective_date) VALUES ('2025-07-01');
 
 INSERT INTO pit_brackets (bracket_level, min_value, max_value, tax_rate, effective_date) VALUES
@@ -740,32 +740,32 @@ INSERT INTO pit_brackets (bracket_level, min_value, max_value, tax_rate, effecti
                                                                                              (5, 100000000, NULL, 35.0, '2025-07-01');
 
 INSERT INTO user_union_membership (user_id, is_member, joined_date) VALUES
-                                                                        (2, 1, '2024-03-15'),
-                                                                        (3, 1, '2023-05-20'),
-                                                                        (4, 0, NULL),
-                                                                        (5, 1, '2025-01-10'),
-                                                                        (6, 1, '2022-11-01'),
-                                                                        (7, 1, '2023-02-15'),
-                                                                        (8, 0, NULL),
-                                                                        (9, 1, '2024-06-18'),
-                                                                        (10, 1, '2021-08-25'),
-                                                                        (11, 1, '2024-09-10'),
-                                                                        (12, 0, NULL),
-                                                                        (13, 1, '2023-11-12'),
-                                                                        (14, 0, NULL),
-                                                                        (15, 1, '2024-01-05'),
-                                                                        (16, 1, '2024-07-19'),
-                                                                        (17, 1, '2025-02-11'),
-                                                                        (18, 0, NULL);
-
-INSERT INTO dependent_number (user_id, dependent, effective_date) VALUES
-                                                                      (2, 1, '2026-01-01'),
-                                                                      (3, 2, '2026-01-01'),
-                                                                      (6, 2, '2026-01-01'),
-                                                                      (10, 1, '2026-01-01'),
-                                                                      (11, 0, '2026-01-01'),
-                                                                      (14, 3, '2026-01-01'),
-                                                                      (15, 1, '2026-02-15');
+	(2, 1, '2024-03-15'),
+	(3, 1, '2023-05-20'),
+	(4, 0, NULL),
+	(5, 1, '2025-01-10'),
+	(6, 1, '2022-11-01'),
+	(7, 1, '2023-02-15'),
+	(8, 0, NULL),
+	(9, 1, '2024-06-18'),
+	(10, 1, '2021-08-25'),
+	(11, 1, '2024-09-10'),
+	(12, 0, NULL),
+	(13, 1, '2023-11-12'),
+	(14, 0, NULL),
+	(15, 1, '2024-01-05'),
+	(16, 1, '2024-07-19'),
+	(17, 1, '2025-02-11'),
+	(18, 0, NULL);
+    
+INSERT INTO dependent_number (user_id, depedent, effective_date) VALUES
+	(2, 1, '2026-01-01'),
+	(3, 2, '2026-01-01'),
+	(6, 2, '2026-01-01'),
+	(10, 1, '2026-01-01'),
+	(11, 0, '2026-01-01'),
+	(14, 3, '2026-01-01'),
+	(15, 1, '2026-02-15');
 
 -- ============================================================
 -- 14. PERMISSIONS
@@ -872,20 +872,20 @@ SELECT r.id, p.id FROM roles r CROSS JOIN permissions p WHERE r.name = 'BUSINESS
 -- HR_MANAGER
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AND p.code IN (
-                                                                                             'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                             'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
-                                                                                             'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_CREATE', 'DEPARTMENT_UPDATE', 'DEPARTMENT_TOGGLE_STATUS',
-                                                                                             'DEPARTMENT_ASSIGN_MANAGER', 'DEPARTMENT_VIEW_EMPLOYEES', 'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
-                                                                                             'POSITION_VIEW_LIST',
-                                                                                             'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE',
-                                                                                             'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
-                                                                                             'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
-                                                                                             'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
-                                                                                             'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
-                                                                                             'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
-                                                                                             'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
-                                                                                             'ATTENDANCE_CONFIRM_DEPT', 'ATTENDANCE_SEND_TO_BUSINESS'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_CREATE', 'DEPARTMENT_UPDATE', 'DEPARTMENT_TOGGLE_STATUS',
+    'DEPARTMENT_ASSIGN_MANAGER', 'DEPARTMENT_VIEW_EMPLOYEES', 'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
+    'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT', 
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
+    'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
+    'ATTENDANCE_CONFIRM_DEPT', 'ATTENDANCE_SEND_TO_BUSINESS'
+);
 
 -- HR_STAFF
 INSERT INTO role_permissions (role_id, permission_id)
@@ -954,17 +954,17 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'DEPARTMENT_MAN
 -- EMPLOYEE
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'EMPLOYEE' AND p.code IN (
-                                                                                           'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                           'USER_VIEW_LIST',
-                                                                                           'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
-                                                                                           'POSITION_VIEW_LIST',
-                                                                                           'CONTRACT_VIEW_OWN',
-                                                                                           'ATTENDANCE_VIEW_OWN',
-                                                                                           'PAYROLL_VIEW_OWN', -- 'PAYROLL_VIEW_DETAIL',
-                                                                                           'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST',
-                                                                                           'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL','PROCESS_REQUEST',
-                                                                                           'TASK_VIEW'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_OWN',
+    'ATTENDANCE_VIEW_OWN',
+    'PAYROLL_VIEW_OWN', -- 'PAYROLL_VIEW_DETAIL',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL','PROCESS_REQUEST',
+    'TASK_VIEW'
+);
 
 -- ============================================================
 -- 18. KẾT THÚC

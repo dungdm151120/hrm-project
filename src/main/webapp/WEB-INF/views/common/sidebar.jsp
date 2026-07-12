@@ -417,6 +417,28 @@
             </div>
         </div>
         </c:if>
+        
+        <!-- Reports Group -->
+        <c:set var="showReports" value="${userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}" />
+        <c:if test="${showReports}">
+        <c:set var="reportActive" value="${currentPath.startsWith(ctx.concat('/reports'))}" />
+        <div class="nav-group">
+            <button class="nav-item nav-toggle ${reportActive ? 'open' : ''}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span>Reports</span>
+                <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </button>
+            <div class="submenu" style="${reportActive ? 'display: flex !important;' : ''}">
+                <a href="${ctx}/reports/attendance" class="submenu-item ${currentPath == ctx.concat('/reports/attendance') ? 'active' : ''}">Attendance Report</a>
+            </div>
+        </div>
+        </c:if>
 
         <!-- Request Group -->
         <c:if test="${showRequests}">

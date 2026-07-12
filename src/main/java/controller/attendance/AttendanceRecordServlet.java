@@ -1,5 +1,6 @@
 package controller.attendance;
 
+import dao.AttendanceConfirmDAO;
 import dao.AttendanceDAO;
 import dao.DepartmentDAO;
 import jakarta.servlet.ServletException;
@@ -8,6 +9,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.AttendanceRecordDTO;
+import model.DepartmentConfirmStatusDTO;
 
 import java.io.IOException;
 import java.time.DayOfWeek;
@@ -73,9 +75,22 @@ public class AttendanceRecordServlet extends HttpServlet {
                 PAGE_SIZE
         );
 
+        AttendanceConfirmDAO confirmDAO = new AttendanceConfirmDAO();
+        String overallStatus = confirmDAO.getOverallStatus(selectedMonth, selectedYear);
+        List<DepartmentConfirmStatusDTO> deptStatuses = confirmDAO.getDepartmentLockStatuses(selectedMonth, selectedYear);
+
+        Map<Integer, Boolean> lockedDepartments = new java.util.HashMap<>();
+        for (DepartmentConfirmStatusDTO ds : deptStatuses) {
+            lockedDepartments.put(ds.getDepartmentId(), "CONFIRMED".equals(ds.getStatus()));
+        }
+        boolean isOverallLocked = "HR_SENT".equals(overallStatus) || "APPROVED".equals(overallStatus);
+
         Map<Integer, AttendanceRecordDTO> employeeMap = new LinkedHashMap<>();
         Map<String, AttendanceRecordDTO> attendanceMap = new LinkedHashMap<>();
         for (AttendanceRecordDTO record : records) {
+            boolean isDeptLocked = record.getDepartmentId() != null && lockedDepartments.getOrDefault(record.getDepartmentId(), false);
+            record.setLocked(isOverallLocked || isDeptLocked);
+
             employeeMap.putIfAbsent(record.getUserId(), record);
             attendanceMap.put(buildAttendanceKey(record.getUserId(), record.getWorkDate()), record);
         }
