@@ -756,32 +756,32 @@ INSERT INTO pit_brackets (version_id, bracket_level, min_value, max_value, tax_r
 	 (1, 5, 100000000, NULL, 35.0);
 
 INSERT INTO user_union_membership (user_id, is_member, joined_date) VALUES
-                                                                        (2, 1, '2024-03-15'),
-                                                                        (3, 1, '2023-05-20'),
-                                                                        (4, 0, NULL),
-                                                                        (5, 1, '2025-01-10'),
-                                                                        (6, 1, '2022-11-01'),
-                                                                        (7, 1, '2023-02-15'),
-                                                                        (8, 0, NULL),
-                                                                        (9, 1, '2024-06-18'),
-                                                                        (10, 1, '2021-08-25'),
-                                                                        (11, 1, '2024-09-10'),
-                                                                        (12, 0, NULL),
-                                                                        (13, 1, '2023-11-12'),
-                                                                        (14, 0, NULL),
-                                                                        (15, 1, '2024-01-05'),
-                                                                        (16, 1, '2024-07-19'),
-                                                                        (17, 1, '2025-02-11'),
-                                                                        (18, 0, NULL);
-
+	(2, 1, '2024-03-15'),
+	(3, 1, '2023-05-20'),
+	(4, 0, NULL),
+	(5, 1, '2025-01-10'),
+	(6, 1, '2022-11-01'),
+	(7, 1, '2023-02-15'),
+	(8, 0, NULL),
+	(9, 1, '2024-06-18'),
+	(10, 1, '2021-08-25'),
+	(11, 1, '2024-09-10'),
+	(12, 0, NULL),
+	(13, 1, '2023-11-12'),
+	(14, 0, NULL),
+	(15, 1, '2024-01-05'),
+	(16, 1, '2024-07-19'),
+	(17, 1, '2025-02-11'),
+	(18, 0, NULL);
+    
 INSERT INTO dependent_number (user_id, dependent, effective_date) VALUES
-                                                                      (2, 1, '2026-01-01'),
-                                                                      (3, 2, '2026-01-01'),
-                                                                      (6, 2, '2026-01-01'),
-                                                                      (10, 1, '2026-01-01'),
-                                                                      (11, 0, '2026-01-01'),
-                                                                      (14, 3, '2026-01-01'),
-                                                                      (15, 1, '2026-02-15');
+	(2, 1, '2026-01-01'),
+	(3, 2, '2026-01-01'),
+	(6, 2, '2026-01-01'),
+	(10, 1, '2026-01-01'),
+	(11, 0, '2026-01-01'),
+	(14, 3, '2026-01-01'),
+	(15, 1, '2026-02-15');
 
 -- ============================================================
 -- 14. PERMISSIONS
@@ -888,20 +888,20 @@ SELECT r.id, p.id FROM roles r CROSS JOIN permissions p WHERE r.name = 'BUSINESS
 -- HR_MANAGER
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AND p.code IN (
-                                                                                             'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                             'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
-                                                                                             'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_CREATE', 'DEPARTMENT_UPDATE', 'DEPARTMENT_TOGGLE_STATUS',
-                                                                                             'DEPARTMENT_ASSIGN_MANAGER', 'DEPARTMENT_VIEW_EMPLOYEES', 'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
-                                                                                             'POSITION_VIEW_LIST',
-                                                                                             'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE',
-                                                                                             'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
-                                                                                             'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
-                                                                                             'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
-                                                                                             'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
-                                                                                             'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
-                                                                                             'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
-                                                                                             'ATTENDANCE_CONFIRM_DEPT', 'ATTENDANCE_SEND_TO_BUSINESS'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_CREATE', 'USER_UPDATE', 'USER_TOGGLE_STATUS',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_CREATE', 'DEPARTMENT_UPDATE', 'DEPARTMENT_TOGGLE_STATUS',
+    'DEPARTMENT_ASSIGN_MANAGER', 'DEPARTMENT_VIEW_EMPLOYEES', 'DEPARTMENT_MOVE_MEMBER', 'DEPARTMENT_ASSIGN_POSITION',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE', 'CONTRACT_TERMINATE',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_UPDATE', 'ATTENDANCE_EXPORT_REPORT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
+    'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
+    'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
+    'ATTENDANCE_CONFIRM_DEPT', 'ATTENDANCE_SEND_TO_BUSINESS'
+);
 
 -- HR_STAFF
 INSERT INTO role_permissions (role_id, permission_id)
@@ -921,35 +921,35 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_STAFF' AND 
 -- PAYROLL_MANAGER
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_MANAGER' AND p.code IN (
-                                                                                                  'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                                  'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
-                                                                                                  'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
-                                                                                                  'POSITION_VIEW_LIST',
-                                                                                                  'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN',
-                                                                                                  'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
-                                                                                                  'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
-                                                                                                  'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
-                                                                                                  'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
-                                                                                                  'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
-                                                                                                  'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
-                                                                                                  'ATTENDANCE_CONFIRM_DEPT'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN',
+    'ATTENDANCE_VIEW_OWN', 'ATTENDANCE_VIEW_DEPARTMENT',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
+    'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_CONFIRM', 'PAYROLL_EXPORT_REPORT',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
+    'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
+    'ATTENDANCE_CONFIRM_DEPT'
+);
 
 -- PAYROLL_STAFF
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_STAFF' AND p.code IN (
-                                                                                                'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                                'USER_VIEW_LIST',
-                                                                                                'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
-                                                                                                'POSITION_VIEW_LIST',
-                                                                                                'CONTRACT_VIEW_OWN',
-                                                                                                'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_EXPORT_REPORT', 'ATTENDANCE_VIEW_OWN',
-                                                                                                'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
-                                                                                                'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT',
-                                                                                                'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
-                                                                                                'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
-                                                                                                'TASK_VIEW'
-    );
+    'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
+    'USER_VIEW_LIST',
+    'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
+    'POSITION_VIEW_LIST',
+    'CONTRACT_VIEW_OWN',
+    'ATTENDANCE_VIEW_DEPARTMENT', 'ATTENDANCE_VIEW_ALL', 'ATTENDANCE_EXPORT_REPORT', 'ATTENDANCE_VIEW_OWN',
+    'PAYROLL_VIEW_OWN', 'PAYROLL_VIEW_DEPARTMENT', 'PAYROLL_VIEW_LIST', 'PAYROLL_VIEW_DETAIL',
+    'PAYROLL_GENERATE', 'PAYROLL_UPDATE_COMPONENT', 'PAYROLL_EXPORT_REPORT',
+    'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
+    'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL',
+    'TASK_VIEW'
+);
 
 -- DEPARTMENT_MANAGER
 INSERT INTO role_permissions (role_id, permission_id)
@@ -981,6 +981,61 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'EMPLOYEE' AND 
                                                                                            'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL','PROCESS_REQUEST',
                                                                                            'TASK_VIEW'
     );
+
+-- ==================
+-- Bảng cho HR report
+-- ==================
+
+-- Bảng lịch sử department (Xử lý luân chuyển)
+CREATE TABLE department_history (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    department_id INT,
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    CONSTRAINT fk_department_history_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_department_history_department
+        FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- Bảng lịch sử contract type
+CREATE TABLE contract_history (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    contract_type VARCHAR(50) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    CONSTRAINT fk_contract_history_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO contract_history (user_id, contract_type, start_date, end_date) VALUES
+    -- Nhóm 1: Lịch sử thử việc (PROBATION) trước khi lên chính thức năm 2024
+    ((SELECT id FROM users WHERE email = 'admin@company.com'), 'PROBATION', '2023-11-01', '2023-12-31'),
+    ((SELECT id FROM users WHERE email = 'minhquan.it@company.com'), 'PROBATION', '2024-03-01', '2024-04-30'),
+    ((SELECT id FROM users WHERE email = 'hrmanager@company.com'), 'PROBATION', '2023-10-15', '2024-01-14'),
+    ((SELECT id FROM users WHERE email = 'maianh.hr@company.com'), 'PROBATION', '2023-12-01', '2024-01-31'),
+    ((SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'), 'PROBATION', '2023-12-20', '2024-02-19'),
+
+    -- Nhóm 2: Trước đây làm Bán thời gian (PART_TIME), sau đó chuyển sang Toàn thời gian cố định
+    ((SELECT id FROM users WHERE email = 'haiyen.hr@company.com'), 'PART_TIME', '2023-06-01', '2024-02-29'),
+    ((SELECT id FROM users WHERE email = 'ducanh.it@company.com'), 'PART_TIME', '2023-01-10', '2024-01-09'),
+    ((SELECT id FROM users WHERE email = 'giahuy.it@company.com'), 'PART_TIME', '2023-08-01', '2024-01-31'),
+    ((SELECT id FROM users WHERE email = 'hoangnam.it@company.com'), 'PART_TIME', '2023-09-15', '2024-02-14'),
+    ((SELECT id FROM users WHERE email = 'payrollmanager@company.com'), 'PART_TIME', '2023-05-20', '2024-01-19'),
+
+    -- Nhóm 3: Lịch sử Hợp đồng xác định thời hạn cũ (FIXED_TERM) giai đoạn trước (ví dụ 2021 - 2024)
+    ((SELECT id FROM users WHERE email = 'thaovy.payroll@company.com'), 'FIXED_TERM', '2021-02-10', '2024-02-09'),
+    ((SELECT id FROM users WHERE email = 'minhkhang.payroll@company.com'), 'FIXED_TERM', '2021-03-05', '2024-03-04'),
+    ((SELECT id FROM users WHERE email = 'phuonganh.payroll@company.com'), 'FIXED_TERM', '2021-03-18', '2024-03-17'),
+    ((SELECT id FROM users WHERE email = 'payroll@company.com'), 'FIXED_TERM', '2021-04-10', '2024-04-09'),
+
+    -- Nhóm 4: Hợp đồng vô thời hạn cũ (INDEFINITE_TERM) trước khi có sự điều chỉnh lại cơ chế lương/vị trí mới năm 2024
+    ((SELECT id FROM users WHERE email = 'salesmanager@company.com'), 'INDEFINITE_TERM', '2020-01-25', '2024-01-24'),
+    ((SELECT id FROM users WHERE email = 'khanhly.sales@company.com'), 'INDEFINITE_TERM', '2022-02-12', '2024-02-11'),
+    ((SELECT id FROM users WHERE email = 'quocbao.sales@company.com'), 'INDEFINITE_TERM', '2022-03-08', '2024-03-07'),
+    ((SELECT id FROM users WHERE email = 'businessadmin@company.com'), 'INDEFINITE_TERM', '2020-04-01', '2024-03-31');
 
 -- ============================================================
 -- 18. KẾT THÚC
