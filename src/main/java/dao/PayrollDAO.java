@@ -1,9 +1,6 @@
 package dao;
 
-import model.DepartmentPayrollSummary;
-import model.Payroll;
-import model.PayrollSetting;
-import model.PitBracket;
+import model.*;
 import util.DBConnection;
 
 import java.sql.*;
@@ -20,10 +17,10 @@ public class PayrollDAO {
             user_id, month, year, expected_hours, actual_hours, 
             basic_salary, rate_multiplier, total_income, bonus, description, 
             social_insurance, health_insurance, unemployment_insurance, 
-            union_fee, income_before_tax, taxable_income, income_tax, overtime_pay, net_pay, 
+            union_fee, income_before_tax, taxable_income, income_tax, overtime_pay, sick_leave_pay, net_pay, 
             company_social_insurance, company_health_insurance, company_unemployment_insurance, 
             company_union_fee, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
             expected_hours = VALUES(expected_hours),
             actual_hours = VALUES(actual_hours),
@@ -40,6 +37,7 @@ public class PayrollDAO {
             taxable_income = VALUES(taxable_income),
             income_tax = VALUES(income_tax),
             overtime_pay = VALUES(overtime_pay),
+            sick_leave_pay = VALUES(sick_leave_pay),
             net_pay = VALUES(net_pay),
             company_social_insurance = VALUES(company_social_insurance),
             company_health_insurance = VALUES(company_health_insurance),
@@ -71,22 +69,25 @@ public class PayrollDAO {
             ps.setLong(13, payroll.getUnemploymentInsurance());
             ps.setLong(14, payroll.getUnionFee());
 
-            // 15-18: Thuế và Net
+            // 15-17: Thuế
             ps.setLong(15, payroll.getIncomeBeforeTax());
             ps.setLong(16, payroll.getTaxableIncome());
             ps.setLong(17, payroll.getIncomeTax());
+
+            // 18-20: Các khoản phúc lợi và Net
             ps.setLong(18, payroll.getOvertimePay());
-            ps.setLong(19, payroll.getNetPay());
+            ps.setLong(19, payroll.getSickLeavePay());
+            ps.setLong(20, payroll.getNetPay());
 
-            // 19-22: Các khoản công ty đóng
-            ps.setLong(20, payroll.getCompanySocialInsurance());
-            ps.setLong(21, payroll.getCompanyHealthInsurance());
-            ps.setLong(22, payroll.getCompanyUnemploymentInsurance());
-            ps.setLong(23, payroll.getCompanyUnionFee());
+            // 20-24: Các khoản công ty đóng
+            ps.setLong(21, payroll.getCompanySocialInsurance());
+            ps.setLong(22, payroll.getCompanyHealthInsurance());
+            ps.setLong(23, payroll.getCompanyUnemploymentInsurance());
+            ps.setLong(24, payroll.getCompanyUnionFee());
 
-            // 23-24: Trạng thái và Ngày tạo
-            ps.setString(24, payroll.getStatus());
-            ps.setTimestamp(25, Timestamp.valueOf(payroll.getCreatedAt() != null ? payroll.getCreatedAt() : java.time.LocalDateTime.now()));
+            // 25-26: Trạng thái và Ngày tạo
+            ps.setString(25, payroll.getStatus());
+            ps.setTimestamp(26, Timestamp.valueOf(payroll.getCreatedAt() != null ? payroll.getCreatedAt() : java.time.LocalDateTime.now()));
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
@@ -128,11 +129,11 @@ public class PayrollDAO {
                     payroll.setTaxableIncome(rs.getLong("taxable_income"));
                     payroll.setIncomeTax(rs.getLong("income_tax"));
                     payroll.setOvertimePay(rs.getLong("overtime_pay"));
+                    payroll.setSickLeavePay(rs.getLong("sick_leave_pay"));
                     payroll.setNetPay(rs.getLong("net_pay"));
                     payroll.setCompanySocialInsurance(rs.getLong("company_social_insurance"));
                     payroll.setCompanyHealthInsurance(rs.getLong("company_health_insurance"));
                     payroll.setCompanyUnemploymentInsurance(rs.getLong("company_unemployment_insurance"));
-                    payroll.setCompanyUnionFee(rs.getLong("company_unemployment_insurance"));
                     payroll.setCompanyUnionFee(rs.getLong("company_union_fee"));
                     payroll.setStatus(rs.getString("status"));
 
@@ -567,33 +568,39 @@ public class PayrollDAO {
         return 0;
     }
 
-    public PayrollSetting getPayrollSetting() {
+    public PayrollSetting getPayrollSettingById(int id) {
         String sql = """
-                    SELECT * FROM payroll_settings
-                    WHERE effective_date <= ?
-                    ORDER BY effective_date DESC
-                    LIMIT 1
-                    """;
+            SELECT * FROM payroll_settings
+            WHERE id = ?
+            """;
+
         try (Connection conn = DBConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setDate(1, Date.valueOf(LocalDate.now()));
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    PayrollSetting setting = new PayrollSetting();
-                    setting.setId(rs.getInt("id"));
-                    setting.setEmployeeSocialInsurance(rs.getDouble("employee_social_insurance"));
-                    setting.setEmployeeHealthInsurance(rs.getDouble("employee_health_insurance"));
-                    setting.setEmployeeUnemploymentInsurance(rs.getDouble("employee_unemployment_insurance"));
-                    setting.setEmployeeUnion(rs.getDouble("employee_union"));
-                    setting.setCompanySocialInsurance(rs.getDouble("company_social_insurance"));
-                    setting.setCompanyHealthInsurance(rs.getDouble("company_health_insurance"));
-                    setting.setCompanyUnemploymentInsurance(rs.getDouble("company_unemployment_insurance"));
-                    setting.setCompanyUnion(rs.getDouble("company_union"));
-                    setting.setSelfDeduction(rs.getLong("self_deduction"));
-                    setting.setDependentDeduction(rs.getLong("dependent_deduction"));
+                    return mapResultSetToSetting(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return getLatestPayrollSetting();
+    }
 
-                    return setting;
+    public PayrollSetting getPayrollSettingByDate(LocalDate calculationDate) {
+        String sql = "SELECT * FROM payroll_settings WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setDate(1, Date.valueOf(calculationDate));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToSetting(rs);
                 }
             }
         } catch (Exception e) {
@@ -601,41 +608,6 @@ public class PayrollDAO {
         }
 
         return null;
-    }
-
-    public List<PitBracket> getPitBrackets() {
-        String sql = """ 
-                    SELECT * FROM pit_brackets\s
-                    WHERE effective_date = (
-                        SELECT MAX(effective_date)\s
-                        FROM pit_brackets\s
-                        WHERE effective_date <= ?
-                    )
-                    ORDER BY bracket_level ASC
-                    """;
-
-        List<PitBracket> brackets = new ArrayList<>();
-        try (Connection connection = DBConnection.getConnection();
-            PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setDate(1, Date.valueOf(LocalDate.now()));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    PitBracket bracket = new PitBracket();
-                    bracket.setId(rs.getInt("id"));
-                    bracket.setBracketLevel(rs.getInt("bracket_level"));
-                    bracket.setMinValue(rs.getLong("min_value"));
-                    bracket.setMaxValue(rs.getObject("max_value", Long.class));
-                    bracket.setTaxRate(rs.getDouble("tax_rate"));
-
-                    brackets.add(bracket);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return brackets;
     }
 
     public boolean isUnionMember(int userId) {
@@ -654,45 +626,282 @@ public class PayrollDAO {
         return false;
     }
 
-    public boolean updatePayrollSetting(PayrollSetting setting) {
-        String sql = "UPDATE payroll_settings SET " +
-                "employee_social_insurance = ?, " +
-                "employee_health_insurance = ?, " +
-                "employee_unemployment_insurance = ?, " +
-                "employee_union = ?, " +
-                "company_social_insurance = ?, " +
-                "company_health_insurance = ?, " +
-                "company_unemployment_insurance = ?, " +
-                "company_union = ?, " +
-                "self_deduction = ?, " +
-                "dependent_deduction = ?, " +
-                "effective_date = ? " +
-                "WHERE id = ?";
+    public PayrollSetting getLatestPayrollSetting() {
+        String sql = "SELECT * FROM payroll_settings ORDER BY effective_date DESC LIMIT 1";
+        try (Connection connection = DBConnection.getConnection();
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return mapResultSetToSetting(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    public List<PayrollSetting> getPayrollSettings(Integer month, Integer year, int offset, int limit) {
+        List<PayrollSetting> settings = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT * FROM payroll_settings 
+            WHERE 1=1
+            """);
 
-            ps.setDouble(1, setting.getEmployeeSocialInsurance());
-            ps.setDouble(2, setting.getEmployeeHealthInsurance());
-            ps.setDouble(3, setting.getEmployeeUnemploymentInsurance());
-            ps.setDouble(4, setting.getEmployeeUnion());
-            ps.setDouble(5, setting.getCompanySocialInsurance());
-            ps.setDouble(6, setting.getCompanyHealthInsurance());
-            ps.setDouble(7, setting.getCompanyUnemploymentInsurance());
-            ps.setDouble(8, setting.getCompanyUnion());
-            ps.setLong(9, setting.getSelfDeduction());
-            ps.setLong(10, setting.getDependentDeduction());
-            ps.setDate(11, Date.valueOf(setting.getEffectiveDate()));
-            ps.setInt(12, setting.getId());
+        if (month != null) {
+            sql.append(" AND MONTH(effective_date) = ? ");
+        }
+        if (year != null) {
+            sql.append(" AND YEAR(effective_date) = ? ");
+        }
 
-            return ps.executeUpdate() > 0;
+        sql.append(" ORDER BY effective_date DESC LIMIT ? OFFSET ? ");
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (month != null) {
+                ps.setInt(idx++, month);
+            }
+            if (year != null) {
+                ps.setInt(idx++, year);
+            }
+
+            ps.setInt(idx++, limit);
+            ps.setInt(idx++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PayrollSetting payrollSetting = mapResultSetToSetting(rs);
+                    settings.add(payrollSetting);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return settings;
+    }
+
+    public boolean insertPayrollSetting(PayrollSetting setting) {
+        String checkSql = "SELECT id FROM payroll_settings WHERE effective_date = ?";
+
+        String insertSql = """
+        INSERT INTO payroll_settings (
+            employee_social_insurance, employee_health_insurance, employee_unemployment_insurance, employee_union, 
+            company_social_insurance, company_health_insurance, company_unemployment_insurance, company_union, sick_leave_rate,
+            ot_weekday_rate, ot_weekend_rate, ot_holiday_rate, self_deduction, dependent_deduction, effective_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
+
+        String updateSql = """
+        UPDATE payroll_settings SET 
+            employee_social_insurance = ?, employee_health_insurance = ?, employee_unemployment_insurance = ?, employee_union = ?, 
+            company_social_insurance = ?, company_health_insurance = ?, company_unemployment_insurance = ?, company_union = ?, 
+            sick_leave_rate = ?, ot_weekday_rate = ?, ot_weekend_rate = ?, ot_holiday_rate = ?, self_deduction = ?, dependent_deduction = ? 
+        WHERE effective_date = ?
+        """;
+
+        try (Connection conn = DBConnection.getConnection()) {
+            boolean isExisted = false;
+
+            try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+                checkPs.setDate(1, java.sql.Date.valueOf(setting.getEffectiveDate()));
+                try (ResultSet rs = checkPs.executeQuery()) {
+                    if (rs.next()) {
+                        isExisted = true;
+                    }
+                }
+            }
+
+            String finalSql = isExisted ? updateSql : insertSql;
+
+            try (PreparedStatement ps = conn.prepareStatement(finalSql)) {
+                ps.setDouble(1, Math.round(setting.getEmployeeSocialInsurance() * 100.0) / 100.0);
+                ps.setDouble(2, Math.round(setting.getEmployeeHealthInsurance() * 100.0) / 100.0);
+                ps.setDouble(3, Math.round(setting.getEmployeeUnemploymentInsurance() * 100.0) / 100.0);
+                ps.setDouble(4, Math.round(setting.getEmployeeUnion() * 100.0) / 100.0);
+                ps.setDouble(5, Math.round(setting.getCompanySocialInsurance() * 100.0) / 100.0);
+                ps.setDouble(6, Math.round(setting.getCompanyHealthInsurance() * 100.0) / 100.0);
+                ps.setDouble(7, Math.round(setting.getCompanyUnemploymentInsurance() * 100.0) / 100.0);
+                ps.setDouble(8, Math.round(setting.getCompanyUnion() * 100.0) / 100.0);
+                ps.setDouble(9, Math.round(setting.getSickLeaveRate() * 100.0) / 100.0);
+                ps.setDouble(10, Math.round(setting.getOtWeekdayRate() * 100.0) / 100.0);
+                ps.setDouble(11, Math.round(setting.getOtWeekendRate() * 100.0) / 100.0);
+                ps.setDouble(12, Math.round(setting.getOtHolidayRate() * 100.0) / 100.0);
+                ps.setLong(13, setting.getSelfDeduction());
+                ps.setLong(14, setting.getDependentDeduction());
+                ps.setDate(15, java.sql.Date.valueOf(setting.getEffectiveDate()));
+
+                return ps.executeUpdate() > 0;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    public boolean updatePitBrackets(java.util.List<model.PitBracket> bracketList, java.time.LocalDate effectiveDate) {
+
+    public int countPayrollSettings(Integer month, Integer year) {
+        StringBuilder sql = new StringBuilder("""
+        SELECT COUNT(*) FROM payroll_settings 
+        WHERE 1=1
+        """);
+
+        if (month != null) {
+            sql.append(" AND MONTH(effective_date) = ? ");
+        }
+        if (year != null) {
+            sql.append(" AND YEAR(effective_date) = ? ");
+        }
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (month != null) {
+                ps.setInt(idx++, month);
+            }
+            if (year != null) {
+                ps.setInt(idx++, year);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public List<PitBracketVersion> getPitBracketVersions(Integer month, Integer year, int offset, int limit) {
+        List<PitBracketVersion> pitBracketVersions = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+        SELECT * FROM pit_bracket_versions 
+        WHERE 1=1
+        """);
+
+        if (month != null) {
+            sql.append(" AND MONTH(effective_date) = ? ");
+        }
+        if (year != null) {
+            sql.append(" AND YEAR(effective_date) = ? ");
+        }
+
+        sql.append(" ORDER BY effective_date DESC LIMIT ? OFFSET ? ");
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (month != null) {
+                ps.setInt(idx++, month);
+            }
+            if (year != null) {
+                ps.setInt(idx++, year);
+            }
+
+            ps.setInt(idx++, limit);
+            ps.setInt(idx++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PitBracketVersion version = new PitBracketVersion();
+                    version.setId(rs.getInt("id"));
+                    version.setVersionName(rs.getString("version_name"));
+                    version.setEffectiveDate(rs.getDate("effective_date").toLocalDate());
+                    if (rs.getTimestamp("created_at") != null) {
+                        version.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toLocalDate());
+                    }
+                    pitBracketVersions.add(version);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return pitBracketVersions;
+    }
+
+    public List<PitBracket> getPitBrackets(int versionId) {
+        String sql = """ 
+                    SELECT * FROM pit_brackets
+                    WHERE version_id = ?
+                    ORDER BY bracket_level ASC
+                    """;
+
+        List<PitBracket> brackets = new ArrayList<>();
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, versionId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PitBracket bracket = new PitBracket();
+                    bracket.setId(rs.getInt("id"));
+                    bracket.setBracketLevel(rs.getInt("bracket_level"));
+                    bracket.setMinValue(rs.getLong("min_value"));
+                    bracket.setMaxValue(rs.getObject("max_value", Long.class));
+                    bracket.setTaxRate(rs.getDouble("tax_rate"));
+                    brackets.add(bracket);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return brackets;
+    }
+
+    public PitBracketVersion getLatestPitBracketVersion() {
+        String fallbackSql = "SELECT * FROM pit_bracket_versions ORDER BY effective_date DESC LIMIT 1";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(fallbackSql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return mapResultSetToBracketVersion(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public PitBracketVersion getActivePitVersionIdByDate(LocalDate calculationDate) {
+        String sql = "SELECT * FROM pit_bracket_versions WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(calculationDate));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToBracketVersion(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return getLatestPitBracketVersion();
+    }
+
+    public List<PitBracket> getPitBracketsByDate(LocalDate calculationDate) {
+        PitBracketVersion version = getActivePitVersionIdByDate(calculationDate);
+
+        if (version != null) {
+            return getPitBrackets(version.getId());
+        }
+        return new ArrayList<>();
+    }
+
+    public boolean updatePitBrackets(List<PitBracket> bracketList, java.time.LocalDate effectiveDate) {
         String sql = "UPDATE pit_brackets SET min_value = ?, max_value = ?, tax_rate = ?, effective_date = ? WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -723,5 +932,151 @@ public class PayrollDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public int countPitBracketVersions(Integer month, Integer year) {
+        StringBuilder sql = new StringBuilder("""
+        SELECT COUNT(*) FROM pit_bracket_versions 
+        WHERE 1=1
+        """);
+
+        if (month != null) {
+            sql.append(" AND MONTH(effective_date) = ? ");
+        }
+        if (year != null) {
+            sql.append(" AND YEAR(effective_date) = ? ");
+        }
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (month != null) {
+                ps.setInt(idx++, month);
+            }
+            if (year != null) {
+                ps.setInt(idx++, year);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public boolean saveOrUpdatePitVersionAndBrackets(int month, int year, List<PitBracket> brackets) {
+        String checkSql = "SELECT id FROM pit_bracket_versions WHERE effective_date = ?";
+        String insertVersionSql = "INSERT INTO pit_bracket_versions (version_name, effective_date) VALUES (?, ?)";
+        String deleteBracketsSql = "DELETE FROM pit_brackets WHERE version_id = ?";
+        String insertBracketSql = "INSERT INTO pit_brackets (version_id, bracket_level, min_value, max_value, tax_rate) VALUES (?, ?, ?, ?, ?)";
+
+        java.sql.Connection conn = null;
+        java.sql.PreparedStatement ps = null;
+        java.sql.ResultSet rs = null;
+
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            java.time.LocalDate effectiveDate = java.time.LocalDate.of(year, month, 1);
+            int versionId = -1;
+
+            ps = conn.prepareStatement(checkSql);
+            ps.setDate(1, java.sql.Date.valueOf(effectiveDate));
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                versionId = rs.getInt("id");
+                try (java.sql.PreparedStatement psDel = conn.prepareStatement(deleteBracketsSql)) {
+                    psDel.setInt(1, versionId);
+                    psDel.executeUpdate();
+                }
+            } else {
+                // Trường hợp 2: CHƯA CÓ -> Tạo mới một phiên bản (Version)
+                try (java.sql.PreparedStatement psInsVer = conn.prepareStatement(insertVersionSql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+                    psInsVer.setString(1, "PIT Version " + month + "/" + year);
+                    psInsVer.setDate(2, java.sql.Date.valueOf(effectiveDate));
+                    psInsVer.executeUpdate();
+
+                    try (java.sql.ResultSet rsKey = psInsVer.getGeneratedKeys()) {
+                        if (rsKey.next()) {
+                            versionId = rsKey.getInt(1);
+                        }
+                    }
+                }
+            }
+
+            if (versionId != -1 && brackets != null && !brackets.isEmpty()) {
+                try (java.sql.PreparedStatement psInsBracket = conn.prepareStatement(insertBracketSql)) {
+                    for (PitBracket b : brackets) {
+                        psInsBracket.setInt(1, versionId);
+                        psInsBracket.setInt(2, b.getBracketLevel());
+                        psInsBracket.setLong(3, b.getMinValue());
+                        if (b.getMaxValue() != null) {
+                            psInsBracket.setLong(4, b.getMaxValue());
+                        } else {
+                            psInsBracket.setNull(4, java.sql.Types.DECIMAL);
+                        }
+                        psInsBracket.setDouble(5, b.getTaxRate());
+                        psInsBracket.addBatch();
+                    }
+                    psInsBracket.executeBatch();
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (Exception ex) { ex.printStackTrace(); }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            try { if (rs != null) rs.close(); } catch (Exception e) {}
+            try { if (ps != null) ps.close(); } catch (Exception e) {}
+            try { if (conn != null) conn.close(); } catch (Exception e) {}
+        }
+    }
+
+    private PayrollSetting mapResultSetToSetting(ResultSet rs) throws Exception {
+        PayrollSetting setting = new PayrollSetting();
+        setting.setId(rs.getInt("id"));
+        setting.setEmployeeSocialInsurance(rs.getDouble("employee_social_insurance"));
+        setting.setEmployeeHealthInsurance(rs.getDouble("employee_health_insurance"));
+        setting.setEmployeeUnemploymentInsurance(rs.getDouble("employee_unemployment_insurance"));
+        setting.setEmployeeUnion(rs.getDouble("employee_union"));
+        setting.setCompanySocialInsurance(rs.getDouble("company_social_insurance"));
+        setting.setCompanyHealthInsurance(rs.getDouble("company_health_insurance"));
+        setting.setCompanyUnemploymentInsurance(rs.getDouble("company_unemployment_insurance"));
+        setting.setCompanyUnion(rs.getDouble("company_union"));
+
+        setting.setSickLeaveRate(rs.getDouble("sick_leave_rate"));
+        setting.setOtWeekdayRate(rs.getDouble("ot_weekday_rate"));
+        setting.setOtWeekendRate(rs.getDouble("ot_weekend_rate"));
+        setting.setOtHolidayRate(rs.getDouble("ot_holiday_rate"));
+
+        setting.setSelfDeduction(rs.getLong("self_deduction"));
+        setting.setDependentDeduction(rs.getLong("dependent_deduction"));
+        setting.setEffectiveDate(rs.getDate("effective_date").toLocalDate());
+        return setting;
+    }
+
+    private PitBracketVersion mapResultSetToBracketVersion(ResultSet rs) throws Exception {
+        PitBracketVersion version = new PitBracketVersion();
+        version.setId(rs.getInt("id"));
+        version.setVersionName(rs.getString("version_name"));
+        version.setEffectiveDate(rs.getDate("effective_date").toLocalDate());
+        if (rs.getTimestamp("created_at") != null) {
+            version.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toLocalDate());
+        }
+        return version;
     }
 }

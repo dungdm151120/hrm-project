@@ -12,6 +12,10 @@ public class PayrollSetting {
     private double companyHealthInsurance;
     private double companyUnemploymentInsurance;
     private double companyUnion;
+    private double sickLeaveRate;
+    private double otWeekdayRate;
+    private double otWeekendRate;
+    private double otHolidayRate;
     private long selfDeduction;
     private long dependentDeduction;
     private LocalDate effectiveDate;
@@ -21,7 +25,8 @@ public class PayrollSetting {
 
     public PayrollSetting(int id, double employeeSocialInsurance, double employeeHealthInsurance, double employeeUnemploymentInsurance,
                           double employeeUnion, double companySocialInsurance, double companyHealthInsurance, double companyUnemploymentInsurance,
-                          double companyUnion, long selfDeduction, long dependentDeduction, LocalDate effectiveDate) {
+                          double companyUnion, double sickLeaveRate, double otWeekdayRate, double otWeekendRate, double otHolidayRate,
+                          long selfDeduction, long dependentDeduction, LocalDate effectiveDate) {
         this.id = id;
         this.employeeSocialInsurance = employeeSocialInsurance;
         this.employeeHealthInsurance = employeeHealthInsurance;
@@ -31,6 +36,10 @@ public class PayrollSetting {
         this.companyHealthInsurance = companyHealthInsurance;
         this.companyUnemploymentInsurance = companyUnemploymentInsurance;
         this.companyUnion = companyUnion;
+        this.sickLeaveRate = sickLeaveRate;
+        this.otWeekdayRate = otWeekdayRate;
+        this.otWeekendRate = otWeekendRate;
+        this.otHolidayRate = otHolidayRate;
         this.selfDeduction = selfDeduction;
         this.dependentDeduction = dependentDeduction;
         this.effectiveDate = effectiveDate;
@@ -130,5 +139,37 @@ public class PayrollSetting {
 
     public void setEmployeeUnion(double employeeUnion) {
         this.employeeUnion = employeeUnion;
+    }
+
+    public double getSickLeaveRate() {
+        return sickLeaveRate;
+    }
+
+    public double getOtWeekdayRate() {
+        return otWeekdayRate;
+    }
+
+    public double getOtWeekendRate() {
+        return otWeekendRate;
+    }
+
+    public double getOtHolidayRate() {
+        return otHolidayRate;
+    }
+
+    public void setSickLeaveRate(double sickLeaveRate) {
+        this.sickLeaveRate = sickLeaveRate;
+    }
+
+    public void setOtWeekdayRate(double otWeekdayRate) {
+        this.otWeekdayRate = otWeekdayRate;
+    }
+
+    public void setOtWeekendRate(double otWeekendRate) {
+        this.otWeekendRate = otWeekendRate;
+    }
+
+    public void setOtHolidayRate(double otHolidayRate) {
+        this.otHolidayRate = otHolidayRate;
     }
 }

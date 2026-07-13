@@ -1,5 +1,6 @@
 package controller.payroll;
 
+import dao.AttendanceDAO;
 import dao.PayrollDAO;
 import dao.UserDAO;
 import jakarta.servlet.ServletException;
@@ -7,20 +8,21 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import model.AttendanceConfirmedSummary;
 import model.Payroll;
 import model.PayrollSetting;
 import model.User;
-import service.PayrollService;
 
 import java.io.IOException;
-import java.util.Set;
+import java.time.LocalDate;
+import java.time.YearMonth;
 
 @WebServlet("/payroll/detail")
 public class PayrollDetailServlet extends HttpServlet {
 
     private final PayrollDAO payrollDAO = new PayrollDAO();
     private final UserDAO userDAO = new UserDAO();
+    private final AttendanceDAO attendanceDAO = new AttendanceDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -56,13 +58,27 @@ public class PayrollDetailServlet extends HttpServlet {
                 employeeInfo.setPositionName("N/A");
             }
 
-            PayrollSetting setting = payrollDAO.getPayrollSetting();
+            int parsedMonth = Integer.parseInt(month);
+            int parsedYear = Integer.parseInt(year);
+            LocalDate payrollPeriodDate = LocalDate.of(parsedYear, parsedMonth, 1);
+
+            int sickLeaveDays = attendanceDAO.countSickLeaveByUserId(payroll.getUserId(), parsedMonth, parsedYear);
+
+            PayrollSetting setting = payrollDAO.getPayrollSettingByDate(payrollPeriodDate);
             int numberOfDependents = payrollDAO.countDependentByUserId(
                     payroll.getUserId(),
                     payroll.getMonth(),
                     payroll.getYear()
             );
 
+            YearMonth yearMonth = YearMonth.of(parsedYear, parsedMonth);
+            LocalDate startDate = yearMonth.atDay(1);
+            LocalDate endDate = yearMonth.atEndOfMonth();
+            AttendanceConfirmedSummary summary = attendanceDAO.getSummaryConfirmedAttendanceByUser(payroll.getUserId(), startDate, endDate);
+            double overtimeHours = summary.getOvertimeHours();
+
+            request.setAttribute("overtimeHours", overtimeHours);
+            request.setAttribute("sickLeaveDays", sickLeaveDays);
             request.setAttribute("month", month);
             request.setAttribute("year", year);
             request.setAttribute("departmentId", departmentId);

@@ -6,8 +6,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Payroll Settings | HRM</title>
+    <title>Payroll Setting Details | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+    <style>
+        .setting-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .readonly-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            border-radius: 6px;
+            color: #334155;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+    </style>
 </head>
 <body class="dashboard-body">
 
@@ -17,87 +33,87 @@
     <div class="dashboard-main">
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Update Payroll & Insurance Rates</h1>
+                <h1 class="header-title">Payroll Setting Details</h1>
             </div>
         </div>
 
         <div class="dashboard-content">
-            <a class="back-link" href="${pageContext.request.contextPath}/payroll/update_component">Back to settings</a>
-            <h2 class="form-title">Configure Payroll Settings</h2>
+            <a class="back-link" href="${pageContext.request.contextPath}/payroll/setting/list">Return to setting list</a>
+            <h2 class="form-title" style="margin-top: 10px;">Configuration Information (Read-Only)</h2>
 
-            <c:if test="${not empty sessionScope.error}">
-                <div class="alert alert-danger">${sessionScope.error}</div>
-                <% session.removeAttribute("error"); %>
-            </c:if>
-            <c:if test="${not empty sessionScope.message}">
-                <div class="alert alert-success">${sessionScope.message}</div>
-                <% session.removeAttribute("message"); %>
-            </c:if>
-
-            <form action="${pageContext.request.contextPath}/payroll/setting" method="POST">
-                <input type="hidden" name="id" value="${setting.id}">
-
-                <div class="form-group">
+            <div class="setting-grid">
+                <div>
                     <h3>Employee Insurance Rates (%)</h3>
                     <div class="form-group">
                         <label>Social Insurance (%)</label>
-                        <input type="number" name="employeeSocialInsurance" class="form-control" value="${setting.employeeSocialInsurance}" required>
+                        <div class="readonly-box">${setting.employeeSocialInsurance}</div>
                     </div>
                     <div class="form-group">
                         <label>Health Insurance (%)</label>
-                        <input type="number" name="employeeHealthInsurance" class="form-control" value="${setting.employeeHealthInsurance}" required>
+                        <div class="readonly-box">${setting.employeeHealthInsurance}</div>
                     </div>
                     <div class="form-group">
                         <label>Unemployment Insurance (%)</label>
-                        <input type="number" name="employeeUnemploymentInsurance" class="form-control" value="${setting.employeeUnemploymentInsurance}" required>
+                        <div class="readonly-box">${setting.employeeUnemploymentInsurance}</div>
                     </div>
                     <div class="form-group">
                         <label>Union Fee (%)</label>
-                        <input type="number" name="employeeUnion" class="form-control" value="${setting.employeeUnion}" required>
+                        <div class="readonly-box">${setting.employeeUnion}</div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <h3>Company Insurance Rates (%)</h3>
+                <div>
+                        <h3 class="form-section-title">OT & Sick Leave Configurations</h3>
+                        <div class="form-group">
+                            <label>Sick Leave Benefit Rate (%)</label>
+                            <div class="readonly-box">${setting.sickLeaveRate}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>OT Weekday Rate (%)</label>
+                            <div class="readonly-box">${setting.otWeekdayRate}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>OT Weekend Rate (%)</label>
+                            <div class="readonly-box">${setting.otWeekendRate}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>OT Holiday Rate (%)</label>
+                            <div class="readonly-box">${setting.otHolidayRate}</div>
+                        </div>
+                    </div>
+
+                <div>
+                    <h3>Company Insurance Rates & Deductions</h3>
                     <div class="form-group">
-                        <label>Social Insurance (%)</label>
-                        <input type="number" name="companySocialInsurance" class="form-control" value="${setting.companySocialInsurance}" required>
+                        <label>Company Social Insurance (%)</label>
+                        <div class="readonly-box">${setting.companySocialInsurance}</div>
                     </div>
                     <div class="form-group">
-                        <label>Health Insurance (%)</label>
-                        <input type="number" name="companyHealthInsurance" class="form-control" value="${setting.companyHealthInsurance}" required>
+                        <label>Company Health Insurance (%)</label>
+                        <div class="readonly-box">${setting.companyHealthInsurance}</div>
                     </div>
                     <div class="form-group">
-                        <label>Unemployment Insurance (%)</label>
-                        <input type="number" name="companyUnemploymentInsurance" class="form-control" value="${setting.companyUnemploymentInsurance}" required>
+                        <label>Company Unemployment Insurance (%)</label>
+                        <div class="readonly-box">${setting.companyUnemploymentInsurance}</div>
                     </div>
                     <div class="form-group">
                         <label>Company Union Fee (%)</label>
-                        <input type="number" name="companyUnion" class="form-control" value="${setting.companyUnion}" required>
+                        <div class="readonly-box">${setting.companyUnion}</div>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <h3>Deductions & Effective Date</h3>
                     <div class="form-group">
                         <label>Self Deduction (VND)</label>
-                        <input type="number" name="selfDeduction" class="form-control" value="${setting.selfDeduction}" required>
+                        <div class="readonly-box"><fmt:formatNumber value="${setting.selfDeduction}" type="number"/> VND</div>
                     </div>
                     <div class="form-group">
                         <label>Dependent Deduction (VND)</label>
-                        <input type="number" name="dependentDeduction" class="form-control" value="${setting.dependentDeduction}" required>
+                        <div class="readonly-box"><fmt:formatNumber value="${setting.dependentDeduction}" type="number"/> VND</div>
                     </div>
                     <div class="form-group">
                         <label>Effective Date</label>
-                        <input type="date" name="effectiveDate" class="form-control" value="${setting.effectiveDate}" required>
+                        <div class="readonly-box">${setting.effectiveDate}</div>
                     </div>
                 </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn-save">Save Changes</button>
-                    <a href="${pageContext.request.contextPath}/payroll/update_component" class="btn-cancel">Cancel</a>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

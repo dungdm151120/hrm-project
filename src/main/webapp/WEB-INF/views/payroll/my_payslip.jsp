@@ -187,8 +187,16 @@
                             </div>
                             <div class="form-group">
                                 <label style="font-weight: 600; color: #374151;">Overtime Pay</label>
+                                <span class="badge-info">${overtimeHours != null ? overtimeHours : 0.0} OT hours</span>
                                 <div style="font-size: 1.1rem; font-weight: 700; color: #2563EB; padding: 8px 12px; background: #F3F4F6; border-radius: 4px;">
                                     <fmt:formatNumber value="${payroll.overtimePay}" type="number" maxFractionDigits="0"/> VND
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-weight: 600; color: #374151;">Sick Leave Pay</label>
+                                <span class="badge-info">${sickLeaveDays != null ? sickLeaveDays : 0} sick leave days</span>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #2563EB; padding: 8px 12px; background: #F3F4F6; border-radius: 4px;">
+                                    <fmt:formatNumber value="${payroll.sickLeavePay}" type="number" maxFractionDigits="0"/> VND
                                 </div>
                             </div>
                         </div>

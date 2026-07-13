@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.PitBracket;
+import model.PitBracketVersion;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -21,68 +22,37 @@ public class PayrollPitBracketServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<PitBracket> bracketList = payrollDao.getPitBrackets();
+        String idStr = request.getParameter("id");
+        String effectiveDateStr = request.getParameter("effectiveDate");
+        List<PitBracket> bracketList = null;
 
-        LocalDate commonEffectiveDate = LocalDate.now();
-        if (bracketList != null && !bracketList.isEmpty() && bracketList.get(0).getEffectiveDate() != null) {
-            commonEffectiveDate = bracketList.get(0).getEffectiveDate();
+        try {
+            if (idStr != null && !idStr.trim().isEmpty()) {
+                int id = Integer.parseInt(idStr);
+                bracketList = payrollDao.getPitBrackets(id);
+            }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+
+        if (bracketList == null || bracketList.isEmpty()) {
+            PitBracketVersion latestVersion = payrollDao.getLatestPitBracketVersion();
+            if (latestVersion != null) {
+                bracketList = payrollDao.getPitBrackets(latestVersion.getId());
+                if (effectiveDateStr == null || effectiveDateStr.trim().isEmpty()) {
+                    effectiveDateStr = latestVersion.getEffectiveDate().toString();
+                }
+            }
         }
 
         request.setAttribute("bracketList", bracketList);
-        request.setAttribute("commonEffectiveDate", commonEffectiveDate);
+        request.setAttribute("effectiveDate", effectiveDateStr);
         request.getRequestDispatcher("/WEB-INF/views/payroll/payroll_pit_bracket.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            String commonDateStr = request.getParameter("commonEffectiveDate");
-            LocalDate effectiveDate = LocalDate.parse(commonDateStr);
-
-            String[] ids = request.getParameterValues("bracketIds");
-            String[] levels = request.getParameterValues("bracketLevels");
-            String[] minValues = request.getParameterValues("minValues");
-            String[] maxValues = request.getParameterValues("maxValues");
-            String[] taxRates = request.getParameterValues("taxRates");
-
-            List<PitBracket> newBrackets = new ArrayList<>();
-
-            if (ids != null) {
-                for (int i = 0; i < ids.length; i++) {
-                    PitBracket bracket = new PitBracket();
-                    bracket.setId(Integer.parseInt(ids[i]));
-                    bracket.setBracketLevel(Integer.parseInt(levels[i]));
-                    bracket.setMinValue(Long.parseLong(minValues[i].trim()));
-
-                    String maxStr = maxValues[i] != null ? maxValues[i].trim() : "";
-                    if (!maxStr.isEmpty()) {
-                        bracket.setMaxValue(Long.parseLong(maxStr));
-                    } else {
-                        bracket.setMaxValue(null); // Không giới hạn (vô cực)
-                    }
-
-                    bracket.setTaxRate(Double.parseDouble(taxRates[i]));
-                    bracket.setEffectiveDate(effectiveDate);
-
-                    newBrackets.add(bracket);
-                }
-            }
-
-            boolean isUpdated = payrollDao.updatePitBrackets(newBrackets, effectiveDate);
-
-            if (isUpdated) {
-                request.getSession().setAttribute("message", "PIT tax brackets updated successfully!");
-            } else {
-                request.getSession().setAttribute("error", "Failed to update PIT tax brackets.");
-            }
-
-            response.sendRedirect(request.getContextPath() + "/payroll/pit");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.getSession().setAttribute("error", "An error occurred: " + e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/payroll/pit");
-        }
+        response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "This view is read-only.");
     }
 }

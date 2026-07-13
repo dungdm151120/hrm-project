@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payroll Setting | HRM</title>
+    <title>Payroll Components | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body class="dashboard-body">
@@ -45,7 +45,7 @@
                         <h2 class="setting-card-title">PIT Bracket</h2>
                         <p class="setting-card-desc">Update personal interest brackets</p>
                     </div>
-                    <a href="${pageContext.request.contextPath}/payroll/pit" class="btn-save">
+                    <a href="${pageContext.request.contextPath}/payroll/pit/list" class="btn-save">
                         Update PIT Bracket
                     </a>
                 </div>
@@ -55,7 +55,7 @@
                         <h2 class="setting-card-title">Insurance Rate</h2>
                         <p class="setting-card-desc">Adjust insurance for both employee and company, self deductions, union rate, etc</p>
                     </div>
-                    <a href="${pageContext.request.contextPath}/payroll/setting" class="btn-save">
+                    <a href="${pageContext.request.contextPath}/payroll/setting/list" class="btn-save">
                         Update Insurance Rate
                     </a>
                 </div>

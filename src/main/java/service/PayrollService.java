@@ -19,105 +19,26 @@ public class PayrollService {
 
     public Payroll generateMonthlyPayroll(User user, int month, int year, long basicSalary) {
 
-        double expectedHours = calculateExpectedHours(month, year);
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
+        LocalDate payrollPeriodDate = LocalDate.of(year, month, 1);
 
         AttendanceConfirmedSummary summary = attendanceDAO.getSummaryConfirmedAttendanceByUser(user.getId(), startDate, endDate);
-        PayrollSetting setting = payrollDAO.getPayrollSetting();
-        List<PitBracket> brackets = payrollDAO.getPitBrackets();
+        PayrollSetting setting = payrollDAO.getPayrollSettingByDate(payrollPeriodDate);
+        List<PitBracket> brackets = payrollDAO.getPitBracketsByDate(payrollPeriodDate);
 
         String positionName = (user.getPositionName() != null) ? user.getPositionName().toLowerCase() : "";
         int numberOfDependents = payrollDAO.countDependentByUserId(user.getId(), month, year);
-
-        double rateMultiplier = 1.0;
-        long bonus = 0;
-        String description = null;
-
-        if (positionName.contains("manager") || positionName.equals("system administrator")) {
-            rateMultiplier = 2.0;
-            bonus = 2000000;
-            description = "Lương thưởng cho Manager";
-        } else if (positionName.contains("staff")) {
-            rateMultiplier = 1.5;
-        }
-
-        // Get Actual Working Hours
-        double totalActualHours = summary.getTotalWorkHours();
-
-        // Calculate Gross Income
-        long grossIncome = Math.round(((basicSalary * rateMultiplier) / expectedHours) * totalActualHours);
-
-        // Calculate Insurance for Employee
-        long employeeSocialInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getEmployeeSocialInsurance()));
-        long employeeHealthInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getEmployeeHealthInsurance()));
-        long employeeUnemploymentInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getEmployeeUnemploymentInsurance()));
+        double expectedHours = calculateExpectedHours(month, year);
         boolean isUnionMember = payrollDAO.isUnionMember(user.getId());
-        long employeeUnionFee = 0;
-        if (isUnionMember) {
-            employeeUnionFee = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getEmployeeUnion()));
+        int sickLeaveDays = attendanceDAO.countSickLeaveByUserId(user.getId(), month, year);
+
+        if (summary == null || setting == null || brackets == null || brackets.isEmpty()) {
+            return null;
         }
-        long employeeTotalInsurance = employeeSocialInsurance + employeeHealthInsurance + employeeUnemploymentInsurance + employeeUnionFee;
 
-        // Calculate Income Before Tax
-        long incomeBeforeTax = grossIncome - employeeTotalInsurance;
-
-        // Get Taxable Income
-        long totalDeductionAmount = (long) (setting.getSelfDeduction() + (setting.getDependentDeduction() * numberOfDependents));
-        long taxableIncome = Math.max(0, Math.round(incomeBeforeTax - totalDeductionAmount));
-
-        // Income Tax
-        long incomeTax = Math.round(calculator.calculateIncomeTax(taxableIncome, brackets));
-
-        // Overtime Pay
-        long overtimePay = calculateOvertimePay(summary.getOvertimeHours(), expectedHours, basicSalary);
-
-        // Net Income
-        long netPay = incomeBeforeTax - incomeTax + bonus + overtimePay;
-
-        // Calculate Insurance Employer pay for each Employee
-        long companySocialInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getCompanySocialInsurance()));
-        long companyHealthInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getCompanyHealthInsurance()));
-        long companyUnemploymentInsurance = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getCompanyUnemploymentInsurance()));
-        long companyUnionFee = Math.round(calculator.calculateInsuranceAmount(grossIncome, setting.getCompanyUnion()));
-
-        Payroll payroll = new Payroll();
-        payroll.setUserId(user.getId());
-        payroll.setMonth(month);
-        payroll.setYear(year);
-        payroll.setExpectedHours(expectedHours);
-        payroll.setActualHours(totalActualHours);
-        payroll.setBasicSalary(basicSalary);
-        payroll.setRateMultiplier(rateMultiplier);
-        payroll.setTotalIncome(grossIncome);
-        payroll.setBonus(bonus);
-        payroll.setDescription(description);
-
-        payroll.setSocialInsurance(employeeSocialInsurance);
-        payroll.setHealthInsurance(employeeHealthInsurance);
-        payroll.setUnemploymentInsurance(employeeUnemploymentInsurance);
-        payroll.setUnionFee(employeeUnionFee);
-
-        payroll.setIncomeBeforeTax(incomeBeforeTax);
-        payroll.setTaxableIncome(taxableIncome);
-        payroll.setIncomeTax(incomeTax);
-        payroll.setOvertimePay(overtimePay);
-        payroll.setNetPay(netPay);
-
-        payroll.setCompanySocialInsurance(companySocialInsurance);
-        payroll.setCompanyHealthInsurance(companyHealthInsurance);
-        payroll.setCompanyUnemploymentInsurance(companyUnemploymentInsurance);
-        payroll.setCompanyUnionFee(companyUnionFee);
-        payroll.setStatus("DRAFT");
-
-        boolean isSaved = payrollDAO.savePayroll(payroll);
-        return isSaved ? payroll : null;
-    }
-
-    private long calculateOvertimePay(double overtimeHours, double expectedHours, long basicSalary) {
-        double hourlyRate = (expectedHours > 0) ? ((double) basicSalary / expectedHours) : 0;
-        return Math.round(overtimeHours * hourlyRate * 1.5);
+        return calculator.calculate(user, basicSalary, expectedHours, summary, isUnionMember, setting, positionName, numberOfDependents, brackets, sickLeaveDays, month, year);
     }
 
     public int generateBulkPayroll(List<User> users, int month, int year, Integer departmentId) throws Exception{
@@ -161,7 +82,7 @@ public class PayrollService {
             long basicSalary = activeSalary.longValue();
 
             Payroll payroll = this.generateMonthlyPayroll(detailedUser, month, year, basicSalary);
-            if (payroll != null) {
+            if (payroll != null && payrollDAO.savePayroll(payroll)) {
                 successCount++;
             }
         }

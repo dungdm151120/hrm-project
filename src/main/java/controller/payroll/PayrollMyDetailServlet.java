@@ -14,6 +14,7 @@ import model.User;
 import service.PayrollService;
 
 import java.io.IOException;
+import java.time.LocalDate;
 
 @WebServlet("/payroll/my/detail")
 public class PayrollMyDetailServlet extends HttpServlet {
@@ -29,6 +30,8 @@ public class PayrollMyDetailServlet extends HttpServlet {
             User currentUser = (User) session.getAttribute("currentUser");
 
             String idParam = request.getParameter("id");
+            String month = request.getParameter("month");
+            String year = request.getParameter("year");
 
             if (idParam == null || idParam.trim().isEmpty()) {
                 request.getSession().setAttribute("error", "Invalid payroll request id.");
@@ -61,7 +64,11 @@ public class PayrollMyDetailServlet extends HttpServlet {
                 employeeInfo.setPositionName("N/A");
             }
 
-            PayrollSetting setting = payrollDAO.getPayrollSetting();
+            int parsedMonth = Integer.parseInt(month);
+            int parsedYear = Integer.parseInt(year);
+            LocalDate payrollPeriodDate = LocalDate.of(parsedYear, parsedMonth, 1);
+
+            PayrollSetting setting = payrollDAO.getPayrollSettingByDate(payrollPeriodDate);
             int numberOfDependents = payrollDAO.countDependentByUserId(
                     payroll.getUserId(),
                     payroll.getMonth(),

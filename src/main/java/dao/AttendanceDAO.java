@@ -660,6 +660,32 @@ public class AttendanceDAO {
         return false;
     }
 
+    public int countSickLeaveByUserId(int userId, int month, int year) {
+        int sickLeaveCount = 0;
+
+        String sql = "SELECT COUNT(*) FROM attendance_snapshot " +
+                "WHERE user_id = ? " +
+                "AND status = 'SICK_LEAVE' " +
+                "AND snapshot_month = ? " +
+                "AND snapshot_year = ?";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, month);
+            ps.setInt(3, year);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    sickLeaveCount = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return sickLeaveCount;
+    }
+
     private void calculateLeaveBalance(Connection conn, int userId, int year, int month,
                                        AttendanceSummary summary) throws SQLException {
         double entitled = 12.0;
