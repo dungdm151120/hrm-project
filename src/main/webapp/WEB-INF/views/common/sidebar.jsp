@@ -436,6 +436,7 @@
             </button>
             <div class="submenu" style="${reportActive ? 'display: flex !important;' : ''}">
                 <a href="${ctx}/reports/attendance" class="submenu-item ${currentPath == ctx.concat('/reports/attendance') ? 'active' : ''}">Attendance Report</a>
+                <a href="${ctx}/reports/hr" class="submenu-item ${currentPath == ctx.concat('/reports/hr') ? 'active' : ''}">HR Report</a>
             </div>
         </div>
         </c:if>
