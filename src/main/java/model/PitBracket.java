@@ -4,26 +4,30 @@ import java.time.LocalDate;
 
 public class PitBracket {
     private int id;
+    private int versionId;
     private int bracketLevel;
     private long minValue;
     private Long maxValue;
     private double taxRate;
-    private LocalDate effectiveDate;
 
     public PitBracket() {
     }
 
-    public PitBracket(int id, int bracketLevel, long minValue, Long maxValue, double taxRate, LocalDate effectiveDate) {
+    public PitBracket(int id, int versionId, int bracketLevel, long minValue, Long maxValue, double taxRate) {
         this.id = id;
+        this.versionId = versionId;
         this.bracketLevel = bracketLevel;
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.taxRate = taxRate;
-        this.effectiveDate = effectiveDate;
     }
 
     public int getId() {
         return id;
+    }
+
+    public int getVersionId() {
+        return versionId;
     }
 
     public int getBracketLevel() {
@@ -42,12 +46,12 @@ public class PitBracket {
         return taxRate;
     }
 
-    public LocalDate getEffectiveDate() {
-        return effectiveDate;
-    }
-
     public void setId(int id) {
         this.id = id;
+    }
+
+    public void setVersionId(int versionId) {
+        this.versionId = versionId;
     }
 
     public void setBracketLevel(int bracketLevel) {
@@ -66,7 +70,4 @@ public class PitBracket {
         this.taxRate = taxRate;
     }
 
-    public void setEffectiveDate(LocalDate effectiveDate) {
-        this.effectiveDate = effectiveDate;
-    }
 }

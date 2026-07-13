@@ -185,6 +185,20 @@
                                 <label>Bonus Description</label>
                                 <textarea readonly style="width: 100%; height: 90px; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF; resize: none; font-family: inherit; font-size: 0.9rem;"><c:out value="${payroll.description}" default="No bonus descriptions provided."/></textarea>
                             </div>
+                            <div class="form-group">
+                                <label style="font-weight: 600; color: #374151;">Overtime Pay</label>
+                                <span class="badge-info">${overtimeHours != null ? overtimeHours : 0.0} OT hours</span>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #2563EB; padding: 8px 12px; background: #F3F4F6; border-radius: 4px;">
+                                    <fmt:formatNumber value="${payroll.overtimePay}" type="number" maxFractionDigits="0"/> VND
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-weight: 600; color: #374151;">Sick Leave Pay</label>
+                                <span class="badge-info">${sickLeaveDays != null ? sickLeaveDays : 0} sick leave days</span>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #2563EB; padding: 8px 12px; background: #F3F4F6; border-radius: 4px;">
+                                    <fmt:formatNumber value="${payroll.sickLeavePay}" type="number" maxFractionDigits="0"/> VND
+                                </div>
+                            </div>
                         </div>
 
                         <div style="background: #2563EB; padding: 20px; border-radius: 6px; color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">

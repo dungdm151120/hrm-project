@@ -141,7 +141,13 @@ public class PermissionFilter implements Filter {
         if (path.equals("/payroll/detail")) return "PAYROLL_VIEW_DETAIL";
         if (path.equals("/payroll/confirm")) return "PAYROLL_CONFIRM";
         if (path.equals("/payroll/generate")) return "PAYROLL_GENERATE";
-        if (path.equals("/payroll/update-component")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/update_component")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/pit/list")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/pit")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/pit/update")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/setting/list")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/setting")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/setting/update")) return "PAYROLL_UPDATE_COMPONENT";
         if (path.equals("/payroll/export")) return "PAYROLL_EXPORT_REPORT";
 
         // Announcement

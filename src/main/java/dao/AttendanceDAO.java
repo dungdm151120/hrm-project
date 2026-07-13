@@ -627,12 +627,28 @@ public class AttendanceDAO {
         return summary;
     }
 
-    public boolean hasAttendanceSnapshot(int month, int year) {
-        String sql = "SELECT COUNT(*) FROM attendance_snapshot WHERE MONTH(work_date) = ? AND YEAR(work_date) = ?";
+    public boolean hasAttendanceSnapshot(Integer month, Integer year, Integer departmentId) {
+        StringBuilder sql = new StringBuilder(
+                """
+                SELECT COUNT(*) FROM attendance_snapshot a
+                JOIN users u ON a.user_id = u.id
+                WHERE MONTH(work_date) = ? AND YEAR(work_date) = ?
+                """);
+
+        if (departmentId != null) {
+            sql.append(" AND department_id = ?");
+        }
+
         try (Connection connection = DBConnection.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+
             ps.setInt(1, month);
             ps.setInt(2, year);
+
+            if (departmentId != null) {
+                ps.setInt(3, departmentId);
+            }
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
@@ -642,6 +658,32 @@ public class AttendanceDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public int countSickLeaveByUserId(int userId, int month, int year) {
+        int sickLeaveCount = 0;
+
+        String sql = "SELECT COUNT(*) FROM attendance_snapshot " +
+                "WHERE user_id = ? " +
+                "AND status = 'SICK_LEAVE' " +
+                "AND snapshot_month = ? " +
+                "AND snapshot_year = ?";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, month);
+            ps.setInt(3, year);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    sickLeaveCount = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return sickLeaveCount;
     }
 
     private void calculateLeaveBalance(Connection conn, int userId, int year, int month,
