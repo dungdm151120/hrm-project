@@ -32,7 +32,7 @@ public class HRReportDAO {
                             + "  SELECT user_id, contract_type, start_date, end_date FROM contract_history) lc ";
 
             /* =================================================================
-             * QUERY 1: Lấy KPI Tổng số, Giới tính, Loại hợp đồng, Chức vụ
+             * QUERY 1: Lấy số liệu Tổng số, Giới tính, Loại hợp đồng, Chức vụ
              * ================================================================= */
             String summarySql =
                     "SELECT COUNT(DISTINCT u.id) as total, "
@@ -76,30 +76,20 @@ public class HRReportDAO {
             }
 
             /* =================================================================
-             * QUERY 2: Cơ cấu Loại Hợp Đồng (Biểu đồ)
+             * QUERY 2: Cơ cấu Loại Hợp Đồng
              * ================================================================= */
             String contractSql =
-                    "SELECT COALESCE(lc.contract_type, 'Chưa rõ') as type, COUNT(DISTINCT u.id) as count "
+                    "SELECT lc.contract_type as type, COUNT(DISTINCT u.id) as count "
                             + "FROM users u "
                             + "INNER JOIN " + allContractsView + " ON u.id = lc.user_id "
-                            + "LEFT JOIN department_history dh ON u.id = dh.user_id "
-                            + "  AND dh.start_date <= ? AND (dh.end_date IS NULL OR dh.end_date >= ?) "
                             + "WHERE lc.start_date <= ? "
-                            + "  AND (lc.end_date IS NULL OR lc.end_date >= ?) ";
-
-            if (departmentId != null) {
-                contractSql += " AND dh.department_id = ? ";
-            }
-            contractSql += " GROUP BY COALESCE(lc.contract_type, 'Chưa rõ')";
+                            + "  AND (lc.end_date IS NULL OR lc.end_date >= ?) "
+                            + "GROUP BY lc.contract_type";
 
             try (PreparedStatement ps = conn.prepareStatement(contractSql)) {
                 ps.setDate(1, sqlTargetDate);
                 ps.setDate(2, sqlTargetDate);
-                ps.setDate(3, sqlTargetDate);
-                ps.setDate(4, sqlTargetDate);
-                if (departmentId != null) {
-                    ps.setInt(5, departmentId);
-                }
+
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         contractTypeData.put(rs.getString("type"), rs.getInt("count"));
@@ -111,27 +101,17 @@ public class HRReportDAO {
              * QUERY 3: Cơ cấu Phòng Ban
              * ================================================================= */
             String deptSql =
-                    "SELECT d.name as dept_name, COUNT(DISTINCT dh.user_id) as count "
+                    "SELECT d.name as dept_name, COUNT(DISTINCT u.id) as count "
                             + "FROM departments d "
-                            + "LEFT JOIN department_history dh ON d.id = dh.department_id "
-                            + "  AND dh.start_date <= ? AND (dh.end_date IS NULL OR dh.end_date >= ?) "
-                            + "LEFT JOIN " + allContractsView + " ON dh.user_id = lc.user_id "
+                            + "LEFT JOIN users u ON d.id = u.department_id "
+                            + "INNER JOIN " + allContractsView + " ON u.id = lc.user_id "
                             + "  AND lc.start_date <= ? AND (lc.end_date IS NULL OR lc.end_date >= ?) "
-                            + "WHERE 1=1 ";
-
-            if (departmentId != null) {
-                deptSql += " AND d.id = ? ";
-            }
-            deptSql += " GROUP BY d.id, d.name";
+                            + "GROUP BY d.id, d.name";
 
             try (PreparedStatement ps = conn.prepareStatement(deptSql)) {
                 ps.setDate(1, sqlTargetDate);
                 ps.setDate(2, sqlTargetDate);
-                ps.setDate(3, sqlTargetDate);
-                ps.setDate(4, sqlTargetDate);
-                if (departmentId != null) {
-                    ps.setInt(5, departmentId);
-                }
+
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         departmentData.put(rs.getString("dept_name"), rs.getInt("count"));

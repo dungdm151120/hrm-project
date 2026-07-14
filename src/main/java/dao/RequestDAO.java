@@ -403,77 +403,6 @@ public class RequestDAO {
         }
         return 0;
     }
-    // Lấy danh sách các đơn thuộc một phòng ban (Department Requests)
-    public List<Request> getRequestByDepartment(int departmentId, String status, String type, String sort, int offset, int limit) {
-        List<Request> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(
-                "SELECT r.*, u.full_name as proposer_name, d.name as department_name, h.full_name as handler_name " +
-                        "FROM requests r " +
-                        "LEFT JOIN users u ON r.user_id = u.id " +
-                        "LEFT JOIN departments d ON r.department_id = d.id " +
-                        "LEFT JOIN users h ON r.handler_id = h.id " +
-                        "WHERE r.department_id = ?"
-        );
-
-        if (status != null && !status.isEmpty()) sql.append(" AND r.status = ?");
-        if (type != null && !type.isEmpty()) sql.append(" AND r.type = ?");
-
-        sql.append(" ORDER BY r.created_at ").append("oldest".equals(sort) ? "ASC" : "DESC").append(" LIMIT ? OFFSET ?");
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
-            int index = 1;
-            ps.setInt(index++, departmentId);
-            if (status != null && !status.isEmpty()) ps.setString(index++, status);
-            if (type != null && !type.isEmpty()) ps.setString(index++, type);
-            ps.setInt(index++, limit);
-            ps.setInt(index++, offset);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Request r = new Request();
-                    r.setId(rs.getInt("id"));
-                    r.setType(rs.getString("type"));
-                    r.setStatus(rs.getString("status"));
-                    r.setCreatedAt(rs.getTimestamp("created_at"));
-                    r.setProposerName(rs.getString("proposer_name"));
-                    r.setDepartmentName(rs.getString("department_name"));
-                    r.setHandlerName(rs.getString("handler_name"));
-                    r.setProcessedAt(rs.getTimestamp("processed_at"));
-
-                    list.add(r);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    // Đếm số lượng đơn thuộc phòng ban
-    public int countRequestByDepartment(int departmentId, String status, String type) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM requests WHERE department_id = ?");
-
-        if (status != null && !status.isEmpty()) sql.append(" AND status = ?");
-        if (type != null && !type.isEmpty()) sql.append(" AND type = ?");
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
-            int index = 1;
-            ps.setInt(index++, departmentId);
-            if (status != null && !status.isEmpty()) ps.setString(index++, status);
-            if (type != null && !type.isEmpty()) ps.setString(index++, type);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
 
     public List<Request> getHandledRequests(int handlerId, String status, String type, String sort, int offset, int limit) {
         List<Request> list = new ArrayList<>();
@@ -518,6 +447,7 @@ public class RequestDAO {
         }
         return list;
     }
+
     public int countHandledRequests(int handlerId, String status, String type) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM requests WHERE handler_id = ? AND status != 'CANCELLED'");
 
@@ -541,7 +471,7 @@ public class RequestDAO {
         return 0;
     }
 
-    // Lấy toàn bộ danh sách đơn (All Requests) cho Admin/HR Manager
+    // Lấy toàn bộ danh sách đơn cho Admin/HR Manager
     public List<Request> getAllRequest(String status, String type, String sort, int offset, int limit) {
         List<Request> list = new ArrayList<>();
 
