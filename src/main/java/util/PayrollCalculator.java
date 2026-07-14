@@ -95,7 +95,7 @@ public class PayrollCalculator {
 
     private long calculateOvertimePay(PayrollSetting setting, double overtimeHours, double expectedHours, long basicSalary) {
         double hourlyRate = (expectedHours > 0) ? ((double) basicSalary / expectedHours) : 0;
-        return Math.round(overtimeHours * hourlyRate * setting.getOtWeekdayRate());
+        return Math.round(overtimeHours * hourlyRate * (setting.getOtWeekdayRate() / 100));
     }
 
     public Long calculateInsuranceAmount(long grossIncome, double ratePercentage) {
