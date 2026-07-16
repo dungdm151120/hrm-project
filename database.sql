@@ -1004,56 +1004,29 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'EMPLOYEE' AND 
 -- Bảng cho HR report
 -- ==================
 
--- Bảng lịch sử department (Xử lý luân chuyển)
+-- Bảng lưu toàn bộ lịch sử các phòng ban cũ
 CREATE TABLE department_history (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    department_id INT,
+    department_id INT NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE NULL,
-    CONSTRAINT fk_department_history_user
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_department_history_department
-        FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    end_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_dept_history_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_dept_history_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
 );
 
--- Bảng lịch sử contract type
-CREATE TABLE contract_history (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    contract_type VARCHAR(50) NOT NULL,
+-- Bảng lưu thông tin phòng ban hiện tại sau lần
+CREATE TABLE department_after_update (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    department_id INT NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE NULL,
-    CONSTRAINT fk_contract_history_user
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+    end_date DATE DEFAULT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_dept_after_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_dept_after_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
 );
-
-INSERT INTO contract_history (user_id, contract_type, start_date, end_date) VALUES
-    -- Nhóm 1: Lịch sử thử việc (PROBATION) trước khi lên chính thức năm 2024
-    ((SELECT id FROM users WHERE email = 'admin@company.com'), 'PROBATION', '2023-11-01', '2023-12-31'),
-    ((SELECT id FROM users WHERE email = 'minhquan.it@company.com'), 'PROBATION', '2024-03-01', '2024-04-30'),
-    ((SELECT id FROM users WHERE email = 'hrmanager@company.com'), 'PROBATION', '2023-10-15', '2024-01-14'),
-    ((SELECT id FROM users WHERE email = 'maianh.hr@company.com'), 'PROBATION', '2023-12-01', '2024-01-31'),
-    ((SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'), 'PROBATION', '2023-12-20', '2024-02-19'),
-
-    -- Nhóm 2: Trước đây làm Bán thời gian (PART_TIME), sau đó chuyển sang Toàn thời gian cố định
-    ((SELECT id FROM users WHERE email = 'haiyen.hr@company.com'), 'PART_TIME', '2023-06-01', '2024-02-29'),
-    ((SELECT id FROM users WHERE email = 'ducanh.it@company.com'), 'PART_TIME', '2023-01-10', '2024-01-09'),
-    ((SELECT id FROM users WHERE email = 'giahuy.it@company.com'), 'PART_TIME', '2023-08-01', '2024-01-31'),
-    ((SELECT id FROM users WHERE email = 'hoangnam.it@company.com'), 'PART_TIME', '2023-09-15', '2024-02-14'),
-    ((SELECT id FROM users WHERE email = 'payrollmanager@company.com'), 'PART_TIME', '2023-05-20', '2024-01-19'),
-
-    -- Nhóm 3: Lịch sử Hợp đồng xác định thời hạn cũ (FIXED_TERM) giai đoạn trước (ví dụ 2021 - 2024)
-    ((SELECT id FROM users WHERE email = 'thaovy.payroll@company.com'), 'FIXED_TERM', '2021-02-10', '2024-02-09'),
-    ((SELECT id FROM users WHERE email = 'minhkhang.payroll@company.com'), 'FIXED_TERM', '2021-03-05', '2024-03-04'),
-    ((SELECT id FROM users WHERE email = 'phuonganh.payroll@company.com'), 'FIXED_TERM', '2021-03-18', '2024-03-17'),
-    ((SELECT id FROM users WHERE email = 'payroll@company.com'), 'FIXED_TERM', '2021-04-10', '2024-04-09'),
-
-    -- Nhóm 4: Hợp đồng vô thời hạn cũ (INDEFINITE_TERM) trước khi có sự điều chỉnh lại cơ chế lương/vị trí mới năm 2024
-    ((SELECT id FROM users WHERE email = 'salesmanager@company.com'), 'INDEFINITE_TERM', '2020-01-25', '2024-01-24'),
-    ((SELECT id FROM users WHERE email = 'khanhly.sales@company.com'), 'INDEFINITE_TERM', '2022-02-12', '2024-02-11'),
-    ((SELECT id FROM users WHERE email = 'quocbao.sales@company.com'), 'INDEFINITE_TERM', '2022-03-08', '2024-03-07'),
-    ((SELECT id FROM users WHERE email = 'businessadmin@company.com'), 'INDEFINITE_TERM', '2020-04-01', '2024-03-31');
 
 -- ============================================================
 -- 18. KẾT THÚC
