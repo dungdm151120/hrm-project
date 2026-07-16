@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.LaborContract;
+import model.User;
 
 import java.io.IOException;
 
@@ -56,7 +57,10 @@ public class UpdateContractServlet extends HttpServlet {
             return;
         }
 
-        if (contractDAO.update(updatedContract)) {
+        User currentUser = ContractRequestHelper.currentUser(request);
+        Integer changedBy = currentUser == null ? null : currentUser.getId();
+
+        if (contractDAO.update(updatedContract, changedBy)) {
             response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + updatedContract.getId());
         } else {
             forwardForm(request, response, updatedContract, "Update contract failed.");
