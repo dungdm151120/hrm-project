@@ -33,6 +33,11 @@ public class PayrollSettingUpdateServlet extends HttpServlet {
             double employeeUnemploymentInsurance = Double.parseDouble(request.getParameter("employeeUnemploymentInsurance"));
             double employeeUnion = Double.parseDouble(request.getParameter("employeeUnion"));
 
+            double sickLeaveRate = Double.parseDouble(request.getParameter("sickLeaveRate"));
+            double otWeekdayRate = Double.parseDouble(request.getParameter("otWeekdayRate"));
+            double otWeekendRate = Double.parseDouble(request.getParameter("otWeekendRate"));
+            double otHolidayRate = Double.parseDouble(request.getParameter("otHolidayRate"));
+
             double companySocialInsurance = Double.parseDouble(request.getParameter("companySocialInsurance"));
             double companyHealthInsurance = Double.parseDouble(request.getParameter("companyHealthInsurance"));
             double companyUnemploymentInsurance = Double.parseDouble(request.getParameter("companyUnemploymentInsurance"));
@@ -55,6 +60,10 @@ public class PayrollSettingUpdateServlet extends HttpServlet {
             setting.setCompanyUnion(companyUnion);
             setting.setSelfDeduction(selfDeduction);
             setting.setDependentDeduction(dependentDeduction);
+            setting.setSickLeaveRate(sickLeaveRate);
+            setting.setOtWeekdayRate(otWeekdayRate);
+            setting.setOtWeekendRate(otWeekendRate);
+            setting.setOtHolidayRate(otHolidayRate);
 
             LocalDate effectiveDate = LocalDate.of(effectiveYear, effectiveMonth, 1);
             setting.setEffectiveDate(effectiveDate);
