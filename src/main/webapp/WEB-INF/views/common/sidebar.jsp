@@ -539,6 +539,9 @@
             </button>
             <div class="submenu" style="${taskActive ? 'display: flex !important;' : ''}">
                 <a href="${ctx}/tasks" class="submenu-item ${currentPath == ctx.concat('/tasks') ? 'active' : ''}">View tasks</a>
+                <c:if test="${userPermissions.contains('TASK_VIEW_ALL')}">
+                    <a href="${ctx}/tasks/all" class="submenu-item ${currentPath == ctx.concat('/tasks/all') ? 'active' : ''}">View all tasks</a>
+                </c:if>
                 <c:if test="${userPermissions.contains('TASK_CREATE')}">
                     <a href="${ctx}/tasks/create" class="submenu-item ${currentPath == ctx.concat('/tasks/create') ? 'active' : ''}">Create task</a>
                 </c:if>
