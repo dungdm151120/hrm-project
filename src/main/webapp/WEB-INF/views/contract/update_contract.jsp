@@ -96,11 +96,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="fileUrl">File URL</label>
-                    <input type="url" id="fileUrl" name="fileUrl" value="${contract.fileUrl}">
-                </div>
-
-                <div class="form-group">
                     <label for="note">Note</label>
                     <textarea id="note" name="note">${contract.note}</textarea>
                 </div>

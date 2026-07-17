@@ -64,7 +64,7 @@ public class MoveMemberServlet extends HttpServlet {
             int currentDeptId = Integer.parseInt(currentDeptIdStr);
 
             UserDAO dao = new UserDAO();
-            String result = dao.moveDepartmentMember(userId, newDeptId);
+            String result = dao.moveDepartmentMember2(userId, newDeptId);
 
             if ("SUCCESS".equals(result)) {
                 response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + currentDeptId + "&msg=move_success");

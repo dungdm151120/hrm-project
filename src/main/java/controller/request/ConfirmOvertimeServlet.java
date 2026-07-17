@@ -38,6 +38,7 @@ public class ConfirmOvertimeServlet extends HttpServlet {
                 
                 boolean updated = overtimeService.confirmOvertime(requestId);
                 if (updated) {
+                    new dao.RequestDAO().notifyRequestChanged(requestId, sessionUser.getId(), "CONFIRMED");
                     response.sendRedirect("request_detail?id=" + requestId + "&success=confirm_success");
                 } else {
                     response.sendRedirect("request_detail?id=" + requestId + "&error=confirm_failed");

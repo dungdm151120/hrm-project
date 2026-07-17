@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.User;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -26,7 +27,10 @@ public class TerminateContractServlet extends HttpServlet {
             return;
         }
 
-        boolean terminated = contractDAO.terminate(contractId, request.getParameter("terminationReason"));
+        User currentUser = ContractRequestHelper.currentUser(request);
+        Integer terminatedBy = currentUser == null ? null : currentUser.getId();
+
+        boolean terminated = contractDAO.terminate(contractId, request.getParameter("terminationReason"), terminatedBy);
         if (terminated) {
             response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contractId);
             return;

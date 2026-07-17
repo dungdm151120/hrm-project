@@ -3,6 +3,7 @@ package controller.request;
 import dao.*;
 import model.AttendanceSummary;
 import model.Department;
+import model.Dependent;
 import model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -24,7 +25,8 @@ public class LoadSubFormServlet extends HttpServlet {
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Must be logged in");
@@ -89,8 +91,7 @@ public class LoadSubFormServlet extends HttpServlet {
             AttendanceSummary summary = attendanceDAO.getSummaryByUser(
                     currentUser.getId(),
                     LocalDate.of(today.getYear(), 1, 1),
-                    today
-            );
+                    today);
             request.setAttribute("remainingLeave", summary.getRemainingLeaveDays());
             request.setAttribute("remainingAbsent", summary.getRemainingAbsentDays());
 
@@ -121,10 +122,14 @@ public class LoadSubFormServlet extends HttpServlet {
             List<User> sysAdmins = userDAO.getUserByPosition("System Administrator");
             List<User> payrollManagers = userDAO.getUserByPosition("Payroll Manager");
             List<User> deptManagers = userDAO.getAllDeptManager();
-            if (sysAdmins != null) allObservers.addAll(sysAdmins);
-            if (hrManagers != null) allObservers.addAll(hrManagers);
-            if (payrollManagers != null) allObservers.addAll(payrollManagers);
-            if (deptManagers != null) allObservers.addAll(deptManagers);
+            if (sysAdmins != null)
+                allObservers.addAll(sysAdmins);
+            if (hrManagers != null)
+                allObservers.addAll(hrManagers);
+            if (payrollManagers != null)
+                allObservers.addAll(payrollManagers);
+            if (deptManagers != null)
+                allObservers.addAll(deptManagers);
             request.setAttribute("allObservers", allObservers);
         }
 
@@ -134,7 +139,8 @@ public class LoadSubFormServlet extends HttpServlet {
             jspPath = "/WEB-INF/views/request/subforms/move_remove.jsp";
         } else if ("OVERTIME".equals(type)) {
             User currentUser = userDAO.findById(user.getId());
-            int deptId = currentUser != null && currentUser.getDepartmentId() != null ? currentUser.getDepartmentId() : 0;
+            int deptId = currentUser != null && currentUser.getDepartmentId() != null ? currentUser.getDepartmentId()
+                    : 0;
             if (deptId > 0) {
                 Department dept = departmentDAO.getDepartmentById(deptId);
                 request.setAttribute("departmentName", dept != null ? dept.getName() : "N/A");
@@ -162,9 +168,11 @@ public class LoadSubFormServlet extends HttpServlet {
 
             List<User> observers = new ArrayList<>();
             List<User> allManagers = userDAO.getAllDeptManager();
-            if(hrManagers != null) allManagers.addAll(hrManagers);
+            if (hrManagers != null)
+                allManagers.addAll(hrManagers);
             List<User> payrollManagers = userDAO.getUserByPosition("Payroll Manager");
-            if(payrollManagers != null) allManagers.addAll(payrollManagers);
+            if (payrollManagers != null)
+                allManagers.addAll(payrollManagers);
             for (User mgr : allManagers) {
                 if (mgr.getId() != currentUser.getId() && !observers.contains(mgr)) {
                     observers.add(mgr);
@@ -202,7 +210,7 @@ public class LoadSubFormServlet extends HttpServlet {
 
             LocalDate today = LocalDate.now();
             int currentDay = today.getDayOfMonth();
-            if (currentDay <= 5) {
+            if (currentDay > 5 && currentDay <= 10) {
                 request.setAttribute("blocked", true);
             } else {
                 request.setAttribute("blocked", false);
@@ -214,9 +222,17 @@ public class LoadSubFormServlet extends HttpServlet {
             request.setAttribute("minDate", minDate.toString());
             request.setAttribute("maxDate", maxDate.toString());
 
-            AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
-            int count = acrDAO.countCurrentMonthByUser(currentUser.getId(), today.getMonthValue(), today.getYear());
-            request.setAttribute("remainingAdjustments", Math.max(0, 2 - count));
+            User defaultApprover = null;
+            if (currentUser.getDepartmentId() != null) {
+                Department dept = departmentDAO.getDepartmentById(currentUser.getDepartmentId());
+                if (dept != null && dept.getManagerUserId() != null) {
+                    defaultApprover = userDAO.findById(dept.getManagerUserId());
+                }
+            }
+            if (defaultApprover == null) {
+                defaultApprover = currentUser;
+            }
+            request.setAttribute("defaultApprover", defaultApprover);
 
             request.setAttribute("proposer", currentUser);
             request.setAttribute("today", today.toString());
@@ -264,6 +280,34 @@ public class LoadSubFormServlet extends HttpServlet {
             request.setAttribute("now", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
 
             jspPath = "/WEB-INF/views/request/subforms/sick_leave.jsp";
+        } else if ("DEPENDENT_CHANGE_REQUEST".equals(type)) {
+            User currentUser = userDAO.findById(user.getId());
+
+            List<User> payrollStaffList = userDAO.getUserByPosition("Payroll Staff");
+            request.setAttribute("payrollStaffList", payrollStaffList);
+
+            List<User> observers = new ArrayList<>();
+            List<User> deptManagers = userDAO.getAllDeptManager();
+            if (deptManagers != null) observers.addAll(deptManagers);
+            List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
+            if (hrManagers != null) observers.addAll(hrManagers);
+            List<User> payrollManagers = userDAO.getUserByPosition("Payroll Manager");
+            if (payrollManagers != null) observers.addAll(payrollManagers);
+
+            observers.removeIf(u -> u.getId() == currentUser.getId());
+
+            Set<User> uniqueObservers = new HashSet<>(observers);
+            request.setAttribute("observerList", new ArrayList<>(uniqueObservers));
+
+            request.setAttribute("proposer", currentUser);
+            request.setAttribute("today", LocalDate.now().toString());
+            request.setAttribute("now", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+
+            DependentDAO dependentDAO = new DependentDAO();
+            List<Dependent> activeDependents = dependentDAO.getActiveDependentsByUserId(currentUser.getId());
+            request.setAttribute("activeDependents", activeDependents);
+
+            jspPath = "/WEB-INF/views/request/subforms/dependent_change.jsp";
         }
 
         try {

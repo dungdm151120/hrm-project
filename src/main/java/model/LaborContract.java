@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 
 public class LaborContract {
     private static final DateTimeFormatter DISPLAY_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter DISPLAY_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private int id;
     private int userId;
@@ -21,8 +22,11 @@ public class LaborContract {
     private String workingTime;
     private String workLocation;
     private String status;
-    private String fileUrl;
     private String note;
+    private LocalDateTime terminatedAt;
+    private Integer terminatedBy;
+    private String terminatedByName;
+    private String terminationReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -138,20 +142,48 @@ public class LaborContract {
         this.status = status;
     }
 
-    public String getFileUrl() {
-        return fileUrl;
-    }
-
-    public void setFileUrl(String fileUrl) {
-        this.fileUrl = fileUrl;
-    }
-
     public String getNote() {
         return note;
     }
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public LocalDateTime getTerminatedAt() {
+        return terminatedAt;
+    }
+
+    public String getTerminatedAtDisplay() {
+        return terminatedAt == null ? "" : terminatedAt.format(DISPLAY_DATE_TIME_FORMATTER);
+    }
+
+    public void setTerminatedAt(LocalDateTime terminatedAt) {
+        this.terminatedAt = terminatedAt;
+    }
+
+    public Integer getTerminatedBy() {
+        return terminatedBy;
+    }
+
+    public void setTerminatedBy(Integer terminatedBy) {
+        this.terminatedBy = terminatedBy;
+    }
+
+    public String getTerminatedByName() {
+        return terminatedByName;
+    }
+
+    public void setTerminatedByName(String terminatedByName) {
+        this.terminatedByName = terminatedByName;
+    }
+
+    public String getTerminationReason() {
+        return terminationReason;
+    }
+
+    public void setTerminationReason(String terminationReason) {
+        this.terminationReason = terminationReason;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -93,6 +93,8 @@
                     <span><i class="legend-dot status-absent"></i>Absent</span>
                     <span><i class="legend-dot status-forgot"></i>Forgot Check In/Out</span>
                     <span><i class="legend-dot status-leave"></i>On leave</span>
+                    <span><i class="legend-dot status-sick-leave"></i>Sick leave</span>
+                    <span><i class="legend-dot status-holiday"></i>Holiday</span>
                     <span><span class="matrix-ot-badge" style="margin-right:4px;">OT</span>Overtime</span>
                 </div>
 
@@ -143,35 +145,13 @@
                                             <c:choose>
                                                 <c:when test="${not empty record}">
                                                     <td class="matrix-attendance-cell ${record.cssClass}">
-                                                        <c:choose>
-                                                            <c:when test="${canUpdateAttendance}">
-                                                                <c:url var="updateUrl" value="/attendance/update">
-                                                                    <c:param name="id" value="${record.attendanceRecordId}"/>
-                                                                </c:url>
-                                                                <a href="${updateUrl}"
-                                                                   class="matrix-cell-link"
-                                                                   title="${record.status}">
-                                                                    <span class="matrix-status-dot"></span>
-                                                                    <span class="matrix-time">
-                                                                        <c:choose>
-                                                                            <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
-                                                                            <c:otherwise>
-                                                                                ${record.checkInText} <b>-</b> ${record.checkOutText}
-                                                                            </c:otherwise>
-                                                                        </c:choose>
-                                                                    </span>
-                                                                    <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}"><a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge" style="text-decoration:none;" title="View OT Detail">OT</a></c:if>
-                                                                    <c:if test="${record.edited}">
-                                                                        <span class="matrix-edited-badge">Edited</span>
-                                                                    </c:if>
-                                                                </a>
-                                                            </c:when>
-                                                            <c:otherwise>
                                                                 <div class="matrix-cell-link" title="${record.status}">
                                                                     <span class="matrix-status-dot"></span>
                                                                     <span class="matrix-time">
                                                                         <c:choose>
                                                                             <c:when test="${record.status == 'ON_LEAVE'}">On leave</c:when>
+                                                                            <c:when test="${record.status == 'SICK_LEAVE'}">Sick leave</c:when>
+                                                                            <c:when test="${record.status == 'HOLIDAY'}">Holiday</c:when>
                                                                             <c:otherwise>
                                                                                 ${record.checkInText} <b>-</b> ${record.checkOutText}
                                                                             </c:otherwise>
@@ -182,8 +162,6 @@
                                                                         <span class="matrix-edited-badge">Edited</span>
                                                                     </c:if>
                                                                 </div>
-                                                            </c:otherwise>
-                                                        </c:choose>
                                                     </td>
                                                 </c:when>
                                                 <c:otherwise>
@@ -198,6 +176,31 @@
                         </tbody>
                     </table>
                 </div>
+
+                <c:if test="${currentUser.id == departmentManagerId
+                              && sessionScope.userPermissions.contains('ATTENDANCE_CONFIRM_DEPT')}">
+                    <div style="margin-top: 20px; text-align: right;">
+                        <c:choose>
+                            <c:when test="${isConfirmed}">
+                                <div class="attendance-matrix-message success">
+                                    ✅ Department Attendance Confirmed
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <form action="${pageContext.request.contextPath}/attendance/confirm"
+                                       method="post"
+                                       style="display:inline;"
+                                       onsubmit="return confirm('Confirm department attendance for ${selectedMonth}/${selectedYear}? This action cannot be undone.');">
+                                    <input type="hidden" name="month" value="${selectedMonth}">
+                                    <input type="hidden" name="year" value="${selectedYear}">
+                                    <input type="hidden" name="departmentId" value="${currentUser.departmentId}">
+                                    <input type="hidden" name="action" value="dept_confirm">
+                                    <button type="submit" class="matrix-btn matrix-search-btn">Confirm</button>
+                                </form>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </c:if>
 
                 <div class="matrix-pagination-wrapper">
                     <p>

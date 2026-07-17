@@ -34,7 +34,6 @@ public class GeneratePayrollServlet extends HttpServlet {
             int departmentId = Integer.parseInt(request.getParameter("departmentId"));
             int month = Integer.parseInt(request.getParameter("month"));
             int year = Integer.parseInt(request.getParameter("year"));
-            double expectedHours = 172.0;
 
             List<User> employeesToCalculate;
 
@@ -51,10 +50,8 @@ public class GeneratePayrollServlet extends HttpServlet {
                 return;
             }
 
-            int successCount = payrollService.generateBulkPayroll(employeesToCalculate, month, year, expectedHours, departmentId);
-
+            int successCount = payrollService.generateBulkPayroll(employeesToCalculate, month, year, departmentId);
             request.setAttribute("success", "Successfully generated " + successCount + " payroll records for " + month + "/" + year + ".");
-
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "An error occurred during payroll generation: " + e.getMessage());

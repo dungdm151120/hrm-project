@@ -1,5 +1,6 @@
 package controller.attendance;
 
+import dao.AttendanceConfirmDAO;
 import dao.AttendanceDAO;
 import dao.DepartmentDAO;
 import jakarta.servlet.ServletException;
@@ -8,6 +9,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.AttendanceRecordDTO;
+import model.DepartmentConfirmStatusDTO;
 
 import java.io.IOException;
 import java.time.DayOfWeek;
@@ -19,7 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet("/attendance/records")
+@WebServlet({"/attendance/records", "/attendance/view_all"})
 public class AttendanceRecordServlet extends HttpServlet {
     private static final int PAGE_SIZE = 5;
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM");
@@ -30,6 +32,9 @@ public class AttendanceRecordServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        boolean isUpdateMode = "/attendance/records".equals(request.getServletPath());
+        String actionUrl = request.getContextPath() + request.getServletPath();
+
         LocalDate today = LocalDate.now();
         int selectedMonth = parseIntInRange(
                 request.getParameter("month"),
@@ -46,6 +51,9 @@ public class AttendanceRecordServlet extends HttpServlet {
         Integer selectedDepartmentId = parsePositiveInteger(request.getParameter("departmentId"));
         String keyword = normalizeKeyword(request.getParameter("keyword"));
         int currentPage = Math.max(1, parseInt(request.getParameter("page"), 1));
+
+        // Đảm bảo dữ liệu holiday đã có cho tất cả nhân viên trong tháng
+        attendanceDAO.createHolidayRecordsForMonth(selectedYear, selectedMonth);
 
         int totalEmployees = attendanceDAO.countEmployeesForAttendanceMatrix(
                 selectedMonth,
@@ -67,17 +75,32 @@ public class AttendanceRecordServlet extends HttpServlet {
                 PAGE_SIZE
         );
 
+        AttendanceConfirmDAO confirmDAO = new AttendanceConfirmDAO();
+        String overallStatus = confirmDAO.getOverallStatus(selectedMonth, selectedYear);
+        List<DepartmentConfirmStatusDTO> deptStatuses = confirmDAO.getDepartmentLockStatuses(selectedMonth, selectedYear);
+
+        Map<Integer, Boolean> lockedDepartments = new java.util.HashMap<>();
+        for (DepartmentConfirmStatusDTO ds : deptStatuses) {
+            lockedDepartments.put(ds.getDepartmentId(), "CONFIRMED".equals(ds.getStatus()));
+        }
+        boolean isOverallLocked = "HR_SENT".equals(overallStatus) || "APPROVED".equals(overallStatus);
+
         Map<Integer, AttendanceRecordDTO> employeeMap = new LinkedHashMap<>();
         Map<String, AttendanceRecordDTO> attendanceMap = new LinkedHashMap<>();
         for (AttendanceRecordDTO record : records) {
+            boolean isDeptLocked = record.getDepartmentId() != null && lockedDepartments.getOrDefault(record.getDepartmentId(), false);
+            record.setLocked(isOverallLocked || isDeptLocked);
+
             employeeMap.putIfAbsent(record.getUserId(), record);
             attendanceMap.put(buildAttendanceKey(record.getUserId(), record.getWorkDate()), record);
         }
 
+        // Lấy danh sách ngày lễ trong tháng
+        List<LocalDate> holidayDates = attendanceDAO.getHolidayDatesInMonth(selectedYear, selectedMonth);
+
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);
         List<LocalDate> daysInMonth = new ArrayList<>();
         List<String> dayLabels = new ArrayList<>();
-        // Hiển thị tất cả các ngày trong tháng
         for (int day = 1; day <= selectedPeriod.lengthOfMonth(); day++) {
             LocalDate date = selectedPeriod.atDay(day);
             daysInMonth.add(date);
@@ -98,6 +121,10 @@ public class AttendanceRecordServlet extends HttpServlet {
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalEmployees", totalEmployees);
+        request.setAttribute("holidayDates", holidayDates);
+        request.setAttribute("isUpdateMode", isUpdateMode);
+        request.setAttribute("actionUrl", actionUrl);
+        request.setAttribute("servletPath", request.getServletPath());
         request.getRequestDispatcher("/WEB-INF/views/attendance/attendance_records.jsp")
                 .forward(request, response);
     }
