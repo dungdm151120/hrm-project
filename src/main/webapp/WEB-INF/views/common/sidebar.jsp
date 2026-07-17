@@ -400,7 +400,7 @@
                     <a href="${ctx}/attendance/department" class="submenu-item ${currentPath == ctx.concat('/attendance/department') ? 'active' : ''}">Department Attendance</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_ALL')}">
-                    <a href="${ctx}/attendance/view_all" class="submenu-item ${currentPath == ctx.concat('/attendance/view_all') ? 'active' : ''}">All Attendance (View)</a>
+                    <a href="${ctx}/attendance/view_all" class="submenu-item ${currentPath == ctx.concat('/attendance/view_all') ? 'active' : ''}">All Attendance</a>
                     <a href="${ctx}/attendance/work-hours" class="submenu-item ${currentPath == ctx.concat('/attendance/work-hours') ? 'active' : ''}">Work Hours Summary</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_UPDATE')}">
@@ -410,7 +410,7 @@
                 <c:if test="${userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}">
                     <a href="${ctx}/attendance/export" class="submenu-item ${currentPath == ctx.concat('/attendance/export') ? 'active' : ''}">Export Report</a>
                 </c:if>
-                <c:if test="${userPermissions.contains('ATTENDANCE_CONFIRM_DEPT') || userPermissions.contains('ATTENDANCE_SEND_TO_BUSINESS') || userPermissions.contains('ATTENDANCE_APPROVE_BUSINESS')}">
+                <c:if test="${currentUser.roleName != 'BUSINESS ADMIN' && (userPermissions.contains('ATTENDANCE_CONFIRM_DEPT') || (currentUser.roleName == 'HR_MANAGER' && userPermissions.contains('ATTENDANCE_FINALIZE_HR')))}">
                     <a href="${ctx}/attendance/confirm" class="submenu-item ${currentPath == ctx.concat('/attendance/confirm') ? 'active' : ''}">Confirm Attendance</a>
                     <a href="${ctx}/attendance/confirm-list" class="submenu-item ${currentPath.startsWith(ctx.concat('/attendance/confirm-list')) or currentPath.startsWith(ctx.concat('/attendance/confirm-detail')) ? 'active' : ''}">Confirmed Attendance List</a>
                 </c:if>

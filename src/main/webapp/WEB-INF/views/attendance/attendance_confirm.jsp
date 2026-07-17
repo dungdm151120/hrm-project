@@ -72,10 +72,7 @@
                     <h3 style="margin-top:0; font-size: 16px; color: #495057;">Overall Month Status: 
                         <c:choose>
                             <c:when test="${overallStatus == 'APPROVED'}">
-                                <span style="color: #28a745; font-weight: bold;">APPROVED & SNAPSHOT CREATED</span>
-                            </c:when>
-                            <c:when test="${overallStatus == 'HR_SENT'}">
-                                <span style="color: #ffc107; font-weight: bold;">HR SENT (WAITING FOR BUSINESS ADMIN)</span>
+                                <span style="color: #28a745; font-weight: bold;">Finalized</span>
                             </c:when>
                             <c:otherwise>
                                 <span style="color: #6c757d; font-weight: bold;">PENDING DEPARTMENT CONFIRMATIONS</span>
@@ -84,28 +81,17 @@
                     </h3>
                     
                     <c:if test="${overallStatus == 'PENDING'}">
-                        <c:if test="${isHR}">
-                            <p style="margin-bottom:0; color:#6c757d; font-size:14px;">You are HR. You can send the final request to Business Admin once all departments are CONFIRMED.</p>
+                        <c:if test="${isHRManager}">
+                            <p style="margin-bottom:0; color:#6c757d; font-size:14px;">All department confirmations are required before HR can finalize attendance.</p>
                             <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" style="margin-top:10px;">
                                 <input type="hidden" name="month" value="${selectedMonth}">
                                 <input type="hidden" name="year" value="${selectedYear}">
-                                <input type="hidden" name="action" value="hr_send">
-                                <button type="submit" class="matrix-btn matrix-search-btn" ${!allConfirmed ? 'disabled' : ''} style="${!allConfirmed ? 'opacity:0.5; cursor:not-allowed;' : ''}">Send to Business Admin</button>
+                                <input type="hidden" name="action" value="hr_finalize">
+                                <button type="submit" class="matrix-btn matrix-search-btn" ${!allConfirmed ? 'disabled' : ''} style="${!allConfirmed ? 'opacity:0.5; cursor:not-allowed;' : ''}" onclick="return confirm('Are you sure? This will create a permanent snapshot.');">Finalize Attendance</button>
                             </form>
                         </c:if>
                     </c:if>
                     
-                    <c:if test="${overallStatus == 'HR_SENT'}">
-                        <c:if test="${isBusinessAdmin}">
-                            <p style="margin-bottom:0; color:#6c757d; font-size:14px;">HR has sent the attendance data. You can now approve and lock it.</p>
-                            <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" style="margin-top:10px;">
-                                <input type="hidden" name="month" value="${selectedMonth}">
-                                <input type="hidden" name="year" value="${selectedYear}">
-                                <input type="hidden" name="action" value="business_approve">
-                                <button type="submit" class="matrix-btn" style="background-color: #dc3545; color:white; border:none; padding:8px 16px; border-radius:4px; font-weight:600; cursor:pointer;" onclick="return confirm('Are you sure? This will create a permanent snapshot.');">Approve & Create Snapshot</button>
-                            </form>
-                        </c:if>
-                    </c:if>
                 </div>
 
                 <div class="attendance-matrix-wrapper">
