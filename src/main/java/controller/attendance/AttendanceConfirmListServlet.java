@@ -30,14 +30,15 @@ public class AttendanceConfirmListServlet extends HttpServlet {
         String role = currentUser.getRoleName() != null ? currentUser.getRoleName().toUpperCase() : "";
         boolean isHRManager = "HR_MANAGER".equals(role);
         boolean isManager = currentUser.isManager();
+        boolean isPayrollRole = isPayrollRole(currentUser);
 
-        if (!isHRManager && !isManager) {
+        if (!isHRManager && !isManager && !isPayrollRole) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to access this page.");
             return;
         }
 
         Integer departmentIdFilter = null;
-        if (isManager && !isHRManager) {
+        if (isManager && !isHRManager && !isPayrollRole) {
             departmentIdFilter = currentUser.getDepartmentId();
         }
 
@@ -59,5 +60,11 @@ public class AttendanceConfirmListServlet extends HttpServlet {
         request.setAttribute("currentYear", currentYear);
         
         request.getRequestDispatcher("/WEB-INF/views/attendance/attendance_confirm_list.jsp").forward(request, response);
+    }
+
+    private boolean isPayrollRole(User user) {
+        String roleName = user.getRoleName();
+        return "PAYROLL_MANAGER".equalsIgnoreCase(roleName)
+                || "PAYROLL_STAFF".equalsIgnoreCase(roleName);
     }
 }

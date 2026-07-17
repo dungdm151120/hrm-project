@@ -134,4 +134,5 @@ public class AttendanceConfirmServlet extends HttpServlet {
     private boolean canFinalizeAttendance(Set<String> userPermissions) {
         return userPermissions.contains("ATTENDANCE_FINALIZE_HR");
     }
+
 }
