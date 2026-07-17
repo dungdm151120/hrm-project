@@ -142,6 +142,24 @@ CREATE TABLE labor_contracts (
                                      FOREIGN KEY (terminated_by) REFERENCES users(id)
 );
 
+CREATE TABLE labor_contract_change_logs (
+                                            id INT PRIMARY KEY AUTO_INCREMENT,
+                                            contract_id INT NOT NULL,
+                                            action VARCHAR(30) NOT NULL,
+                                            field_name VARCHAR(100) NOT NULL,
+                                            old_value TEXT,
+                                            new_value TEXT,
+                                            changed_by INT,
+                                            changed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                            CONSTRAINT fk_labor_contract_change_logs_contract
+                                                FOREIGN KEY (contract_id) REFERENCES labor_contracts(id) ON DELETE CASCADE,
+                                            CONSTRAINT fk_labor_contract_change_logs_changed_by
+                                                FOREIGN KEY (changed_by) REFERENCES users(id),
+                                            INDEX idx_contract_change_logs_contract (contract_id),
+                                            INDEX idx_contract_change_logs_changed_at (changed_at),
+                                            INDEX idx_contract_change_logs_changed_by (changed_by)
+);
+
 -- ============================================================
 -- 4. ATTENDANCE
 -- ============================================================

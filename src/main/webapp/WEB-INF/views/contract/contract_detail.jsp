@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -127,6 +128,54 @@
                     <button type="submit" class="btn btn-danger">Terminate Contract</button>
                 </form>
             </c:if>
+
+            <div class="table-wrapper" style="margin-top: 24px;">
+                <h2>Contract Change History</h2>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Action</th>
+                        <th>Field</th>
+                        <th>Old Value</th>
+                        <th>New Value</th>
+                        <th>Changed By</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <c:forEach items="${changeLogs}" var="log">
+                        <tr>
+                            <td><fmt:formatDate value="${log.changedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
+                            <td><c:out value="${log.action}"/></td>
+                            <td><c:out value="${log.fieldName}"/></td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${not empty log.oldValue}"><c:out value="${log.oldValue}"/></c:when>
+                                    <c:otherwise>-</c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${not empty log.newValue}"><c:out value="${log.newValue}"/></c:when>
+                                    <c:otherwise>-</c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${not empty log.changedByName}"><c:out value="${log.changedByName}"/></c:when>
+                                    <c:otherwise>System</c:otherwise>
+                                </c:choose>
+                            </td>
+                        </tr>
+                    </c:forEach>
+                    <c:if test="${empty changeLogs}">
+                        <tr>
+                            <td colspan="6" class="empty-state">No contract changes recorded yet.</td>
+                        </tr>
+                    </c:if>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
