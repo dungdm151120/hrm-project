@@ -26,7 +26,7 @@ public class HRReportServlet extends HttpServlet {
         String action = request.getParameter("action");
         String deptParam = request.getParameter("departmentId");
 
-        // 1. Tạo danh sách năm hiển thị bộ lọc (Từ 2020 đến năm hiện tại)
+        // 1. Tạo danh sách năm hiển thị bộ lọc (từ 2020 -> nay)
         int currentYear = LocalDate.now().getYear();
         List<Integer> years = new ArrayList<>();
         for (int i = currentYear; i >= 2020; i--) {
@@ -56,7 +56,7 @@ public class HRReportServlet extends HttpServlet {
             return;
         }
 
-        // 3. Xử lý logic tính toán Target Date tối ưu từ các ô chọn độc lập
+        // 3. Xử lý logic tính toán Target Date từ các ô chọn
         String periodType = request.getParameter("periodType");
         String monthParam = request.getParameter("month");
         String quarterParam = request.getParameter("quarter");
@@ -87,7 +87,7 @@ public class HRReportServlet extends HttpServlet {
         // 4. Lấy dữ liệu từ DAO
         HRReportDTO reportData = reportDAO.getHRReportData(targetDate, selectedDeptId);
 
-        // 5. Đẩy ngược dữ liệu dạng Số nguyên chuẩn sang JSP
+        // 5. Đẩy dữ liệu sang JSP
         request.setAttribute("isGenerated", true);
         request.setAttribute("reportData", reportData);
         request.setAttribute("periodType", periodType);

@@ -79,6 +79,13 @@
                                         <c:when test="${param.error == 'missing_evidence_file'}">Please upload a proof document (image).</c:when>
                                         <c:when test="${param.error == 'missing_dependents_count'}">Please enter the number of dependents.</c:when>
                                         <c:when test="${param.error == 'invalid_dependents_count'}">Invalid number of dependents.</c:when>
+                                        <c:when test="${param.error == 'missing_dependent_info'}">Please fill in all dependent details.</c:when>
+                                        <c:when test="${param.error == 'future_dependent_dob'}">Dependent's date of birth cannot be in the future.</c:when>
+                                        <c:when test="${param.error == 'invalid_dependent_dob'}">Invalid date of birth format.</c:when>
+                                        <c:when test="${param.error == 'missing_change_type'}">Please select a change type.</c:when>
+                                        <c:when test="${param.error == 'missing_dependent_id'}">Please select a dependent to modify.</c:when>
+                                        <c:when test="${param.error == 'invalid_dependent_id'}">Invalid dependent selected.</c:when>
+                                        <c:when test="${param.error == 'invalid_dependent_id_number'}">Personal Identification Number must be exactly 12 digits.</c:when>
                                         <c:when test="${param.error == 'missing_file'}">Please attach a medical
                                             certificate.</c:when>
                                         <c:when test="${param.error == 'missing_sick_dates'}">Please select at least one

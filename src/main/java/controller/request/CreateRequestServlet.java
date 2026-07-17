@@ -102,7 +102,10 @@ public class CreateRequestServlet extends HttpServlet {
                     }
                 }
             } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
-                req.setHandlerId(req.getApproverId());
+                String handlerIdParam = request.getParameter("handlerId");
+                if (handlerIdParam != null && !handlerIdParam.trim().isEmpty()) {
+                    req.setHandlerId(Integer.parseInt(handlerIdParam));
+                }
             } else if ("SICK_LEAVE_REQUEST".equals(req.getType()) || "DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
                 req.setHandlerId(req.getApproverId());
             } else {
@@ -200,14 +203,6 @@ public class CreateRequestServlet extends HttpServlet {
                 LocalDate workDate = LocalDate.parse(workDateStr);
 
                 AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
-                int count = acrDAO.countCurrentMonthByUser(
-                        currentUser.getId(),
-                        workDate.getMonthValue(),
-                        workDate.getYear());
-                if (count >= 2) {
-                    response.sendRedirect("create_request?error=adjustment_limit_exceeded");
-                    return;
-                }
 
                 String desiredCheckInStr = request.getParameter("desiredCheckIn");
                 String desiredCheckOutStr = request.getParameter("desiredCheckOut");
@@ -225,44 +220,95 @@ public class CreateRequestServlet extends HttpServlet {
                 acr.setRequestId(requestId);
                 acrDAO.create(acr);
             } else if ("DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
-                Part filePart = request.getPart("dependentFile");
-                if (filePart == null || filePart.getSize() == 0) {
-                    response.sendRedirect("create_request?error=missing_evidence_file");
+                String changeType = request.getParameter("changeType");
+                if (changeType == null || changeType.trim().isEmpty()) {
+                    response.sendRedirect("create_request?error=missing_change_type");
                     return;
                 }
 
-                String numberOfDependentsStr = request.getParameter("numberOfDependents");
-                if (numberOfDependentsStr == null || numberOfDependentsStr.trim().isEmpty()) {
-                    response.sendRedirect("create_request?error=missing_dependents_count");
-                    return;
-                }
-
-                int numberOfDependents;
-                try {
-                    numberOfDependents = Integer.parseInt(numberOfDependentsStr);
-                    if (numberOfDependents < 0) {
-                        throw new NumberFormatException();
+                Integer dependentId = null;
+                if ("UPDATE".equals(changeType) || "REMOVE".equals(changeType)) {
+                    String dependentIdStr = request.getParameter("dependentId");
+                    if (dependentIdStr == null || dependentIdStr.trim().isEmpty()) {
+                        response.sendRedirect("create_request?error=missing_dependent_id");
+                        return;
                     }
-                } catch (NumberFormatException e) {
-                    response.sendRedirect("create_request?error=invalid_dependents_count");
-                    return;
+                    try {
+                        dependentId = Integer.parseInt(dependentIdStr);
+                    } catch (NumberFormatException e) {
+                        response.sendRedirect("create_request?error=invalid_dependent_id");
+                        return;
+                    }
                 }
 
-                String fileName = System.currentTimeMillis() + "_" + filePart.getSubmittedFileName();
-                String uploadDir = getServletContext().getRealPath("/uploads/dependent_change");
-                File uploadFolder = new File(uploadDir);
-                if (!uploadFolder.exists()) {
-                    uploadFolder.mkdirs();
+                String dependentName = null;
+                LocalDate dependentDob = null;
+                String dependentIdNumber = null;
+                String relationship = null;
+
+                if ("ADD".equals(changeType) || "UPDATE".equals(changeType)) {
+                    dependentName = request.getParameter("dependentName");
+                    String dependentDobStr = request.getParameter("dependentDob");
+                    dependentIdNumber = request.getParameter("dependentIdNumber");
+                    relationship = request.getParameter("relationship");
+
+                    if (dependentName == null || dependentName.trim().isEmpty() ||
+                        dependentDobStr == null || dependentDobStr.trim().isEmpty() ||
+                        dependentIdNumber == null || dependentIdNumber.trim().isEmpty() ||
+                        relationship == null || relationship.trim().isEmpty()) {
+                        response.sendRedirect("create_request?error=missing_dependent_info");
+                        return;
+                    }
+
+                    dependentIdNumber = dependentIdNumber.trim();
+                    if (!dependentIdNumber.matches("^[0-9]{12}$")) {
+                        response.sendRedirect("create_request?error=invalid_dependent_id_number");
+                        return;
+                    }
+
+                    try {
+                        dependentDob = LocalDate.parse(dependentDobStr);
+                        if (dependentDob.isAfter(LocalDate.now())) {
+                            response.sendRedirect("create_request?error=future_dependent_dob");
+                            return;
+                        }
+                    } catch (Exception e) {
+                        response.sendRedirect("create_request?error=invalid_dependent_dob");
+                        return;
+                    }
                 }
-                String filePath = uploadDir + File.separator + fileName;
-                filePart.write(filePath);
-                String relativePath = "/uploads/dependent_change/" + fileName;
+
+                Part filePart = request.getPart("dependentFile");
+                if ("ADD".equals(changeType) || "UPDATE".equals(changeType)) {
+                    if (filePart == null || filePart.getSize() == 0) {
+                        response.sendRedirect("create_request?error=missing_evidence_file");
+                        return;
+                    }
+                }
+
+                String relativePath = null;
+                if (filePart != null && filePart.getSize() > 0) {
+                    String fileName = System.currentTimeMillis() + "_" + filePart.getSubmittedFileName();
+                    String uploadDir = getServletContext().getRealPath("/uploads/dependent_change");
+                    File uploadFolder = new File(uploadDir);
+                    if (!uploadFolder.exists()) {
+                        uploadFolder.mkdirs();
+                    }
+                    String filePath = uploadDir + File.separator + fileName;
+                    filePart.write(filePath);
+                    relativePath = "/uploads/dependent_change/" + fileName;
+                }
 
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
 
                 DependentChangeRequest dcr = new DependentChangeRequest();
                 dcr.setRequestId(requestId);
-                dcr.setNumberOfDependents(numberOfDependents);
+                dcr.setChangeType(changeType);
+                dcr.setDependentId(dependentId);
+                if (dependentName != null) dcr.setDependentName(dependentName.trim());
+                dcr.setDependentDob(dependentDob);
+                if (dependentIdNumber != null) dcr.setDependentIdNumber(dependentIdNumber.trim());
+                if (relationship != null) dcr.setRelationship(relationship.trim());
                 dcr.setDocumentPath(relativePath);
 
                 DependentChangeRequestDAO dcrDAO = new DependentChangeRequestDAO();

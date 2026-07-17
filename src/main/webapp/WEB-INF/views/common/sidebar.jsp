@@ -26,7 +26,6 @@
   }
   if (currentUser != null && userPermissions != null
           && (userPermissions.contains("VIEW_MY_REQUEST")
-              || userPermissions.contains("VIEW_DEPARTMENT_REQUESTS")
               || userPermissions.contains("VIEW_ALL_REQUEST")
               || userPermissions.contains("PROCESS_REQUEST")
               || userPermissions.contains("CREATE_REQUEST"))) {
@@ -49,7 +48,7 @@
 <c:set var="showContracts"   value="${userPermissions.contains('CONTRACT_VIEW_LIST') or userPermissions.contains('CONTRACT_VIEW_OWN') or userPermissions.contains('CONTRACT_CREATE')}" />
 <c:set var="showAttendance"  value="${userPermissions.contains('ATTENDANCE_VIEW_OWN') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_UPDATE') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}" />
 <c:set var="showTasks"       value="${userPermissions.contains('TASK_VIEW')}" />
-<c:set var="showRequests"    value="${userPermissions.contains('VIEW_MY_REQUEST') or (userPermissions.contains('VIEW_DEPARTMENT_REQUESTS') and not empty currentUser.departmentId) or userPermissions.contains('VIEW_ALL_REQUEST') or userPermissions.contains('CREATE_REQUEST')}" />
+<c:set var="showRequests"    value="${userPermissions.contains('VIEW_MY_REQUEST') or userPermissions.contains('VIEW_ALL_REQUEST') or userPermissions.contains('CREATE_REQUEST')}" />
 <c:set var="showPayroll"     value="${userPermissions.contains('PAYROLL_VIEW_OWN') or userPermissions.contains('PAYROLL_VIEW_LIST') or userPermissions.contains('PAYROLL_GENERATE') or userPermissions.contains('PAYROLL_EXPORT_REPORT')}" />
 <c:set var="showAnnouncements" value="${userPermissions.contains('ANNOUNCEMENT_VIEW_LIST') or userPermissions.contains('ANNOUNCEMENT_CREATE')}" />
 
@@ -447,7 +446,6 @@
                                     currentPath.startsWith(ctx.concat('/view_pending_request')) ||
                                     currentPath.startsWith(ctx.concat('/view_observed_request')) ||
                                     currentPath.startsWith(ctx.concat('/view_handled_request')) ||
-                                    currentPath.startsWith(ctx.concat('/view_department_request')) ||
                                     currentPath.startsWith(ctx.concat('/view_all_request')) ||
                                     currentPath.startsWith(ctx.concat('/create_request')) ||
                                     currentPath.startsWith(ctx.concat('/request_detail'))}" />
@@ -475,10 +473,6 @@
                     </c:if>
                     <!-- Mọi người dùng đăng nhập đều có thể được làm approver, nên cứ hiển thị menu Pending Approvals -->
                     <a href="${ctx}/view_pending_request" class="submenu-item ${currentPath == ctx.concat('/view_pending_request') ? 'active' : ''}">Pending Approvals</a>
-                    
-                    <c:if test="${userPermissions.contains('VIEW_DEPARTMENT_REQUESTS') and not empty currentUser.departmentId}">
-                        <a href="${ctx}/view_department_request" class="submenu-item ${currentPath == ctx.concat('/view_department_request') ? 'active' : ''}">View department requests</a>
-                    </c:if>
                     <c:if test="${userPermissions.contains('VIEW_ALL_REQUEST')}">
                         <a href="${ctx}/view_all_request" class="submenu-item ${currentPath == ctx.concat('/view_all_request') ? 'active' : ''}">View all requests</a>
                     </c:if>
@@ -578,7 +572,6 @@
   <div class="header-right global-header-actions">
     <c:if test="${userPermissions.contains('ANNOUNCEMENT_VIEW_LIST')
                   or userPermissions.contains('VIEW_MY_REQUEST')
-                  or userPermissions.contains('VIEW_DEPARTMENT_REQUESTS')
                   or userPermissions.contains('VIEW_ALL_REQUEST')
                   or userPermissions.contains('PROCESS_REQUEST')
                   or userPermissions.contains('CREATE_REQUEST')}">

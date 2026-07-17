@@ -44,6 +44,7 @@ public class AttendanceReportDAO {
                 GROUP BY op.user_id
             ) ot_reg ON u.id = ot_reg.user_id
             WHERE u.active = TRUE
+              AND u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN', 'SYSTEM ADMIN'))
         """);
         
         if (departmentId != null && departmentId > 0) {

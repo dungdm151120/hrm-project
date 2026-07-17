@@ -82,30 +82,6 @@ public class ProcessRequestServlet extends HttpServlet {
                                         attendanceDAO.markAbsent(req.getUserId(), lr.getLeaveDate());
                                     }
                                 }
-                            } else if ("APPROVE".equals(action) && "ATTENDANCE_ADJUST".equals(req.getType())) {
-                                AttendanceChangeRequest acr = attendanceChangeRequestDAO.getByRequestId(requestId);
-                                if (acr != null) {
-                                    AttendanceRecord record = attendanceDAO.getRecordByUserAndDate(req.getUserId(), acr.getWorkDate());
-                                    if (record == null) {
-                                        record = new AttendanceRecord();
-                                        record.setUserId(req.getUserId());
-                                        record.setWorkDate(acr.getWorkDate());
-                                    }
-                                    if (acr.getDesiredCheckIn() != null) {
-                                        record.setCheckIn(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckIn()));
-                                    } else {
-                                        record.setCheckIn(null);
-                                    }
-                                    if (acr.getDesiredCheckOut() != null) {
-                                        record.setCheckOut(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckOut()));
-                                    } else {
-                                        record.setCheckOut(null);
-                                    }
-                                    record.setNote("Attendance adjusted via request #" + requestId);
-                                    attendanceDAO.calculateWorkingHours(record);
-                                    record.setStatus(attendanceDAO.determineStatus(record));
-                                    attendanceDAO.saveAttendanceRecord(record);
-                                }
                             } else if ("APPROVE".equals(action) && "SICK_LEAVE_REQUEST".equals(req.getType())) {
                                 SickLeaveRequest sickReq = sickLeaveRequestDAO.getByRequestId(requestId);
                                 if (sickReq != null) {
@@ -118,12 +94,43 @@ public class ProcessRequestServlet extends HttpServlet {
                                 DependentChangeRequestDAO dcrDAO = new DependentChangeRequestDAO();
                                 DependentChangeRequest dcr = dcrDAO.getByRequestId(requestId);
                                 if (dcr != null) {
-                                    dcrDAO.updateUserDependentNumber(req.getUserId(), dcr.getNumberOfDependents());
+                                    dcrDAO.approveDependentChange(req.getUserId(), dcr);
                                 }
                             } else if ("OVERTIME".equals(req.getType())) {
                                 service.OvertimeService overtimeService = new service.OvertimeService();
                                 overtimeService.handleProcessAction(requestId, action);
                             }
+                        }
+                    }
+                    break;
+
+                case "APPLY_CHANGES":
+                    if (("HR Staff".equals(position) || currentUser.getId() == req.getHandlerId()) && "APPROVED".equals(req.getStatus()) && "ATTENDANCE_ADJUST".equals(req.getType())) {
+                        AttendanceChangeRequest acr = attendanceChangeRequestDAO.getByRequestId(requestId);
+                        if (acr != null) {
+                            AttendanceRecord record = attendanceDAO.getRecordByUserAndDate(req.getUserId(), acr.getWorkDate());
+                            if (record == null) {
+                                record = new AttendanceRecord();
+                                record.setUserId(req.getUserId());
+                                record.setWorkDate(acr.getWorkDate());
+                            }
+                            if (acr.getDesiredCheckIn() != null) {
+                                record.setCheckIn(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckIn()));
+                            } else {
+                                record.setCheckIn(null);
+                            }
+                            if (acr.getDesiredCheckOut() != null) {
+                                record.setCheckOut(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckOut()));
+                            } else {
+                                record.setCheckOut(null);
+                            }
+                            record.setNote("Attendance adjusted via request #" + requestId);
+                            attendanceDAO.calculateWorkingHours(record);
+                            record.setStatus(attendanceDAO.determineStatus(record));
+                            attendanceDAO.saveAttendanceRecord(record);
+
+                            success = attendanceChangeRequestDAO.markApplied(requestId);
+                            notificationEventType = null;
                         }
                     }
                     break;

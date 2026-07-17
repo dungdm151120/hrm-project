@@ -1023,6 +1023,34 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'EMPLOYEE' AND 
                                                                                            'TASK_VIEW'
     );
 
+-- ==================
+-- Bảng cho HR report
+-- ==================
+
+-- Bảng lưu toàn bộ lịch sử các phòng ban cũ
+CREATE TABLE department_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    department_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_dept_history_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_dept_history_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
+);
+
+-- Bảng lưu thông tin phòng ban hiện tại sau lần
+CREATE TABLE department_after_update (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    department_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE DEFAULT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_dept_after_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_dept_after_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
+);
+
 
 INSERT INTO contract_history (user_id, contract_type, start_date, end_date) VALUES
                                                                                 -- Nhóm 1: Lịch sử thử việc (PROBATION) trước khi lên chính thức năm 2024

@@ -24,15 +24,38 @@ public class HRReportDAO {
         try (Connection conn = DBConnection.getConnection()) {
 
             /* =================================================================
-             * SUB-QUERY ĐƯỢC CHUẨN HÓA (Gộp cả Hợp đồng hiện tại & Lịch sử cũ)
+             * SUB-QUERY KHÔI PHỤC TRẠNG THÁI LỊCH SỬ TẠI MỐC TARGET_DATE
              * ================================================================= */
-            String allContractsView =
-                    " (SELECT user_id, contract_type, start_date, end_date FROM labor_contracts "
-                            + "  UNION "
-                            + "  SELECT user_id, contract_type, start_date, end_date FROM contract_history) lc ";
+            String activeContractsSubQuery =
+                    "(SELECT lc.user_id, " +
+                            "        COALESCE(" +
+                            "            (SELECT log.old_value FROM labor_contract_change_logs log " +
+                            "             WHERE log.contract_id = lc.id " +
+                            "               AND log.field_name = 'contract_type' " +
+                            "               AND CAST(log.changed_at AS DATE) > ? " + // Chỉ khôi phục nếu ngày sửa sau ngày báo cáo
+                            "             ORDER BY log.changed_at ASC LIMIT 1), " +
+                            "            lc.contract_type" +
+                            "        ) as contract_type, " +
+                            "        COALESCE(" +
+                            "            (SELECT STR_TO_DATE(log.old_value, '%Y-%m-%d') FROM labor_contract_change_logs log " +
+                            "             WHERE log.contract_id = lc.id " +
+                            "               AND log.field_name = 'start_date' " +
+                            "               AND CAST(log.changed_at AS DATE) > ? " + // Chỉ khôi phục nếu ngày sửa sau ngày báo cáo
+                            "             ORDER BY log.changed_at ASC LIMIT 1), " +
+                            "            lc.start_date" +
+                            "        ) as start_date, " +
+                            "        COALESCE(" +
+                            "            (SELECT STR_TO_DATE(log.old_value, '%Y-%m-%d') FROM labor_contract_change_logs log " +
+                            "             WHERE log.contract_id = lc.id " +
+                            "               AND log.field_name = 'end_date' " +
+                            "               AND CAST(log.changed_at AS DATE) > ? " + // Chỉ khôi phục nếu ngày sửa sau ngày báo cáo
+                            "             ORDER BY log.changed_at ASC LIMIT 1), " +
+                            "            lc.end_date" +
+                            "        ) as end_date " +
+                            " FROM labor_contracts lc) lc ";
 
             /* =================================================================
-             * QUERY 1: Lấy KPI Tổng số, Giới tính, Loại hợp đồng, Chức vụ
+             * QUERY 1: Lấy số liệu Tổng số, Giới tính, Loại hợp đồng, Chức vụ
              * ================================================================= */
             String summarySql =
                     "SELECT COUNT(DISTINCT u.id) as total, "
@@ -42,25 +65,29 @@ public class HRReportDAO {
                             + "SUM(CASE WHEN p.name LIKE '%MANAGER%' THEN 1 ELSE 0 END) as managers, "
                             + "SUM(CASE WHEN p.name NOT LIKE '%MANAGER%' THEN 1 ELSE 0 END) as employees "
                             + "FROM users u "
-                            + "INNER JOIN " + allContractsView + " ON u.id = lc.user_id "
+                            + "INNER JOIN " + activeContractsSubQuery + " ON u.id = lc.user_id "
                             + "LEFT JOIN positions p ON u.position_id = p.id "
-                            + "LEFT JOIN department_history dh ON u.id = dh.user_id "
-                            + "  AND dh.start_date <= ? AND (dh.end_date IS NULL OR dh.end_date >= ?) "
                             + "WHERE lc.start_date <= ? "
-                            + "  AND (lc.end_date IS NULL OR lc.end_date >= ?)";
+                            + "  AND (lc.end_date IS NULL OR lc.end_date >= ?) ";
 
             if (departmentId != null) {
-                summarySql += " AND dh.department_id = ? ";
+                summarySql += " AND u.department_id = ? ";
             }
 
             try (PreparedStatement ps = conn.prepareStatement(summarySql)) {
-                ps.setDate(1, sqlTargetDate);
-                ps.setDate(2, sqlTargetDate);
-                ps.setDate(3, sqlTargetDate);
-                ps.setDate(4, sqlTargetDate);
+                // Set tham số cho Sub-query khôi phục lịch sử hợp đồng
+                ps.setDate(1, sqlTargetDate); // contract_type log
+                ps.setDate(2, sqlTargetDate); // start_date log
+                ps.setDate(3, sqlTargetDate); // end_date log
+
+                // Set tham số cho điều kiện WHERE lọc thời gian hợp đồng hợp lệ
+                ps.setDate(4, sqlTargetDate); // lc.start_date <= targetDate
+                ps.setDate(5, sqlTargetDate); // lc.end_date >= targetDate
+
                 if (departmentId != null) {
-                    ps.setInt(5, departmentId);
+                    ps.setInt(6, departmentId);
                 }
+
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         int total = rs.getInt("total");
@@ -76,30 +103,22 @@ public class HRReportDAO {
             }
 
             /* =================================================================
-             * QUERY 2: Cơ cấu Loại Hợp Đồng (Biểu đồ)
+             * QUERY 2: Cơ cấu Loại Hợp Đồng
              * ================================================================= */
             String contractSql =
-                    "SELECT COALESCE(lc.contract_type, 'Chưa rõ') as type, COUNT(DISTINCT u.id) as count "
-                            + "FROM users u "
-                            + "INNER JOIN " + allContractsView + " ON u.id = lc.user_id "
-                            + "LEFT JOIN department_history dh ON u.id = dh.user_id "
-                            + "  AND dh.start_date <= ? AND (dh.end_date IS NULL OR dh.end_date >= ?) "
+                    "SELECT lc.contract_type as type, COUNT(DISTINCT lc.user_id) as count "
+                            + "FROM " + activeContractsSubQuery
                             + "WHERE lc.start_date <= ? "
-                            + "  AND (lc.end_date IS NULL OR lc.end_date >= ?) ";
-
-            if (departmentId != null) {
-                contractSql += " AND dh.department_id = ? ";
-            }
-            contractSql += " GROUP BY COALESCE(lc.contract_type, 'Chưa rõ')";
+                            + "  AND (lc.end_date IS NULL OR lc.end_date >= ?) "
+                            + "GROUP BY lc.contract_type";
 
             try (PreparedStatement ps = conn.prepareStatement(contractSql)) {
                 ps.setDate(1, sqlTargetDate);
                 ps.setDate(2, sqlTargetDate);
                 ps.setDate(3, sqlTargetDate);
                 ps.setDate(4, sqlTargetDate);
-                if (departmentId != null) {
-                    ps.setInt(5, departmentId);
-                }
+                ps.setDate(5, sqlTargetDate);
+
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         contractTypeData.put(rs.getString("type"), rs.getInt("count"));
@@ -108,30 +127,47 @@ public class HRReportDAO {
             }
 
             /* =================================================================
-             * QUERY 3: Cơ cấu Phòng Ban
+             * QUERY 3: Cơ cấu Phòng Ban (Đã sửa lỗi không cập nhật sau khi Move)
              * ================================================================= */
             String deptSql =
-                    "SELECT d.name as dept_name, COUNT(DISTINCT dh.user_id) as count "
+                    "SELECT d.name as dept_name, COUNT(DISTINCT lc.user_id) as count "
                             + "FROM departments d "
-                            + "LEFT JOIN department_history dh ON d.id = dh.department_id "
-                            + "  AND dh.start_date <= ? AND (dh.end_date IS NULL OR dh.end_date >= ?) "
-                            + "LEFT JOIN " + allContractsView + " ON dh.user_id = lc.user_id "
-                            + "  AND lc.start_date <= ? AND (lc.end_date IS NULL OR lc.end_date >= ?) "
-                            + "WHERE 1=1 ";
-
-            if (departmentId != null) {
-                deptSql += " AND d.id = ? ";
-            }
-            deptSql += " GROUP BY d.id, d.name";
+                            + "LEFT JOIN ("
+                            + "    SELECT u.id as user_id, "
+                            + "           COALESCE("
+                            + "               (SELECT active.department_id "
+                            + "                FROM ("
+                            + "                    SELECT user_id, department_id, start_date, end_date FROM department_history "
+                            + "                    UNION ALL "
+                            + "                    SELECT user_id, department_id, start_date, COALESCE(end_date, '9999-12-31') as end_date FROM department_after_update"
+                            + "                ) active "
+                            + "                WHERE active.user_id = u.id "
+                            + "                  AND active.start_date <= ? "
+                            + "                  AND active.end_date >= ? "
+                            + "                ORDER BY active.start_date DESC LIMIT 1)," // Lấy bản ghi mới nhất khớp với mốc thời gian
+                            + "               u.department_id" // Nếu chưa từng dịch chuyển, lấy phòng mặc định trong users
+                            + "           ) as active_dept_id "
+                            + "    FROM users u"
+                            + ") member ON d.id = member.active_dept_id "
+                            + "INNER JOIN " + activeContractsSubQuery + " ON member.user_id = lc.user_id "
+                            + "WHERE lc.start_date <= ? "
+                            + "  AND (lc.end_date IS NULL OR lc.end_date >= ?) "
+                            + "GROUP BY d.id, d.name";
 
             try (PreparedStatement ps = conn.prepareStatement(deptSql)) {
-                ps.setDate(1, sqlTargetDate);
-                ps.setDate(2, sqlTargetDate);
-                ps.setDate(3, sqlTargetDate);
-                ps.setDate(4, sqlTargetDate);
-                if (departmentId != null) {
-                    ps.setInt(5, departmentId);
-                }
+                // 1. Tham số lọc mốc thời gian để tìm phòng ban hoạt động của nhân viên tại targetDate
+                ps.setDate(1, sqlTargetDate); // active.start_date <= targetDate
+                ps.setDate(2, sqlTargetDate); // active.end_date >= targetDate
+
+                // 2. Tham số khôi phục lịch sử hợp đồng (activeContractsSubQuery)
+                ps.setDate(3, sqlTargetDate); // contract_type log
+                ps.setDate(4, sqlTargetDate); // start_date log
+                ps.setDate(5, sqlTargetDate); // end_date log
+
+                // 3. Tham số lọc thời gian cho hợp đồng hoạt động (lc)
+                ps.setDate(6, sqlTargetDate); // lc.start_date <= targetDate
+                ps.setDate(7, sqlTargetDate); // lc.end_date >= targetDate
+
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         departmentData.put(rs.getString("dept_name"), rs.getInt("count"));

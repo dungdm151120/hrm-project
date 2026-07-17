@@ -75,6 +75,36 @@ public class UserDAO {
         return null;
     }
 
+    public User findActiveUserWithPositionByEmail(String email) {
+        String sql = """
+                SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
+                FROM users u
+                JOIN roles r ON u.role_id = r.id
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE u.email = ?
+                  AND u.active = TRUE
+                  AND r.active = TRUE
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
 
     public User findById(int id) {
         String sql = """
@@ -1101,6 +1131,189 @@ public class UserDAO {
         } catch (Exception e) {
             e.printStackTrace();
             return "ERROR_SYSTEM";
+        }
+        return "ERROR_FAILED";
+    }
+
+    public String moveDepartmentMember2(int userId, int newDeptId) {
+        // Sửa câu check để lấy thêm cả department_id hiện tại của user trước khi move
+        String checkPositionSql = "SELECT p.name, u.department_id FROM users u " +
+                "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
+        String getDeptNameSql = "SELECT name FROM departments WHERE id = ?";
+        String getPositionIdSql = "SELECT id FROM positions WHERE name = ?";
+
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            // Bắt đầu Transaction
+            conn.setAutoCommit(false);
+
+            int oldDeptId = -1;
+
+            // 1. Kiểm tra chức vụ (Manager) và lấy phòng ban hiện tại từ bảng users
+            try (PreparedStatement psCheck = conn.prepareStatement(checkPositionSql)) {
+                psCheck.setInt(1, userId);
+                try (ResultSet rs = psCheck.executeQuery()) {
+                    if (rs.next()) {
+                        String posName = rs.getString("name");
+                        oldDeptId = rs.getInt("department_id");
+
+                        if (posName != null && posName.toLowerCase().contains("manager")) {
+                            conn.rollback();
+                            return "ERROR_IS_MANAGER";
+                        }
+                    } else {
+                        conn.rollback();
+                        return "ERROR_USER_NOT_FOUND";
+                    }
+                }
+            }
+
+            // Nếu phòng ban mới trùng với phòng ban cũ thì không cần làm gì cả
+            if (oldDeptId == newDeptId) {
+                conn.rollback();
+                return "SUCCESS";
+            }
+
+            // 2. Lấy tên phòng ban mới
+            String deptName = null;
+            try (PreparedStatement psDept = conn.prepareStatement(getDeptNameSql)) {
+                psDept.setInt(1, newDeptId);
+                try (ResultSet rs = psDept.executeQuery()) {
+                    if (rs.next()) deptName = rs.getString("name");
+                }
+            }
+
+            String defaultPositionName;
+            String roleName;
+            if ("Human Resources".equalsIgnoreCase(deptName)) {
+                defaultPositionName = "HR Staff";
+                roleName = "HR_STAFF";
+            } else if ("Finance".equalsIgnoreCase(deptName)) {
+                defaultPositionName = "Payroll Staff";
+                roleName = "PAYROLL_STAFF";
+            } else {
+                defaultPositionName = "Employee";
+                roleName = "EMPLOYEE";
+            }
+
+            // 3. Lấy ID của chức vụ mặc định
+            int positionId = -1;
+            try (PreparedStatement psPos = conn.prepareStatement(getPositionIdSql)) {
+                psPos.setString(1, defaultPositionName);
+                try (ResultSet rs = psPos.executeQuery()) {
+                    if (rs.next()) positionId = rs.getInt("id");
+                }
+            }
+            if (positionId == -1) {
+                conn.rollback();
+                return "ERROR_FAILED";
+            }
+
+            // 4. Lấy ID của Role tương ứng
+            int roleId = getRoleIdByName(conn, roleName);
+            if (roleId == -1) {
+                conn.rollback();
+                return "ERROR_FAILED";
+            }
+
+            /* =================================================================
+             * XỬ LÝ LƯU TRỮ LỊCH SỬ PHÒNG BAN THEO LOGIC MỚI (CHỐNG ĐỨT GÃY CHUỖI)
+             * ================================================================= */
+            java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
+            java.sql.Date oldStartDate = null;
+
+            // BƯỚC A: Tìm start_date của phòng cũ trong bảng department_after_update
+            String selectCurrentSql = "SELECT start_date FROM department_after_update WHERE user_id = ?";
+            try (PreparedStatement psSelect = conn.prepareStatement(selectCurrentSql)) {
+                psSelect.setInt(1, userId);
+                try (ResultSet rs = psSelect.executeQuery()) {
+                    if (rs.next()) {
+                        // Lần move thứ 2 trở đi: Bê nguyên start_date cũ từ after_update sang
+                        oldStartDate = rs.getDate("start_date");
+                    }
+                }
+            }
+
+            // Nếu oldStartDate vẫn là null (Đây là LẦN ĐẦU TIÊN move trong đời nhân viên này)
+            if (oldStartDate == null) {
+                // Lấy ngày bắt đầu của hợp đồng đầu tiên làm start_date gốc
+                String selectContractSql = "SELECT MIN(start_date) as contract_start FROM labor_contracts WHERE user_id = ?";
+                try (PreparedStatement psContract = conn.prepareStatement(selectContractSql)) {
+                    psContract.setInt(1, userId);
+                    try (ResultSet rs = psContract.executeQuery()) {
+                        if (rs.next()) {
+                            oldStartDate = rs.getDate("contract_start");
+                        }
+                    }
+                }
+                // Phòng hờ nếu nhân viên chưa có hợp đồng nào thì lấy ngày hôm nay làm mốc start_date gốc
+                if (oldStartDate == null) {
+                    oldStartDate = today;
+                }
+            }
+
+            // BƯỚC B: Lưu phòng cũ vào bảng lịch sử `department_history` (end_date = today)
+            String insertHistorySql = "INSERT INTO department_history (user_id, department_id, start_date, end_date) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement psHist = conn.prepareStatement(insertHistorySql)) {
+                psHist.setInt(1, userId);
+                psHist.setInt(2, oldDeptId);
+                psHist.setDate(3, oldStartDate);
+                psHist.setDate(4, today); // end_date chốt sổ phòng cũ chính là ngày hôm nay
+                psHist.executeUpdate();
+            }
+
+            // BƯỚC C: Cập nhật phòng mới vào bảng hiện tại `department_after_update`
+            // Sử dụng cú pháp UPSERT (INSERT ... ON DUPLICATE KEY UPDATE)
+            String upsertAfterUpdateSql =
+                    "INSERT INTO department_after_update (user_id, department_id, start_date, end_date) " +
+                            "VALUES (?, ?, ?, NULL) " +
+                            "ON DUPLICATE KEY UPDATE department_id = ?, start_date = ?, end_date = NULL";
+            try (PreparedStatement psUpsert = conn.prepareStatement(upsertAfterUpdateSql)) {
+                psUpsert.setInt(1, userId);
+                psUpsert.setInt(2, newDeptId);
+                psUpsert.setDate(3, today); // start_date của phòng mới là ngày hôm nay
+                psUpsert.setInt(4, newDeptId);
+                psUpsert.setDate(5, today);
+                psUpsert.executeUpdate();
+            }
+
+            /* =================================================================
+             * CẬP NHẬT BẢNG CHÍNH USERS & HOÀN TẤT TRANSACTION
+             * ================================================================= */
+            String updateSql = "UPDATE users SET department_id = ?, position_id = ?, role_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            try (PreparedStatement psUpdate = conn.prepareStatement(updateSql)) {
+                psUpdate.setInt(1, newDeptId);
+                psUpdate.setInt(2, positionId);
+                psUpdate.setInt(3, roleId);
+                psUpdate.setInt(4, userId);
+                int rows = psUpdate.executeUpdate();
+
+                if (rows > 0) {
+                    conn.commit(); // Thành công rực rỡ -> Commit toàn bộ dữ liệu
+                    return "SUCCESS";
+                }
+            }
+
+            conn.rollback(); // Nếu không update được bảng users -> Rollback
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Có lỗi hệ thống -> Rollback sạch sẽ
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            return "ERROR_SYSTEM";
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return "ERROR_FAILED";
     }

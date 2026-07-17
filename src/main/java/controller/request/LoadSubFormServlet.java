@@ -3,6 +3,7 @@ package controller.request;
 import dao.*;
 import model.AttendanceSummary;
 import model.Department;
+import model.Dependent;
 import model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -222,9 +223,17 @@ public class LoadSubFormServlet extends HttpServlet {
             request.setAttribute("minDate", minDate.toString());
             request.setAttribute("maxDate", maxDate.toString());
 
-            AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
-            int count = acrDAO.countCurrentMonthByUser(currentUser.getId(), today.getMonthValue(), today.getYear());
-            request.setAttribute("remainingAdjustments", Math.max(0, 2 - count));
+            User defaultApprover = null;
+            if (currentUser.getDepartmentId() != null) {
+                Department dept = departmentDAO.getDepartmentById(currentUser.getDepartmentId());
+                if (dept != null && dept.getManagerUserId() != null) {
+                    defaultApprover = userDAO.findById(dept.getManagerUserId());
+                }
+            }
+            if (defaultApprover == null) {
+                defaultApprover = currentUser;
+            }
+            request.setAttribute("defaultApprover", defaultApprover);
 
             request.setAttribute("proposer", currentUser);
             request.setAttribute("today", today.toString());
@@ -294,6 +303,10 @@ public class LoadSubFormServlet extends HttpServlet {
             request.setAttribute("proposer", currentUser);
             request.setAttribute("today", LocalDate.now().toString());
             request.setAttribute("now", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+
+            DependentDAO dependentDAO = new DependentDAO();
+            List<Dependent> activeDependents = dependentDAO.getActiveDependentsByUserId(currentUser.getId());
+            request.setAttribute("activeDependents", activeDependents);
 
             jspPath = "/WEB-INF/views/request/subforms/dependent_change.jsp";
         }

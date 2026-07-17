@@ -133,6 +133,7 @@ public class PermissionFilter implements Filter {
         if (path.equals("/attendance/export")) return "ATTENDANCE_EXPORT_REPORT";
         if (path.equals("/attendance/confirm")) return "ATTENDANCE_CONFIRM_ACCESS";
         if (path.equals("/reports/attendance")) return "ATTENDANCE_REPORT_ACCESS";
+        if (path.equals("/reports/attendance/export")) return "ATTENDANCE_REPORT_ACCESS";
 
         // Payroll
         if (path.equals("/payroll/my") && "GET".equals(method)) return "PAYROLL_VIEW_OWN";
