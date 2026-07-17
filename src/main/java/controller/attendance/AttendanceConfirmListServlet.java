@@ -28,16 +28,16 @@ public class AttendanceConfirmListServlet extends HttpServlet {
         }
 
         String role = currentUser.getRoleName() != null ? currentUser.getRoleName().toUpperCase() : "";
-        boolean isHRorAdmin = role.contains("ADMIN") || role.contains("HR_") || role.contains("PAYROLL_");
+        boolean isHRManager = "HR_MANAGER".equals(role);
         boolean isManager = currentUser.isManager();
 
-        if (!isHRorAdmin && !isManager) {
+        if (!isHRManager && !isManager) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to access this page.");
             return;
         }
 
         Integer departmentIdFilter = null;
-        if (isManager && !isHRorAdmin) {
+        if (isManager && !isHRManager) {
             departmentIdFilter = currentUser.getDepartmentId();
         }
 

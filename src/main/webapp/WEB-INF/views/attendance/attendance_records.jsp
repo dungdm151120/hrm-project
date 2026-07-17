@@ -19,7 +19,7 @@
     <main class="dashboard-main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">${isUpdateMode ? 'Update Attendance' : 'All Attendance (View)'}</h1>
+                <h1 class="header-title">${isUpdateMode ? 'Update Attendance' : 'All Attendance'}</h1>
             </div>
         </header>
 
@@ -27,7 +27,7 @@
             <section class="attendance-records-card">
                 <div class="attendance-records-heading">
                     <div>
-                        <h2>${isUpdateMode ? 'Update Attendance' : 'All Attendance (View)'}</h2>
+                        <h2>${isUpdateMode ? 'Update Attendance' : 'All Attendance'}</h2>
                         <p>Showing all days of ${selectedMonth}/${selectedYear}.</p>
                     </div>
                 </div>

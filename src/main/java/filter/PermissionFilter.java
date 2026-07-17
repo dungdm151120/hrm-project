@@ -45,7 +45,7 @@ public class PermissionFilter implements Filter {
                 && ("ATTENDANCE_VIEW_SUMMARY".equals(requiredPermission)
                 ? canViewAttendanceSummary(req, session, userPermissions)
                 : ("ATTENDANCE_CONFIRM_ACCESS".equals(requiredPermission)
-                ? (userPermissions.contains("ATTENDANCE_CONFIRM_DEPT") || userPermissions.contains("ATTENDANCE_SEND_TO_BUSINESS") || userPermissions.contains("ATTENDANCE_APPROVE_BUSINESS"))
+                ? canAccessAttendanceConfirmation(session, userPermissions)
                 : ("ATTENDANCE_REPORT_ACCESS".equals(requiredPermission)
                 ? (userPermissions.contains("ATTENDANCE_VIEW_ALL") || userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT") || userPermissions.contains("ATTENDANCE_EXPORT_REPORT"))
                 : userPermissions.contains(requiredPermission))));
@@ -214,5 +214,16 @@ public class PermissionFilter implements Filter {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    private boolean canAccessAttendanceConfirmation(HttpSession session, Set<String> userPermissions) {
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null) {
+            return false;
+        }
+        boolean isBusinessAdmin = "BUSINESS ADMIN".equalsIgnoreCase(currentUser.getRoleName());
+        return !isBusinessAdmin && (userPermissions.contains("ATTENDANCE_CONFIRM_DEPT")
+                || ("HR_MANAGER".equalsIgnoreCase(currentUser.getRoleName())
+                && userPermissions.contains("ATTENDANCE_FINALIZE_HR")));
     }
 }

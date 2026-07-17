@@ -48,13 +48,11 @@ public class AttendanceConfirmServlet extends HttpServlet {
             }
         }
 
-        boolean isHR = false;
-        boolean isBusinessAdmin = false;
+        boolean isHRManager = "HR_MANAGER".equalsIgnoreCase(currentUser.getRoleName());
 
         Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
         if (userPermissions != null) {
-            isHR = userPermissions.contains("ATTENDANCE_SEND_TO_BUSINESS");
-            isBusinessAdmin = userPermissions.contains("ATTENDANCE_APPROVE_BUSINESS");
+            isHRManager = isHRManager && canFinalizeAttendance(userPermissions);
         }
 
         request.setAttribute("deptStatuses", deptStatuses);
@@ -63,8 +61,7 @@ public class AttendanceConfirmServlet extends HttpServlet {
         request.setAttribute("selectedMonth", month);
         request.setAttribute("selectedYear", year);
         request.setAttribute("currentUser", currentUser);
-        request.setAttribute("isHR", isHR);
-        request.setAttribute("isBusinessAdmin", isBusinessAdmin);
+        request.setAttribute("isHRManager", isHRManager);
 
         request.getRequestDispatcher("/WEB-INF/views/attendance/attendance_confirm.jsp").forward(request, response);
     }
@@ -100,20 +97,20 @@ public class AttendanceConfirmServlet extends HttpServlet {
                 } else {
                     session.setAttribute("errorMsg", "You are not the manager of this department.");
                 }
-            } else if ("hr_send".equals(action)) {
+            } else if ("hr_finalize".equals(action)) {
                 Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
-                if (userPermissions != null && userPermissions.contains("ATTENDANCE_SEND_TO_BUSINESS")) {
-                    confirmDAO.logAction(month, year, "HR_SEND", currentUser.getId(), null, "Sent to Business Admin by HR");
-                    session.setAttribute("successMsg", "Request sent to Business Admin successfully.");
-                } else {
-                    session.setAttribute("errorMsg", "Permission denied.");
-                }
-            } else if ("business_approve".equals(action)) {
-                Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
-                if (userPermissions != null && userPermissions.contains("ATTENDANCE_APPROVE_BUSINESS")) {
-                    confirmDAO.logAction(month, year, "BUSINESS_APPROVE", currentUser.getId(), null, "Approved by Business Admin");
-                    confirmDAO.createSnapshot(month, year, currentUser.getId());
-                    session.setAttribute("successMsg", "Attendance Approved and Snapshot Created successfully.");
+                boolean isHRManager = "HR_MANAGER".equalsIgnoreCase(currentUser.getRoleName());
+                if (isHRManager && userPermissions != null && canFinalizeAttendance(userPermissions)) {
+                    List<DepartmentConfirmStatusDTO> deptStatuses = confirmDAO.getDepartmentLockStatuses(month, year);
+                    boolean allConfirmed = !deptStatuses.isEmpty()
+                            && deptStatuses.stream().allMatch(dept -> "CONFIRMED".equals(dept.getStatus()));
+                    if (!allConfirmed) {
+                        session.setAttribute("errorMsg", "All departments must confirm attendance before HR can finalize it.");
+                    } else if (confirmDAO.finalizeAttendance(month, year, currentUser.getId())) {
+                        session.setAttribute("successMsg", "Attendance finalized and snapshot created successfully.");
+                    } else {
+                        session.setAttribute("errorMsg", "Attendance has already been finalized for this month.");
+                    }
                 } else {
                     session.setAttribute("errorMsg", "Permission denied.");
                 }
@@ -132,5 +129,9 @@ public class AttendanceConfirmServlet extends HttpServlet {
         } catch (Exception e) {
             return defaultValue;
         }
+    }
+
+    private boolean canFinalizeAttendance(Set<String> userPermissions) {
+        return userPermissions.contains("ATTENDANCE_FINALIZE_HR");
     }
 }
