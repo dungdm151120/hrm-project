@@ -3,19 +3,18 @@ package model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class DependentChangeRequest {
+public class Dependent {
     private int id;
-    private int requestId;
-    private String changeType;
-    private Integer dependentId;
+    private int userId;
     private String dependentName;
     private LocalDate dependentDob;
     private String dependentIdNumber;
     private String relationship;
-    private String documentPath;
+    private String status;
+    private LocalDate effectiveDate;
     private LocalDateTime createdAt;
 
-    public DependentChangeRequest() {}
+    public Dependent() {}
 
     public int getId() {
         return id;
@@ -25,28 +24,12 @@ public class DependentChangeRequest {
         this.id = id;
     }
 
-    public int getRequestId() {
-        return requestId;
+    public int getUserId() {
+        return userId;
     }
 
-    public void setRequestId(int requestId) {
-        this.requestId = requestId;
-    }
-
-    public String getChangeType() {
-        return changeType;
-    }
-
-    public void setChangeType(String changeType) {
-        this.changeType = changeType;
-    }
-
-    public Integer getDependentId() {
-        return dependentId;
-    }
-
-    public void setDependentId(Integer dependentId) {
-        this.dependentId = dependentId;
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     public String getDependentName() {
@@ -81,12 +64,20 @@ public class DependentChangeRequest {
         this.relationship = relationship;
     }
 
-    public String getDocumentPath() {
-        return documentPath;
+    public String getStatus() {
+        return status;
     }
 
-    public void setDocumentPath(String documentPath) {
-        this.documentPath = documentPath;
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDate getEffectiveDate() {
+        return effectiveDate;
+    }
+
+    public void setEffectiveDate(LocalDate effectiveDate) {
+        this.effectiveDate = effectiveDate;
     }
 
     public LocalDateTime getCreatedAt() {

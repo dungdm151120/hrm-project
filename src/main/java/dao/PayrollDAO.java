@@ -548,9 +548,8 @@ public class PayrollDAO {
         LocalDate endDate = yearMonth.atEndOfMonth();
 
         String sql = """
-                        SELECT dependent FROM dependent_number
-                        WHERE user_id = ? AND effective_date <= ? 
-                        ORDER BY effective_date LIMIT 1
+                        SELECT COUNT(*) AS active_count FROM dependents
+                        WHERE user_id = ? AND status = 'ACTIVE' AND effective_date <= ?
                     """;
 
         try (Connection connection = DBConnection.getConnection();
@@ -559,7 +558,7 @@ public class PayrollDAO {
             ps.setDate(2, Date.valueOf(endDate));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt("dependent");
+                    return rs.getInt("active_count");
                 }
             }
         } catch (Exception e) {

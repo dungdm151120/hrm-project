@@ -305,29 +305,69 @@
                     <%-- ══════════════ DEPENDENT CHANGE REQUEST ══════════════ --%>
                     <c:if test="${request.type == 'DEPENDENT_CHANGE_REQUEST' && not empty dependentChangeRequest}">
                         <div class="detail-row">
-                            <span class="detail-label">New Number of Dependents:</span>
-                            <span class="detail-value"><strong>${dependentChangeRequest.numberOfDependents}</strong></span>
-                        </div>
-                        <div class="detail-row" style="grid-column: 1 / -1;">
-                            <span class="detail-label">Evidence Image:</span>
+                            <span class="detail-label">Change Type:</span>
                             <span class="detail-value">
                                 <c:choose>
-                                    <c:when test="${not empty dependentChangeRequest.documentPath}">
-                                        <c:set var="fullUrl" value="${pageContext.request.contextPath}${dependentChangeRequest.documentPath}"/>
-                                        <div class="attachment-preview-wrap" style="margin-top: 10px;">
-                                            <img src="${fullUrl}" alt="Evidence Image"
-                                                 onclick="window.open('${fullUrl}','_blank')"
-                                                 title="Click to open full size"
-                                                 style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: contain;"/>
-                                            <div class="att-open-hint" style="font-size: 12px; color: #666; margin-top: 5px;">Click image to open full size</div>
-                                        </div>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span style="color:#999;">No image uploaded.</span>
-                                    </c:otherwise>
+                                    <c:when test="${dependentChangeRequest.changeType == 'ADD'}"><strong>Add Dependent</strong></c:when>
+                                    <c:when test="${dependentChangeRequest.changeType == 'UPDATE'}"><strong>Update Dependent</strong></c:when>
+                                    <c:when test="${dependentChangeRequest.changeType == 'REMOVE'}"><strong>Remove Dependent</strong></c:when>
+                                    <c:otherwise><strong>${dependentChangeRequest.changeType}</strong></c:otherwise>
                                 </c:choose>
                             </span>
                         </div>
+                        <c:if test="${not empty targetDependent}">
+                            <div class="detail-row">
+                                <span class="detail-label">Target Dependent:</span>
+                                <span class="detail-value"><strong>${targetDependent.dependentName} (${targetDependent.relationship})</strong></span>
+                            </div>
+                        </c:if>
+                        
+                        <c:choose>
+                            <c:when test="${dependentChangeRequest.changeType == 'ADD' || dependentChangeRequest.changeType == 'UPDATE'}">
+                                <div class="detail-row">
+                                    <span class="detail-label">Proposed Dependent Full Name:</span>
+                                    <span class="detail-value"><strong>${dependentChangeRequest.dependentName}</strong></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Proposed Date of Birth:</span>
+                                    <span class="detail-value"><strong>${dependentChangeRequest.dependentDob}</strong></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Proposed ID Number:</span>
+                                    <span class="detail-value"><strong>${dependentChangeRequest.dependentIdNumber}</strong></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Proposed Relationship:</span>
+                                    <span class="detail-value"><strong>${dependentChangeRequest.relationship}</strong></span>
+                                </div>
+                                <div class="detail-row" style="grid-column: 1 / -1;">
+                                    <span class="detail-label">Evidence Image:</span>
+                                    <span class="detail-value">
+                                        <c:choose>
+                                            <c:when test="${not empty dependentChangeRequest.documentPath}">
+                                                <c:set var="fullUrl" value="${pageContext.request.contextPath}${dependentChangeRequest.documentPath}"/>
+                                                <div class="attachment-preview-wrap" style="margin-top: 10px;">
+                                                    <img src="${fullUrl}" alt="Evidence Image"
+                                                         onclick="window.open('${fullUrl}','_blank')"
+                                                         title="Click to open full size"
+                                                         style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: contain;"/>
+                                                    <div class="att-open-hint" style="font-size: 12px; color: #666; margin-top: 5px;">Click image to open full size</div>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span style="color:#999;">No image uploaded.</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </div>
+                            </c:when>
+                            <c:when test="${dependentChangeRequest.changeType == 'REMOVE'}">
+                                <div class="detail-row" style="grid-column: 1 / -1;">
+                                    <span class="detail-label">Target Dependent Status:</span>
+                                    <span class="detail-value" style="color: #dc3545; font-weight: bold;">To Be Marked Inactive</span>
+                                </div>
+                            </c:when>
+                        </c:choose>
                     </c:if>
 
                     <%-- ══════════════ OVERTIME ══════════════ --%>

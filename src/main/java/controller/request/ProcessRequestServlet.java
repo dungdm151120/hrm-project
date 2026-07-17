@@ -118,7 +118,7 @@ public class ProcessRequestServlet extends HttpServlet {
                                 DependentChangeRequestDAO dcrDAO = new DependentChangeRequestDAO();
                                 DependentChangeRequest dcr = dcrDAO.getByRequestId(requestId);
                                 if (dcr != null) {
-                                    dcrDAO.updateUserDependentNumber(req.getUserId(), dcr.getNumberOfDependents());
+                                    dcrDAO.approveDependentChange(req.getUserId(), dcr);
                                 }
                             } else if ("OVERTIME".equals(req.getType())) {
                                 service.OvertimeService overtimeService = new service.OvertimeService();
