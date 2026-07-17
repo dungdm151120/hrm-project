@@ -1,5 +1,6 @@
 package controller.attendance;
 
+import dao.AttendanceConfirmDAO;
 import dao.AttendanceDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -8,8 +9,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.AttendanceRecord;
 import model.AttendanceRecordDTO;
+import model.DepartmentConfirmStatusDTO;
 
 import java.io.IOException;
+import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -18,6 +21,7 @@ import java.time.format.DateTimeParseException;
 @WebServlet("/attendance/update")
 public class AttendanceUpdateServlet extends HttpServlet {
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();
+    private final AttendanceConfirmDAO confirmDAO = new AttendanceConfirmDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -31,6 +35,11 @@ public class AttendanceUpdateServlet extends HttpServlet {
         AttendanceRecordDTO record = attendanceDAO.getAttendanceRecordDetailById(id);
         if (record == null) {
             redirectToRecords(request, response, "record_not_found");
+            return;
+        }
+
+        if (isRecordLocked(record)) {
+            redirectToRecords(request, response, "record_locked");
             return;
         }
 
@@ -50,6 +59,11 @@ public class AttendanceUpdateServlet extends HttpServlet {
         AttendanceRecordDTO recordDetail = attendanceDAO.getAttendanceRecordDetailById(id);
         if (record == null || recordDetail == null) {
             redirectToRecords(request, response, "record_not_found");
+            return;
+        }
+
+        if (isRecordLocked(recordDetail)) {
+            redirectToRecords(request, response, "record_locked");
             return;
         }
 
@@ -125,11 +139,30 @@ public class AttendanceUpdateServlet extends HttpServlet {
 
         response.sendRedirect(
                 request.getContextPath()
-                        + "/attendance/employee?userId=" + record.getUserId()
-                        + "&month=" + record.getWorkDate().getMonthValue()
+                        + "/attendance/records?month=" + record.getWorkDate().getMonthValue()
                         + "&year=" + record.getWorkDate().getYear()
                         + "&message=updated"
         );
+    }
+
+    private boolean isRecordLocked(AttendanceRecordDTO record) {
+        int month = record.getWorkDate().getMonthValue();
+        int year = record.getWorkDate().getYear();
+        
+        String overallStatus = confirmDAO.getOverallStatus(month, year);
+        if ("HR_SENT".equals(overallStatus) || "APPROVED".equals(overallStatus)) {
+            return true;
+        }
+        
+        if (record.getDepartmentId() != null) {
+            List<DepartmentConfirmStatusDTO> deptStatuses = confirmDAO.getDepartmentLockStatuses(month, year);
+            for (DepartmentConfirmStatusDTO ds : deptStatuses) {
+                if (ds.getDepartmentId() == record.getDepartmentId() && "CONFIRMED".equals(ds.getStatus())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void forwardToForm(

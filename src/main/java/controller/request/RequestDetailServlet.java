@@ -8,7 +8,10 @@ import model.AttendanceChangeRequest;
 import model.LeaveRequest;
 import model.Request;
 import model.SickLeaveRequest;
+import model.DependentChangeRequest;
 import model.User;
+import dao.DependentChangeRequestDAO;
+import dao.DependentDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -34,6 +37,12 @@ public class RequestDetailServlet extends HttpServlet {
         Request req = dao.getRequestById(id);
 
         if (req != null) {
+            HttpSession session = request.getSession(false);
+            User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+            if (currentUser != null) {
+                dao.markRequestNotificationsRead(id, currentUser.getId());
+            }
+
             List<User> observers = dao.getObserversByRequestId(id);
             req.setObserver(observers);
 
@@ -60,6 +69,14 @@ public class RequestDetailServlet extends HttpServlet {
                 if (oreq != null) {
                     request.setAttribute("overtimeRequest", oreq);
                     request.setAttribute("overtimeParticipants", overtimeParticipantDAO.getByOvertimeRequestId(oreq.getId()));
+                }
+            } else if ("DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
+                DependentChangeRequestDAO dcrDAO = new DependentChangeRequestDAO();
+                DependentChangeRequest dcr = dcrDAO.getByRequestId(id);
+                request.setAttribute("dependentChangeRequest", dcr);
+                if (dcr != null && dcr.getDependentId() != null) {
+                    DependentDAO dependentDAO = new DependentDAO();
+                    request.setAttribute("targetDependent", dependentDAO.getById(dcr.getDependentId()));
                 }
             }
 

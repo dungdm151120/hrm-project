@@ -29,7 +29,6 @@ final class ContractFormMapper {
         contract.setWorkingTime(trimToNull(request.getParameter("workingTime")));
         contract.setWorkLocation(trimToNull(request.getParameter("workLocation")));
         contract.setStatus(validStatus(request.getParameter("status")));
-        contract.setFileUrl(trimToNull(request.getParameter("fileUrl")));
         contract.setNote(trimToNull(request.getParameter("note")));
 
         if ("INDEFINITE_TERM".equals(contract.getContractType())) {

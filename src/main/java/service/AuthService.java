@@ -18,7 +18,7 @@ public class AuthService {
         }
 
         String trimmedPassword = password.trim();
-        User user = userDAO.findActiveUserByEmail(email.trim());
+        User user = userDAO.findActiveUserWithPositionByEmail(email.trim());
 
         if (user == null || !PasswordUtil.verifyPassword(trimmedPassword, user.getPassword())) {
             return null;

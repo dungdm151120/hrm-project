@@ -1,16 +1,12 @@
 package service;
 
 import dao.*;
-import model.AttendanceSummary;
-import model.Payroll;
-import model.Position;
-import model.User;
+import model.*;
 import util.PayrollCalculator;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PayrollService {
@@ -21,76 +17,40 @@ public class PayrollService {
     private PayrollDAO payrollDAO = new PayrollDAO();
     private UserDAO userDAO = new UserDAO();
 
-    public Payroll generateMonthlyPayroll(User user, int month, int year, double basicSalary, double expectedHours) {
+    public Payroll generateMonthlyPayroll(User user, int month, int year, long basicSalary) {
 
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
+        LocalDate payrollPeriodDate = LocalDate.of(year, month, 1);
 
-        AttendanceSummary summary = attendanceDAO.getSummaryByUser(user.getId(), startDate, endDate);
+        AttendanceConfirmedSummary summary = attendanceDAO.getSummaryConfirmedAttendanceByUser(user.getId(), startDate, endDate);
+        PayrollSetting setting = payrollDAO.getPayrollSettingByDate(payrollPeriodDate);
+        List<PitBracket> brackets = payrollDAO.getPitBracketsByDate(payrollPeriodDate);
 
         String positionName = (user.getPositionName() != null) ? user.getPositionName().toLowerCase() : "";
+        int numberOfDependents = payrollDAO.countDependentByUserId(user.getId(), month, year);
+        double expectedHours = calculateExpectedHours(month, year);
+        boolean isUnionMember = payrollDAO.isUnionMember(user.getId());
+        int sickLeaveDays = attendanceDAO.countSickLeaveByUserId(user.getId(), month, year);
 
-        double rateMultiplier = 1.0;
-        double bonus = 0.0;
-        String description = null;
-        if (positionName.contains("manager") || positionName.equals("System Administrator")) {
-            rateMultiplier = 2.0;
-            bonus = 2000000;
-            description = "Lương thưởng cho Manager";
-        } else if (positionName.contains("staff")) {
-            rateMultiplier = 1.5;
+        if (summary == null || setting == null || brackets == null || brackets.isEmpty()) {
+            return null;
         }
 
-        // Get Actual Working Hours
-        double totalActualHours = summary.getTotalWorkHours();
-
-        // Calculate Total Income
-        double totalIncome = ((basicSalary * rateMultiplier) / expectedHours) * totalActualHours;
-
-        // Calculate Insurance
-        double socialInsurance = calculator.calculateSocialInsurance(totalIncome);
-        double healthInsurance = calculator.calculateHealthInsurance(totalIncome);
-        double unemploymentInsurance = calculator.calculateUnemploymentInsurance(totalIncome);
-        double totalInsurance = socialInsurance + healthInsurance + unemploymentInsurance;
-
-        // Calculate Income Before Tax
-        double incomeBeforeTax = totalIncome - totalInsurance;
-
-        // Get Taxable Income
-        double taxableIncome = Math.max(0.0, incomeBeforeTax - 15500000.0);
-
-        // Income Tax
-        double incomeTax = calculator.calculateIncomeTax(taxableIncome);
-
-        // Net Income
-        double netPay = incomeBeforeTax - incomeTax + bonus;
-
-        Payroll payroll = new Payroll();
-        payroll.setUserId(user.getId());
-        payroll.setMonth(month);
-        payroll.setYear(year);
-        payroll.setExpectedHours(expectedHours);
-        payroll.setActualHours(totalActualHours);
-        payroll.setBasicSalary(basicSalary);
-        payroll.setRateMultiplier(rateMultiplier);
-        payroll.setTotalIncome(totalIncome);
-        payroll.setBonus(bonus);
-        payroll.setDescription(description);
-        payroll.setSocialInsurance(socialInsurance);
-        payroll.setHealthInsurance(healthInsurance);
-        payroll.setUnemploymentInsurance(unemploymentInsurance);
-        payroll.setIncomeBeforeTax(incomeBeforeTax);
-        payroll.setTaxableIncome(taxableIncome);
-        payroll.setIncomeTax(incomeTax);
-        payroll.setNetPay(netPay);
-        payroll.setStatus("DRAFT");
-
-        boolean isSaved = payrollDAO.savePayroll(payroll);
-        return isSaved ? payroll : null;
+        return calculator.calculate(user, basicSalary, expectedHours, summary, isUnionMember, setting, positionName, numberOfDependents, brackets, sickLeaveDays, month, year);
     }
 
-    public int generateBulkPayroll(List<User> users, int month, int year, double expectedHours, Integer departmentId) throws Exception{
+    public int generateBulkPayroll(List<User> users, int month, int year, Integer departmentId) throws Exception{
+
+        Integer queryDeptId = (departmentId != null && departmentId == 0) ? null : departmentId;
+
+        boolean hasSnapshot = attendanceDAO.hasAttendanceSnapshot(month, year, queryDeptId);
+
+        if (!hasSnapshot) {
+            throw new Exception("There is no confirmed attendance for this period in this department");
+        }
+
         int totalUsersInDept = users.size();
 
         if (totalUsersInDept == 0) {
@@ -101,7 +61,7 @@ public class PayrollService {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
-        int employeesWithAttendance = attendanceDAO.countEmployeesWithAttendance(departmentId, startDate, endDate);
+        int employeesWithAttendance = attendanceDAO.countEmployeesWithAttendance(queryDeptId, startDate, endDate);
 
         if (employeesWithAttendance < totalUsersInDept) {
             int missingCount = totalUsersInDept - employeesWithAttendance;
@@ -119,13 +79,25 @@ public class PayrollService {
             }
 
             BigDecimal activeSalary = laborContractDAO.findActiveSalaryByUserId(userId);
-            double basicSalary = activeSalary.doubleValue();
+            long basicSalary = activeSalary.longValue();
 
-            Payroll payroll = this.generateMonthlyPayroll(detailedUser, month, year, basicSalary, expectedHours);
-            if (payroll != null) {
+            Payroll payroll = this.generateMonthlyPayroll(detailedUser, month, year, basicSalary);
+            if (payroll != null && payrollDAO.savePayroll(payroll)) {
                 successCount++;
             }
         }
         return successCount;
+    }
+
+    private double calculateExpectedHours(int month, int year) {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int weekdays = 0;
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+            LocalDate date = yearMonth.atDay(day);
+            if (date.getDayOfWeek().getValue() < 6) {
+                weekdays++;
+            }
+        }
+        return weekdays * 8.0;
     }
 }

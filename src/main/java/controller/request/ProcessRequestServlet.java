@@ -53,6 +53,7 @@ public class ProcessRequestServlet extends HttpServlet {
 
             boolean success = false;
             String returnUrl = "request_detail?id=" + requestId;
+            String notificationEventType = null;
 
             switch (action) {
                 case "APPROVE":
@@ -64,6 +65,7 @@ public class ProcessRequestServlet extends HttpServlet {
                         }
 
                         String newStatus = action.equals("APPROVE") ? "APPROVED" : "REJECTED";
+                        notificationEventType = newStatus;
                         if ("APPROVE".equals(action) && "OVERTIME".equals(req.getType())) {
                             success = dao.updateRequestStatusAndHandler(requestId, newStatus, comment, userId);
                         } else {
@@ -80,30 +82,6 @@ public class ProcessRequestServlet extends HttpServlet {
                                         attendanceDAO.markAbsent(req.getUserId(), lr.getLeaveDate());
                                     }
                                 }
-                            } else if ("APPROVE".equals(action) && "ATTENDANCE_ADJUST".equals(req.getType())) {
-                                AttendanceChangeRequest acr = attendanceChangeRequestDAO.getByRequestId(requestId);
-                                if (acr != null) {
-                                    AttendanceRecord record = attendanceDAO.getRecordByUserAndDate(req.getUserId(), acr.getWorkDate());
-                                    if (record == null) {
-                                        record = new AttendanceRecord();
-                                        record.setUserId(req.getUserId());
-                                        record.setWorkDate(acr.getWorkDate());
-                                    }
-                                    if (acr.getDesiredCheckIn() != null) {
-                                        record.setCheckIn(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckIn()));
-                                    } else {
-                                        record.setCheckIn(null);
-                                    }
-                                    if (acr.getDesiredCheckOut() != null) {
-                                        record.setCheckOut(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckOut()));
-                                    } else {
-                                        record.setCheckOut(null);
-                                    }
-                                    record.setNote("Attendance adjusted via request #" + requestId);
-                                    attendanceDAO.calculateWorkingHours(record);
-                                    record.setStatus(attendanceDAO.determineStatus(record));
-                                    attendanceDAO.saveAttendanceRecord(record);
-                                }
                             } else if ("APPROVE".equals(action) && "SICK_LEAVE_REQUEST".equals(req.getType())) {
                                 SickLeaveRequest sickReq = sickLeaveRequestDAO.getByRequestId(requestId);
                                 if (sickReq != null) {
@@ -111,6 +89,12 @@ public class ProcessRequestServlet extends HttpServlet {
                                     for (LocalDate date : dates) {
                                         attendanceDAO.markSickLeave(req.getUserId(), date);
                                     }
+                                }
+                            } else if ("APPROVE".equals(action) && "DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
+                                DependentChangeRequestDAO dcrDAO = new DependentChangeRequestDAO();
+                                DependentChangeRequest dcr = dcrDAO.getByRequestId(requestId);
+                                if (dcr != null) {
+                                    dcrDAO.approveDependentChange(req.getUserId(), dcr);
                                 }
                             } else if ("OVERTIME".equals(req.getType())) {
                                 service.OvertimeService overtimeService = new service.OvertimeService();
@@ -120,9 +104,41 @@ public class ProcessRequestServlet extends HttpServlet {
                     }
                     break;
 
+                case "APPLY_CHANGES":
+                    if (("HR Staff".equals(position) || currentUser.getId() == req.getHandlerId()) && "APPROVED".equals(req.getStatus()) && "ATTENDANCE_ADJUST".equals(req.getType())) {
+                        AttendanceChangeRequest acr = attendanceChangeRequestDAO.getByRequestId(requestId);
+                        if (acr != null) {
+                            AttendanceRecord record = attendanceDAO.getRecordByUserAndDate(req.getUserId(), acr.getWorkDate());
+                            if (record == null) {
+                                record = new AttendanceRecord();
+                                record.setUserId(req.getUserId());
+                                record.setWorkDate(acr.getWorkDate());
+                            }
+                            if (acr.getDesiredCheckIn() != null) {
+                                record.setCheckIn(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckIn()));
+                            } else {
+                                record.setCheckIn(null);
+                            }
+                            if (acr.getDesiredCheckOut() != null) {
+                                record.setCheckOut(LocalDateTime.of(acr.getWorkDate(), acr.getDesiredCheckOut()));
+                            } else {
+                                record.setCheckOut(null);
+                            }
+                            record.setNote("Attendance adjusted via request #" + requestId);
+                            attendanceDAO.calculateWorkingHours(record);
+                            record.setStatus(attendanceDAO.determineStatus(record));
+                            attendanceDAO.saveAttendanceRecord(record);
+
+                            success = attendanceChangeRequestDAO.markApplied(requestId);
+                            notificationEventType = null;
+                        }
+                    }
+                    break;
+
                 case "CANCEL":
                     if (String.valueOf(req.getUserId()).equals(String.valueOf(userId)) && "PENDING".equals(req.getStatus())) {
                         success = dao.updateRequestStatus(requestId, "CANCELLED", null);
+                        notificationEventType = "CANCELLED";
 
                         if (success && "OVERTIME".equals(req.getType())) {
                             service.OvertimeService overtimeService = new service.OvertimeService();
@@ -146,6 +162,9 @@ public class ProcessRequestServlet extends HttpServlet {
             }
 
             if (success) {
+                if (notificationEventType != null) {
+                    dao.notifyRequestChanged(requestId, userId, notificationEventType);
+                }
                 response.sendRedirect(returnUrl + "&success=true");
             } else {
                 String encodedComment = URLEncoder.encode(comment != null ? comment : "", "UTF-8");

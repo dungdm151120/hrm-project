@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import model.AttendanceRecord;
 import model.AttendanceRecordDTO;
 import model.AttendanceSummary;
 import model.User;
@@ -23,11 +22,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @WebServlet("/attendance/my")
 public class MyAttendanceServlet extends HttpServlet {
@@ -80,6 +75,9 @@ public class MyAttendanceServlet extends HttpServlet {
         int selectedMonth = parseIntInRange(request.getParameter("month"), today.getMonthValue(), 1, 12);
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);
 
+        // Đảm bảo dữ liệu holiday đã có cho tất cả nhân viên
+        attendanceDAO.createHolidayRecordsForMonth(selectedYear, selectedMonth);
+
         AttendanceSummary summary = attendanceDAO.getSummaryByUser(
                 employee.getId(),
                 selectedPeriod.atDay(1),
@@ -93,10 +91,14 @@ public class MyAttendanceServlet extends HttpServlet {
                 selectedYear
         );
 
+        // Lấy danh sách ngày lễ trong tháng
+        List<LocalDate> holidayDates = attendanceDAO.getHolidayDatesInMonth(selectedYear, selectedMonth);
+
         Map<String, AttendanceRecordDTO> attendanceMap = new LinkedHashMap<>();
         for (AttendanceRecordDTO dto : recordList) {
             String key = dto.getUserId() + "_" + dto.getWorkDate();
             dto.setCssClass(resolveCssClass(dto.getStatus()));
+            dto.setHoliday("HOLIDAY".equals(dto.getStatus()));
             attendanceMap.put(key, dto);
         }
 
@@ -125,6 +127,7 @@ public class MyAttendanceServlet extends HttpServlet {
         request.setAttribute("dayLabels", dayLabels);
         request.setAttribute("attendanceMap", attendanceMap);
         request.setAttribute("employees", employees);
+        request.setAttribute("holidayDates", holidayDates);
         request.setAttribute("summaryAction", request.getContextPath() + "/attendance/my");
         if (requestedUserId != null) {
             request.setAttribute("summaryUserId", employee.getId());
@@ -186,6 +189,8 @@ public class MyAttendanceServlet extends HttpServlet {
             case "ON_TIME" -> "status-on-time";
             case "LATE", "EARLY_LEAVE", "LATE_AND_EARLY", "LATE_AND_EARLY_LEAVE" -> "status-late";
             case "ON_LEAVE" -> "status-leave";
+            case "HOLIDAY" -> "status-holiday";           // tím
+            case "SICK_LEAVE" -> "status-sick-leave";     // xanh nước biển nhạt
             case "ABSENT" -> "status-absent";
             case "FORGOT_CHECKIN", "FORGOT_CHECKOUT",
                  "FORGOT_CHECK_IN", "FORGOT_CHECK_OUT" -> "status-forgot";

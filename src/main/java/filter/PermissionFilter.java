@@ -44,7 +44,11 @@ public class PermissionFilter implements Filter {
         boolean permitted = userPermissions != null
                 && ("ATTENDANCE_VIEW_SUMMARY".equals(requiredPermission)
                 ? canViewAttendanceSummary(req, session, userPermissions)
-                : userPermissions.contains(requiredPermission));
+                : ("ATTENDANCE_CONFIRM_ACCESS".equals(requiredPermission)
+                ? canAccessAttendanceConfirmation(session, userPermissions)
+                : ("ATTENDANCE_REPORT_ACCESS".equals(requiredPermission)
+                ? (userPermissions.contains("ATTENDANCE_VIEW_ALL") || userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT") || userPermissions.contains("ATTENDANCE_EXPORT_REPORT"))
+                : userPermissions.contains(requiredPermission))));
 
         if (!permitted) {
             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -122,17 +126,29 @@ public class PermissionFilter implements Filter {
         if (path.equals("/attendance/summary") && "GET".equals(method)) return "ATTENDANCE_VIEW_SUMMARY";
         if (path.equals("/attendance/records") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/department") && "GET".equals(method)) return "ATTENDANCE_VIEW_DEPARTMENT";
+        if (path.equals("/attendance/view_all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
+        if (path.equals("/attendance/work-hours") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/update")) return "ATTENDANCE_UPDATE";
         if (path.equals("/attendance/export")) return "ATTENDANCE_EXPORT_REPORT";
+        if (path.equals("/attendance/confirm")) return "ATTENDANCE_CONFIRM_ACCESS";
+        if (path.equals("/reports/attendance")) return "ATTENDANCE_REPORT_ACCESS";
+        if (path.equals("/reports/attendance/export")) return "ATTENDANCE_REPORT_ACCESS";
 
         // Payroll
         if (path.equals("/payroll/my") && "GET".equals(method)) return "PAYROLL_VIEW_OWN";
-        if (path.equals("/payroll/list") && "GET".equals(method)) return "PAYROLL_VIEW_LIST";
-        if (path.equals("/payroll/detail") && "GET".equals(method)) return "PAYROLL_VIEW_DETAIL";
-        if (path.equals("/payroll/generate")) return "PAYROLL_GENERATE";
-        if (path.equals("/payroll/update-component")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/department")) return "PAYROLL_VIEW_DEPARTMENT";
+        if (path.equals("/payroll/list")) return "PAYROLL_VIEW_LIST";
+        if (path.equals("/payroll/detail")) return "PAYROLL_VIEW_DETAIL";
         if (path.equals("/payroll/confirm")) return "PAYROLL_CONFIRM";
+        if (path.equals("/payroll/generate")) return "PAYROLL_GENERATE";
+        if (path.equals("/payroll/update_component")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/pit/list")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/pit")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/pit/update")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/setting/list")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/setting")) return "PAYROLL_UPDATE_COMPONENT";
+        if (path.equals("/payroll/setting/update")) return "PAYROLL_UPDATE_COMPONENT";
         if (path.equals("/payroll/export")) return "PAYROLL_EXPORT_REPORT";
 
         // Announcement
@@ -198,5 +214,16 @@ public class PermissionFilter implements Filter {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    private boolean canAccessAttendanceConfirmation(HttpSession session, Set<String> userPermissions) {
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null) {
+            return false;
+        }
+        boolean isBusinessAdmin = "BUSINESS ADMIN".equalsIgnoreCase(currentUser.getRoleName());
+        return !isBusinessAdmin && (userPermissions.contains("ATTENDANCE_CONFIRM_DEPT")
+                || ("HR_MANAGER".equalsIgnoreCase(currentUser.getRoleName())
+                && userPermissions.contains("ATTENDANCE_FINALIZE_HR")));
     }
 }

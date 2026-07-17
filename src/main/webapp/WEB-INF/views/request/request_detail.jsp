@@ -302,6 +302,74 @@
                         </div>
                     </c:if>
 
+                    <%-- ══════════════ DEPENDENT CHANGE REQUEST ══════════════ --%>
+                    <c:if test="${request.type == 'DEPENDENT_CHANGE_REQUEST' && not empty dependentChangeRequest}">
+                        <div class="detail-row">
+                            <span class="detail-label">Change Type:</span>
+                            <span class="detail-value">
+                                <c:choose>
+                                    <c:when test="${dependentChangeRequest.changeType == 'ADD'}"><strong>Add Dependent</strong></c:when>
+                                    <c:when test="${dependentChangeRequest.changeType == 'UPDATE'}"><strong>Update Dependent</strong></c:when>
+                                    <c:when test="${dependentChangeRequest.changeType == 'REMOVE'}"><strong>Remove Dependent</strong></c:when>
+                                    <c:otherwise><strong>${dependentChangeRequest.changeType}</strong></c:otherwise>
+                                </c:choose>
+                            </span>
+                        </div>
+                        <c:if test="${not empty targetDependent}">
+                            <div class="detail-row">
+                                <span class="detail-label">Target Dependent:</span>
+                                <span class="detail-value"><strong>${targetDependent.dependentName} (${targetDependent.relationship})</strong></span>
+                            </div>
+                        </c:if>
+                        
+                        <c:choose>
+                            <c:when test="${dependentChangeRequest.changeType == 'ADD' || dependentChangeRequest.changeType == 'UPDATE'}">
+                                <div class="detail-row">
+                                    <span class="detail-label">Proposed Dependent Full Name:</span>
+                                    <span class="detail-value"><strong>${dependentChangeRequest.dependentName}</strong></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Proposed Date of Birth:</span>
+                                    <span class="detail-value"><strong>${dependentChangeRequest.dependentDob}</strong></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Proposed ID Number:</span>
+                                    <span class="detail-value"><strong>${dependentChangeRequest.dependentIdNumber}</strong></span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Proposed Relationship:</span>
+                                    <span class="detail-value"><strong>${dependentChangeRequest.relationship}</strong></span>
+                                </div>
+                                <div class="detail-row" style="grid-column: 1 / -1;">
+                                    <span class="detail-label">Evidence Image:</span>
+                                    <span class="detail-value">
+                                        <c:choose>
+                                            <c:when test="${not empty dependentChangeRequest.documentPath}">
+                                                <c:set var="fullUrl" value="${pageContext.request.contextPath}${dependentChangeRequest.documentPath}"/>
+                                                <div class="attachment-preview-wrap" style="margin-top: 10px;">
+                                                    <img src="${fullUrl}" alt="Evidence Image"
+                                                         onclick="window.open('${fullUrl}','_blank')"
+                                                         title="Click to open full size"
+                                                         style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: contain;"/>
+                                                    <div class="att-open-hint" style="font-size: 12px; color: #666; margin-top: 5px;">Click image to open full size</div>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span style="color:#999;">No image uploaded.</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </div>
+                            </c:when>
+                            <c:when test="${dependentChangeRequest.changeType == 'REMOVE'}">
+                                <div class="detail-row" style="grid-column: 1 / -1;">
+                                    <span class="detail-label">Target Dependent Status:</span>
+                                    <span class="detail-value" style="color: #dc3545; font-weight: bold;">To Be Marked Inactive</span>
+                                </div>
+                            </c:when>
+                        </c:choose>
+                    </c:if>
+
                     <%-- ══════════════ OVERTIME ══════════════ --%>
                     <c:if test="${request.type == 'OVERTIME' && not empty overtimeRequest}">
                         <div class="detail-row">
@@ -392,6 +460,40 @@
                             </c:choose>
                         </span>
                     </div>
+
+                    <c:if test="${request.type == 'ATTENDANCE_ADJUST' && request.status == 'APPROVED' && !attendanceChangeRequest.applied && (sessionScope.currentUser.positionName == 'HR Staff' || sessionScope.currentUser.id eq request.handlerId)}">
+                        <div class="detail-row" style="margin-top: 20px; grid-column: 1 / -1;">
+                            <span class="detail-label">Apply Attendance Correction:</span>
+                            <span class="detail-value">
+                                <form action="process_request" method="POST">
+                                    <input type="hidden" name="requestId" value="${request.id}">
+                                    <button type="submit" name="action" value="APPLY_CHANGES" class="btn btn-success" 
+                                            style="border: 2px solid #28a745; padding: 8px 16px; border-radius: 4px; font-weight: bold; background-color: #28a745; color: #fff; cursor: pointer;"
+                                            onclick="return confirm('Are you sure you want to apply these attendance changes to the database?');">
+                                        Apply Changes
+                                    </button>
+                                </form>
+                            </span>
+                        </div>
+                    </c:if>
+
+                    <c:if test="${request.type == 'ATTENDANCE_ADJUST' && request.status == 'APPROVED' && attendanceChangeRequest.applied}">
+                        <div class="detail-row" style="margin-top: 20px; grid-column: 1 / -1;">
+                            <div style="padding:12px; background-color:#d4edda; color:#155724; border-radius:8px; border:1px solid #c3e6cb; width: 100%;">
+                                <strong>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                         style="vertical-align:text-bottom; margin-right:4px;">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                    Changes Applied!
+                                </strong><br/>
+                                The attendance record adjustments have been successfully applied to the database by HR Staff.
+                            </div>
+                        </div>
+                    </c:if>
+
                     <div class="detail-row" style="margin-top: 20px;">
                         <span class="detail-label">Approver Comment *:</span>
                         <span class="detail-value">

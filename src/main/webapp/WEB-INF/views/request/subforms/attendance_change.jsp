@@ -13,8 +13,14 @@
 </div>
 
 <div class="request-group">
-    <label>Approver <span class="required-star">*</span></label>
-    <select name="approverId" class="request-select" required>
+    <label>Approver</label>
+    <input type="text" class="request-input" value="${defaultApprover.fullName} - ${defaultApprover.positionName}" readonly style="background-color: #f8f9fa;" />
+    <input type="hidden" name="approverId" value="${defaultApprover.id}" />
+</div>
+
+<div class="request-group">
+    <label for="handlerId">Request Handler (HR Staff) <span class="required-star">*</span></label>
+    <select name="handlerId" id="handlerId" class="request-select" required>
         <option value="" disabled selected>-- Select HR Staff --</option>
         <c:forEach items="${hrStaffList}" var="hr">
             <option value="${hr.id}">${hr.fullName} - ${hr.positionName}</option>
@@ -24,8 +30,7 @@
 
 <div class="request-group">
     <label for="workDate">Work Date <span class="required-star">*</span></label>
-    <input type="date" name="workDate" id="workDate" class="request-input"
-           min="${minDate}" max="${maxDate}" required />
+    <input type="date" name="workDate" id="workDate" class="request-input" min="${minDate}" max="${maxDate}" required />
 </div>
 
 <div class="request-group">
@@ -47,12 +52,6 @@
     </select>
 </div>
 
-<div class="request-group">
-    <div class="balance-text-italic-red">
-        Remaining adjustments this month: <span id="remainingAdjustments">${remainingAdjustments}</span>
-    </div>
-</div>
-
 <div class="request-group" style="grid-column: 1 / -1;">
     <label for="reasonEditor">Reason <span class="required-star">*</span></label>
     <textarea name="reason" id="reasonEditor" class="request-textarea" rows="5" required></textarea>
@@ -61,7 +60,7 @@
 <c:if test="${blocked}">
     <div class="request-group" style="grid-column: 1 / -1;">
         <div class="request-info-box" style="color: #d32f2f;">
-            Attendance adjustment requests cannot be submitted during the first 5 days of the month.
+            Attendance adjustment requests cannot be submitted from the 6th to the 10th day of the month.
         </div>
     </div>
 </c:if>
