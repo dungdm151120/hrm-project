@@ -34,13 +34,13 @@ public class SalaryReportDAO {
                 orderClause = "d.name ASC";
             }
             case "position" -> {
-                selectGroup = "COALESCE(pos.name, 'N/A')";
+                selectGroup = "CONCAT(COALESCE(pos.name, 'N/A'), ' (', COALESCE(d.name, 'N/A'), ')')";
                 selectDepartment = "COALESCE(d.name, 'N/A')";
                 groupClause = "pos.id, pos.name, d.id, d.name";
                 orderClause = "pos.name ASC, d.name ASC";
             }
             default -> {
-                selectGroup = "COALESCE(pos.name, 'N/A')";
+                selectGroup = "CONCAT(COALESCE(pos.name, 'N/A'), ' (', COALESCE(d.name, 'N/A'), ')')";
                 selectDepartment = "COALESCE(d.name, 'N/A')";
                 groupClause = "pos.id, pos.name, d.id, d.name";
                 orderClause = "pos.name ASC, d.name ASC";
