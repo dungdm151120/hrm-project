@@ -102,7 +102,10 @@ public class CreateRequestServlet extends HttpServlet {
                     }
                 }
             } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
-                req.setHandlerId(req.getApproverId());
+                String handlerIdParam = request.getParameter("handlerId");
+                if (handlerIdParam != null && !handlerIdParam.trim().isEmpty()) {
+                    req.setHandlerId(Integer.parseInt(handlerIdParam));
+                }
             } else if ("SICK_LEAVE_REQUEST".equals(req.getType()) || "DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
                 req.setHandlerId(req.getApproverId());
             } else {
@@ -200,14 +203,6 @@ public class CreateRequestServlet extends HttpServlet {
                 LocalDate workDate = LocalDate.parse(workDateStr);
 
                 AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
-                int count = acrDAO.countCurrentMonthByUser(
-                        currentUser.getId(),
-                        workDate.getMonthValue(),
-                        workDate.getYear());
-                if (count >= 2) {
-                    response.sendRedirect("create_request?error=adjustment_limit_exceeded");
-                    return;
-                }
 
                 String desiredCheckInStr = request.getParameter("desiredCheckIn");
                 String desiredCheckOutStr = request.getParameter("desiredCheckOut");

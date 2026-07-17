@@ -49,6 +49,7 @@ public class AttendanceChangeRequestDAO {
                     if (checkOut != null) acr.setDesiredCheckOut(checkOut.toLocalTime());
                     acr.setReason(rs.getString("reason"));
                     acr.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                    acr.setApplied(rs.getBoolean("is_applied"));
                     return acr;
                 }
             }
@@ -56,6 +57,18 @@ public class AttendanceChangeRequestDAO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean markApplied(int requestId) {
+        String sql = "UPDATE attendance_change_requests SET is_applied = TRUE WHERE request_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, requestId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public int countCurrentMonthByUser(int userId, int month, int year) {

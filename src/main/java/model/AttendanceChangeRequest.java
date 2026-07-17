@@ -12,6 +12,7 @@ public class AttendanceChangeRequest {
     private LocalTime desiredCheckOut;
     private String reason;
     private LocalDateTime createdAt;
+    private boolean isApplied;
 
     public AttendanceChangeRequest() {}
 
@@ -29,4 +30,6 @@ public class AttendanceChangeRequest {
     public void setReason(String reason) { this.reason = reason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public boolean isApplied() { return isApplied; }
+    public void setApplied(boolean isApplied) { this.isApplied = isApplied; }
 }

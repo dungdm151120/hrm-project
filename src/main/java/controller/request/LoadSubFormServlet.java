@@ -223,9 +223,17 @@ public class LoadSubFormServlet extends HttpServlet {
             request.setAttribute("minDate", minDate.toString());
             request.setAttribute("maxDate", maxDate.toString());
 
-            AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
-            int count = acrDAO.countCurrentMonthByUser(currentUser.getId(), today.getMonthValue(), today.getYear());
-            request.setAttribute("remainingAdjustments", Math.max(0, 2 - count));
+            User defaultApprover = null;
+            if (currentUser.getDepartmentId() != null) {
+                Department dept = departmentDAO.getDepartmentById(currentUser.getDepartmentId());
+                if (dept != null && dept.getManagerUserId() != null) {
+                    defaultApprover = userDAO.findById(dept.getManagerUserId());
+                }
+            }
+            if (defaultApprover == null) {
+                defaultApprover = currentUser;
+            }
+            request.setAttribute("defaultApprover", defaultApprover);
 
             request.setAttribute("proposer", currentUser);
             request.setAttribute("today", today.toString());

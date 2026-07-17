@@ -75,6 +75,36 @@ public class UserDAO {
         return null;
     }
 
+    public User findActiveUserWithPositionByEmail(String email) {
+        String sql = """
+                SELECT u.*, r.name AS role_name, d.name AS department_name, p.name AS position_name
+                FROM users u
+                JOIN roles r ON u.role_id = r.id
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE u.email = ?
+                  AND u.active = TRUE
+                  AND r.active = TRUE
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
 
     public User findById(int id) {
         String sql = """
