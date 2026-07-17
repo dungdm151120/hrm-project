@@ -863,7 +863,7 @@ public class AttendanceDAO {
                         "LEFT JOIN positions p ON p.id = u.position_id " +
                         "LEFT JOIN (SELECT op1.user_id, op1.status, oreq1.overtime_date FROM overtime_participants op1 JOIN overtime_requests oreq1 ON op1.overtime_request_id = oreq1.id) ot " +
                         "ON ot.user_id = ar.user_id AND ot.overtime_date = ar.work_date " +
-                        "WHERE ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
+                        "WHERE ar.work_date BETWEEN ? AND ? AND u.active = TRUE AND u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN', 'SYSTEM ADMIN'))"
         );
         if (departmentId != null) {
             sql.append(" AND u.department_id = ?");
