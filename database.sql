@@ -599,30 +599,36 @@ CREATE TABLE sick_leave_dates (
 -- 13b. DEPENDENT CHANGE REQUEST MODULE
 -- ============================================================
 
+CREATE TABLE dependents (
+                            id INT PRIMARY KEY AUTO_INCREMENT,
+                            user_id INT NOT NULL,
+                            dependent_name VARCHAR(255) NOT NULL,
+                            dependent_dob DATE NOT NULL,
+                            dependent_id_number VARCHAR(50) NOT NULL,
+                            relationship VARCHAR(255) NOT NULL,
+                            status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+                            effective_date DATE NOT NULL,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE dependent_change_requests (
                                            id INT PRIMARY KEY AUTO_INCREMENT,
                                            request_id INT NOT NULL UNIQUE,
-                                           number_of_dependents INT NOT NULL,
-                                           document_path VARCHAR(500) NOT NULL,
+                                           change_type VARCHAR(50) NOT NULL,
+                                           dependent_id INT NULL,
+                                           dependent_name VARCHAR(255) NULL,
+                                           dependent_dob DATE NULL,
+                                           dependent_id_number VARCHAR(50) NULL,
+                                           relationship VARCHAR(255) NULL,
+                                           document_path VARCHAR(500) NULL,
                                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                           CONSTRAINT fk_dependent_change_request FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE
+                                           CONSTRAINT fk_dependent_change_request FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
+                                           CONSTRAINT fk_dependent_target FOREIGN KEY (dependent_id) REFERENCES dependents(id) ON DELETE SET NULL
 );
 -- ==================
 -- Bảng cho HR report
 -- ==================
-
--- Bảng lịch sử department
-CREATE TABLE department_history (
-                                    id INT PRIMARY KEY AUTO_INCREMENT,
-                                    user_id INT NOT NULL,
-                                    department_id INT,
-                                    start_date DATE NOT NULL,
-                                    end_date DATE NULL,
-                                    CONSTRAINT fk_department_history_user
-                                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-                                    CONSTRAINT fk_department_history_department
-                                        FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE RESTRICT ON UPDATE CASCADE
-);
 
 -- Bảng lịch sử contract
 CREATE TABLE contract_history (
