@@ -30,12 +30,12 @@
         </div>
 
         <div class="dashboard-content">
-            <c:if test="${not empty success}">
-                <div class="alert alert-success">${success}</div>
+            <c:if test="${not empty profileSuccess}">
+                <div class="alert alert-success">${profileSuccess}</div>
             </c:if>
 
-            <c:if test="${not empty error}">
-                <div class="alert alert-error">${error}</div>
+            <c:if test="${not empty profileError}">
+                <div class="alert alert-error">${profileError}</div>
             </c:if>
 
             <c:if test="${empty user}">
