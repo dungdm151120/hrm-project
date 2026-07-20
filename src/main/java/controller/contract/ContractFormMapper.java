@@ -25,9 +25,9 @@ final class ContractFormMapper {
         contract.setContractType(validContractType(request.getParameter("contractType")));
         contract.setStartDate(parseDate(request.getParameter("startDate"), "Start date is required."));
         contract.setEndDate(parseOptionalDate(request.getParameter("endDate")));
-        contract.setBaseSalary(parseOptionalSalary(request.getParameter("baseSalary")));
-        contract.setWorkingTime(trimToNull(request.getParameter("workingTime")));
-        contract.setWorkLocation(trimToNull(request.getParameter("workLocation")));
+        contract.setBaseSalary(parseRequiredSalary(request.getParameter("baseSalary")));
+        contract.setWorkingTime(required(request.getParameter("workingTime"), "Working time is required."));
+        contract.setWorkLocation(required(request.getParameter("workLocation"), "Work location is required."));
         contract.setStatus(validStatus(request.getParameter("status")));
         contract.setNote(trimToNull(request.getParameter("note")));
 
@@ -105,15 +105,12 @@ final class ContractFormMapper {
         }
     }
 
-    private static BigDecimal parseOptionalSalary(String value) {
-        String trimmed = trimToNull(value);
-        if (trimmed == null) {
-            return null;
-        }
+    private static BigDecimal parseRequiredSalary(String value) {
+        String trimmed = required(value, "Base salary is required.");
         try {
             BigDecimal salary = new BigDecimal(trimmed);
-            if (salary.compareTo(BigDecimal.ZERO) < 0) {
-                throw new IllegalArgumentException("Base salary must be non-negative.");
+            if (salary.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Base salary must be greater than 0.");
             }
             return salary;
         } catch (NumberFormatException e) {
