@@ -222,7 +222,7 @@ public class ExportAttendanceReportServlet extends HttpServlet {
             // Stat 2
             Row stat2 = sheet2.createRow(r2++);
             stat2.createCell(0).setCellValue("Hiệu suất làm thêm (OT)");
-            double otPercent = totalRegisteredOvertimeHours > 0 ? (totalActualOvertimeHours / totalRegisteredOvertimeHours) * 100 : 100.0;
+            double otPercent = totalRegisteredOvertimeHours > 0 ? (totalActualOvertimeHours / totalRegisteredOvertimeHours) * 100 : 0.0;
             stat2.createCell(1).setCellValue(String.format("%.1f%%", otPercent));
             stat2.createCell(2).setCellValue(String.format("%.1f / %.1f giờ OT", totalActualOvertimeHours, totalRegisteredOvertimeHours));
             stat2.createCell(3);

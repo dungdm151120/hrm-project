@@ -105,7 +105,10 @@ public class AttendanceReportServlet extends HttpServlet {
             } catch (NumberFormatException ignored) {}
         }
 
-        boolean isGenerated = "generate".equalsIgnoreCase(request.getParameter("action"));
+        // Opening Attendance Report should immediately show the current month's report.
+        String action = request.getParameter("action");
+        boolean isGenerated = action == null || action.isEmpty()
+                || "generate".equalsIgnoreCase(action);
 
         if (isGenerated) {
             LocalDate startDate = LocalDate.now();
