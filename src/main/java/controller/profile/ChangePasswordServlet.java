@@ -55,9 +55,9 @@ public class ChangePasswordServlet extends HttpServlet {
         String error = userService.changePassword(userId, oldPassword, newPassword, confirmPassword);
 
         if (error != null) {
-            request.setAttribute("error", error);
+            request.setAttribute("passwordError", error);
         } else {
-            request.setAttribute("success", "Đổi mật khẩu thành công");
+            request.setAttribute("passwordSuccess", "Đổi mật khẩu thành công");
         }
 
         request.getRequestDispatcher("/WEB-INF/views/profile/change_password.jsp")

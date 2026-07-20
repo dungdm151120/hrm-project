@@ -25,11 +25,11 @@
         </div>
 
         <div class="dashboard-content">
-            <c:if test="${not empty error}">
-                <div class="alert alert-error">${error}</div>
+            <c:if test="${not empty passwordError}">
+                <div class="alert alert-error">${passwordError}</div>
             </c:if>
-            <c:if test="${not empty success}">
-                <div class="alert alert-success">✓ ${success}</div>
+            <c:if test="${not empty passwordSuccess}">
+                <div class="alert alert-success">✓ ${passwordSuccess}</div>
             </c:if>
 
             <div class="detail-wrapper">

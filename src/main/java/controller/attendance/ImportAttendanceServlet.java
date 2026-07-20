@@ -105,12 +105,12 @@ public class ImportAttendanceServlet extends HttpServlet {
             dao.processAllPendingLogs();
 
 
-            req.getSession().setAttribute("success", "Đã import thành công " + count + " bản ghi!");
+            req.getSession().setAttribute("importSuccess", "Đã import thành công " + count + " bản ghi!");
             resp.sendRedirect(req.getContextPath() + "/admin/attendance/import");
 
         } catch (Exception e) {
             e.printStackTrace();
-            req.setAttribute("error", "Import thất bại: " + e.getMessage());
+            req.setAttribute("importError", "Import thất bại: " + e.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/attendance/import.jsp").forward(req, resp);
         }
     }

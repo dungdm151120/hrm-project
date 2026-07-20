@@ -36,24 +36,25 @@
             <div style="max-width: 720px; margin: 0 auto;">
 
                 <%-- ERROR / SUCCESS MESSAGES --%>
-                <c:if test="${not empty error}">
+                <c:if test="${not empty importError}">
                     <div class="alert alert-error" role="alert">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <line x1="15" y1="9" x2="9" y2="15"/>
                             <line x1="9" y1="9" x2="15" y2="15"/>
                         </svg>
-                        <span>${error}</span>
+                        <span>${importError}</span>
                     </div>
                 </c:if>
-                <c:if test="${not empty success}">
+                <c:if test="${not empty importSuccess}">
                     <div class="alert alert-success" role="alert">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                             <polyline points="22 4 12 14.01 9 11.01"/>
                         </svg>
-                        <span>${success}</span>
+                        <span>${importSuccess}</span>
                     </div>
+                    <c:remove var="importSuccess" scope="session"/>
                 </c:if>
 
                 <%-- UPLOAD CARD --%>

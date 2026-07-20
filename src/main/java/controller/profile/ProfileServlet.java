@@ -62,7 +62,7 @@ public class ProfileServlet extends HttpServlet {
         } catch (Exception e) {
             User currentProfile = userService.getProfile(userId);
             request.setAttribute("user", currentProfile);
-            request.setAttribute("error", "Date of birth is invalid.");
+            request.setAttribute("profileError", "Date of birth is invalid.");
             request.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp")
                     .forward(request, response);
             return;
@@ -71,7 +71,7 @@ public class ProfileServlet extends HttpServlet {
         String error = userService.updateProfile(user);
         if (error != null) {
             copyEditableFieldsToCurrentProfile(userService.getProfile(userId), user, request);
-            request.setAttribute("error", error);
+            request.setAttribute("profileError", error);
             request.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp")
                     .forward(request, response);
             return;
@@ -80,7 +80,7 @@ public class ProfileServlet extends HttpServlet {
         User updatedProfile = userService.getProfile(userId);
         updateSessionProfile(session, updatedProfile);
         request.setAttribute("user", updatedProfile);
-        request.setAttribute("success", "Profile updated successfully.");
+        request.setAttribute("profileSuccess", "Profile updated successfully.");
         request.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp")
                 .forward(request, response);
     }
