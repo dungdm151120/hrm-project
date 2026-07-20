@@ -1,5 +1,6 @@
 package dao;
 
+import model.DeptEmployeeChangeDTO;
 import model.HRReportDTO;
 import util.DBConnection;
 
@@ -7,7 +8,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HRReportDAO {
@@ -24,7 +27,7 @@ public class HRReportDAO {
         try (Connection conn = DBConnection.getConnection()) {
 
             /* =================================================================
-             * SUB-QUERY KHÔI PHỤC TRẠNG THÁI LỊCH SỬ TẠI MỐC TARGET_DATE
+             * SUB-QUERY KHÔI PHỤC TRẠNG THÁI HỢP ĐỒNG TẠI MỐC TARGET_DATE
              * ================================================================= */
             String activeContractsSubQuery =
                     "(SELECT lc.user_id, " +
@@ -32,7 +35,7 @@ public class HRReportDAO {
                             "            (SELECT log.old_value FROM labor_contract_change_logs log " +
                             "             WHERE log.contract_id = lc.id " +
                             "               AND log.field_name = 'contract_type' " +
-                            "               AND CAST(log.changed_at AS DATE) > ? " + // Chỉ khôi phục nếu ngày sửa sau ngày báo cáo
+                            "               AND CAST(log.changed_at AS DATE) > ? " +
                             "             ORDER BY log.changed_at ASC LIMIT 1), " +
                             "            lc.contract_type" +
                             "        ) as contract_type, " +
@@ -40,7 +43,7 @@ public class HRReportDAO {
                             "            (SELECT STR_TO_DATE(log.old_value, '%Y-%m-%d') FROM labor_contract_change_logs log " +
                             "             WHERE log.contract_id = lc.id " +
                             "               AND log.field_name = 'start_date' " +
-                            "               AND CAST(log.changed_at AS DATE) > ? " + // Chỉ khôi phục nếu ngày sửa sau ngày báo cáo
+                            "               AND CAST(log.changed_at AS DATE) > ? " +
                             "             ORDER BY log.changed_at ASC LIMIT 1), " +
                             "            lc.start_date" +
                             "        ) as start_date, " +
@@ -48,7 +51,7 @@ public class HRReportDAO {
                             "            (SELECT STR_TO_DATE(log.old_value, '%Y-%m-%d') FROM labor_contract_change_logs log " +
                             "             WHERE log.contract_id = lc.id " +
                             "               AND log.field_name = 'end_date' " +
-                            "               AND CAST(log.changed_at AS DATE) > ? " + // Chỉ khôi phục nếu ngày sửa sau ngày báo cáo
+                            "               AND CAST(log.changed_at AS DATE) > ? " +
                             "             ORDER BY log.changed_at ASC LIMIT 1), " +
                             "            lc.end_date" +
                             "        ) as end_date " +
@@ -75,14 +78,11 @@ public class HRReportDAO {
             }
 
             try (PreparedStatement ps = conn.prepareStatement(summarySql)) {
-                // Set tham số cho Sub-query khôi phục lịch sử hợp đồng
-                ps.setDate(1, sqlTargetDate); // contract_type log
-                ps.setDate(2, sqlTargetDate); // start_date log
-                ps.setDate(3, sqlTargetDate); // end_date log
-
-                // Set tham số cho điều kiện WHERE lọc thời gian hợp đồng hợp lệ
-                ps.setDate(4, sqlTargetDate); // lc.start_date <= targetDate
-                ps.setDate(5, sqlTargetDate); // lc.end_date >= targetDate
+                ps.setDate(1, sqlTargetDate);
+                ps.setDate(2, sqlTargetDate);
+                ps.setDate(3, sqlTargetDate);
+                ps.setDate(4, sqlTargetDate);
+                ps.setDate(5, sqlTargetDate);
 
                 if (departmentId != null) {
                     ps.setInt(6, departmentId);
@@ -180,5 +180,66 @@ public class HRReportDAO {
         }
 
         return dto;
+    }
+
+    public List<DeptEmployeeChangeDTO> getDeptEmployeeChanges(LocalDate startDate, LocalDate endDate) {
+        List<DeptEmployeeChangeDTO> list = new ArrayList<>();
+
+        String sql =
+                "SELECT " +
+                        "    d.id AS department_id, " +
+                        "    d.name AS department_name, " +
+                        "    COALESCE(e_in.in_count, 0) AS in_count, " +
+                        "    COALESCE(e_out.out_count, 0) AS out_count " +
+                        "FROM departments d " +
+                        "LEFT JOIN ( " +
+                        "    /* Đếm số người CHUYỂN ĐẾN (start_date) trong khoảng lọc */ " +
+                        "    SELECT department_id, COUNT(*) AS in_count " +
+                        "    FROM ( " +
+                        "        SELECT department_id, start_date FROM department_history WHERE start_date BETWEEN ? AND ? " +
+                        "        UNION ALL " +
+                        "        SELECT department_id, start_date FROM department_after_update WHERE start_date BETWEEN ? AND ? " +
+                        "    ) t_in GROUP BY department_id " +
+                        ") e_in ON d.id = e_in.department_id " +
+                        "LEFT JOIN ( " +
+                        "    /* Đếm số người RỜI ĐI (end_date) trong khoảng lọc */ " +
+                        "    SELECT department_id, COUNT(*) AS out_count " +
+                        "    FROM ( " +
+                        "        SELECT department_id, end_date FROM department_history WHERE end_date BETWEEN ? AND ? " +
+                        "        UNION ALL " +
+                        "        SELECT department_id, end_date FROM department_after_update WHERE end_date BETWEEN ? AND ? " +
+                        "    ) t_out GROUP BY department_id " +
+                        ") e_out ON d.id = e_out.department_id " +
+                        "ORDER BY d.id ASC";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            java.sql.Date sqlStart = java.sql.Date.valueOf(startDate);
+            java.sql.Date sqlEnd = java.sql.Date.valueOf(endDate);
+
+            ps.setDate(1, sqlStart);
+            ps.setDate(2, sqlEnd);
+            ps.setDate(3, sqlStart);
+            ps.setDate(4, sqlEnd);
+            ps.setDate(5, sqlStart);
+            ps.setDate(6, sqlEnd);
+            ps.setDate(7, sqlStart);
+            ps.setDate(8, sqlEnd);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String deptName = rs.getString("department_name");
+                    int inCount = rs.getInt("in_count");
+                    int outCount = rs.getInt("out_count");
+
+                    list.add(new DeptEmployeeChangeDTO(deptName, inCount, outCount));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
     }
 }

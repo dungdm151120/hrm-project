@@ -20,7 +20,7 @@ public class RemoveMemberServlet extends HttpServlet {
         try {
             int userId = Integer.parseInt(userIdStr);
             UserDAO dao = new UserDAO();
-            String result = dao.removeMemberFromDepartment(userId);
+            String result = dao.removeMemberFromDepartment2(userId);
 
             if ("SUCCESS".equals(result)) {
                 response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptIdStr + "&msg=remove_success");

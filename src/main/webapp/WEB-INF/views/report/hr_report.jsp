@@ -3,7 +3,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-<c:set var="ctx" value="${pageContext.request.contextPath}" />
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -148,6 +148,15 @@
             font-weight: 500;
         }
 
+        .delta-info {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .text-success { color: #16a34a; }
+        .text-danger { color: #dc2626; }
+        .text-muted { color: #6b7280; }
+
         /* Chart Grid Layout */
         .charts-section-grid {
             display: grid;
@@ -187,20 +196,6 @@
             height: 300px;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 48px 24px;
-            background: var(--white);
-            border-radius: var(--radius);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-        }
-
-        .empty-icon {
-            margin-bottom: 16px;
-            color: var(--text-muted);
-        }
-
         .bold {
             font-weight: 600;
             color: var(--text-primary);
@@ -215,7 +210,7 @@
     <div class="dashboard-main">
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Tổng Quan Nhân Sự</h1>
+                <h1 class="header-title">HR Overview Report</h1>
             </div>
         </div>
 
@@ -224,38 +219,48 @@
             <!-- Filters Card -->
             <div class="report-filter-card">
                 <form action="${ctx}/reports/hr" method="GET">
-                    <input type="hidden" name="action" value="generate">
-
                     <div class="filter-form-grid">
                         <div class="form-group">
-                            <label for="periodType">Kỳ báo cáo</label>
+                            <label for="periodType">Reporting Period</label>
                             <select name="periodType" id="periodType">
-                                <option value="month" ${periodType == 'month' ? 'selected' : ''}>Theo Tháng</option>
-                                <option value="quarter" ${periodType == 'quarter' ? 'selected' : ''}>Theo Quý</option>
-                                <option value="year" ${periodType == 'year' ? 'selected' : ''}>Theo Năm</option>
+                                <option value="month" ${periodType == 'month' ? 'selected' : ''}>Monthly</option>
+                                <option value="quarter" ${periodType == 'quarter' ? 'selected' : ''}>Quarterly</option>
+                                <option value="year" ${periodType == 'year' ? 'selected' : ''}>Yearly</option>
                             </select>
                         </div>
 
+                        <!-- Month Select (January -> December) -->
                         <div class="form-group" id="monthGroup">
-                            <label for="month">Tháng</label>
+                            <label for="month">Month</label>
                             <select name="month" id="month">
-                                <c:forEach var="m" begin="1" end="12">
-                                    <option value="${m}" ${selectedMonth == m ? 'selected' : ''}>Tháng ${m}</option>
-                                </c:forEach>
+                                <option value="1" ${selectedMonth == 1 ? 'selected' : ''}>January</option>
+                                <option value="2" ${selectedMonth == 2 ? 'selected' : ''}>February</option>
+                                <option value="3" ${selectedMonth == 3 ? 'selected' : ''}>March</option>
+                                <option value="4" ${selectedMonth == 4 ? 'selected' : ''}>April</option>
+                                <option value="5" ${selectedMonth == 5 ? 'selected' : ''}>May</option>
+                                <option value="6" ${selectedMonth == 6 ? 'selected' : ''}>June</option>
+                                <option value="7" ${selectedMonth == 7 ? 'selected' : ''}>July</option>
+                                <option value="8" ${selectedMonth == 8 ? 'selected' : ''}>August</option>
+                                <option value="9" ${selectedMonth == 9 ? 'selected' : ''}>September</option>
+                                <option value="10" ${selectedMonth == 10 ? 'selected' : ''}>October</option>
+                                <option value="11" ${selectedMonth == 11 ? 'selected' : ''}>November</option>
+                                <option value="12" ${selectedMonth == 12 ? 'selected' : ''}>December</option>
                             </select>
                         </div>
 
+                        <!-- Quarter Select -->
                         <div class="form-group" id="quarterGroup">
-                            <label for="quarter">Quý</label>
+                            <label for="quarter">Quarter</label>
                             <select name="quarter" id="quarter">
                                 <c:forEach var="q" begin="1" end="4">
-                                    <option value="${q}" ${selectedQuarter == q ? 'selected' : ''}>Quý ${q}</option>
+                                    <option value="${q}" ${selectedQuarter == q ? 'selected' : ''}>Quarter ${q}</option>
                                 </c:forEach>
                             </select>
                         </div>
 
+                        <!-- Year Select -->
                         <div class="form-group" id="yearGroup">
-                            <label for="year">Năm</label>
+                            <label for="year">Year</label>
                             <select name="year" id="year">
                                 <c:forEach var="y" items="${years}">
                                     <option value="${y}" ${selectedYear == y ? 'selected' : ''}>${y}</option>
@@ -265,169 +270,179 @@
 
                         <div class="form-group">
                             <button type="submit" class="btn-generate">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                     stroke-linejoin="round">
                                     <line x1="18" y1="20" x2="18" y2="10"></line>
                                     <line x1="12" y1="20" x2="12" y2="4"></line>
                                     <line x1="6" y1="20" x2="6" y2="14"></line>
                                 </svg>
-                                Tạo báo cáo
+                                Generate Report
                             </button>
                         </div>
                     </div>
                 </form>
             </div>
 
-            <!-- Report Results Section -->
-            <c:choose>
-                <c:when test="${not isGenerated}">
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Statistics Grid -->
+            <div class="dashboard-grid">
+
+                <!-- Card 1: Total Headcount & Net Mobility -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Headcount</span>
+                        <div class="stat-icon" style="background-color: #EFF6FF; color: #2563EB;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Số lượng Headcount tổng hiện tại -->
+                    <div class="stat-value" style="color: #1E3A8A;">${not empty totalHeadcount ? totalHeadcount : reportData.totalEmployees}</div>
+
+                </div>
+
+                <!-- Card 2: Gender Demographics -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Gender Distribution</span>
+                        <div class="stat-icon" style="background-color: #F472B622; color: #EC4899;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 2a7 7 0 1 0 10 10"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-value" style="font-size: 18px; margin-top: 5px;">
+                        <span style="color: #2563EB;">${reportData.maleCount} Male</span> | <span
+                            style="color: #EC4899;">${reportData.femaleCount} Female</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Positions -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Job Position</span>
+                        <div class="stat-icon" style="background-color: #FEF3C7; color: #D97706;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <polyline points="16 11 18 13 22 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-value" style="font-size: 18px; margin-top: 5px;">
+                        <span class="bold">${reportData.managerCount}</span> Manager | <span
+                            class="bold">${reportData.employeeCount}</span> Employee
+                    </div>
+                </div>
+
+                <!-- Card 4: Contract Status -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Contract Status</span>
+                        <div class="stat-icon" style="background-color: #ECFDF5; color: #10B981;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                 <polyline points="14 2 14 8 20 8"></polyline>
                                 <line x1="16" y1="13" x2="8" y2="13"></line>
                                 <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10 9 9 9 8 9"></polyline>
                             </svg>
                         </div>
-                        <h3>Chọn bộ lọc và click "Tạo báo cáo" để hiển thị dữ liệu nhân sự</h3>
-                        <p>Hệ thống hỗ trợ tổng hợp biểu đồ cơ cấu và phân tách dữ liệu trạng thái nhân viên.</p>
                     </div>
-                </c:when>
-
-                <c:otherwise>
-                    <!-- Statistics Grid -->
-                    <div class="dashboard-grid">
-
-                        <!-- Card 1: Total Employees -->
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <span class="stat-title">Tổng nhân sự</span>
-                                <div class="stat-icon" style="background-color: #EFF6FF; color: #2563EB;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="9" cy="7" r="4"></circle>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="stat-value" style="color: #1E3A8A;">${reportData.totalEmployees}</div>
-                            <div class="stat-ratio">Nhân sự có hợp đồng hợp lệ</div>
-                        </div>
-
-                        <!-- Card 2: Gender Demographics -->
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <span class="stat-title">Theo Giới Tính</span>
-                                <div class="stat-icon" style="background-color: #F472B622; color: #EC4899;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <path d="M12 2a7 7 0 1 0 10 10"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="stat-value" style="font-size: 18px; margin-top: 5px;">
-                                <span style="color: #2563EB;">${reportData.maleCount} Nam</span> | <span style="color: #EC4899;">${reportData.femaleCount} Nữ</span>
-                            </div>
-                            <div class="stat-ratio">Cơ cấu giới tính toàn công ty</div>
-                        </div>
-
-                        <!-- Card 3: Positions -->
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <span class="stat-title">Theo Chức Vụ</span>
-                                <div class="stat-icon" style="background-color: #FEF3C7; color: #D97706;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="9" cy="7" r="4"></circle>
-                                        <polyline points="16 11 18 13 22 9"></polyline>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="stat-value" style="font-size: 18px; margin-top: 5px;">
-                                <span class="bold">${reportData.managerCount}</span> Quản lý | <span class="bold">${reportData.employeeCount}</span> NV
-                            </div>
-                            <div class="stat-ratio">Phân bổ cấp bậc nhân sự</div>
-                        </div>
-
-                        <!-- Card 4: Contract Status -->
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <span class="stat-title">Trạng Thái Hợp Đồng</span>
-                                <div class="stat-icon" style="background-color: #ECFDF5; color: #10B981;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="stat-value" style="font-size: 18px; margin-top: 5px;">
-                                <span style="color: #10B981;">${reportData.regularCount} CT</span> | <span style="color: #F59E0B;">${reportData.probationCount} TV</span>
-                            </div>
-                            <div class="stat-ratio">Chính thức (CT) vs Thử việc (TV)</div>
-                        </div>
+                    <div class="stat-value" style="font-size: 18px; margin-top: 5px;">
+                        <span style="color: #10B981;">${reportData.regularCount} Official</span> | <span
+                            style="color: #F59E0B;">${reportData.probationCount} Probation</span>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Charts Display Section -->
-                    <div class="charts-section-grid">
+            <!-- Charts Display Section -->
+            <div class="charts-section-grid">
 
-                        <!-- Chart 1: Contracts -->
-                        <div class="chart-full-wrapper">
-                            <div class="chart-box-title">📊 Cơ Cấu Loại Hợp Đồng</div>
-                            <div class="chart-container">
-                                <canvas id="contractChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Chart 2: Departments -->
-                        <div class="chart-full-wrapper">
-                            <div class="chart-box-title">🏢 Số Lượng Nhân Sự Theo Phòng Ban</div>
-                            <div class="chart-container">
-                                <canvas id="deptChart"></canvas>
-                            </div>
-                        </div>
-
+                <!-- Chart 1: Contracts -->
+                <div class="chart-full-wrapper">
+                    <div class="chart-box-title">📊 Contract Type Breakdown</div>
+                    <div class="chart-container">
+                        <canvas id="contractChart"></canvas>
                     </div>
-                </c:otherwise>
-            </c:choose>
+                </div>
+
+                <!-- Chart 2: Departments -->
+                <div class="chart-full-wrapper">
+                    <div class="chart-box-title">🏢 Headcount by Department</div>
+                    <div class="chart-container">
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Chart 3: Department Employee Changes -->
+            <div class="chart-full-wrapper" style="margin-bottom: 24px;">
+                <div class="chart-box-title">
+                    🔄 Department Transfer Mobility
+                </div>
+                <div class="chart-container" style="height: 380px;">
+                    <canvas id="deptChangeChart"></canvas>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         const periodTypeSelect = document.getElementById("periodType");
         const monthGroup = document.getElementById("monthGroup");
         const quarterGroup = document.getElementById("quarterGroup");
+        const monthSelect = document.getElementById("month");
+        const quarterSelect = document.getElementById("quarter");
 
         function updateFieldsVisibility() {
             const val = periodTypeSelect.value;
             if (val === "month") {
                 monthGroup.style.display = "flex";
+                monthSelect.disabled = false;
+
                 quarterGroup.style.display = "none";
+                quarterSelect.disabled = true;
             } else if (val === "quarter") {
                 monthGroup.style.display = "none";
+                monthSelect.disabled = true;
+
                 quarterGroup.style.display = "flex";
+                quarterSelect.disabled = false;
             } else if (val === "year") {
                 monthGroup.style.display = "none";
+                monthSelect.disabled = true;
+
                 quarterGroup.style.display = "none";
+                quarterSelect.disabled = true;
             }
         }
 
         periodTypeSelect.addEventListener("change", updateFieldsVisibility);
         updateFieldsVisibility();
 
-        <c:if test="${isGenerated and not empty reportData}">
+        <c:if test="${not empty reportData}">
         const rawContractData = {};
         <c:forEach var="entry" items="${reportData.contractTypeData}">
         rawContractData["${entry.key}"] = ${entry.value};
         </c:forEach>
 
-        const finalContractLabels = ["FIXED_TERM", "INDEFINITE_TERM", "PROBATION", "PART_TIME"];
-        const finalContractValues = finalContractLabels.map(label => rawContractData[label] || 0);
+        const finalContractLabels = ["Fixed Term", "Indefinite Term", "Probation", "Part Time"];
+        const contractMappingKeys = ["FIXED_TERM", "INDEFINITE_TERM", "PROBATION", "PART_TIME"];
+        const finalContractValues = contractMappingKeys.map(key => rawContractData[key] || 0);
 
         const rawDeptData = {};
         <c:forEach var="entry" items="${reportData.departmentData}">
@@ -438,14 +453,14 @@
         let deptValues = Object.values(rawDeptData);
 
         if (deptLabels.length === 0) {
-            deptLabels = ["Không có dữ liệu"];
+            deptLabels = ["No Data"];
             deptValues = [0];
         }
 
         const topLabelsPlugin = {
             id: 'topLabels',
             afterDraw(chart) {
-                const { ctx } = chart;
+                const {ctx} = chart;
                 ctx.save();
                 ctx.font = 'bold 12px sans-serif';
                 ctx.fillStyle = '#4B5563';
@@ -454,7 +469,7 @@
 
                 chart.data.datasets[0].data.forEach((value, index) => {
                     const meta = chart.getDatasetMeta(0);
-                    if(meta.data[index]) {
+                    if (meta.data[index]) {
                         const bar = meta.data[index];
                         ctx.fillText(value, bar.x, bar.y - 6);
                     }
@@ -463,11 +478,9 @@
             }
         };
 
-        // Hàm ngắt dòng nhãn trục X: Cắt mỗi 10 ký tự hoặc theo khoảng trắng
-        const wrapLabelCallback = function(value, index, values) {
+        const wrapLabelCallback = function (value, index, values) {
             let label = this.getLabelForValue(value);
             if (label.length > 10) {
-                // Tách chữ theo từ để ngắt dòng đẹp hơn thay vì cắt thô
                 const words = label.split(' ');
                 const lines = [];
                 let currentLine = '';
@@ -486,19 +499,14 @@
             return label;
         };
 
-        // Chart 1: Contract Type Chart
+        // Chart 1: Contract Type
         new Chart(document.getElementById('contractChart').getContext('2d'), {
             type: 'bar',
             data: {
                 labels: finalContractLabels,
                 datasets: [{
                     data: finalContractValues,
-                    backgroundColor: [
-                        '#3B82F6', // FIXED_TERM
-                        '#10B981', // INDEFINITE_TERM
-                        '#F59E0B', // Probation
-                        '#EC4899'  // Part-time
-                    ],
+                    backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EC4899'],
                     borderRadius: 4,
                     barPercentage: 0.4
                 }]
@@ -506,53 +514,35 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: {
-                    padding: {
-                        bottom: 10
-                    }
-                },
                 scales: {
                     x: {
-                        grid: { display: false },
-                        afterFit: function(scaleInstance) {
-                            scaleInstance.height = 55;
-                        },
+                        grid: {display: false},
                         ticks: {
                             color: '#4B5563',
-                            font: { weight: '600' },
-                            minRotation: 0,
-                            maxRotation: 0,
+                            font: {weight: '600'},
                             callback: wrapLabelCallback
                         }
                     },
                     y: {
                         beginAtZero: true,
                         grace: '15%',
-                        grid: { color: '#E5E7EB' },
-                        ticks: {
-                            stepSize: 5,
-                            precision: 0,
-                            color: '#9CA3AF'
-                        }
+                        grid: {color: '#E5E7EB'},
+                        ticks: {stepSize: 5, precision: 0, color: '#9CA3AF'}
                     }
                 },
-                plugins: {
-                    legend: { display: false }
-                }
+                plugins: {legend: {display: false}}
             },
             plugins: [topLabelsPlugin]
         });
 
-        // Chart 2: Department Chart
+        // Chart 2: Departments Overview
         new Chart(document.getElementById('deptChart').getContext('2d'), {
             type: 'bar',
             data: {
                 labels: deptLabels,
                 datasets: [{
                     data: deptValues,
-                    backgroundColor: [
-                        '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#64748B'
-                    ],
+                    backgroundColor: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#64748B'],
                     borderRadius: 4,
                     barPercentage: 0.4
                 }]
@@ -560,41 +550,137 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: {
-                    padding: {
-                        bottom: 10
-                    }
-                },
                 scales: {
                     x: {
-                        grid: { display: false },
-                        afterFit: function(scaleInstance) {
-                            scaleInstance.height = 55;
-                        },
+                        grid: {display: false},
                         ticks: {
                             color: '#4B5563',
-                            font: { weight: '600' },
-                            minRotation: 0,
-                            maxRotation: 0,
+                            font: {weight: '600'},
                             callback: wrapLabelCallback
                         }
                     },
                     y: {
                         beginAtZero: true,
                         grace: '15%',
-                        grid: { color: '#E5E7EB' },
+                        grid: {color: '#E5E7EB'},
+                        ticks: {stepSize: 5, precision: 0, color: '#9CA3AF'}
+                    }
+                },
+                plugins: {legend: {display: false}}
+            },
+            plugins: [topLabelsPlugin]
+        });
+        </c:if>
+
+        <!-- Chart 3: Department Employee Changes -->
+        <c:if test="${not empty deptChanges}">
+        const deptChangeLabels = [];
+        const inData = [];
+        const outData = [];
+        const netData = [];
+
+        <c:forEach var="item" items="${deptChanges}">
+        deptChangeLabels.push("${item.deptName}");
+        inData.push(${item.inCount});
+        outData.push(${item.outCount});
+        netData.push(${item.netCount});
+        </c:forEach>
+
+        new Chart(document.getElementById('deptChangeChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: deptChangeLabels,
+                datasets: [
+                    {
+                        label: 'Transferred IN',
+                        data: inData,
+                        backgroundColor: '#22C55E',
+                        borderRadius: 4,
+                        barPercentage: 0.5,
+                        categoryPercentage: 0.6
+                    },
+                    {
+                        label: 'Transferred OUT',
+                        data: outData,
+                        backgroundColor: '#EF4444',
+                        borderRadius: 4,
+                        barPercentage: 0.5,
+                        categoryPercentage: 0.6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {top: 25, bottom: 25}
+                },
+                scales: {
+                    x: {
+                        grid: {display: false},
                         ticks: {
-                            stepSize: 5,
+                            color: '#374151',
+                            font: {weight: '600', size: 12},
+                            callback: function (value, index) {
+                                const label = this.getLabelForValue(value);
+                                const netVal = Number(netData[index]);
+
+                                let netText = 'Net: 0';
+                                if (netVal > 0) {
+                                    netText = 'Net: +' + netVal;
+                                } else if (netVal < 0) {
+                                    netText = 'Net: -' + netVal;
+                                }
+
+                                return [label, netText];
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grace: '15%',
+                        grid: {color: '#E5E7EB'},
+                        ticks: {
+                            stepSize: 1,
                             precision: 0,
                             color: '#9CA3AF'
                         }
                     }
                 },
                 plugins: {
-                    legend: { display: false }
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8,
+                            font: {weight: '600'}
+                        }
+                    }
                 }
             },
-            plugins: [topLabelsPlugin]
+            plugins: [{
+                id: 'deptChangeTopLabels',
+                afterDraw(chart) {
+                    const {ctx} = chart;
+                    ctx.save();
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        const meta = chart.getDatasetMeta(datasetIndex);
+                        meta.data.forEach((bar, index) => {
+                            const val = dataset.data[index];
+                            if (val > 0) {
+                                ctx.fillStyle = datasetIndex === 0 ? '#15803D' : '#B91C1C';
+                                ctx.fillText(val, bar.x, bar.y - 4);
+                            }
+                        });
+                    });
+                    ctx.restore();
+                }
+            }]
         });
         </c:if>
     });

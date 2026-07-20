@@ -1,6 +1,7 @@
 package model;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HRReportDTO {
@@ -11,6 +12,9 @@ public class HRReportDTO {
     private int employeeCount;
     private int regularCount;
     private int probationCount;
+    private int totalIn;      // Tổng tuyển mới / chuyển đến trong kỳ
+    private int totalOut;     // Tổng nghỉ việc / chuyển đi trong kỳ
+    private int netChange;    // Biến động ròng = totalIn - totalOut
 
     private Map<String, Integer> contractTypeData = new HashMap<>();
     private Map<String, Integer> departmentData = new HashMap<>();
@@ -85,5 +89,29 @@ public class HRReportDTO {
 
     public void setDepartmentData(Map<String, Integer> departmentData) {
         this.departmentData = departmentData;
+    }
+
+    public int getTotalIn() {
+        return totalIn;
+    }
+
+    public void setTotalIn(int totalIn) {
+        this.totalIn = totalIn;
+    }
+
+    public int getTotalOut() {
+        return totalOut;
+    }
+
+    public void setTotalOut(int totalOut) {
+        this.totalOut = totalOut;
+    }
+
+    public int getNetChange() {
+        return netChange;
+    }
+
+    public void setNetChange(int netChange) {
+        this.netChange = netChange;
     }
 }
