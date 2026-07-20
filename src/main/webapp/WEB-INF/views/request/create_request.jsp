@@ -76,6 +76,10 @@
                                             adjustment requests between the 6th and 10th day of the month.</c:when>
                                         <c:when test="${param.error == 'adjustment_limit_exceeded'}">You have reached
                                             the maximum of 2 adjustment requests for this month.</c:when>
+                                        <c:when test="${param.error == 'adjustment_date_weekend'}">Attendance adjustment is not allowed on weekends.</c:when>
+                                        <c:when test="${param.error == 'adjustment_date_holiday'}">Attendance adjustment is not allowed on holidays.</c:when>
+                                        <c:when test="${param.error == 'adjustment_date_duplicate'}">An adjustment request for this date already exists (pending or approved).</c:when>
+                                        <c:when test="${param.error == 'adjustment_invalid_time'}">Desired check-out time cannot be earlier than check-in time.</c:when>
                                         <c:when test="${param.error == 'missing_evidence_file'}">Please upload a proof document (image).</c:when>
                                         <c:when test="${param.error == 'missing_dependents_count'}">Please enter the number of dependents.</c:when>
                                         <c:when test="${param.error == 'invalid_dependents_count'}">Invalid number of dependents.</c:when>
