@@ -21,11 +21,11 @@ public class PayrollCalculator {
         String description = null;
 
         if (positionName.contains("manager") || positionName.equals("system administrator")) {
-            rateMultiplier = 2.0;
-            bonus = 2000000;
+            bonus += 2000000;
             description = "Lương thưởng cho Manager";
         } else if (positionName.contains("staff")) {
-            rateMultiplier = 1.5;
+            bonus += 500000;
+            description = "Lương thưởng cho Staff";
         }
 
         payroll.setRateMultiplier(rateMultiplier);

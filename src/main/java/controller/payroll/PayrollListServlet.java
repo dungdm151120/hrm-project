@@ -1,5 +1,6 @@
 package controller.payroll;
 
+import dao.DepartmentDAO;
 import dao.PayrollDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -7,6 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.Department;
 import model.Payroll;
 import model.User;
 
@@ -28,18 +30,34 @@ public class PayrollListServlet extends HttpServlet {
         String deptParam = request.getParameter("departmentId");
         String sort = request.getParameter("sort");
         String pageParam = request.getParameter("page");
+
         Integer userId = null;
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+
         Integer month = parseIntegerInRange(monthParam, 1, 12);
+        if (month == null && (monthParam == null || monthParam.trim().isEmpty())) {
+            month = today.getMonthValue();
+        }
+
         Integer year = parseIntegerInRange(yearParam, 1900, 9999);
-        Integer departmentId = null;
+        if (year == null && (yearParam == null || yearParam.trim().isEmpty())) {
+            year = today.getYear();
+        }
 
         if (statusParam == null || statusParam.trim().isEmpty()) {
             statusParam = "all";
         }
 
+        if (sort == null || sort.trim().isEmpty()) {
+            sort = "name_asc";
+        }
+
+        Integer departmentId = null;
         if (deptParam != null && !deptParam.isEmpty()) {
-            try { departmentId = Integer.parseInt(deptParam); }
-            catch (NumberFormatException ignored) {}
+            try {
+                departmentId = Integer.parseInt(deptParam);
+            } catch (NumberFormatException ignored) {}
         }
 
         int currentPage = 1;
@@ -52,6 +70,7 @@ public class PayrollListServlet extends HttpServlet {
         }
 
         PayrollDAO payrollDAO = new PayrollDAO();
+        DepartmentDAO departmentDAO = new DepartmentDAO();
 
         int totalRows = payrollDAO.countPayrolls(keyword, statusParam, userId, month, year, departmentId);
         int totalPages = (int) Math.ceil((double) totalRows / pageSize);
@@ -63,17 +82,20 @@ public class PayrollListServlet extends HttpServlet {
         int offset = (currentPage - 1) * pageSize;
 
         List<Payroll> payrollList = payrollDAO.findPayrollsAdvanced(keyword, statusParam, sort, offset, pageSize, userId, month, year, departmentId);
+        List<Department> departmentList = departmentDAO.getAllDepartments();
+        Payroll totalSummary = payrollDAO.calculatePayrollSummary(keyword, statusParam, userId, month, year, departmentId);
 
+        request.setAttribute("totalSummary", totalSummary);
+        request.setAttribute("departmentList", departmentList);
         request.setAttribute("payrollList", payrollList);
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPage", totalPages);
-
         request.setAttribute("keyword", keyword);
         request.setAttribute("status", statusParam);
         request.setAttribute("month", month);
         request.setAttribute("year", year);
         request.setAttribute("departmentId", departmentId);
-        request.setAttribute("currentYear", Year.now().getValue());
+        request.setAttribute("currentYear", today.getYear());
         request.setAttribute("sort", sort);
 
         request.getRequestDispatcher("/WEB-INF/views/payroll/payroll_list.jsp").forward(request, response);
