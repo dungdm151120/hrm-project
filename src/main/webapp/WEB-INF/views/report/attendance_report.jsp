@@ -269,7 +269,7 @@
                         <div class="dashboard-main">
                             <div class="dashboard-header">
                                 <div class="header-left">
-                                    <h1 class="header-title">Báo Cáo Chuyên Cần</h1>
+                                    <h1 class="header-title">Attendance Report</h1>
                                 </div>
                                 <div class="header-right">
                                     <!-- Additional controls can go here -->
@@ -287,7 +287,7 @@
 
                                             <!-- Department Selection -->
                                             <div class="form-group">
-                                                <label for="departmentId">Phòng ban</label>
+                                                <label for="departmentId">Department</label>
                                                 <c:choose>
                                                     <c:when test="${isRestricted}">
                                                         <select name="departmentId" id="departmentId" readonly>
@@ -299,8 +299,7 @@
                                                     </c:when>
                                                     <c:otherwise>
                                                         <select name="departmentId" id="departmentId">
-                                                            <option value="all" ${empty selectedDeptId ? 'selected' : ''
-                                                                }>Tất cả phòng ban</option>
+                                                            <option value="all" ${empty selectedDeptId ? 'selected' : ''}>All Departments</option>
                                                             <c:forEach var="dept" items="${departments}">
                                                                 <option value="${dept.id}" ${selectedDeptId==dept.id
                                                                     ? 'selected' : '' }>${dept.name}</option>
@@ -312,42 +311,37 @@
 
                                             <!-- Period Type -->
                                             <div class="form-group">
-                                                <label for="periodType">Kỳ báo cáo</label>
+                                                <label for="periodType">Report Period</label>
                                                 <select name="periodType" id="periodType">
-                                                    <option value="month" ${periodType=='month' ? 'selected' : '' }>Theo
-                                                        Tháng</option>
-                                                    <option value="quarter" ${periodType=='quarter' ? 'selected' : '' }>
-                                                        Theo Quý</option>
-                                                    <option value="year" ${periodType=='year' ? 'selected' : '' }>Theo
-                                                        Năm</option>
+                                                    <option value="month" ${periodType=='month' ? 'selected' : ''}>Monthly</option>
+                                                    <option value="quarter" ${periodType=='quarter' ? 'selected' : ''}>Quarterly</option>
+                                                    <option value="year" ${periodType=='year' ? 'selected' : ''}>Yearly</option>
                                                 </select>
                                             </div>
 
                                             <!-- Monthly Input Option -->
                                             <div class="form-group" id="monthGroup">
-                                                <label for="month">Tháng</label>
+                                                <label for="month">Month</label>
                                                 <select name="month" id="month">
                                                     <c:forEach var="m" begin="1" end="12">
-                                                        <option value="${m}" ${selectedMonth==m ? 'selected' : '' }>
-                                                            Tháng ${m}</option>
+                                                        <option value="${m}" ${selectedMonth==m ? 'selected' : '' }>Month ${m}</option>
                                                     </c:forEach>
                                                 </select>
                                             </div>
 
                                             <!-- Quarterly Input Option -->
                                             <div class="form-group" id="quarterGroup">
-                                                <label for="quarter">Quý</label>
+                                                <label for="quarter">Quarter</label>
                                                 <select name="quarter" id="quarter">
                                                     <c:forEach var="q" begin="1" end="4">
-                                                        <option value="${q}" ${selectedQuarter==q ? 'selected' : '' }>
-                                                            Quý ${q}</option>
+                                                        <option value="${q}" ${selectedQuarter==q ? 'selected' : '' }>Quarter ${q}</option>
                                                     </c:forEach>
                                                 </select>
                                             </div>
 
                                             <!-- Year (needed for month, quarter, and year periods) -->
                                             <div class="form-group" id="yearGroup">
-                                                <label for="year">Năm</label>
+                                                <label for="year">Year</label>
                                                 <select name="year" id="year">
                                                     <c:forEach var="y" items="${years}">
                                                         <option value="${y}" ${selectedYear==y ? 'selected' : '' }>${y}
@@ -367,7 +361,7 @@
                                                         <line x1="12" y1="20" x2="12" y2="4"></line>
                                                         <line x1="6" y1="20" x2="6" y2="14"></line>
                                                     </svg>
-                                                    Tạo báo cáo
+                                                    Generate Report
                                                 </button>
                                             </div>
 
@@ -384,7 +378,7 @@
                                                         <line x1="16" y1="17" x2="8" y2="17"></line>
                                                         <polyline points="10 9 9 9 8 9"></polyline>
                                                     </svg>
-                                                    Xuất Excel
+                                                    Export to Excel
                                                 </button>
                                             </div>
 
@@ -409,39 +403,41 @@
                                                     <polyline points="10 9 9 9 8 9"></polyline>
                                                 </svg>
                                             </div>
-                                            <h3>Chọn bộ lọc và click "Tạo báo cáo" để hiển thị dữ liệu</h3>
-                                            <p>Bạn có thể lọc báo cáo chuyên cần theo Phòng ban và chọn kỳ báo cáo mong
-                                                muốn.</p>
+                                            <h3>Select filters and click "Generate Report" to display data</h3>
+                                            <p>Filter the attendance report by department and reporting period.</p>
                                         </div>
                                     </c:when>
                                     <c:otherwise>
-                                        <c:if test="${empty selectedDeptId}">
-                                            <!-- Chart container -->
-                                            <div class="report-filter-card"
-                                                style="margin-bottom: 24px; padding: 24px; border: 1px solid var(--border-color); background: var(--card-bg); border-radius: var(--radius);">
-                                                <h3
-                                                    style="margin-top: 0; margin-bottom: 24px; font-size: 16px; font-weight: 700; color: var(--text-primary);">
-                                                    Attendance Overview by Department</h3>
-                                                <div style="width: 100%; height: 350px; position: relative;">
-                                                    <canvas id="deptAttendanceChart"></canvas>
-                                                </div>
-                                            </div>
-                                        </c:if>
-
-                                         <!-- Table Filter & Search Controls -->
-                                         <div style="display: flex; gap: 16px; margin-bottom: 16px; align-items: center; background: var(--white); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-color);">
+                                        <!-- Table Filter & Search Controls -->
+                                         <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; align-items: center; background: var(--white); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-color);">
                                              <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
-                                                 <label style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">Tìm kiếm theo tên nhân viên</label>
-                                                 <input type="text" id="localSearchName" placeholder="Nhập tên nhân viên..." 
+                                                 <label style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">Search by Employee Name</label>
+                                                 <input type="text" id="localSearchName" placeholder="Enter employee name..."
                                                         style="padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); outline: none; font-size: 14px;" />
                                              </div>
                                              <div style="width: 250px; display: flex; flex-direction: column; gap: 6px;">
-                                                 <label style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">Lọc theo phòng ban</label>
+                                                 <label style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">Filter by Department</label>
                                                  <select id="localFilterDept" style="padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); outline: none; font-size: 14px; background-color: var(--white); color: var(--text-primary);">
-                                                     <option value="all">Tất cả phòng ban</option>
+                                                     <option value="all">All Departments</option>
                                                      <c:forEach var="dept" items="${departments}">
                                                          <option value="${dept.name}">${dept.name}</option>
                                                      </c:forEach>
+                                                 </select>
+                                             </div>
+                                             <div style="width: 230px; display: flex; flex-direction: column; gap: 6px;">
+                                                 <label for="localSortBy" style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">Sort by</label>
+                                                 <select id="localSortBy" style="padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); outline: none; font-size: 14px; background-color: var(--white); color: var(--text-primary);">
+                                                     <option value="workHours">Total Work Hours</option>
+                                                     <option value="absentDays">Total Absent Days</option>
+                                                     <option value="lateEarly">Late Arrivals + Early Leaves</option>
+                                                     <option value="missingCheck">Missed Check-ins + outs</option>
+                                                 </select>
+                                             </div>
+                                             <div style="width: 170px; display: flex; flex-direction: column; gap: 6px;">
+                                                 <label for="localSortOrder" style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">Order</label>
+                                                 <select id="localSortOrder" style="padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); outline: none; font-size: 14px; background-color: var(--white); color: var(--text-primary);">
+                                                     <option value="desc">Descending</option>
+                                                     <option value="asc">Ascending</option>
                                                  </select>
                                              </div>
                                          </div>
@@ -451,25 +447,31 @@
                                             <table>
                                                 <thead>
                                                     <tr>
-                                                        <th class="align-center">Mã NV</th>
-                                                        <th>Họ tên</th>
-                                                        <th>Chức vụ</th>
-                                                        <th>Phòng ban</th>
-                                                        <th class="align-center">Tổng ngày công</th>
-                                                        <th class="align-center">Ngày có mặt</th>
-                                                        <th class="align-center">Ngày vắng</th>
-                                                        <th class="align-center">Đi muộn</th>
-                                                        <th class="align-center">Về sớm</th>
-                                                        <th class="align-center">Quên check-in</th>
-                                                        <th class="align-center">Quên check-out</th>
-                                                        <th class="align-right">Tổng giờ công</th>
-                                                        <th class="align-right">Tổng giờ OT</th>
-                                                        <th class="align-center">Tổng Phép</th>
+                                                        <th class="align-center">Employee ID</th>
+                                                        <th>Employee Name</th>
+                                                        <th>Position</th>
+                                                        <th>Department</th>
+                                                        <th class="align-center">Expected Workdays</th>
+                                                        <th class="align-center">Present Days</th>
+                                                        <th class="align-center">Absent Days</th>
+                                                        <th class="align-center">Late Arrivals</th>
+                                                        <th class="align-center">Early Leaves</th>
+                                                        <th class="align-center">Missed Check-ins</th>
+                                                        <th class="align-center">Missed Check-outs</th>
+                                                        <th class="align-right">Total Work Hours</th>
+                                                        <th class="align-right">Total OT Hours</th>
+                                                        <th class="align-center">Leave Days</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     <c:forEach var="row" items="${reportRows}">
-                                                        <tr class="employee-row" data-name="${fn:toLowerCase(row.employeeName)}" data-dept="${row.departmentName}">
+                                                        <tr class="employee-row"
+                                                            data-name="${fn:toLowerCase(row.employeeName)}"
+                                                            data-dept="${row.departmentName}"
+                                                            data-work-hours="${row.totalWorkHours}"
+                                                            data-absent-days="${row.absentDays}"
+                                                            data-late-early="${row.lateDays + row.earlyLeaveDays}"
+                                                            data-missing-check="${row.forgotCheckInDays + row.forgotCheckOutDays}">
                                                             <td class="align-center bold">${row.employeeCode}</td>
                                                             <td class="bold">${row.employeeName}</td>
                                                             <td>${row.positionName}</td>
@@ -496,14 +498,27 @@
                                                         <tr>
                                                             <td colspan="14" class="align-center"
                                                                 style="padding: 40px; color: var(--text-secondary);">
-                                                                Không tìm thấy dữ liệu nhân viên nào phù hợp với bộ lọc
-                                                                đã chọn.
+                                                                No employee data matches the selected filters.
                                                             </td>
                                                         </tr>
                                                     </c:if>
                                                 </tbody>
                                             </table>
                                         </div>
+
+                                        <c:if test="${empty selectedDeptId}">
+                                            <!-- Chart container -->
+                                            <div class="report-filter-card"
+                                                style="margin-bottom: 24px; padding: 24px; border: 1px solid var(--border-color); background: var(--card-bg); border-radius: var(--radius);">
+                                                <h3
+                                                    style="margin-top: 0; margin-bottom: 24px; font-size: 16px; font-weight: 700; color: var(--text-primary);">
+                                                    Attendance Overview by Department</h3>
+                                                <div style="width: 100%; height: 350px; position: relative;">
+                                                    <canvas id="deptAttendanceChart"></canvas>
+                                                </div>
+                                            </div>
+                                        </c:if>
+
 
                                         <!-- Bottom Summaries and Highlights -->
                                         <c:if test="${not empty reportRows}">
@@ -513,7 +528,7 @@
                                                 <!-- Stat 1: Total Work Hours vs Expected -->
                                                 <div class="stat-card">
                                                     <div class="stat-header">
-                                                        <span class="stat-title">Hiệu suất giờ công</span>
+                                                        <span class="stat-title">Work Hours Performance</span>
                                                         <div class="stat-icon">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="18"
                                                                 height="18" viewBox="0 0 24 24" fill="none"
@@ -532,7 +547,7 @@
                                                         <fmt:formatNumber value="${totalActualWorkHours}"
                                                             pattern="#,##0.0" /> /
                                                         <fmt:formatNumber value="${totalExpectedWorkHours}"
-                                                            pattern="#,##0.0" /> giờ công
+                                                            pattern="#,##0.0" /> work hours
                                                     </div>
                                                     <div class="progress-bar-container">
                                                         <div class="progress-bar-fill"
@@ -544,7 +559,7 @@
                                                 <!-- Stat 2: Total OT Hours vs Registered -->
                                                 <div class="stat-card">
                                                     <div class="stat-header">
-                                                        <span class="stat-title">Hiệu suất làm thêm (OT)</span>
+                                                        <span class="stat-title">Overtime Performance</span>
                                                         <div class="stat-icon"
                                                             style="background-color: #FEF3C7; color: #D97706;">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="18"
@@ -558,20 +573,15 @@
                                                     </div>
                                                     <div class="stat-value">
                                                         <c:set var="otPercent"
-                                                            value="${totalRegisteredOvertimeHours > 0 ? (totalActualOvertimeHours / totalRegisteredOvertimeHours) * 100 : 100.0}" />
-                                                        <c:choose>
-                                                            <c:when test="${totalRegisteredOvertimeHours > 0}">
-                                                                <fmt:formatNumber value="${otPercent}"
-                                                                    pattern="#,##0.0" />%
-                                                            </c:when>
-                                                            <c:otherwise>100%</c:otherwise>
-                                                        </c:choose>
+                                                            value="${totalRegisteredOvertimeHours > 0 ? (totalActualOvertimeHours / totalRegisteredOvertimeHours) * 100 : 0.0}" />
+                                                        <fmt:formatNumber value="${otPercent}"
+                                                            pattern="#,##0.0" />%
                                                     </div>
                                                     <div class="stat-ratio">
                                                         <fmt:formatNumber value="${totalActualOvertimeHours}"
                                                             pattern="#,##0.0" /> /
                                                         <fmt:formatNumber value="${totalRegisteredOvertimeHours}"
-                                                            pattern="#,##0.0" /> giờ OT
+                                                            pattern="#,##0.0" /> OT hours
                                                     </div>
                                                     <div class="progress-bar-container">
                                                         <div class="progress-bar-fill"
@@ -583,7 +593,7 @@
                                                 <!-- Stat 3: Total Leave Days -->
                                                 <div class="stat-card">
                                                     <div class="stat-header">
-                                                        <span class="stat-title">Tổng ngày nghỉ phép</span>
+                                                        <span class="stat-title">Total Leave Days</span>
                                                         <div class="stat-icon"
                                                             style="background-color: #ECFDF5; color: #10B981;">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="18"
@@ -597,18 +607,17 @@
                                                         </div>
                                                     </div>
                                                     <div class="stat-value" style="color: #10B981;">
-                                                        <fmt:formatNumber value="${totalLeaveDays}" pattern="#,##0.0" />
-                                                        ngày
+                                                        <fmt:formatNumber value="${totalLeaveDays}" pattern="#,##0.0" /> days
                                                     </div>
                                                     <div class="stat-ratio">
-                                                        Nghỉ phép thường và nghỉ ốm
+                                                        Annual leave and sick leave
                                                     </div>
                                                 </div>
 
                                                 <!-- Stat 4: Total Absent Days -->
                                                 <div class="stat-card">
                                                     <div class="stat-header">
-                                                        <span class="stat-title">Tổng ngày vắng mặt</span>
+                                                        <span class="stat-title">Total Absent Days</span>
                                                         <div class="stat-icon"
                                                             style="background-color: #FEF2F2; color: #EF4444;">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="18"
@@ -620,11 +629,10 @@
                                                         </div>
                                                     </div>
                                                     <div class="stat-value" style="color: #EF4444;">
-                                                        <fmt:formatNumber value="${totalAbsentDays}" pattern="#,##0" />
-                                                        ngày
+                                                        <fmt:formatNumber value="${totalAbsentDays}" pattern="#,##0" /> days
                                                     </div>
                                                     <div class="stat-ratio">
-                                                        Vắng mặt không phép / nghỉ không lương
+                                                        Unauthorized absence / unpaid leave
                                                     </div>
                                                 </div>
 
@@ -638,8 +646,7 @@
                                                 <c:if test="${not empty hardestWorking}">
                                                     <div class="stat-card highlight-card">
                                                         <div class="stat-header">
-                                                            <span class="stat-title" style="color: #1E3A8A;">🏆 Nhân
-                                                                viên chăm chỉ nhất</span>
+                                                            <span class="stat-title" style="color: #1E3A8A;">Top Performing Employee</span>
                                                             <div class="stat-icon">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="18"
                                                                     height="18" viewBox="0 0 24 24" fill="none"
@@ -661,17 +668,13 @@
                                                             ${hardestWorking.employeeName}
                                                         </div>
                                                         <div class="highlight-meta">
-                                                            Mã NV: <span
-                                                                class="bold">${hardestWorking.employeeCode}</span> |
-                                                            Phòng ban: <span
-                                                                class="bold">${hardestWorking.departmentName}</span>
+                                                            Employee ID: <span class="bold">${hardestWorking.employeeCode}</span> |
+                                                            Department: <span class="bold">${hardestWorking.departmentName}</span>
                                                         </div>
                                                         <div class="stat-ratio"
                                                             style="color: #2563EB; font-weight: 600; margin-top: 8px;">
-                                                            Tổng giờ làm + OT:
-                                                            <fmt:formatNumber
-                                                                value="${hardestWorking.totalWorkHours + hardestWorking.totalOvertimeHours}"
-                                                                pattern="#,##0.0" /> giờ
+                                                            Total work + OT hours:
+                                                            <fmt:formatNumber value="${hardestWorking.totalWorkHours + hardestWorking.totalOvertimeHours}" pattern="#,##0.0" /> hours
                                                         </div>
                                                     </div>
                                                 </c:if>
@@ -680,8 +683,7 @@
                                                 <c:if test="${not empty mostPunctual}">
                                                     <div class="stat-card highlight-card punctual">
                                                         <div class="stat-header">
-                                                            <span class="stat-title" style="color: #064E3B;">⏱️ Nhân
-                                                                viên đúng giờ nhất</span>
+                                                            <span class="stat-title" style="color: #064E3B;">Most Punctual Employee</span>
                                                             <div class="stat-icon">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="18"
                                                                     height="18" viewBox="0 0 24 24" fill="none"
@@ -696,16 +698,13 @@
                                                             ${mostPunctual.employeeName}
                                                         </div>
                                                         <div class="highlight-meta">
-                                                            Mã NV: <span
-                                                                class="bold">${mostPunctual.employeeCode}</span> | Phòng
-                                                            ban: <span
-                                                                class="bold">${mostPunctual.departmentName}</span>
+                                                            Employee ID: <span class="bold">${mostPunctual.employeeCode}</span> |
+                                                            Department: <span class="bold">${mostPunctual.departmentName}</span>
                                                         </div>
                                                         <div class="stat-ratio"
                                                             style="color: #059669; font-weight: 600; margin-top: 8px;">
-                                                            Đi muộn: ${mostPunctual.lateDays} lần | Về sớm:
-                                                            ${mostPunctual.earlyLeaveDays} lần | Quên check-in:
-                                                            ${mostPunctual.forgotCheckInDays} lần
+                                                            Late: ${mostPunctual.lateDays} times | Early leave: ${mostPunctual.earlyLeaveDays} times |
+                                                            Missed check-in: ${mostPunctual.forgotCheckInDays} times
                                                         </div>
                                                     </div>
                                                 </c:if>
@@ -727,11 +726,11 @@
                             const form = document.getElementById("reportForm");
                             const originalAction = form.action;
                             const originalMethod = form.method;
-                            
+
                             form.action = "${ctx}/reports/attendance/export";
                             form.method = "GET";
                             form.submit();
-                            
+
                             form.action = originalAction;
                             form.method = originalMethod;
                         }
@@ -873,33 +872,53 @@
             });
                             </c:if>
 
-                            // Client-side search and department filtering
+                            // Client-side search, department filtering, and sorting
                             const searchInput = document.getElementById("localSearchName");
                             const deptSelect = document.getElementById("localFilterDept");
-                            
-                            if (searchInput && deptSelect) {
+                            const sortSelect = document.getElementById("localSortBy");
+                            const sortOrderSelect = document.getElementById("localSortOrder");
+                            const tableBody = document.querySelector(".table-wrapper tbody");
+
+                            if (searchInput && deptSelect && sortSelect && sortOrderSelect && tableBody) {
                                 function filterTable() {
                                     const query = searchInput.value.toLowerCase().trim();
                                     const selectedDept = deptSelect.value;
-                                    
-                                    const rows = document.querySelectorAll(".employee-row");
-                                    rows.forEach(row => {
-                                        const empName = row.getAttribute("data-name") || "";
-                                        const empDept = row.getAttribute("data-dept") || "";
-                                        
+
+                                    tableBody.querySelectorAll(".employee-row").forEach(row => {
+                                        const empName = row.dataset.name || "";
+                                        const empDept = row.dataset.dept || "";
                                         const matchesName = empName.includes(query);
-                                        const matchesDept = (selectedDept === "all" || empDept === selectedDept);
-                                        
-                                        if (matchesName && matchesDept) {
-                                            row.style.display = "";
-                                        } else {
-                                            row.style.display = "none";
-                                        }
+                                        const matchesDept = selectedDept === "all" || empDept === selectedDept;
+
+                                        row.style.display = matchesName && matchesDept ? "" : "none";
                                     });
                                 }
-                                
+
+                                function sortTable() {
+                                    const sortKey = sortSelect.value;
+                                    const direction = sortOrderSelect.value === "asc" ? 1 : -1;
+                                    const rows = Array.from(tableBody.querySelectorAll(".employee-row"));
+
+                                    rows.sort((rowA, rowB) => {
+                                        const valueA = Number.parseFloat(rowA.dataset[sortKey]) || 0;
+                                        const valueB = Number.parseFloat(rowB.dataset[sortKey]) || 0;
+                                        const difference = valueA - valueB;
+
+                                        if (difference !== 0) {
+                                            return difference * direction;
+                                        }
+
+                                        return (rowA.dataset.name || "").localeCompare(rowB.dataset.name || "");
+                                    });
+
+                                    rows.forEach(row => tableBody.appendChild(row));
+                                }
+
                                 searchInput.addEventListener("input", filterTable);
                                 deptSelect.addEventListener("change", filterTable);
+                                sortSelect.addEventListener("change", sortTable);
+                                sortOrderSelect.addEventListener("change", sortTable);
+                                sortTable();
                             }
                         });
                     </script>
