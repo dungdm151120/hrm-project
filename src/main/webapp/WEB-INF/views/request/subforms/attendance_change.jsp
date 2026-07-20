@@ -71,4 +71,54 @@
             toolbar: ['heading', '|', 'bold', 'italic', 'underline', 'link', 'bulletedList', 'numberedList', '|', 'alignment', 'fontColor', 'fontFamily', 'fontSize', '|', 'insertTable', 'blockQuote', 'undo', 'redo']
         })
         .catch(error => { console.error(error); });
+
+    $(document).ready(function() {
+        // Namespace the submit event handler to avoid duplicate triggers if reloaded
+        $('form').off('submit.attendance_change').on('submit.attendance_change', function(e) {
+            if ($('#typeSelect').val() === 'ATTENDANCE_ADJUST') {
+                const workDateVal = $('#workDate').val();
+                if (workDateVal) {
+                    const date = new Date(workDateVal);
+                    const day = date.getDay(); // 0: Sunday, 6: Saturday
+                    if (day === 0 || day === 6) {
+                        alert('Attendance adjustment is not allowed on weekends. / Không được xin điều chỉnh công cho ngày cuối tuần.');
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+
+                const checkInVal = $('#desiredCheckIn').val();
+                const checkOutVal = $('#desiredCheckOut').val();
+                if (checkInVal && checkOutVal) {
+                    if (checkOutVal < checkInVal) {
+                        alert('Desired check-out time cannot be earlier than check-in time. / Giờ check-out mong muốn phải sau hoặc bằng giờ check-in mong muốn.');
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+        });
+
+        // Alert on input change for immediate feedback
+        $('#workDate').on('change', function() {
+            const val = $(this).val();
+            if (val) {
+                const date = new Date(val);
+                const day = date.getDay();
+                if (day === 0 || day === 6) {
+                    alert('Attendance adjustment is not allowed on weekends. / Không được xin điều chỉnh công cho ngày cuối tuần.');
+                    $(this).val('');
+                }
+            }
+        });
+
+        $('#desiredCheckIn, #desiredCheckOut').on('change', function() {
+            const checkIn = $('#desiredCheckIn').val();
+            const checkOut = $('#desiredCheckOut').val();
+            if (checkIn && checkOut && checkOut < checkIn) {
+                alert('Desired check-out time cannot be earlier than check-in time. / Giờ check-out mong muốn phải sau hoặc bằng giờ check-in mong muốn.');
+                $('#desiredCheckOut').val('');
+            }
+        });
+    });
 </script>

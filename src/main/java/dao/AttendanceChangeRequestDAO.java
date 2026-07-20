@@ -89,4 +89,21 @@ public class AttendanceChangeRequestDAO {
         }
         return 0;
     }
+
+    public boolean existsRequestForDate(int userId, LocalDate workDate) {
+        String sql = "SELECT COUNT(*) FROM attendance_change_requests acr " +
+                "JOIN requests r ON acr.request_id = r.id " +
+                "WHERE r.user_id = ? AND acr.work_date = ? AND r.status IN ('PENDING', 'APPROVED')";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(workDate));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

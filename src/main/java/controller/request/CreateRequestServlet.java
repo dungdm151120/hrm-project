@@ -191,18 +191,34 @@ public class CreateRequestServlet extends HttpServlet {
             } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
                 int currentDay = LocalDate.now().getDayOfMonth();
                 if (currentDay > 5 && currentDay <= 10) {
-                    response.sendRedirect("create_request?error=adjustment_blocked_days_6_to_10");
+                    response.sendRedirect("create_request?type=ATTENDANCE_ADJUST&error=adjustment_blocked_days_6_to_10");
                     return;
                 }
 
                 String workDateStr = request.getParameter("workDate");
                 if (workDateStr == null || workDateStr.trim().isEmpty()) {
-                    response.sendRedirect("create_request?error=missing_work_date");
+                    response.sendRedirect("create_request?type=ATTENDANCE_ADJUST&error=missing_work_date");
                     return;
                 }
                 LocalDate workDate = LocalDate.parse(workDateStr);
 
+                DayOfWeek dayOfWeek = workDate.getDayOfWeek();
+                if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+                    response.sendRedirect("create_request?type=ATTENDANCE_ADJUST&error=adjustment_date_weekend");
+                    return;
+                }
+
+                HolidayDAO holidayDAO = new HolidayDAO();
+                if (holidayDAO.isHoliday(workDate)) {
+                    response.sendRedirect("create_request?type=ATTENDANCE_ADJUST&error=adjustment_date_holiday");
+                    return;
+                }
+
                 AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
+                if (acrDAO.existsRequestForDate(currentUser.getId(), workDate)) {
+                    response.sendRedirect("create_request?type=ATTENDANCE_ADJUST&error=adjustment_date_duplicate");
+                    return;
+                }
 
                 String desiredCheckInStr = request.getParameter("desiredCheckIn");
                 String desiredCheckOutStr = request.getParameter("desiredCheckOut");
@@ -214,6 +230,13 @@ public class CreateRequestServlet extends HttpServlet {
                 }
                 if (desiredCheckOutStr != null && !desiredCheckOutStr.trim().isEmpty()) {
                     acr.setDesiredCheckOut(LocalTime.parse(desiredCheckOutStr));
+                }
+
+                if (acr.getDesiredCheckIn() != null && acr.getDesiredCheckOut() != null) {
+                    if (acr.getDesiredCheckOut().isBefore(acr.getDesiredCheckIn())) {
+                        response.sendRedirect("create_request?type=ATTENDANCE_ADJUST&error=adjustment_invalid_time");
+                        return;
+                    }
                 }
 
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
