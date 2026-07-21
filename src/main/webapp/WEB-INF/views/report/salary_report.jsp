@@ -133,6 +133,26 @@
             padding: 18px 24px 8px;
         }
 
+        .chart-title {
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 800;
+            margin: 0 0 14px;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .analytics-grid .report-panel { margin-bottom: 0; }
+
+        @media (max-width: 640px) {
+            .analytics-grid { grid-template-columns: 1fr; }
+        }
+
         .chart-scroll {
             width: 100%;
             overflow-x: auto;
@@ -239,6 +259,15 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="salarySort">Sắp xếp theo thực lĩnh</label>
+                            <select name="salarySort" id="salarySort">
+                                <option value="default" ${salarySort == 'default' ? 'selected' : ''}>Mặc định</option>
+                                <option value="salaryAsc" ${salarySort == 'salaryAsc' ? 'selected' : ''}>Thấp → cao</option>
+                                <option value="salaryDesc" ${salarySort == 'salaryDesc' ? 'selected' : ''}>Cao → thấp</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
                             <button type="submit" class="btn-generate">Tạo báo cáo</button>
                         </div>
                     </div>
@@ -269,6 +298,37 @@
                         <div class="summary-card">
                             <div class="summary-title">Tổng thực lĩnh</div>
                             <div class="summary-value"><fmt:formatNumber value="${totalIncome}" type="number" maxFractionDigits="0"/></div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-grid">
+                        <c:if test="${periodType != 'month'}">
+                            <div class="report-panel">
+                                <div class="chart-wrap">
+                                    <h2 class="chart-title">Tổng lương toàn công ty theo tháng</h2>
+                                    <div class="chart-inner"><canvas id="companySalaryTrendChart"></canvas></div>
+                                    <div id="monthlySalaryData" hidden>
+                                        <c:forEach var="item" items="${monthlySalaryTotals}">
+                                            <span data-label="Tháng ${item.month}/${item.year}" data-value="${item.totalNetPay}"></span>
+                                        </c:forEach>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:if>
+
+                        <div class="report-panel">
+                            <div class="chart-wrap">
+                                <h2 class="chart-title">Cơ cấu lương giữa các phòng ban</h2>
+                                <div class="chart-inner"><canvas id="departmentSalaryChart"></canvas></div>
+                                <div id="departmentSalaryData" hidden>
+                                    <c:forEach var="item" items="${departmentRows}">
+                                        <span data-label="${item.groupName}"
+                                              data-workday="${item.workdayIncome}"
+                                              data-bonus="${item.productIncome}"
+                                              data-overtime="${item.overtimeIncome}"></span>
+                                    </c:forEach>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -309,7 +369,7 @@
                                     <th class="number">Lương ngày công</th>
                                     <th class="number">Lương thưởng</th>
                                     <th class="number">Lương làm thêm</th>
-                                    <th class="number">Tổng</th>
+                                    <th class="number">Thực lĩnh</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -357,6 +417,69 @@
         periodTypeSelect.addEventListener("change", updateFieldsVisibility);
         updateFieldsVisibility();
 
+        const currency = value => new Intl.NumberFormat("vi-VN").format(value) + " VND";
+        const commonMoneyAxis = {
+            beginAtZero: true,
+            grid: { color: "#eef2f7" },
+            ticks: { callback: value => new Intl.NumberFormat("vi-VN").format(value) }
+        };
+
+        const monthlyData = Array.from(document.querySelectorAll("#monthlySalaryData span"));
+        const trendCanvas = document.getElementById("companySalaryTrendChart");
+        if (trendCanvas && monthlyData.length && window.Chart) {
+            new Chart(trendCanvas.getContext("2d"), {
+                type: "line",
+                data: {
+                    labels: monthlyData.map(item => item.dataset.label),
+                    datasets: [{
+                        label: "Tổng thực lĩnh",
+                        data: monthlyData.map(item => Number(item.dataset.value || 0)),
+                        borderColor: "#16a34a",
+                        backgroundColor: "rgba(34, 197, 94, 0.14)",
+                        pointBackgroundColor: "#16a34a",
+                        pointRadius: 4,
+                        borderWidth: 3,
+                        tension: 0.28,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: commonMoneyAxis },
+                    plugins: { tooltip: { callbacks: { label: context => currency(context.parsed.y) } } }
+                }
+            });
+        }
+
+        const departmentData = Array.from(document.querySelectorAll("#departmentSalaryData span"));
+        const departmentCanvas = document.getElementById("departmentSalaryChart");
+        if (departmentCanvas && departmentData.length && window.Chart) {
+            new Chart(departmentCanvas.getContext("2d"), {
+                type: "bar",
+                data: {
+                    labels: departmentData.map(item => item.dataset.label),
+                    datasets: [
+                        { label: "Lương ngày công", data: departmentData.map(item => Number(item.dataset.workday || 0)), backgroundColor: "#86efac" },
+                        { label: "Lương thưởng", data: departmentData.map(item => Number(item.dataset.bonus || 0)), backgroundColor: "#facc15" },
+                        { label: "Lương làm thêm", data: departmentData.map(item => Number(item.dataset.overtime || 0)), backgroundColor: "#0f766e" }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: "y",
+                    scales: {
+                        x: { ...commonMoneyAxis, stacked: true },
+                        y: { stacked: true, grid: { display: false } }
+                    },
+                    plugins: {
+                        tooltip: { callbacks: { label: context => context.dataset.label + ": " + currency(context.parsed.x) } }
+                    }
+                }
+            });
+        }
+
         const rows = Array.from(document.querySelectorAll("#salaryTable tbody tr[data-label]"));
         if (rows.length > 0 && window.Chart) {
             const labels = rows.map(row => row.dataset.label);
@@ -375,7 +498,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: "Tổng thu nhập",
+                        label: "Tổng thực lĩnh",
                         data: values,
                         backgroundColor: "#4ade80",
                         borderRadius: 4,

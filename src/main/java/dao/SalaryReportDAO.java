@@ -1,6 +1,7 @@
 package dao;
 
 import model.SalaryReportRowDTO;
+import model.MonthlySalaryTotalDTO;
 import util.DBConnection;
 
 import java.sql.Connection;
@@ -8,11 +9,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SalaryReportDAO {
 
-    public List<SalaryReportRowDTO> generateSalaryReport(String groupBy, YearMonth startPeriod, YearMonth endPeriod) {
+    public List<SalaryReportRowDTO> generateSalaryReport(String groupBy, YearMonth startPeriod,
+                                                          YearMonth endPeriod, String salarySort) {
         List<SalaryReportRowDTO> rows = new ArrayList<>();
 
         String selectGroup;
@@ -45,6 +49,12 @@ public class SalaryReportDAO {
                 groupClause = "pos.id, pos.name, d.id, d.name";
                 orderClause = "pos.name ASC, d.name ASC";
             }
+        }
+
+        if ("salaryAsc".equals(salarySort)) {
+            orderClause = "total_income ASC, group_name ASC";
+        } else if ("salaryDesc".equals(salarySort)) {
+            orderClause = "total_income DESC, group_name ASC";
         }
 
         String sql = """
@@ -91,5 +101,43 @@ public class SalaryReportDAO {
         }
 
         return rows;
+    }
+
+    public List<MonthlySalaryTotalDTO> getMonthlyCompanySalaryTotals(YearMonth startPeriod, YearMonth endPeriod) {
+        Map<YearMonth, MonthlySalaryTotalDTO> totalsByMonth = new LinkedHashMap<>();
+        for (YearMonth period = startPeriod; !period.isAfter(endPeriod); period = period.plusMonths(1)) {
+            MonthlySalaryTotalDTO total = new MonthlySalaryTotalDTO();
+            total.setYear(period.getYear());
+            total.setMonth(period.getMonthValue());
+            totalsByMonth.put(period, total);
+        }
+        String sql = """
+            SELECT p.year, p.month, COALESCE(SUM(p.net_pay), 0) AS total_net_pay
+            FROM payrolls p
+            WHERE ((p.year * 12) + p.month) BETWEEN ? AND ?
+            GROUP BY p.year, p.month
+            ORDER BY p.year, p.month
+            """;
+
+        int startKey = startPeriod.getYear() * 12 + startPeriod.getMonthValue();
+        int endKey = endPeriod.getYear() * 12 + endPeriod.getMonthValue();
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, startKey);
+            ps.setInt(2, endKey);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    YearMonth period = YearMonth.of(rs.getInt("year"), rs.getInt("month"));
+                    MonthlySalaryTotalDTO total = totalsByMonth.get(period);
+                    if (total != null) {
+                        total.setTotalNetPay(rs.getLong("total_net_pay"));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>(totalsByMonth.values());
     }
 }

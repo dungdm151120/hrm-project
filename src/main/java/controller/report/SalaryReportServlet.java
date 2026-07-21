@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.SalaryReportRowDTO;
+import model.MonthlySalaryTotalDTO;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -46,6 +47,11 @@ public class SalaryReportServlet extends HttpServlet {
             groupBy = "position";
         }
 
+        String salarySort = request.getParameter("salarySort");
+        if (!"salaryAsc".equals(salarySort) && !"salaryDesc".equals(salarySort)) {
+            salarySort = "default";
+        }
+
         int selectedMonth = parseIntInRange(request.getParameter("month"), today.getMonthValue(), 1, 12);
         int selectedQuarter = parseIntInRange(request.getParameter("quarter"),
                 ((today.getMonthValue() - 1) / 3) + 1, 1, 4);
@@ -73,7 +79,13 @@ public class SalaryReportServlet extends HttpServlet {
                 endPeriod = startPeriod;
             }
 
-            List<SalaryReportRowDTO> reportRows = reportDAO.generateSalaryReport(groupBy, startPeriod, endPeriod);
+            List<SalaryReportRowDTO> reportRows = reportDAO.generateSalaryReport(
+                    groupBy, startPeriod, endPeriod, salarySort);
+            List<SalaryReportRowDTO> departmentRows = reportDAO.generateSalaryReport(
+                    "department", startPeriod, endPeriod, "salaryDesc");
+            List<MonthlySalaryTotalDTO> monthlySalaryTotals = "month".equals(periodType)
+                    ? List.of()
+                    : reportDAO.getMonthlyCompanySalaryTotals(startPeriod, endPeriod);
             long totalWorkdayIncome = 0L;
             long totalProductIncome = 0L;
             long totalOvertimeIncome = 0L;
@@ -89,6 +101,8 @@ public class SalaryReportServlet extends HttpServlet {
             }
 
             request.setAttribute("reportRows", reportRows);
+            request.setAttribute("departmentRows", departmentRows);
+            request.setAttribute("monthlySalaryTotals", monthlySalaryTotals);
             request.setAttribute("totalWorkdayIncome", totalWorkdayIncome);
             request.setAttribute("totalProductIncome", totalProductIncome);
             request.setAttribute("totalOvertimeIncome", totalOvertimeIncome);
@@ -99,6 +113,7 @@ public class SalaryReportServlet extends HttpServlet {
         request.setAttribute("isGenerated", isGenerated);
         request.setAttribute("periodType", periodType);
         request.setAttribute("groupBy", groupBy);
+        request.setAttribute("salarySort", salarySort);
         request.setAttribute("selectedMonth", selectedMonth);
         request.setAttribute("selectedQuarter", selectedQuarter);
         request.setAttribute("selectedYear", selectedYear);
