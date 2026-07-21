@@ -420,7 +420,7 @@
         </c:if>
         
         <!-- Reports Group -->
-        <c:set var="showReports" value="${userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}" />
+        <c:set var="showReports" value="${userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT') or userPermissions.contains('PAYROLL_VIEW_LIST') or userPermissions.contains('PAYROLL_EXPORT_REPORT')}" />
         <c:if test="${showReports}">
         <c:set var="reportActive" value="${currentPath.startsWith(ctx.concat('/reports'))}" />
         <div class="nav-group">
@@ -436,8 +436,13 @@
                 </svg>
             </button>
             <div class="submenu" style="${reportActive ? 'display: flex !important;' : ''}">
-                <a href="${ctx}/reports/attendance" class="submenu-item ${currentPath == ctx.concat('/reports/attendance') ? 'active' : ''}">Attendance Report</a>
-                <a href="${ctx}/reports/hr" class="submenu-item ${currentPath == ctx.concat('/reports/hr') ? 'active' : ''}">HR Report</a>
+                <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}">
+                    <a href="${ctx}/reports/attendance" class="submenu-item ${currentPath == ctx.concat('/reports/attendance') ? 'active' : ''}">Attendance Report</a>
+                    <a href="${ctx}/reports/hr" class="submenu-item ${currentPath == ctx.concat('/reports/hr') ? 'active' : ''}">HR Report</a>
+                </c:if>
+                <c:if test="${userPermissions.contains('PAYROLL_VIEW_LIST') or userPermissions.contains('PAYROLL_EXPORT_REPORT')}">
+                    <a href="${ctx}/reports/salary" class="submenu-item ${currentPath == ctx.concat('/reports/salary') ? 'active' : ''}">Salary Report</a>
+                </c:if>
             </div>
         </div>
         </c:if>
