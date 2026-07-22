@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -185,6 +186,7 @@ public class HRReportDAO {
     public List<DeptEmployeeChangeDTO> getDeptEmployeeChanges(LocalDate startDate, LocalDate endDate) {
         List<DeptEmployeeChangeDTO> list = new ArrayList<>();
 
+        // Thêm user_id / employee_id vào subquery và dùng COUNT(DISTINCT user_id)
         String sql =
                 "SELECT " +
                         "    d.id AS department_id, " +
@@ -193,21 +195,21 @@ public class HRReportDAO {
                         "    COALESCE(e_out.out_count, 0) AS out_count " +
                         "FROM departments d " +
                         "LEFT JOIN ( " +
-                        "    /* Đếm số người CHUYỂN ĐẾN (start_date) trong khoảng lọc */ " +
-                        "    SELECT department_id, COUNT(*) AS in_count " +
+                        "    /* Đếm số nhân sự DISTINCT CHUYỂN ĐẾN trong khoảng lọc */ " +
+                        "    SELECT department_id, COUNT(DISTINCT user_id) AS in_count " +
                         "    FROM ( " +
-                        "        SELECT department_id, start_date FROM department_history WHERE start_date BETWEEN ? AND ? " +
-                        "        UNION ALL " +
-                        "        SELECT department_id, start_date FROM department_after_update WHERE start_date BETWEEN ? AND ? " +
+                        "        SELECT department_id, user_id FROM department_history WHERE start_date BETWEEN ? AND ? " +
+                        "        UNION " + // Dùng UNION thay vì UNION ALL để tự loại bỏ bản ghi ghi trùng ở 2 bảng
+                        "        SELECT department_id, user_id FROM department_after_update WHERE start_date BETWEEN ? AND ? " +
                         "    ) t_in GROUP BY department_id " +
                         ") e_in ON d.id = e_in.department_id " +
                         "LEFT JOIN ( " +
-                        "    /* Đếm số người RỜI ĐI (end_date) trong khoảng lọc */ " +
-                        "    SELECT department_id, COUNT(*) AS out_count " +
+                        "    /* Đếm số nhân sự DISTINCT RỜI ĐI trong khoảng lọc */ " +
+                        "    SELECT department_id, COUNT(DISTINCT user_id) AS out_count " +
                         "    FROM ( " +
-                        "        SELECT department_id, end_date FROM department_history WHERE end_date BETWEEN ? AND ? " +
-                        "        UNION ALL " +
-                        "        SELECT department_id, end_date FROM department_after_update WHERE end_date BETWEEN ? AND ? " +
+                        "        SELECT department_id, user_id FROM department_history WHERE end_date BETWEEN ? AND ? " +
+                        "        UNION " + // Dùng UNION để de-duplicate
+                        "        SELECT department_id, user_id FROM department_after_update WHERE end_date BETWEEN ? AND ? " +
                         "    ) t_out GROUP BY department_id " +
                         ") e_out ON d.id = e_out.department_id " +
                         "ORDER BY d.id ASC";
@@ -241,5 +243,120 @@ public class HRReportDAO {
         }
 
         return list;
+    }
+
+    public List<Integer> getMonthlyHeadcountTrend(int year, Integer deptId, String contractType) {
+        List<Integer> trendData = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+
+        for (int month = 1; month <= 12; month++) {
+            LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();
+            LocalDate startOfMonth = LocalDate.of(year, month, 1);
+
+            // 1. Nếu tháng nằm hoàn toàn trong tương lai (đầu tháng > hôm nay) -> Trả về 0
+            if (startOfMonth.isAfter(today)) {
+                trendData.add(null);
+            }
+            // 2. Nếu là tháng hiện tại (Tháng 7) -> Đếm headcount tính tới NGÀY HÔM NAY (today)
+            else if (month == today.getMonthValue() && year == today.getYear()) {
+                int count = getHeadcountAtDate(today, deptId, contractType);
+                trendData.add(count);
+            }
+            // 3. Các tháng đã qua trong quá khứ -> Đếm tính tới NGÀY CUỐI THÁNG đó
+            else {
+                int count = getHeadcountAtDate(endOfMonth, deptId, contractType);
+                trendData.add(count);
+            }
+        }
+
+        return trendData;
+    }
+
+    private int getHeadcountAtDate(LocalDate targetDate, Integer deptId, String contractType) {
+        java.sql.Date sqlTargetDate = java.sql.Date.valueOf(targetDate);
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(DISTINCT lc.user_id) AS total ")
+                .append("FROM labor_contracts lc ")
+                .append("JOIN users u ON lc.user_id = u.id ")
+                .append("WHERE lc.start_date <= ? ")
+                .append("  AND (lc.end_date IS NULL OR lc.end_date >= ?) ");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIdx = 1;
+            ps.setDate(paramIdx++, sqlTargetDate);
+            ps.setDate(paramIdx++, sqlTargetDate);
+
+            if (deptId != null) {
+                ps.setInt(paramIdx++, deptId);
+            }
+            if (contractType != null && !contractType.trim().isEmpty() && !contractType.equalsIgnoreCase("all")) {
+                ps.setString(paramIdx++, contractType);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public Map<String, Integer> getEmployeeChanges(LocalDate startDate, LocalDate endDate) {
+        Map<String, Integer> result = new HashMap<>();
+        int inCount = 0;
+        int outCount = 0;
+
+        java.sql.Date sqlStart = java.sql.Date.valueOf(startDate);
+        java.sql.Date sqlEnd = java.sql.Date.valueOf(endDate);
+
+        // 1. Đếm số người MỚI GIA NHẬP công ty (Có hợp đồng đầu tiên bắt đầu trong kỳ)
+        String sqlIn = "SELECT COUNT(DISTINCT lc.user_id) AS total_in " +
+                "FROM labor_contracts lc " +
+                "JOIN users u ON lc.user_id = u.id " +
+                "WHERE lc.start_date BETWEEN ? AND ? " +
+                "  AND NOT EXISTS ( " +
+                "      SELECT 1 FROM labor_contracts prev " +
+                "      WHERE prev.user_id = lc.user_id AND prev.start_date < lc.start_date " +
+                "  )";
+
+        // 2. Đếm số người NGHỈ VIỆC / HẾT HẠN HỢP ĐỒNG (Có hợp đồng kết thúc trong kỳ và không ký tiếp)
+        String sqlOut = "SELECT COUNT(DISTINCT lc.user_id) AS total_out " +
+                "FROM labor_contracts lc " +
+                "JOIN users u ON lc.user_id = u.id " +
+                "WHERE lc.end_date BETWEEN ? AND ? " +
+                "  AND NOT EXISTS ( " +
+                "      SELECT 1 FROM labor_contracts next_lc " +
+                "      WHERE next_lc.user_id = lc.user_id AND next_lc.start_date > lc.end_date " +
+                "  )";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlIn)) {
+                ps.setDate(1, sqlStart);
+                ps.setDate(2, sqlEnd);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) inCount = rs.getInt("total_in");
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlOut)) {
+                ps.setDate(1, sqlStart);
+                ps.setDate(2, sqlEnd);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) outCount = rs.getInt("total_out");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        result.put("inCount", inCount);
+        result.put("outCount", outCount);
+        return result;
     }
 }

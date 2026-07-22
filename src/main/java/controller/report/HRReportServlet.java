@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/reports/hr")
 public class HRReportServlet extends HttpServlet {
@@ -85,6 +86,11 @@ public class HRReportServlet extends HttpServlet {
         HRReportDTO reportData = reportDAO.getHRReportData(endDate, selectedDeptId);
         List<DeptEmployeeChangeDTO> deptChanges = reportDAO.getDeptEmployeeChanges(startDate, endDate);
 
+        String contractType = request.getParameter("contractType");
+
+        List<Integer> headcountTrend = reportDAO.getMonthlyHeadcountTrend(year, selectedDeptId,contractType);
+        Map<String, Integer> employeeChanges = reportDAO.getEmployeeChanges(startDate, endDate);
+
         // 3. Đẩy dữ liệu sang JSP
         request.setAttribute("isGenerated", true);
         request.setAttribute("reportData", reportData);
@@ -93,6 +99,13 @@ public class HRReportServlet extends HttpServlet {
         request.setAttribute("selectedMonth", selectedMonth);
         request.setAttribute("selectedQuarter", selectedQuarter);
         request.setAttribute("selectedYear", year);
+
+        // Đẩy thêm biến mới cho Line Chart
+        request.setAttribute("headcountTrend", headcountTrend);
+        request.setAttribute("selectedContractType", contractType);
+
+        request.setAttribute("totalIn", employeeChanges.get("inCount"));
+        request.setAttribute("totalOut", employeeChanges.get("outCount"));
 
         request.getRequestDispatcher("/WEB-INF/views/report/hr_report.jsp").forward(request, response);
     }
