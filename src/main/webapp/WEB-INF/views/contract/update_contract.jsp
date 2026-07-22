@@ -76,17 +76,20 @@
 
                 <div class="form-group">
                     <label for="baseSalary">Base Salary <span class="required-star">*</span></label>
-                    <input type="number" id="baseSalary" name="baseSalary" min="0.01" step="0.01" value="${contract.baseSalary}" required>
+                    <input type="number" id="baseSalary" name="baseSalary" min="0.01" max="9999999999999.99"
+                           step="0.01" value="${contract.baseSalary}" required>
                 </div>
 
                 <div class="form-group">
                     <label for="workingTime">Working Time <span class="required-star">*</span></label>
-                    <input type="text" id="workingTime" name="workingTime" value="${contract.workingTime}" required>
+                    <input type="text" id="workingTime" name="workingTime" value="${contract.workingTime}"
+                           maxlength="100" required>
                 </div>
 
                 <div class="form-group">
                     <label for="workLocation">Work Location <span class="required-star">*</span></label>
-                    <input type="text" id="workLocation" name="workLocation" value="${contract.workLocation}" required>
+                    <input type="text" id="workLocation" name="workLocation" value="${contract.workLocation}"
+                           maxlength="255" required>
                 </div>
 
                 <div class="form-group">
@@ -97,7 +100,7 @@
 
                 <div class="form-group">
                     <label for="note">Note</label>
-                    <textarea id="note" name="note">${contract.note}</textarea>
+                    <textarea id="note" name="note" maxlength="1000">${contract.note}</textarea>
                 </div>
 
                 <div class="form-actions">
