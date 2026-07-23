@@ -107,7 +107,7 @@
                     <a href="${actionUrl}"
                        class="matrix-btn matrix-clear-btn">Clear</a>
 
-                    <c:url var="exportUrl" value="/attendance/export">
+                    <c:url var="exportUrl" value="/attendance/work-hours/export">
                         <c:param name="month" value="${selectedMonth}"/>
                         <c:param name="year" value="${selectedYear}"/>
                         <c:if test="${not empty selectedDepartmentId}">

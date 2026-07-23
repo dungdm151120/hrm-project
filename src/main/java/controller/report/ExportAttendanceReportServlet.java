@@ -149,6 +149,11 @@ public class ExportAttendanceReportServlet extends HttpServlet {
             AttendanceReportRowDTO mostPunctual = null;
             double minIrregularities = Double.MAX_VALUE;
 
+            AttendanceReportRowDTO lowestWorking = null;
+            double minHours = Double.MAX_VALUE;
+            AttendanceReportRowDTO leastPunctual = null;
+            int maxIrregularities = 0;
+
             for (AttendanceReportRowDTO row : reportRows) {
                 row.setExpectedWorkdays(expectedWorkdays);
                 
@@ -168,11 +173,24 @@ public class ExportAttendanceReportServlet extends HttpServlet {
 
                 // Most punctual check
                 if (row.getPresentDays() > 0) {
-                    double irregularities = row.getLateDays() + row.getEarlyLeaveDays() + row.getForgotCheckInDays();
+                    double irregularities = row.getLateDays() + row.getEarlyLeaveDays()
+                            + row.getForgotCheckInDays() + row.getForgotCheckOutDays();
                     if (irregularities < minIrregularities) {
                         minIrregularities = irregularities;
                         mostPunctual = row;
                     }
+
+                    if (workAndOt < minHours) {
+                        minHours = workAndOt;
+                        lowestWorking = row;
+                    }
+                }
+
+                int irregularities = row.getLateDays() + row.getEarlyLeaveDays()
+                        + row.getForgotCheckInDays() + row.getForgotCheckOutDays();
+                if (irregularities > maxIrregularities) {
+                    maxIrregularities = irregularities;
+                    leastPunctual = row;
                 }
 
                 Row dr = sheet1.createRow(r1++);
@@ -340,6 +358,42 @@ public class ExportAttendanceReportServlet extends HttpServlet {
                     if (row.getCell(i) != null) {
                         row.getCell(i).setCellStyle(dataStyle);
                     }
+                }
+            }
+
+            r2 += 2;
+            Row secHeader3 = sheet2.createRow(r2++);
+            Cell secCell3 = secHeader3.createCell(0);
+            secCell3.setCellValue("III. EMPLOYEES NEEDING ATTENTION");
+            secCell3.setCellStyle(sectionHeaderStyle);
+            sheet2.addMergedRegion(new CellRangeAddress(r2 - 1, r2 - 1, 0, 4));
+
+            String[] attentionLabels = {
+                "Lowest total work + OT hours",
+                "Least punctual employee"
+            };
+            AttendanceReportRowDTO[] attentionRows = {
+                lowestWorking, leastPunctual
+            };
+            String[] attentionDetails = {
+                lowestWorking == null ? "No data" : String.format("%.1f work + OT hours", lowestWorking.getTotalWorkHours() + lowestWorking.getTotalOvertimeHours()),
+                leastPunctual == null ? "No data" : "Late: " + leastPunctual.getLateDays()
+                        + " | Early leave: " + leastPunctual.getEarlyLeaveDays()
+                        + " | Missing check-in: " + leastPunctual.getForgotCheckInDays()
+                        + " | Missing check-out: " + leastPunctual.getForgotCheckOutDays()
+            };
+
+            for (int i = 0; i < attentionLabels.length; i++) {
+                Row row = sheet2.createRow(r2++);
+                AttendanceReportRowDTO employee = attentionRows[i];
+                row.createCell(0).setCellValue(attentionLabels[i]);
+                row.createCell(1).setCellValue(employee == null ? "No data" : employee.getEmployeeName());
+                row.createCell(2).setCellValue(employee == null ? "-" : employee.getEmployeeCode());
+                row.createCell(3).setCellValue(employee == null ? "-" : employee.getDepartmentName());
+                row.createCell(4).setCellValue(attentionDetails[i]);
+                row.getCell(0).setCellStyle(boldDataStyle);
+                for (int cellIndex = 1; cellIndex <= 4; cellIndex++) {
+                    row.getCell(cellIndex).setCellStyle(dataStyle);
                 }
             }
 

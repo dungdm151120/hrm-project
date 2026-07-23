@@ -130,6 +130,7 @@ public class PermissionFilter implements Filter {
         if (path.equals("/attendance/department") && "GET".equals(method)) return "ATTENDANCE_VIEW_DEPARTMENT";
         if (path.equals("/attendance/view_all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/work-hours") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
+        if (path.equals("/attendance/work-hours/export") && "GET".equals(method)) return "ATTENDANCE_EXPORT_REPORT";
         if (path.equals("/attendance/all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/my") && "GET".equals(method)) return "ATTENDANCE_VIEW_OWN";
         if (path.equals("/attendance/employee") && "GET".equals(method)) return "ATTENDANCE_VIEW_SUMMARY";
