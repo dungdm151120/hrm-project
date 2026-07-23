@@ -40,9 +40,8 @@ public class LoadSubFormServlet extends HttpServlet {
         if ("POSITION_HANDOVER".equals(type)) {
             String position = userDAO.getPositionNameByUserId(user.getId());
             boolean isManager = (position != null && position.contains("Manager"));
-            boolean isSysAdmin = (position != null && position.contains("Admin"));
 
-            if (!isManager && !isSysAdmin) {
+            if (!isManager) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền tạo loại đơn này.");
                 return;
             }
