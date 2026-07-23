@@ -90,6 +90,8 @@ public class SalaryReportServlet extends HttpServlet {
             long totalWorkdayIncome = 0L;
             long totalProductIncome = 0L;
             long totalOvertimeIncome = 0L;
+            long totalSickLeaveIncome = 0L;
+            long totalGrossIncome = 0L;
             long totalIncome = 0L;
             int totalEmployees = 0;
 
@@ -97,6 +99,8 @@ public class SalaryReportServlet extends HttpServlet {
                 totalWorkdayIncome += row.getWorkdayIncome();
                 totalProductIncome += row.getProductIncome();
                 totalOvertimeIncome += row.getOvertimeIncome();
+                totalSickLeaveIncome += row.getSickLeaveIncome();
+                totalGrossIncome += row.getGrossIncome();
                 totalIncome += row.getTotalIncome();
                 totalEmployees += row.getEmployeeCount();
             }
@@ -107,6 +111,8 @@ public class SalaryReportServlet extends HttpServlet {
             request.setAttribute("totalWorkdayIncome", totalWorkdayIncome);
             request.setAttribute("totalProductIncome", totalProductIncome);
             request.setAttribute("totalOvertimeIncome", totalOvertimeIncome);
+            request.setAttribute("totalSickLeaveIncome", totalSickLeaveIncome);
+            request.setAttribute("totalGrossIncome", totalGrossIncome);
             request.setAttribute("totalIncome", totalIncome);
             request.setAttribute("totalEmployees", totalEmployees);
         }

@@ -281,12 +281,20 @@
                             <div class="summary-value">${totalEmployees}</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-title">Regular Pay</div>
-                            <div class="summary-value"><fmt:formatNumber value="${totalWorkdayIncome}" type="number" maxFractionDigits="0"/></div>
+                            <div class="summary-title">Bonus / Allowance</div>
+                            <div class="summary-value"><fmt:formatNumber value="${totalProductIncome}" type="number" maxFractionDigits="0"/></div>
                         </div>
                         <div class="summary-card">
                             <div class="summary-title">Overtime Pay</div>
                             <div class="summary-value"><fmt:formatNumber value="${totalOvertimeIncome}" type="number" maxFractionDigits="0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">Sick Leave Pay</div>
+                            <div class="summary-value"><fmt:formatNumber value="${totalSickLeaveIncome}" type="number" maxFractionDigits="0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">Total Gross Pay</div>
+                            <div class="summary-value"><fmt:formatNumber value="${totalGrossIncome}" type="number" maxFractionDigits="0"/></div>
                         </div>
                         <div class="summary-card">
                             <div class="summary-title">Total Net Pay</div>
@@ -311,14 +319,12 @@
 
                         <div class="report-panel">
                             <div class="chart-wrap">
-                                <h2 class="chart-title">Salary Breakdown by Department</h2>
+                                <h2 class="chart-title">Net Pay by Department</h2>
                                 <div class="chart-inner"><canvas id="departmentSalaryChart"></canvas></div>
                                 <div id="departmentSalaryData" hidden>
                                     <c:forEach var="item" items="${departmentRows}">
                                         <span data-label="${item.groupName}"
-                                              data-workday="${item.workdayIncome}"
-                                              data-bonus="${item.productIncome}"
-                                              data-overtime="${item.overtimeIncome}"></span>
+                                              data-net-pay="${item.totalIncome}"></span>
                                     </c:forEach>
                                 </div>
                             </div>
@@ -348,12 +354,13 @@
                                     <c:if test="${groupBy != 'employee'}">
                                         <th rowspan="2" class="number">Employee Count</th>
                                     </c:if>
-                                    <th colspan="4" class="number">Earnings</th>
+                                    <th colspan="5" class="number">Earnings</th>
                                 </tr>
                                 <tr>
-                                    <th class="number">Regular Pay</th>
-                                    <th class="number">Bonus</th>
+                                    <th class="number">Bonus / Allowance</th>
                                     <th class="number">Overtime Pay</th>
+                                    <th class="number">Sick Leave Pay</th>
+                                    <th class="number">Gross Pay</th>
                                     <th class="number">Net Pay</th>
                                 </tr>
                                 </thead>
@@ -366,15 +373,16 @@
                                         <c:if test="${groupBy != 'employee'}">
                                             <td class="number">${row.employeeCount}</td>
                                         </c:if>
-                                        <td class="number"><fmt:formatNumber value="${row.workdayIncome}" type="number" maxFractionDigits="0"/></td>
                                         <td class="number"><fmt:formatNumber value="${row.productIncome}" type="number" maxFractionDigits="0"/></td>
                                         <td class="number"><fmt:formatNumber value="${row.overtimeIncome}" type="number" maxFractionDigits="0"/></td>
+                                        <td class="number"><fmt:formatNumber value="${row.sickLeaveIncome}" type="number" maxFractionDigits="0"/></td>
+                                        <td class="number"><fmt:formatNumber value="${row.grossIncome}" type="number" maxFractionDigits="0"/></td>
                                         <td class="number"><fmt:formatNumber value="${row.totalIncome}" type="number" maxFractionDigits="0"/></td>
                                     </tr>
                                 </c:forEach>
                                 <c:if test="${empty reportRows}">
                                     <tr>
-                                        <td colspan="${groupBy == 'employee' ? 7 : 8}" style="text-align: center; color: var(--text-secondary);">No payroll data is available for the selected period.</td>
+                                        <td colspan="${groupBy == 'employee' ? 8 : 9}" style="text-align: center; color: var(--text-secondary);">No payroll data is available for the selected period.</td>
                                     </tr>
                                 </c:if>
                                 </tbody>
@@ -444,19 +452,21 @@
                 type: "bar",
                 data: {
                     labels: departmentData.map(item => item.dataset.label),
-                    datasets: [
-                        { label: "Regular Pay", data: departmentData.map(item => Number(item.dataset.workday || 0)), backgroundColor: "#86efac" },
-                        { label: "Bonus", data: departmentData.map(item => Number(item.dataset.bonus || 0)), backgroundColor: "#facc15" },
-                        { label: "Overtime Pay", data: departmentData.map(item => Number(item.dataset.overtime || 0)), backgroundColor: "#0f766e" }
-                    ]
+                    datasets: [{
+                        label: "Net Pay",
+                        data: departmentData.map(item => Number(item.dataset.netPay || 0)),
+                        backgroundColor: "#16a34a",
+                        borderColor: "#15803d",
+                        borderWidth: 1
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     indexAxis: "y",
                     scales: {
-                        x: { ...commonMoneyAxis, stacked: true },
-                        y: { stacked: true, grid: { display: false } }
+                        x: commonMoneyAxis,
+                        y: { grid: { display: false } }
                     },
                     plugins: {
                         tooltip: { callbacks: { label: context => context.dataset.label + ": " + currency(context.parsed.x) } }

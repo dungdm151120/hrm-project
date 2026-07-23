@@ -7,6 +7,8 @@ public class SalaryReportRowDTO {
     private long workdayIncome;
     private long productIncome;
     private long overtimeIncome;
+    private long sickLeaveIncome;
+    private long grossIncome;
     private long totalIncome;
 
     public String getGroupName() {
@@ -55,6 +57,22 @@ public class SalaryReportRowDTO {
 
     public void setOvertimeIncome(long overtimeIncome) {
         this.overtimeIncome = overtimeIncome;
+    }
+
+    public long getSickLeaveIncome() {
+        return sickLeaveIncome;
+    }
+
+    public void setSickLeaveIncome(long sickLeaveIncome) {
+        this.sickLeaveIncome = sickLeaveIncome;
+    }
+
+    public long getGrossIncome() {
+        return grossIncome;
+    }
+
+    public void setGrossIncome(long grossIncome) {
+        this.grossIncome = grossIncome;
     }
 
     public long getTotalIncome() {
