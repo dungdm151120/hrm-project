@@ -69,7 +69,7 @@
                     <a href="${pageContext.request.contextPath}/admin/departments/employees?id=${id}" class="btn-reset">Clear</a>
                 </form>
 
-                <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                <c:if test="${canMoveMember}">
                     <a href="${pageContext.request.contextPath}/add_member?deptId=${id}" class="employee-add-member">Add Member</a>
                 </c:if>
             </div>
@@ -91,7 +91,7 @@
                         <th>Position</th>
                         <th>Department</th>
                         <th>Status</th>
-                        <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                        <c:if test="${showActions}">
                             <th>Action</th>
                         </c:if>
                     </tr>
@@ -138,28 +138,30 @@
                                     </c:otherwise>
                                 </c:choose>
                             </td>
-                            <c:if test="${sessionScope.roleName != 'EMPLOYEE'}">
+                            <c:if test="${showActions}">
                                 <td class="actions">
-                                    <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}"
-                                       class="btn-secondary"
-                                       <c:if test="${user.manager}">
-                                           onclick="alert('Cannot move Manager!'); return false;"
-                                       </c:if>>
-                                        Move
-                                    </a>
+                                    <c:if test="${canMoveMember}">
+                                        <a href="${pageContext.request.contextPath}/move_member?userId=${user.id}&currentDeptId=${param.id}"
+                                           class="btn-secondary"
+                                           <c:if test="${user.manager}">
+                                               onclick="alert('Cannot move Manager!'); return false;"
+                                           </c:if>>
+                                            Move
+                                        </a>
 
-                                    <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
-                                       class="btn-danger"
-                                       <c:if test="${user.manager}">
-                                           onclick="alert('Cannot remove Manager!'); return false;"
-                                       </c:if>
-                                       <c:if test="${not user.manager}">
-                                           onclick="return confirm('Remove this employee?')"
-                                       </c:if>>
-                                        Remove
-                                    </a>
+                                        <a href="${pageContext.request.contextPath}/remove_member?userId=${user.id}&deptId=${param.id}"
+                                           class="btn-danger"
+                                           <c:if test="${user.manager}">
+                                               onclick="alert('Cannot remove Manager!'); return false;"
+                                           </c:if>
+                                           <c:if test="${not user.manager}">
+                                               onclick="return confirm('Remove this employee?')"
+                                           </c:if>>
+                                            Remove
+                                        </a>
+                                    </c:if>
 
-                                    <c:if test="${user.manager}">
+                                    <c:if test="${canAssignManager && user.manager}">
                                         <form action="${pageContext.request.contextPath}/admin/departments/unassign-manager"
                                               method="post"
                                               class="inline-action-form">
@@ -178,7 +180,7 @@
                     </c:forEach>
                     <c:if test="${empty employees}">
                         <tr>
-                            <td colspan="8" class="empty-state">
+                            <td colspan="${showActions ? 8 : 7}" class="empty-state">
                                 <c:choose>
                                     <c:when test="${not empty keyword || status != 'all'}">
                                         No employees match the current search or filter.

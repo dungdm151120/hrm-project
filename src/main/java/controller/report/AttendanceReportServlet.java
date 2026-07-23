@@ -46,9 +46,8 @@ public class AttendanceReportServlet extends HttpServlet {
         }
 
         // Determine if user is restricted to their own department
-        boolean isRestricted = !userPermissions.contains("ATTENDANCE_VIEW_ALL") && 
-                              !userPermissions.contains("ATTENDANCE_EXPORT_REPORT") && 
-                              userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
+        boolean isRestricted = !userPermissions.contains("ATTENDANCE_VIEW_ALL")
+                && userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
 
         List<Department> departments = new ArrayList<>();
         if (isRestricted) {

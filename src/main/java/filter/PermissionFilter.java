@@ -46,9 +46,11 @@ public class PermissionFilter implements Filter {
                 ? canViewAttendanceSummary(req, session, userPermissions)
                 : ("ATTENDANCE_CONFIRM_ACCESS".equals(requiredPermission)
                 ? canAccessAttendanceConfirmation(session, userPermissions)
+                : ("ATTENDANCE_FINALIZED_ACCESS".equals(requiredPermission)
+                ? canAccessFinalizedAttendance(userPermissions)
                 : ("ATTENDANCE_REPORT_ACCESS".equals(requiredPermission)
                 ? (userPermissions.contains("ATTENDANCE_VIEW_ALL") || userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT") || userPermissions.contains("ATTENDANCE_EXPORT_REPORT"))
-                : userPermissions.contains(requiredPermission))));
+                : userPermissions.contains(requiredPermission)))));
 
         if (!permitted) {
             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -129,9 +131,16 @@ public class PermissionFilter implements Filter {
         if (path.equals("/attendance/view_all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/work-hours") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
+        if (path.equals("/attendance/my") && "GET".equals(method)) return "ATTENDANCE_VIEW_OWN";
+        if (path.equals("/attendance/employee") && "GET".equals(method)) return "ATTENDANCE_VIEW_SUMMARY";
+        if (path.equals("/get_overtime_detail") && "GET".equals(method)) return "ATTENDANCE_VIEW_SUMMARY";
         if (path.equals("/attendance/update")) return "ATTENDANCE_UPDATE";
         if (path.equals("/attendance/export")) return "ATTENDANCE_EXPORT_REPORT";
+        if (path.equals("/admin/attendance/exportPersonal") && "GET".equals(method)) return "ATTENDANCE_VIEW_SUMMARY";
+        if (path.equals("/admin/attendance/import")) return "ATTENDANCE_UPDATE";
         if (path.equals("/attendance/confirm")) return "ATTENDANCE_CONFIRM_ACCESS";
+        if (path.equals("/attendance/confirm-list") && "GET".equals(method)) return "ATTENDANCE_FINALIZED_ACCESS";
+        if (path.equals("/attendance/confirm-detail") && "GET".equals(method)) return "ATTENDANCE_FINALIZED_ACCESS";
         if (path.equals("/reports/attendance")) return "ATTENDANCE_REPORT_ACCESS";
         if (path.equals("/reports/attendance/export")) return "ATTENDANCE_REPORT_ACCESS";
 
@@ -163,6 +172,7 @@ public class PermissionFilter implements Filter {
         if (path.equals("/request_detail") && "GET".equals(method)) return "VIEW_REQUEST_DETAIL";
         if (path.equals("/process_request") && "POST".equals(method)) return "PROCESS_REQUEST";
         if (path.equals("/create_request")) return "CREATE_REQUEST";
+        if (path.equals("/create_overtime_request") && "POST".equals(method)) return "CREATE_REQUEST";
         // Task
         if (path.equals("/tasks") && "GET".equals(method)) return "TASK_VIEW";
         if (path.equals("/tasks/all") && "GET".equals(method)) return "TASK_VIEW_ALL";
@@ -225,5 +235,14 @@ public class PermissionFilter implements Filter {
         return !isBusinessAdmin && (userPermissions.contains("ATTENDANCE_CONFIRM_DEPT")
                 || ("HR_MANAGER".equalsIgnoreCase(currentUser.getRoleName())
                 && userPermissions.contains("ATTENDANCE_FINALIZE_HR")));
+    }
+
+    private boolean canAccessFinalizedAttendance(Set<String> userPermissions) {
+        return userPermissions.contains("ATTENDANCE_VIEW_ALL")
+                || userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT")
+                || userPermissions.contains("ATTENDANCE_CONFIRM_DEPT")
+                || userPermissions.contains("ATTENDANCE_FINALIZE_HR")
+                || userPermissions.contains("PAYROLL_VIEW_DEPARTMENT")
+                || userPermissions.contains("PAYROLL_VIEW_LIST");
     }
 }

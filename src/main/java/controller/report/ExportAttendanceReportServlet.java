@@ -7,6 +7,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import model.User;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -14,6 +16,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @WebServlet("/reports/attendance/export")
 public class ExportAttendanceReportServlet extends HttpServlet {
@@ -22,6 +25,20 @@ public class ExportAttendanceReportServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
+            HttpSession session = req.getSession(false);
+            User currentUser = session == null ? null : (User) session.getAttribute("currentUser");
+            if (currentUser == null) {
+                resp.sendRedirect(req.getContextPath() + "/login");
+                return;
+            }
+
+            @SuppressWarnings("unchecked")
+            Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
+            if (userPermissions == null) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
             // Read parameters
             String periodType = req.getParameter("periodType");
             if (periodType == null || periodType.isEmpty()) {
@@ -43,7 +60,15 @@ public class ExportAttendanceReportServlet extends HttpServlet {
                 year = Integer.parseInt(yParam);
             }
             
-            Integer departmentId = parseInteger(req.getParameter("departmentId"));
+            boolean isRestricted = !userPermissions.contains("ATTENDANCE_VIEW_ALL")
+                    && userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
+            Integer departmentId = isRestricted
+                    ? currentUser.getDepartmentId()
+                    : parseInteger(req.getParameter("departmentId"));
+            if (isRestricted && departmentId == null) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "No department assigned.");
+                return;
+            }
 
             LocalDate startDate = LocalDate.now();
             LocalDate endDate = LocalDate.now();
