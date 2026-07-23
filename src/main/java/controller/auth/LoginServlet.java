@@ -12,9 +12,16 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @WebServlet("/login")
 public class   LoginServlet extends HttpServlet {
+
+    private static final int MAX_EMAIL_LENGTH = 100;
+    private static final int MAX_PASSWORD_LENGTH = 72;
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+    );
 
     private final AuthService authService = new AuthService();
     private final PermissionDAO permissionDAO = new PermissionDAO();
@@ -32,6 +39,17 @@ public class   LoginServlet extends HttpServlet {
 
         String email = request.getParameter("email");
         String password = request.getParameter("password");
+
+        email = email == null ? "" : email.trim().toLowerCase();
+        request.setAttribute("email", email);
+
+        String validationError = validateLoginInput(email, password);
+        if (validationError != null) {
+            request.setAttribute("error", validationError);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp")
+                    .forward(request, response);
+            return;
+        }
 
         User user = authService.login(email, password);
 
@@ -58,5 +76,21 @@ public class   LoginServlet extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp")
                     .forward(request, response);
         }
+    }
+
+    private String validateLoginInput(String email, String password) {
+        if (email.isEmpty()) {
+            return "Vui lòng nhập email.";
+        }
+        if (email.length() > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.matcher(email).matches()) {
+            return "Email không hợp lệ.";
+        }
+        if (password == null || password.isEmpty()) {
+            return "Vui lòng nhập mật khẩu.";
+        }
+        if (password.length() > MAX_PASSWORD_LENGTH) {
+            return "Mật khẩu không được vượt quá 72 ký tự.";
+        }
+        return null;
     }
 }

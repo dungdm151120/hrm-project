@@ -13,19 +13,19 @@ public class AuthService {
             return null;
         }
 
-        if (password == null || password.trim().isEmpty()) {
+        if (password == null || password.isEmpty()) {
             return null;
         }
 
-        String trimmedPassword = password.trim();
-        User user = userDAO.findActiveUserWithPositionByEmail(email.trim());
+        String normalizedEmail = email.trim().toLowerCase();
+        User user = userDAO.findActiveUserWithPositionByEmail(normalizedEmail);
 
-        if (user == null || !PasswordUtil.verifyPassword(trimmedPassword, user.getPassword())) {
+        if (user == null || !PasswordUtil.verifyPassword(password, user.getPassword())) {
             return null;
         }
 
         if (PasswordUtil.needsHashUpgrade(user.getPassword())) {
-            userDAO.updatePassword(user.getId(), PasswordUtil.hashPassword(trimmedPassword));
+            userDAO.updatePassword(user.getId(), PasswordUtil.hashPassword(password));
         }
 
         return user;
