@@ -74,8 +74,7 @@ public class PayrollSettingUpdateServlet extends HttpServlet {
         int effectiveMonth = parseAndValidateInt(
                 request.getParameter("effectiveMonth"), "Effective Month", 1, 12, errorMsg);
 
-        int effectiveYear = parseAndValidateInt(
-                request.getParameter("effectiveYear"), "Effective Year", 2023, currentYear, errorMsg);
+        int effectiveYear = Integer.parseInt(request.getParameter("effectiveYear"));
 
         if (errorMsg.length() > 0) {
             request.getSession().setAttribute("error", errorMsg.toString());

@@ -16,7 +16,6 @@ public class PayrollCalculator {
         payroll.setExpectedHours(expectedHours);
         payroll.setBasicSalary(basicSalary);
 
-        double rateMultiplier = 1.0;
         long bonus = 0;
         String description = null;
 

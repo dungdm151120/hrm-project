@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.PayrollSetting;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 @WebServlet("/payroll/setting/list")
@@ -31,13 +32,20 @@ public class PayrollSettingListServlet extends HttpServlet {
             int offset = (currentPage - 1) * limit;
 
             List<PayrollSetting> settings = payrollDAO.getPayrollSettings(month, year, offset, limit);
-            PayrollSetting latestSetting = payrollDAO.getLatestPayrollSetting();
+            PayrollSetting activeSetting = payrollDAO.getCurrentlyActivePayrollSetting();
+
+            int totalRecords = payrollDAO.getPayrollSettingCount(month, year);
+            int totalPages = (int) Math.ceil((double) totalRecords / limit);
+            if (totalPages < 1) totalPages = 1;
 
             request.setAttribute("settings", settings);
-            request.setAttribute("latestId", latestSetting != null ? latestSetting.getId() : -1);
+            request.setAttribute("activeId", activeSetting != null ? activeSetting.getId() : -1);
+            request.setAttribute("today", LocalDate.now().toString());
             request.setAttribute("month", month);
             request.setAttribute("year", year);
             request.setAttribute("currentPage", currentPage);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalRecords", totalRecords);
 
             request.getRequestDispatcher("/WEB-INF/views/payroll/payroll_setting_list.jsp").forward(request, response);
         } catch (Exception e) {

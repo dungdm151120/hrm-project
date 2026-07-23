@@ -10,6 +10,7 @@ import model.PayrollSetting;
 import model.PitBracketVersion;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 @WebServlet("/payroll/pit/list")
@@ -32,6 +33,7 @@ public class PayrollPitBracketListServlet extends HttpServlet {
             int offset = (currentPage - 1) * limit;
 
             List<PitBracketVersion> versions = payrollDAO.getPitBracketVersions(month, year, offset, limit);
+            PitBracketVersion activePit = payrollDAO.getCurrentlyActivePitVersion();
 
             int totalRecords = payrollDAO.countPitBracketVersions(month, year);
             int totalPages = (totalRecords > 0) ? (int) Math.ceil((double) totalRecords / limit) : 1;
@@ -40,10 +42,9 @@ public class PayrollPitBracketListServlet extends HttpServlet {
                 currentPage = totalPages;
             }
 
-            PitBracketVersion latestVersion = payrollDAO.getLatestPitBracketVersion();
-
             request.setAttribute("versions", versions);
-            request.setAttribute("latestId", latestVersion != null ? latestVersion.getId() : -1);
+            request.setAttribute("activeId", activePit != null ? activePit.getId() : -1);
+            request.setAttribute("today", LocalDate.now().toString());
             request.setAttribute("month", month);
             request.setAttribute("year", year);
             request.setAttribute("currentPage", currentPage);
