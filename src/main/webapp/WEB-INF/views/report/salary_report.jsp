@@ -5,11 +5,11 @@
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo Lương | HRM</title>
+    <title>Payroll Report | HRM</title>
     <link rel="stylesheet" href="${ctx}/assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -153,13 +153,6 @@
             .analytics-grid { grid-template-columns: 1fr; }
         }
 
-        .chart-scroll {
-            width: 100%;
-            overflow-x: auto;
-            overflow-y: hidden;
-            padding-bottom: 8px;
-        }
-
         .chart-inner {
             height: 320px;
             min-width: 100%;
@@ -211,7 +204,7 @@
     <div class="dashboard-main">
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Báo Cáo Lương</h1>
+                <h1 class="header-title">Payroll Report</h1>
             </div>
         </div>
 
@@ -223,34 +216,34 @@
 
                     <div class="filter-form-grid">
                         <div class="form-group">
-                            <label for="periodType">Kỳ báo cáo</label>
+                            <label for="periodType">Reporting Period</label>
                             <select name="periodType" id="periodType">
-                                <option value="month" ${periodType == 'month' ? 'selected' : ''}>Theo Tháng</option>
-                                <option value="quarter" ${periodType == 'quarter' ? 'selected' : ''}>Theo Quý</option>
-                                <option value="year" ${periodType == 'year' ? 'selected' : ''}>Theo Năm</option>
+                                <option value="month" ${periodType == 'month' ? 'selected' : ''}>Monthly</option>
+                                <option value="quarter" ${periodType == 'quarter' ? 'selected' : ''}>Quarterly</option>
+                                <option value="year" ${periodType == 'year' ? 'selected' : ''}>Yearly</option>
                             </select>
                         </div>
 
                         <div class="form-group" id="monthGroup">
-                            <label for="month">Tháng</label>
+                            <label for="month">Month</label>
                             <select name="month" id="month">
                                 <c:forEach var="m" begin="1" end="12">
-                                    <option value="${m}" ${selectedMonth == m ? 'selected' : ''}>Tháng ${m}</option>
+                                    <option value="${m}" ${selectedMonth == m ? 'selected' : ''}>Month ${m}</option>
                                 </c:forEach>
                             </select>
                         </div>
 
                         <div class="form-group" id="quarterGroup">
-                            <label for="quarter">Quý</label>
+                            <label for="quarter">Quarter</label>
                             <select name="quarter" id="quarter">
                                 <c:forEach var="q" begin="1" end="4">
-                                    <option value="${q}" ${selectedQuarter == q ? 'selected' : ''}>Quý ${q}</option>
+                                    <option value="${q}" ${selectedQuarter == q ? 'selected' : ''}>Quarter ${q}</option>
                                 </c:forEach>
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label for="year">Năm</label>
+                            <label for="year">Year</label>
                             <select name="year" id="year">
                                 <c:forEach var="y" items="${years}">
                                     <option value="${y}" ${selectedYear == y ? 'selected' : ''}>${y}</option>
@@ -259,16 +252,16 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="salarySort">Sắp xếp theo thực lĩnh</label>
+                            <label for="salarySort">Sort by Net Pay</label>
                             <select name="salarySort" id="salarySort">
-                                <option value="default" ${salarySort == 'default' ? 'selected' : ''}>Mặc định</option>
-                                <option value="salaryAsc" ${salarySort == 'salaryAsc' ? 'selected' : ''}>Thấp → cao</option>
-                                <option value="salaryDesc" ${salarySort == 'salaryDesc' ? 'selected' : ''}>Cao → thấp</option>
+                                <option value="default" ${salarySort == 'default' ? 'selected' : ''}>Default</option>
+                                <option value="salaryAsc" ${salarySort == 'salaryAsc' ? 'selected' : ''}>Low to High</option>
+                                <option value="salaryDesc" ${salarySort == 'salaryDesc' ? 'selected' : ''}>High to Low</option>
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <button type="submit" class="btn-generate">Tạo báo cáo</button>
+                            <button type="submit" class="btn-generate">Generate Report</button>
                         </div>
                     </div>
                 </form>
@@ -277,26 +270,26 @@
             <c:choose>
                 <c:when test="${not isGenerated}">
                     <div class="empty-state">
-                        <h3>Chọn bộ lọc và click "Tạo báo cáo" để hiển thị dữ liệu lương</h3>
-                        <p>Báo cáo hỗ trợ xem theo nhân viên, vị trí công việc hoặc phòng ban.</p>
+                        <h3>Select filters and click "Generate Report" to display payroll data.</h3>
+                        <p>The report can be grouped by employee, job position, or department.</p>
                     </div>
                 </c:when>
                 <c:otherwise>
                     <div class="summary-grid">
                         <div class="summary-card">
-                            <div class="summary-title">Tổng nhân sự</div>
+                            <div class="summary-title">Total Employees</div>
                             <div class="summary-value">${totalEmployees}</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-title">Lương ngày công</div>
+                            <div class="summary-title">Regular Pay</div>
                             <div class="summary-value"><fmt:formatNumber value="${totalWorkdayIncome}" type="number" maxFractionDigits="0"/></div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-title">Lương làm thêm</div>
+                            <div class="summary-title">Overtime Pay</div>
                             <div class="summary-value"><fmt:formatNumber value="${totalOvertimeIncome}" type="number" maxFractionDigits="0"/></div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-title">Tổng thực lĩnh</div>
+                            <div class="summary-title">Total Net Pay</div>
                             <div class="summary-value"><fmt:formatNumber value="${totalIncome}" type="number" maxFractionDigits="0"/></div>
                         </div>
                     </div>
@@ -305,11 +298,11 @@
                         <c:if test="${periodType != 'month'}">
                             <div class="report-panel">
                                 <div class="chart-wrap">
-                                    <h2 class="chart-title">Tổng lương toàn công ty theo tháng</h2>
+                                    <h2 class="chart-title">Company-wide Net Pay by Month</h2>
                                     <div class="chart-inner"><canvas id="companySalaryTrendChart"></canvas></div>
                                     <div id="monthlySalaryData" hidden>
                                         <c:forEach var="item" items="${monthlySalaryTotals}">
-                                            <span data-label="Tháng ${item.month}/${item.year}" data-value="${item.totalNetPay}"></span>
+                                            <span data-label="Month ${item.month}/${item.year}" data-value="${item.totalNetPay}"></span>
                                         </c:forEach>
                                     </div>
                                 </div>
@@ -318,7 +311,7 @@
 
                         <div class="report-panel">
                             <div class="chart-wrap">
-                                <h2 class="chart-title">Cơ cấu lương giữa các phòng ban</h2>
+                                <h2 class="chart-title">Salary Breakdown by Department</h2>
                                 <div class="chart-inner"><canvas id="departmentSalaryChart"></canvas></div>
                                 <div id="departmentSalaryData" hidden>
                                     <c:forEach var="item" items="${departmentRows}">
@@ -334,47 +327,39 @@
 
                     <div class="report-panel">
                         <div class="salary-tabs">
-                            <button type="submit" form="salaryReportForm" class="salary-tab ${groupBy == 'employee' ? 'active' : ''}" onclick="document.getElementById('groupBy').value='employee'">Nhân viên</button>
-                            <button type="submit" form="salaryReportForm" class="salary-tab ${groupBy == 'position' ? 'active' : ''}" onclick="document.getElementById('groupBy').value='position'">Vị trí công việc</button>
-                            <button type="submit" form="salaryReportForm" class="salary-tab ${groupBy == 'department' ? 'active' : ''}" onclick="document.getElementById('groupBy').value='department'">Phòng ban</button>
-                        </div>
-
-                        <div class="chart-wrap">
-                            <div class="chart-scroll">
-                                <div class="chart-inner" id="salaryChartInner">
-                                    <canvas id="salaryChart"></canvas>
-                                </div>
-                            </div>
+                            <button type="submit" form="salaryReportForm" class="salary-tab ${groupBy == 'employee' ? 'active' : ''}" onclick="document.getElementById('groupBy').value='employee'">Employees</button>
+                            <button type="submit" form="salaryReportForm" class="salary-tab ${groupBy == 'position' ? 'active' : ''}" onclick="document.getElementById('groupBy').value='position'">Job Positions</button>
+                            <button type="submit" form="salaryReportForm" class="salary-tab ${groupBy == 'department' ? 'active' : ''}" onclick="document.getElementById('groupBy').value='department'">Departments</button>
                         </div>
 
                         <div class="table-wrap">
                             <table class="salary-table" id="salaryTable">
                                 <thead>
                                 <tr>
-                                    <th rowspan="2">STT</th>
+                                    <th rowspan="2">No.</th>
                                     <th rowspan="2">
                                         <c:choose>
-                                            <c:when test="${groupBy == 'employee'}">Nhân viên</c:when>
-                                            <c:when test="${groupBy == 'department'}">Phòng ban</c:when>
-                                            <c:otherwise>Vị trí công việc</c:otherwise>
+                                            <c:when test="${groupBy == 'employee'}">Employee</c:when>
+                                            <c:when test="${groupBy == 'department'}">Department</c:when>
+                                            <c:otherwise>Job Position</c:otherwise>
                                         </c:choose>
                                     </th>
-                                    <th rowspan="2">Đơn vị công tác</th>
+                                    <th rowspan="2">Department</th>
                                     <c:if test="${groupBy != 'employee'}">
-                                        <th rowspan="2" class="number">Số lượng nhân sự</th>
+                                        <th rowspan="2" class="number">Employee Count</th>
                                     </c:if>
-                                    <th colspan="4" class="number">Thu nhập</th>
+                                    <th colspan="4" class="number">Earnings</th>
                                 </tr>
                                 <tr>
-                                    <th class="number">Lương ngày công</th>
-                                    <th class="number">Lương thưởng</th>
-                                    <th class="number">Lương làm thêm</th>
-                                    <th class="number">Thực lĩnh</th>
+                                    <th class="number">Regular Pay</th>
+                                    <th class="number">Bonus</th>
+                                    <th class="number">Overtime Pay</th>
+                                    <th class="number">Net Pay</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 <c:forEach var="row" items="${reportRows}" varStatus="status">
-                                    <tr data-label="${row.groupName}" data-value="${row.totalIncome}">
+                                    <tr>
                                         <td>${status.index + 1}</td>
                                         <td><c:out value="${row.groupName}"/></td>
                                         <td><c:out value="${row.departmentName}"/></td>
@@ -389,7 +374,7 @@
                                 </c:forEach>
                                 <c:if test="${empty reportRows}">
                                     <tr>
-                                        <td colspan="${groupBy == 'employee' ? 7 : 8}" style="text-align: center; color: var(--text-secondary);">Không có dữ liệu lương trong kỳ đã chọn.</td>
+                                        <td colspan="${groupBy == 'employee' ? 7 : 8}" style="text-align: center; color: var(--text-secondary);">No payroll data is available for the selected period.</td>
                                     </tr>
                                 </c:if>
                                 </tbody>
@@ -417,11 +402,11 @@
         periodTypeSelect.addEventListener("change", updateFieldsVisibility);
         updateFieldsVisibility();
 
-        const currency = value => new Intl.NumberFormat("vi-VN").format(value) + " VND";
+        const currency = value => new Intl.NumberFormat("en-US").format(value) + " VND";
         const commonMoneyAxis = {
             beginAtZero: true,
             grid: { color: "#eef2f7" },
-            ticks: { callback: value => new Intl.NumberFormat("vi-VN").format(value) }
+            ticks: { callback: value => new Intl.NumberFormat("en-US").format(value) }
         };
 
         const monthlyData = Array.from(document.querySelectorAll("#monthlySalaryData span"));
@@ -432,7 +417,7 @@
                 data: {
                     labels: monthlyData.map(item => item.dataset.label),
                     datasets: [{
-                        label: "Tổng thực lĩnh",
+                        label: "Total Net Pay",
                         data: monthlyData.map(item => Number(item.dataset.value || 0)),
                         borderColor: "#16a34a",
                         backgroundColor: "rgba(34, 197, 94, 0.14)",
@@ -460,9 +445,9 @@
                 data: {
                     labels: departmentData.map(item => item.dataset.label),
                     datasets: [
-                        { label: "Lương ngày công", data: departmentData.map(item => Number(item.dataset.workday || 0)), backgroundColor: "#86efac" },
-                        { label: "Lương thưởng", data: departmentData.map(item => Number(item.dataset.bonus || 0)), backgroundColor: "#facc15" },
-                        { label: "Lương làm thêm", data: departmentData.map(item => Number(item.dataset.overtime || 0)), backgroundColor: "#0f766e" }
+                        { label: "Regular Pay", data: departmentData.map(item => Number(item.dataset.workday || 0)), backgroundColor: "#86efac" },
+                        { label: "Bonus", data: departmentData.map(item => Number(item.dataset.bonus || 0)), backgroundColor: "#facc15" },
+                        { label: "Overtime Pay", data: departmentData.map(item => Number(item.dataset.overtime || 0)), backgroundColor: "#0f766e" }
                     ]
                 },
                 options: {
@@ -480,86 +465,6 @@
             });
         }
 
-        const rows = Array.from(document.querySelectorAll("#salaryTable tbody tr[data-label]"));
-        if (rows.length > 0 && window.Chart) {
-            const labels = rows.map(row => row.dataset.label);
-            const values = rows.map(row => Number(row.dataset.value || 0));
-            const groupBy = "${groupBy}";
-            const chartInner = document.getElementById("salaryChartInner");
-
-            if (groupBy === "employee") {
-                chartInner.style.width = Math.max(900, rows.length * 130) + "px";
-            } else {
-                chartInner.style.width = "100%";
-            }
-
-            new Chart(document.getElementById("salaryChart").getContext("2d"), {
-                type: "bar",
-                data: {
-                    labels,
-                    datasets: [{
-                        label: "Tổng thực lĩnh",
-                        data: values,
-                        backgroundColor: "#4ade80",
-                        borderRadius: 4,
-                        barPercentage: 0.45
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            afterFit: function(scaleInstance) {
-                                scaleInstance.height = groupBy === "employee" ? 80 : 58;
-                            },
-                            ticks: {
-                                maxRotation: 0,
-                                minRotation: 0,
-                                callback: function(value) {
-                                    const label = this.getLabelForValue(value);
-                                    const maxLength = groupBy === "employee" ? 18 : 14;
-                                    if (label.length <= maxLength) return label;
-                                    const words = label.split(" ");
-                                    const lines = [];
-                                    let line = "";
-                                    words.forEach(function(word) {
-                                        if ((line + " " + word).trim().length > maxLength) {
-                                            if (line) lines.push(line.trim());
-                                            line = word;
-                                        } else {
-                                            line = (line + " " + word).trim();
-                                        }
-                                    });
-                                    if (line) lines.push(line);
-                                    return lines.slice(0, 3);
-                                }
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: "#eef2f7" },
-                            ticks: {
-                                callback: function(value) {
-                                    return new Intl.NumberFormat("vi-VN").format(value);
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return new Intl.NumberFormat("vi-VN").format(context.parsed.y) + " VND";
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
     });
 </script>
 </body>
