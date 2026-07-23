@@ -36,17 +36,20 @@
                 <form action="${pageContext.request.contextPath}/change-password" method="post">
                     <div class="form-group">
                         <label for="oldPassword">Old Password <span class="required-star">*</span></label>
-                        <input type="password" id="oldPassword" name="oldPassword" placeholder="Nhập mật khẩu cũ" required>
+                        <input type="password" id="oldPassword" name="oldPassword"
+                               placeholder="Nhập mật khẩu cũ" maxlength="72" required>
                     </div>
 
                     <div class="form-group">
                         <label for="newPassword">New Password <span class="required-star">*</span></label>
-                        <input type="password" id="newPassword" name="newPassword" placeholder="Nhập mật khẩu mới" required>
+                        <input type="password" id="newPassword" name="newPassword"
+                               placeholder="Nhập mật khẩu mới" minlength="6" maxlength="72" required>
                     </div>
 
                     <div class="form-group">
                         <label for="confirmPassword">Confirm New Password <span class="required-star">*</span></label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Xác nhận mật khẩu mới" required>
+                        <input type="password" id="confirmPassword" name="confirmPassword"
+                               placeholder="Xác nhận mật khẩu mới" minlength="6" maxlength="72" required>
                     </div>
 
                     <div class="form-actions">

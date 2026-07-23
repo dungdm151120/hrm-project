@@ -63,7 +63,8 @@
 
 <div class="request-group full-width" style="margin-top: 15px;">
     <label>Reason <span class="required-star">*</span></label>
-    <textarea name="reason" class="request-textarea" rows="4" placeholder="Enter reason (at least 10 characters)" required minlength="10"></textarea>
+    <textarea name="reason" class="request-textarea" rows="4"
+              placeholder="Enter reason" maxlength="500" required></textarea>
 </div>
 
 <script>

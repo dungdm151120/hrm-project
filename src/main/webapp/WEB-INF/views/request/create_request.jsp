@@ -63,8 +63,9 @@
                                             allowed from Monday to Friday.</c:when>
                                         <c:when test="${param.error == 'overtime_date_holiday'}">Overtime date cannot be
                                             a holiday.</c:when>
-                                        <c:when test="${param.error == 'reason_too_short'}">The reason must be at least
-                                            10 characters long.</c:when>
+                                        <c:when test="${param.error == 'missing_reason'}">Please enter a reason.</c:when>
+                                        <c:when test="${param.error == 'reason_too_long'}">The reason must not exceed
+                                            500 characters.</c:when>
                                         <c:when test="${param.error == 'missing_employees'}">Please select at least one
                                             employee to work overtime.</c:when>
                                         <c:when test="${param.error == 'duplicate_overtime'}">One or more selected

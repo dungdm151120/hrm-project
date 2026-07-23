@@ -27,6 +27,7 @@ import java.util.Set;
 
 @WebServlet("/create_overtime_request")
 public class CreateOvertimeRequestServlet extends HttpServlet {
+    private static final int MAX_REASON_LENGTH = 500;
     private final RequestDAO requestDAO = new RequestDAO();
     private final OvertimeRequestDAO overtimeRequestDAO = new OvertimeRequestDAO();
     private final OvertimeParticipantDAO overtimeParticipantDAO = new OvertimeParticipantDAO();
@@ -73,8 +74,13 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
             }
 
             String reason = request.getParameter("reason");
-            if (reason == null || reason.trim().length() < 10) {
-                response.sendRedirect("create_request?error=reason_too_short");
+            if (reason == null || reason.trim().isEmpty()) {
+                response.sendRedirect("create_request?error=missing_reason");
+                return;
+            }
+            reason = reason.trim();
+            if (reason.length() > MAX_REASON_LENGTH) {
+                response.sendRedirect("create_request?error=reason_too_long");
                 return;
             }
 
