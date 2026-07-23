@@ -102,11 +102,9 @@ public class HRReportDAO {
                         dto.setTotalEmployees(rs.getInt("total"));
                         dto.setMaleCount(rs.getInt("males"));
                         dto.setFemaleCount(rs.getInt("females"));
-                        dto.setOtherCount(rs.getInt("others")); // Hoặc tên setter tương ứng trong DTO của bạn
+                        dto.setOtherCount(rs.getInt("others"));
                         dto.setRegularCount(rs.getInt("regulars"));
                         dto.setProbationCount(rs.getInt("probations"));
-                        dto.setManagerCount(rs.getInt("managers"));
-                        dto.setEmployeeCount(rs.getInt("employees"));
                     }
                 }
             }

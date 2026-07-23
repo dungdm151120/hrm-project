@@ -82,7 +82,7 @@
         }
 
         .stat-value {
-            font-size: 14px !important;
+            font-size: 20px !important;
         }
 
         .charts-section-grid {
@@ -423,9 +423,9 @@
                         </div>
 
                         <!-- Số lượng Headcount tổng hiện tại -->
-                        <div class="stat-value"
-                             style="color: #1E3A8A;">${not empty totalHeadcount ? totalHeadcount : reportData.totalEmployees}</div>
-
+                        <div class="stat-value" style="margin-top: 5px; color: #1E3A8A;">
+                            ${not empty totalHeadcount ? totalHeadcount : reportData.totalEmployees}
+                        </div>
                     </div>
 
                     <!-- Card 2: Gender Demographics -->
@@ -440,33 +440,14 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="stat-value" style="font-size: 16px; margin-top: 5px;">
+                        <div class="stat-value" style="margin-top: 5px;">
                             <span style="color: #2563EB;">${reportData.maleCount} Male</span> | <span
                                 style="color: #EC4899;">${reportData.femaleCount} Female</span> | <span
-                                class="rainbow-text">${reportData.otherCount} Other</span>
+                                class="rainbow-text" style="font-size: 20px">${reportData.otherCount} Other</span>
                         </div>
                     </div>
 
-                    <!-- Card 3: Positions -->
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <span class="stat-title">Job Position</span>
-                            <div class="stat-icon" style="background-color: #FEF3C7; color: #D97706;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <polyline points="16 11 18 13 22 9"></polyline>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="stat-value" style="font-size: 16px; margin-top: 5px;">
-                            <span class="bold">${reportData.managerCount}</span> Manager | <span
-                                class="bold">${reportData.employeeCount}</span> Employee
-                        </div>
-                    </div>
-
-                    <!-- Card 4: Contract Status -->
+                    <!-- Card 3: Contract Status -->
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">Contract Status</span>
@@ -480,12 +461,13 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="stat-value" style="font-size: 16px; margin-top: 5px;">
+                        <div class="stat-value" style="margin-top: 5px;">
                             <span style="color: #10B981;">${reportData.regularCount} Official</span> | <span
                                 style="color: #F59E0B;">${reportData.probationCount} Probation</span>
                         </div>
                     </div>
 
+                    <!-- Card 4: Headcount movement -->
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">Headcount Movement</span>
@@ -499,7 +481,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="stat-value" style="font-size: 16px; margin-top: 5px;">
+                        <div class="stat-value" style="margin-top: 5px;">
                             <span style="color: #10B981;">+${totalIn != null ? totalIn : 0} New</span> |
                             <span style="color: #EF4444;">-${totalOut != null ? totalOut : 0} Left</span>
                         </div>

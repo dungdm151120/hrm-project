@@ -9,8 +9,6 @@ public class HRReportDTO {
     private int maleCount;
     private int femaleCount;
     private int otherCount;
-    private int managerCount;
-    private int employeeCount;
     private int regularCount;
     private int probationCount;
 
@@ -41,28 +39,12 @@ public class HRReportDTO {
         this.femaleCount = femaleCount;
     }
 
-    public int getManagerCount() {
-        return managerCount;
-    }
-
     public int getOtherCount() {
         return otherCount;
     }
 
     public void setOtherCount(int otherCount) {
         this.otherCount = otherCount;
-    }
-
-    public void setManagerCount(int managerCount) {
-        this.managerCount = managerCount;
-    }
-
-    public int getEmployeeCount() {
-        return employeeCount;
-    }
-
-    public void setEmployeeCount(int employeeCount) {
-        this.employeeCount = employeeCount;
     }
 
     public int getRegularCount() {
