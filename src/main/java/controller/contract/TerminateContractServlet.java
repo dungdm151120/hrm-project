@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 @WebServlet("/contracts/terminate")
 public class TerminateContractServlet extends HttpServlet {
+    private static final int MAX_TERMINATION_REASON_LENGTH = 1000;
     private final LaborContractDAO contractDAO = new LaborContractDAO();
 
     @Override
@@ -30,13 +31,37 @@ public class TerminateContractServlet extends HttpServlet {
         User currentUser = ContractRequestHelper.currentUser(request);
         Integer terminatedBy = currentUser == null ? null : currentUser.getId();
 
-        boolean terminated = contractDAO.terminate(contractId, request.getParameter("terminationReason"), terminatedBy);
+        String terminationReason = trimToNull(request.getParameter("terminationReason"));
+        if (terminationReason == null) {
+            redirectWithError(request, response, contractId, "Termination reason is required.");
+            return;
+        }
+        if (terminationReason.length() > MAX_TERMINATION_REASON_LENGTH) {
+            redirectWithError(request, response, contractId,
+                    "Termination reason must not exceed 1000 characters.");
+            return;
+        }
+
+        boolean terminated = contractDAO.terminate(contractId, terminationReason, terminatedBy);
         if (terminated) {
             response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contractId);
             return;
         }
 
-        String error = URLEncoder.encode("Only active contracts can be terminated.", StandardCharsets.UTF_8);
-        response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contractId + "&error=" + error);
+        redirectWithError(request, response, contractId, "Only active contracts can be terminated.");
+    }
+
+    private void redirectWithError(HttpServletRequest request, HttpServletResponse response,
+                                   int contractId, String message) throws IOException {
+        String error = URLEncoder.encode(message, StandardCharsets.UTF_8);
+        response.sendRedirect(request.getContextPath()
+                + "/contracts/detail?id=" + contractId + "&error=" + error);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 }

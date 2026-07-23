@@ -53,6 +53,8 @@
                                         </c:when>
                                         <c:when test="${param.error == 'missing_approver'}">Please select an approver.
                                         </c:when>
+                                        <c:when test="${param.error == 'invalid_approver'}">The selected approver must
+                                            be an active HR Manager.</c:when>
                                         <c:when test="${param.error == 'missing_department'}">You must be assigned to a
                                             department to create this request.</c:when>
                                         <c:when test="${param.error == 'missing_date'}">Please select an overtime date.
@@ -63,10 +65,13 @@
                                             allowed from Monday to Friday.</c:when>
                                         <c:when test="${param.error == 'overtime_date_holiday'}">Overtime date cannot be
                                             a holiday.</c:when>
-                                        <c:when test="${param.error == 'reason_too_short'}">The reason must be at least
-                                            10 characters long.</c:when>
+                                        <c:when test="${param.error == 'missing_reason'}">Please enter a reason.</c:when>
+                                        <c:when test="${param.error == 'reason_too_long'}">The reason must not exceed
+                                            500 characters.</c:when>
                                         <c:when test="${param.error == 'missing_employees'}">Please select at least one
                                             employee to work overtime.</c:when>
+                                        <c:when test="${param.error == 'invalid_employee'}">One or more selected
+                                            employees are invalid or outside your department.</c:when>
                                         <c:when test="${param.error == 'duplicate_overtime'}">One or more selected
                                             employees already have an overtime request (pending or approved) on this
                                             date.</c:when>
@@ -76,6 +81,10 @@
                                             adjustment requests between the 6th and 10th day of the month.</c:when>
                                         <c:when test="${param.error == 'adjustment_limit_exceeded'}">You have reached
                                             the maximum of 2 adjustment requests for this month.</c:when>
+                                        <c:when test="${param.error == 'adjustment_date_weekend'}">Attendance adjustment is not allowed on weekends.</c:when>
+                                        <c:when test="${param.error == 'adjustment_date_holiday'}">Attendance adjustment is not allowed on holidays.</c:when>
+                                        <c:when test="${param.error == 'adjustment_date_duplicate'}">An adjustment request for this date already exists (pending or approved).</c:when>
+                                        <c:when test="${param.error == 'adjustment_invalid_time'}">Desired check-out time cannot be earlier than check-in time.</c:when>
                                         <c:when test="${param.error == 'missing_evidence_file'}">Please upload a proof document (image).</c:when>
                                         <c:when test="${param.error == 'missing_dependents_count'}">Please enter the number of dependents.</c:when>
                                         <c:when test="${param.error == 'invalid_dependents_count'}">Invalid number of dependents.</c:when>

@@ -149,7 +149,7 @@
                                     <select name="effectiveYear" class="form-control" required>
                                         <option value="">-- Select Year --</option>
                                         <c:set var="currentYear" value="<%= java.time.Year.now().getValue() %>"/>
-                                        <c:forEach var="y" begin="${currentYear - 3}" end="${currentYear + 3}">
+                                        <c:forEach var="y" begin="${currentYear - 3}" end="${currentYear}">
                                             <option value="${y}" ${oldYear == ''.concat(y) ? 'selected' : (empty oldYear && y == currentYear ? 'selected' : '')}>
                                                 Year ${y}
                                             </option>

@@ -13,8 +13,9 @@ import model.User;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
-@WebServlet("/attendance/confirm-detail")
+@WebServlet("/attendance/confirm_detail")
 public class AttendanceConfirmDetailServlet extends HttpServlet {
     private final AttendanceConfirmDAO confirmedDAO = new AttendanceConfirmDAO();
 
@@ -27,19 +28,19 @@ public class AttendanceConfirmDetailServlet extends HttpServlet {
             return;
         }
 
-        String role = currentUser.getRoleName() != null ? currentUser.getRoleName().toUpperCase() : "";
-        boolean isHRManager = "HR_MANAGER".equals(role);
-        boolean isManager = currentUser.isManager();
-        boolean isPayrollRole = isPayrollRole(currentUser);
-
-        if (!isHRManager && !isManager && !isPayrollRole) {
+        @SuppressWarnings("unchecked")
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        boolean canViewAll = canViewAllFinalizedAttendance(permissions);
+        boolean canViewDepartment = canViewDepartmentFinalizedAttendance(permissions);
+        if (!canViewAll && !canViewDepartment) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to access this page.");
             return;
         }
 
-        Integer departmentIdFilter = null;
-        if (isManager && !isHRManager && !isPayrollRole) {
-            departmentIdFilter = currentUser.getDepartmentId();
+        Integer departmentIdFilter = canViewAll ? null : currentUser.getDepartmentId();
+        if (!canViewAll && departmentIdFilter == null) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "No department assigned.");
+            return;
         }
 
         int month;
@@ -48,7 +49,7 @@ public class AttendanceConfirmDetailServlet extends HttpServlet {
             month = Integer.parseInt(request.getParameter("month"));
             year = Integer.parseInt(request.getParameter("year"));
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/attendance/confirm-list");
+            response.sendRedirect(request.getContextPath() + "/attendance/confirm_list");
             return;
         }
 
@@ -90,9 +91,15 @@ public class AttendanceConfirmDetailServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/attendance/attendance_confirm_detail.jsp").forward(request, response);
     }
 
-    private boolean isPayrollRole(User user) {
-        String roleName = user.getRoleName();
-        return "PAYROLL_MANAGER".equalsIgnoreCase(roleName)
-                || "PAYROLL_STAFF".equalsIgnoreCase(roleName);
+    private boolean canViewAllFinalizedAttendance(Set<String> permissions) {
+        return permissions != null && (permissions.contains("ATTENDANCE_VIEW_ALL")
+                || permissions.contains("ATTENDANCE_FINALIZE_HR")
+                || permissions.contains("PAYROLL_VIEW_LIST"));
+    }
+
+    private boolean canViewDepartmentFinalizedAttendance(Set<String> permissions) {
+        return permissions != null && (permissions.contains("ATTENDANCE_VIEW_DEPARTMENT")
+                || permissions.contains("ATTENDANCE_CONFIRM_DEPT")
+                || permissions.contains("PAYROLL_VIEW_DEPARTMENT"));
     }
 }

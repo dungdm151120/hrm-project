@@ -239,13 +239,31 @@ public class PayrollDAO {
                     payroll.setUserId(rs.getInt("user_id"));
                     payroll.setMonth(rs.getInt("month"));
                     payroll.setYear(rs.getInt("year"));
-                    payroll.setBasicSalary(rs.getLong("basic_salary"));
-                    payroll.setTotalIncome(rs.getLong("total_income"));
-                    payroll.setNetPay(rs.getLong("net_pay"));
                     payroll.setStatus(rs.getString("status"));
+
                     payroll.setEmployeeName(rs.getString("employee_name"));
                     payroll.setDepartmentName(rs.getString("department_name"));
                     payroll.setPositionName(rs.getString("position_name"));
+
+                    payroll.setExpectedHours(rs.getInt("expected_hours"));
+                    payroll.setActualHours(rs.getInt("actual_hours"));
+
+                    payroll.setBasicSalary(rs.getLong("basic_salary"));
+                    payroll.setTotalIncome(rs.getLong("total_income"));
+                    payroll.setNetPay(rs.getLong("net_pay"));
+
+                    payroll.setSocialInsurance(rs.getLong("social_insurance"));
+                    payroll.setHealthInsurance(rs.getLong("health_insurance"));
+                    payroll.setUnemploymentInsurance(rs.getLong("unemployment_insurance"));
+                    payroll.setUnionFee(rs.getLong("union_fee"));
+
+                    payroll.setIncomeBeforeTax(rs.getLong("income_before_tax"));
+                    payroll.setTaxableIncome(rs.getLong("taxable_income"));
+                    payroll.setIncomeTax(rs.getLong("income_tax"));
+
+                    payroll.setOvertimePay(rs.getLong("overtime_pay"));
+                    payroll.setSickLeavePay(rs.getLong("sick_leave_pay"));
+                    payroll.setBonus(rs.getLong("bonus"));
                     list.add(payroll);
                 }
             }
@@ -253,6 +271,84 @@ public class PayrollDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public Payroll calculatePayrollSummary(String keyword, String status, Integer userId, Integer month, Integer year, Integer departmentId) {
+        Payroll summary = new Payroll();
+
+        StringBuilder sql = new StringBuilder("""
+        SELECT 
+            SUM(p.expected_hours) AS sum_expected_hours,
+            SUM(p.actual_hours) AS sum_actual_hours,
+            SUM(p.basic_salary) AS sum_basic_salary,
+            SUM(p.total_income) AS sum_total_income,
+            SUM(p.social_insurance) AS sum_social_insurance,
+            SUM(p.health_insurance) AS sum_health_insurance,
+            SUM(p.unemployment_insurance) AS sum_unemployment_insurance,
+            SUM(p.union_fee) AS sum_union_fee,
+            SUM(p.income_before_tax) AS sum_income_before_tax,
+            SUM(p.taxable_income) AS sum_taxable_income,
+            SUM(p.income_tax) AS sum_income_tax,
+            SUM(p.overtime_pay) AS sum_overtime_pay,
+            SUM(p.sick_leave_pay) AS sum_sick_leave_pay,
+            SUM(p.bonus) AS sum_bonus,
+            SUM(p.net_pay) AS sum_net_pay
+        FROM payrolls p
+        JOIN users u ON p.user_id = u.id
+        WHERE 1=1
+    """);
+
+        // Thêm các điều kiện WHERE tương tự như hàm findPayrollsAdvanced...
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            boolean hasAccent = keyword.trim().matches(".*[áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴĐ].*");
+            if (hasAccent) {
+                sql.append(" AND LOWER(u.full_name) COLLATE utf8mb4_bin LIKE LOWER(?) ");
+            } else {
+                sql.append(" AND u.full_name COLLATE utf8mb4_general_ci LIKE ? ");
+            }
+        }
+        if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status)) {
+            sql.append(" AND LOWER(p.status) = LOWER(?) ");
+        }
+        if (userId != null) sql.append(" AND p.user_id = ? ");
+        if (month != null) sql.append(" AND p.month = ? ");
+        if (year != null) sql.append(" AND p.year = ? ");
+        if (departmentId != null) sql.append(" AND u.department_id = ? ");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+            if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status)) ps.setString(paramIndex++, status.trim());
+            if (userId != null) ps.setInt(paramIndex++, userId);
+            if (month != null) ps.setInt(paramIndex++, month);
+            if (year != null) ps.setInt(paramIndex++, year);
+            if (departmentId != null) ps.setInt(paramIndex++, departmentId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    summary.setExpectedHours(rs.getInt("sum_expected_hours"));
+                    summary.setActualHours(rs.getInt("sum_actual_hours"));
+                    summary.setBasicSalary(rs.getLong("sum_basic_salary"));
+                    summary.setTotalIncome(rs.getLong("sum_total_income"));
+                    summary.setSocialInsurance(rs.getLong("sum_social_insurance"));
+                    summary.setHealthInsurance(rs.getLong("sum_health_insurance"));
+                    summary.setUnemploymentInsurance(rs.getLong("sum_unemployment_insurance"));
+                    summary.setUnionFee(rs.getLong("sum_union_fee"));
+                    summary.setIncomeBeforeTax(rs.getLong("sum_income_before_tax"));
+                    summary.setTaxableIncome(rs.getLong("sum_taxable_income"));
+                    summary.setIncomeTax(rs.getLong("sum_income_tax"));
+                    summary.setOvertimePay(rs.getLong("sum_overtime_pay"));
+                    summary.setSickLeavePay(rs.getLong("sum_sick_leave_pay"));
+                    summary.setBonus(rs.getLong("sum_bonus"));
+                    summary.setNetPay(rs.getLong("sum_net_pay"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return summary;
     }
 
     public boolean updateStatus(int payrollId, String status) {

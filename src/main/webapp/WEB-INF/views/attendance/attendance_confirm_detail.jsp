@@ -31,7 +31,7 @@
 
         <div class="dashboard-content">
             <div class="detail-header">
-                <a href="${pageContext.request.contextPath}/attendance/confirm-list" class="btn-back">🔙 Back to List</a>
+                <a href="${pageContext.request.contextPath}/attendance/confirm_list" class="btn-back">🔙 Back to List</a>
             </div>
 
             <!-- Summary Cards -->
@@ -56,7 +56,7 @@
 
             <!-- Toolbar & Search -->
             <div class="toolbar">
-                <form id="searchForm" action="${pageContext.request.contextPath}/attendance/confirm-detail" method="get">
+                <form id="searchForm" action="${pageContext.request.contextPath}/attendance/confirm_detail" method="get">
                     <input type="hidden" name="month" value="${month}">
                     <input type="hidden" name="year" value="${year}">
                     <input type="text" name="search" class="search-box" placeholder="Search Employee Code or Name" value="${searchQuery}">

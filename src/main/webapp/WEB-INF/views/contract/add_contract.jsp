@@ -47,7 +47,9 @@
 
                 <div class="form-group">
                     <label for="contractCode">Contract Code <span class="required-star">*</span></label>
-                    <input type="text" id="contractCode" name="contractCode" value="${contract.contractCode}" required>
+                    <input type="text" id="contractCode" name="contractCode" value="${contract.contractCode}"
+                           maxlength="50" pattern="[A-Za-z0-9/_-]+"
+                           title="Use only letters, numbers, hyphens, underscores, and slashes" required>
                 </div>
 
                 <div class="form-group">
@@ -71,18 +73,21 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="baseSalary">Base Salary</label>
-                    <input type="number" id="baseSalary" name="baseSalary" min="0" step="0.01" value="${contract.baseSalary}">
+                    <label for="baseSalary">Base Salary <span class="required-star">*</span></label>
+                    <input type="number" id="baseSalary" name="baseSalary" min="0.01" max="9999999999999.99"
+                           step="0.01" value="${contract.baseSalary}" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="workingTime">Working Time</label>
-                    <input type="text" id="workingTime" name="workingTime" value="${contract.workingTime}">
+                    <label for="workingTime">Working Time <span class="required-star">*</span></label>
+                    <input type="text" id="workingTime" name="workingTime" value="${contract.workingTime}"
+                           maxlength="100" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="workLocation">Work Location</label>
-                    <input type="text" id="workLocation" name="workLocation" value="${contract.workLocation}">
+                    <label for="workLocation">Work Location <span class="required-star">*</span></label>
+                    <input type="text" id="workLocation" name="workLocation" value="${contract.workLocation}"
+                           maxlength="255" required>
                 </div>
 
                 <div class="form-group">
@@ -93,7 +98,7 @@
 
                 <div class="form-group">
                     <label for="note">Note</label>
-                    <textarea id="note" name="note">${contract.note}</textarea>
+                    <textarea id="note" name="note" maxlength="1000">${contract.note}</textarea>
                 </div>
 
                 <div class="form-actions">
@@ -108,6 +113,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const contractType = document.getElementById('contractType');
+        const startDate = document.getElementById('startDate');
         const endDateGroup = document.getElementById('endDateGroup');
         const endDate = document.getElementById('endDate');
         const employeeSearch = document.getElementById('employeeSearch');
@@ -115,7 +121,41 @@
         const employeeOptions = Array.from(employeeSelect.options);
         const today = new Date().toISOString().split('T')[0];
 
-        endDate.min = today;
+        function addDays(dateValue, days) {
+            const date = new Date(dateValue + 'T00:00:00Z');
+            date.setUTCDate(date.getUTCDate() + days);
+            return date.toISOString().split('T')[0];
+        }
+
+        function addMonths(dateValue, months) {
+            const parts = dateValue.split('-').map(Number);
+            const target = new Date(Date.UTC(parts[0], parts[1] - 1 + months, 1));
+            const lastDay = new Date(Date.UTC(
+                target.getUTCFullYear(), target.getUTCMonth() + 1, 0
+            )).getUTCDate();
+            target.setUTCDate(Math.min(parts[2], lastDay));
+            return target.toISOString().split('T')[0];
+        }
+
+        function laterDate(first, second) {
+            return first > second ? first : second;
+        }
+
+        function updateEndDateRange() {
+            let minimumEndDate = today;
+            endDate.removeAttribute('max');
+
+            if (startDate.value) {
+                minimumEndDate = laterDate(minimumEndDate, addDays(startDate.value, 1));
+
+                if (contractType.value === 'FIXED_TERM') {
+                    minimumEndDate = laterDate(minimumEndDate, addMonths(startDate.value, 1));
+                    endDate.max = addMonths(startDate.value, 36);
+                }
+            }
+
+            endDate.min = minimumEndDate;
+        }
 
         function handleContractTypeChange() {
             const isIndefiniteTerm = contractType.value === 'INDEFINITE_TERM';
@@ -124,6 +164,7 @@
             if (isIndefiniteTerm) {
                 endDate.value = '';
             }
+            updateEndDateRange();
         }
 
         function handleEmployeeSearch() {
@@ -138,6 +179,7 @@
         }
 
         contractType.addEventListener('change', handleContractTypeChange);
+        startDate.addEventListener('change', updateEndDateRange);
         employeeSearch.addEventListener('input', handleEmployeeSearch);
         handleContractTypeChange();
     });

@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 
 @WebServlet("/announcements/add")
 public class AddAnnouncementServlet extends HttpServlet {
+    private static final int MAX_TITLE_LENGTH = 200;
+    private static final int MAX_CONTENT_LENGTH = 5000;
     private final AnnouncementDAO announcementDAO = new AnnouncementDAO();
     private final DepartmentDAO departmentDAO = new DepartmentDAO();
 
@@ -64,8 +66,14 @@ public class AddAnnouncementServlet extends HttpServlet {
         if (title == null) {
             throw new IllegalArgumentException("Title is required.");
         }
+        if (title.length() > MAX_TITLE_LENGTH) {
+            throw new IllegalArgumentException("Title must not exceed 200 characters.");
+        }
         if (content == null) {
             throw new IllegalArgumentException("Content is required.");
+        }
+        if (content.length() > MAX_CONTENT_LENGTH) {
+            throw new IllegalArgumentException("Content must not exceed 5000 characters.");
         }
         if (!"ALL".equals(targetScope) && !"DEPARTMENT".equals(targetScope)) {
             throw new IllegalArgumentException("Target audience is invalid.");
