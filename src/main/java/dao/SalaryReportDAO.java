@@ -65,6 +65,8 @@ public class SalaryReportDAO {
                 COALESCE(SUM(p.total_income), 0) AS workday_income,
                 COALESCE(SUM(p.bonus), 0) AS product_income,
                 COALESCE(SUM(p.overtime_pay), 0) AS overtime_income,
+                COALESCE(SUM(p.sick_leave_pay), 0) AS sick_leave_income,
+                COALESCE(SUM(p.total_income + p.overtime_pay + p.sick_leave_pay), 0) AS gross_income,
                 COALESCE(SUM(p.net_pay), 0) AS total_income
             FROM payrolls p
             JOIN users u ON p.user_id = u.id
@@ -92,6 +94,8 @@ public class SalaryReportDAO {
                     row.setWorkdayIncome(rs.getLong("workday_income"));
                     row.setProductIncome(rs.getLong("product_income"));
                     row.setOvertimeIncome(rs.getLong("overtime_income"));
+                    row.setSickLeaveIncome(rs.getLong("sick_leave_income"));
+                    row.setGrossIncome(rs.getLong("gross_income"));
                     row.setTotalIncome(rs.getLong("total_income"));
                     rows.add(row);
                 }
