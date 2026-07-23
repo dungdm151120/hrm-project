@@ -221,6 +221,7 @@ public class RequestDAO {
                     r.setReason(rs.getString("reason"));
                     r.setProposerName(rs.getString("proposer_name"));
                     r.setDepartmentName(rs.getString("department_name"));
+                    r.setDepartmentId(rs.getInt("department_id"));
                     r.setApproverId(rs.getInt("approver_id"));
                     r.setApproverName(rs.getString("approver_name"));
                     r.setCreatedAt(rs.getTimestamp("created_at"));

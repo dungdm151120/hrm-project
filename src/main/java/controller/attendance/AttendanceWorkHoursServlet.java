@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet("/attendance/work-hours")
+@WebServlet("/attendance/work_hours")
 public class AttendanceWorkHoursServlet extends HttpServlet {
     private static final int PAGE_SIZE = 5;
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM");

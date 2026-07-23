@@ -65,6 +65,10 @@ CREATE TABLE users (
                        reset_token_expired_at DATETIME,
                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        updated_at DATETIME,
+                       CONSTRAINT chk_users_email_not_blank
+                           CHECK (CHAR_LENGTH(TRIM(email)) > 0),
+                       CONSTRAINT chk_users_password_not_blank
+                           CHECK (CHAR_LENGTH(password) > 0),
                        CONSTRAINT fk_users_roles FOREIGN KEY (role_id) REFERENCES roles(id),
                        CONSTRAINT fk_users_departments FOREIGN KEY (department_id) REFERENCES departments(id),
                        CONSTRAINT fk_users_positions FOREIGN KEY (position_id) REFERENCES positions(id),
@@ -109,6 +113,8 @@ CREATE TABLE password_reset_requests (
                                          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                          handled_at DATETIME,
                                          handled_by INT,
+                                         CONSTRAINT chk_password_reset_email_not_blank
+                                             CHECK (CHAR_LENGTH(TRIM(email)) > 0),
                                          CONSTRAINT fk_password_reset_requests_user
                                              FOREIGN KEY (user_id) REFERENCES users(id),
                                          CONSTRAINT fk_password_reset_requests_admin
@@ -126,9 +132,9 @@ CREATE TABLE labor_contracts (
                                  contract_type VARCHAR(50) NOT NULL,
                                  start_date DATE NOT NULL,
                                  end_date DATE,
-                                 base_salary DECIMAL(15,2),
-                                 working_time VARCHAR(100),
-                                 work_location VARCHAR(255),
+                                 base_salary DECIMAL(15,2) NOT NULL,
+                                 working_time VARCHAR(100) NOT NULL,
+                                 work_location VARCHAR(255) NOT NULL,
                                  status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                                  note TEXT,
                                  terminated_at DATETIME,
@@ -136,6 +142,37 @@ CREATE TABLE labor_contracts (
                                  termination_reason TEXT,
                                  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                  updated_at DATETIME,
+                                 CONSTRAINT chk_labor_contract_code_not_blank
+                                     CHECK (CHAR_LENGTH(TRIM(contract_code)) > 0),
+                                 CONSTRAINT chk_labor_contract_type
+                                     CHECK (contract_type IN ('FIXED_TERM', 'INDEFINITE_TERM', 'PROBATION', 'PART_TIME')),
+                                 CONSTRAINT chk_labor_contract_status
+                                     CHECK (status IN ('ACTIVE', 'EXPIRED', 'TERMINATED')),
+                                 CONSTRAINT chk_labor_contract_salary
+                                     CHECK (base_salary > 0),
+                                 CONSTRAINT chk_labor_contract_working_time_not_blank
+                                     CHECK (CHAR_LENGTH(TRIM(working_time)) > 0),
+                                 CONSTRAINT chk_labor_contract_location_not_blank
+                                     CHECK (CHAR_LENGTH(TRIM(work_location)) > 0),
+                                 CONSTRAINT chk_labor_contract_note_length
+                                     CHECK (note IS NULL OR CHAR_LENGTH(note) <= 1000),
+                                 CONSTRAINT chk_labor_contract_date_order
+                                     CHECK (end_date IS NULL OR end_date >= start_date),
+                                 CONSTRAINT chk_labor_contract_fixed_term_duration
+                                     CHECK (
+                                         contract_type <> 'FIXED_TERM'
+                                         OR (
+                                             end_date IS NOT NULL
+                                             AND end_date BETWEEN DATE_ADD(start_date, INTERVAL 1 MONTH)
+                                                 AND DATE_ADD(start_date, INTERVAL 36 MONTH)
+                                         )
+                                     ),
+                                 CONSTRAINT chk_labor_contract_active_end_date
+                                     CHECK (
+                                         status <> 'ACTIVE'
+                                         OR (contract_type = 'INDEFINITE_TERM' AND end_date IS NULL)
+                                         OR (contract_type <> 'INDEFINITE_TERM' AND end_date IS NOT NULL)
+                                     ),
                                  CONSTRAINT fk_labor_contracts_users
                                      FOREIGN KEY (user_id) REFERENCES users(id),
                                  CONSTRAINT fk_labor_contracts_terminated_by
@@ -599,41 +636,34 @@ CREATE TABLE sick_leave_dates (
 -- 13b. DEPENDENT CHANGE REQUEST MODULE
 -- ============================================================
 
+CREATE TABLE dependents (
+                            id INT PRIMARY KEY AUTO_INCREMENT,
+                            user_id INT NOT NULL,
+                            dependent_name VARCHAR(255) NOT NULL,
+                            dependent_dob DATE NOT NULL,
+                            dependent_id_number VARCHAR(50) NOT NULL,
+                            relationship VARCHAR(255) NOT NULL,
+                            status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+                            effective_date DATE NOT NULL,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE dependent_change_requests (
                                            id INT PRIMARY KEY AUTO_INCREMENT,
                                            request_id INT NOT NULL UNIQUE,
-                                           number_of_dependents INT NOT NULL,
-                                           document_path VARCHAR(500) NOT NULL,
+                                           change_type VARCHAR(50) NOT NULL,
+                                           dependent_id INT NULL,
+                                           dependent_name VARCHAR(255) NULL,
+                                           dependent_dob DATE NULL,
+                                           dependent_id_number VARCHAR(50) NULL,
+                                           relationship VARCHAR(255) NULL,
+                                           document_path VARCHAR(500) NULL,
                                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                           CONSTRAINT fk_dependent_change_request FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE
-);
--- ==================
--- Bảng cho HR report
--- ==================
-
--- Bảng lịch sử department
-CREATE TABLE department_history (
-                                    id INT PRIMARY KEY AUTO_INCREMENT,
-                                    user_id INT NOT NULL,
-                                    department_id INT,
-                                    start_date DATE NOT NULL,
-                                    end_date DATE NULL,
-                                    CONSTRAINT fk_department_history_user
-                                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-                                    CONSTRAINT fk_department_history_department
-                                        FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE RESTRICT ON UPDATE CASCADE
+                                           CONSTRAINT fk_dependent_change_request FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
+                                           CONSTRAINT fk_dependent_target FOREIGN KEY (dependent_id) REFERENCES dependents(id) ON DELETE SET NULL
 );
 
--- Bảng lịch sử contract
-CREATE TABLE contract_history (
-                                  id INT PRIMARY KEY AUTO_INCREMENT,
-                                  user_id INT NOT NULL,
-                                  contract_type VARCHAR(50) NOT NULL,
-                                  start_date DATE NOT NULL,
-                                  end_date DATE NULL,
-                                  CONSTRAINT fk_contract_history_user
-                                      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
 -- ============================================================
 -- 14. INSERT DỮ LIỆU MẪU
 -- ============================================================
@@ -941,7 +971,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AN
                                                                                              'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
                                                                                              'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
                                                                                              'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
-    'ATTENDANCE_CONFIRM_DEPT', 'ATTENDANCE_FINALIZE_HR'
+                                                                                             'ATTENDANCE_CONFIRM_DEPT', 'ATTENDANCE_FINALIZE_HR'
     );
 
 -- HR_STAFF
@@ -1029,21 +1059,21 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'EMPLOYEE' AND 
 
 -- Bảng lưu toàn bộ lịch sử các phòng ban cũ
 CREATE TABLE department_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    department_id INT NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_dept_history_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_dept_history_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
+                                    id INT AUTO_INCREMENT PRIMARY KEY,
+                                    user_id INT NOT NULL,
+                                    department_id INT NOT NULL,
+                                    start_date DATE NOT NULL,
+                                    end_date DATE NOT NULL,
+                                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                    CONSTRAINT fk_dept_history_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                                    CONSTRAINT fk_dept_history_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
 );
 
 -- Bảng lưu thông tin phòng ban hiện tại sau lần
 CREATE TABLE department_after_update (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
-    department_id INT NOT NULL,
+    department_id INT,
     start_date DATE NOT NULL,
     end_date DATE DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1051,32 +1081,6 @@ CREATE TABLE department_after_update (
     CONSTRAINT fk_dept_after_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
 );
 
-
-INSERT INTO contract_history (user_id, contract_type, start_date, end_date) VALUES
-                                                                                -- Nhóm 1: Lịch sử thử việc (PROBATION) trước khi lên chính thức năm 2024
-                                                                                ((SELECT id FROM users WHERE email = 'admin@company.com'), 'PROBATION', '2023-11-01', '2023-12-31'),
-                                                                                ((SELECT id FROM users WHERE email = 'minhquan.it@company.com'), 'PROBATION', '2024-03-01', '2024-04-30'),
-                                                                                ((SELECT id FROM users WHERE email = 'hrmanager@company.com'), 'PROBATION', '2023-10-15', '2024-01-14'),
-                                                                                ((SELECT id FROM users WHERE email = 'maianh.hr@company.com'), 'PROBATION', '2023-12-01', '2024-01-31'),
-                                                                                ((SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'), 'PROBATION', '2023-12-20', '2024-02-19'),
-
-                                                                                -- Nhóm 2: Trước đây làm Bán thời gian (PART_TIME), sau đó chuyển sang Toàn thời gian cố định
-                                                                                ((SELECT id FROM users WHERE email = 'haiyen.hr@company.com'), 'PART_TIME', '2023-06-01', '2024-02-29'),
-                                                                                ((SELECT id FROM users WHERE email = 'ducanh.it@company.com'), 'PART_TIME', '2023-01-10', '2024-01-09'),
-                                                                                ((SELECT id FROM users WHERE email = 'giahuy.it@company.com'), 'PART_TIME', '2023-08-01', '2024-01-31'),
-                                                                                ((SELECT id FROM users WHERE email = 'hoangnam.it@company.com'), 'PART_TIME', '2023-09-15', '2024-02-14'),
-                                                                                ((SELECT id FROM users WHERE email = 'payrollmanager@company.com'), 'PART_TIME', '2023-05-20', '2024-01-19'),
-
-                                                                                -- Nhóm 3: Lịch sử Hợp đồng xác định thời hạn cũ (FIXED_TERM) giai đoạn trước (2021 - 2024)
-                                                                                ((SELECT id FROM users WHERE email = 'thaovy.payroll@company.com'), 'FIXED_TERM', '2021-02-10', '2024-02-09'),
-                                                                                ((SELECT id FROM users WHERE email = 'minhkhang.payroll@company.com'), 'FIXED_TERM', '2021-03-05', '2024-03-04'),
-                                                                                ((SELECT id FROM users WHERE email = 'phuonganh.payroll@company.com'), 'FIXED_TERM', '2021-03-18', '2024-03-17'),
-                                                                                ((SELECT id FROM users WHERE email = 'payroll@company.com'), 'FIXED_TERM', '2021-04-10', '2024-04-09'),
--- Nhóm 4: Hợp đồng vô thời hạn cũ (INDEFINITE_TERM) trước khi có sự điều chỉnh lại cơ chế lương/vị trí mới năm 2024
-                                                                                ((SELECT id FROM users WHERE email = 'salesmanager@company.com'), 'INDEFINITE_TERM', '2020-01-25', '2024-01-24'),
-                                                                                ((SELECT id FROM users WHERE email = 'khanhly.sales@company.com'), 'INDEFINITE_TERM', '2022-02-12', '2024-02-11'),
-                                                                                ((SELECT id FROM users WHERE email = 'quocbao.sales@company.com'), 'INDEFINITE_TERM', '2022-03-08', '2024-03-07'),
-                                                                                ((SELECT id FROM users WHERE email = 'businessadmin@company.com'), 'INDEFINITE_TERM', '2020-04-01', '2024-03-31');
 -- ============================================================
 -- 18. KẾT THÚC
 -- ============================================================

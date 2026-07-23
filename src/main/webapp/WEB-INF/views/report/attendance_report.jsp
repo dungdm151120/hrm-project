@@ -96,6 +96,27 @@
                             margin-bottom: 28px;
                         }
 
+                        .report-results-layout {
+                            display: flex;
+                            flex-direction: column;
+                        }
+
+                        .report-summary {
+                            order: 1;
+                        }
+
+                        .report-table-controls {
+                            order: 2;
+                        }
+
+                        .report-results-layout > .table-wrapper {
+                            order: 3;
+                        }
+
+                        #deptAttendanceOverview {
+                            order: 4;
+                        }
+
                         .stat-card {
                             background: var(--white);
                             border-radius: var(--radius-sm);
@@ -181,6 +202,16 @@
 
                         .highlight-card.punctual .stat-icon {
                             color: #10B981;
+                        }
+
+                        .highlight-card.attention {
+                            background: #FFF7ED;
+                            border-color: #FED7AA;
+                        }
+
+                        .highlight-card.critical {
+                            background: #FEF2F2;
+                            border-color: #FECACA;
                         }
 
                         .highlight-meta {
@@ -408,8 +439,9 @@
                                         </div>
                                     </c:when>
                                     <c:otherwise>
+                                        <div class="report-results-layout">
                                         <!-- Table Filter & Search Controls -->
-                                         <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; align-items: center; background: var(--white); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-color);">
+                                         <div class="report-table-controls" style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; align-items: center; background: var(--white); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-color);">
                                              <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
                                                  <label style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">Search by Employee Name</label>
                                                  <input type="text" id="localSearchName" placeholder="Enter employee name..."
@@ -508,7 +540,7 @@
 
                                         <c:if test="${empty selectedDeptId}">
                                             <!-- Chart container -->
-                                            <div class="report-filter-card"
+                                            <div id="deptAttendanceOverview" class="report-filter-card"
                                                 style="margin-bottom: 24px; padding: 24px; border: 1px solid var(--border-color); background: var(--card-bg); border-radius: var(--radius);">
                                                 <h3
                                                     style="margin-top: 0; margin-bottom: 24px; font-size: 16px; font-weight: 700; color: var(--text-primary);">
@@ -522,6 +554,7 @@
 
                                         <!-- Bottom Summaries and Highlights -->
                                         <c:if test="${not empty reportRows}">
+                                            <div class="report-summary">
 
                                             <div class="dashboard-grid">
 
@@ -709,10 +742,52 @@
                                                     </div>
                                                 </c:if>
 
+                                                <c:if test="${not empty lowestWorking}">
+                                                    <div class="stat-card highlight-card attention">
+                                                        <div class="stat-header">
+                                                            <span class="stat-title" style="color: #9A3412;">Lowest Total Work + OT Hours</span>
+                                                        </div>
+                                                        <div class="stat-value" style="color: #9A3412; font-size: 24px; margin-top: 4px;">
+                                                            ${lowestWorking.employeeName}
+                                                        </div>
+                                                        <div class="highlight-meta">
+                                                            Employee ID: <span class="bold">${lowestWorking.employeeCode}</span> |
+                                                            Department: <span class="bold">${lowestWorking.departmentName}</span>
+                                                        </div>
+                                                        <div class="stat-ratio" style="color: #C2410C; font-weight: 600; margin-top: 8px;">
+                                                            Total work + OT hours:
+                                                            <fmt:formatNumber value="${lowestWorking.totalWorkHours + lowestWorking.totalOvertimeHours}" pattern="#,##0.0" /> hours
+                                                        </div>
+                                                    </div>
+                                                </c:if>
+
+                                                <c:if test="${not empty leastPunctual}">
+                                                    <div class="stat-card highlight-card critical">
+                                                        <div class="stat-header">
+                                                            <span class="stat-title" style="color: #991B1B;">Least Punctual Employee</span>
+                                                        </div>
+                                                        <div class="stat-value" style="color: #991B1B; font-size: 24px; margin-top: 4px;">
+                                                            ${leastPunctual.employeeName}
+                                                        </div>
+                                                        <div class="highlight-meta">
+                                                            Employee ID: <span class="bold">${leastPunctual.employeeCode}</span> |
+                                                            Department: <span class="bold">${leastPunctual.departmentName}</span>
+                                                        </div>
+                                                        <div class="stat-ratio" style="color: #DC2626; font-weight: 600; margin-top: 8px;">
+                                                            Late: ${leastPunctual.lateDays} times |
+                                                            Early leave: ${leastPunctual.earlyLeaveDays} times |
+                                                            Missing check-in: ${leastPunctual.forgotCheckInDays} times |
+                                                            Missing check-out: ${leastPunctual.forgotCheckOutDays} times
+                                                        </div>
+                                                    </div>
+                                                </c:if>
+
                                             </div>
 
+                                            </div>
                                         </c:if>
 
+                                        </div>
                                     </c:otherwise>
                                 </c:choose>
 

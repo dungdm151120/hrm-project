@@ -1,5 +1,6 @@
 package dao;
 
+import model.DeptEmployeeChangeDTO;
 import model.HRReportDTO;
 import util.DBConnection;
 
@@ -7,7 +8,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HRReportDAO {
@@ -24,7 +28,7 @@ public class HRReportDAO {
         try (Connection conn = DBConnection.getConnection()) {
 
             /* =================================================================
-             * SUB-QUERY KHÔI PHỤC TRẠNG THÁI LỊCH SỬ TẠI MỐC TARGET_DATE
+             * SUB-QUERY KHÔI PHỤC TRẠNG THÁI HỢP ĐỒNG TẠI MỐC TARGET_DATE
              * ================================================================= */
             String activeContractsSubQuery =
                     "(SELECT lc.user_id, " +
@@ -32,7 +36,7 @@ public class HRReportDAO {
                             "            (SELECT log.old_value FROM labor_contract_change_logs log " +
                             "             WHERE log.contract_id = lc.id " +
                             "               AND log.field_name = 'contract_type' " +
-                            "               AND CAST(log.changed_at AS DATE) > ? " + // Chỉ khôi phục nếu ngày sửa sau ngày báo cáo
+                            "               AND CAST(log.changed_at AS DATE) > ? " +
                             "             ORDER BY log.changed_at ASC LIMIT 1), " +
                             "            lc.contract_type" +
                             "        ) as contract_type, " +
@@ -40,7 +44,7 @@ public class HRReportDAO {
                             "            (SELECT STR_TO_DATE(log.old_value, '%Y-%m-%d') FROM labor_contract_change_logs log " +
                             "             WHERE log.contract_id = lc.id " +
                             "               AND log.field_name = 'start_date' " +
-                            "               AND CAST(log.changed_at AS DATE) > ? " + // Chỉ khôi phục nếu ngày sửa sau ngày báo cáo
+                            "               AND CAST(log.changed_at AS DATE) > ? " +
                             "             ORDER BY log.changed_at ASC LIMIT 1), " +
                             "            lc.start_date" +
                             "        ) as start_date, " +
@@ -48,7 +52,7 @@ public class HRReportDAO {
                             "            (SELECT STR_TO_DATE(log.old_value, '%Y-%m-%d') FROM labor_contract_change_logs log " +
                             "             WHERE log.contract_id = lc.id " +
                             "               AND log.field_name = 'end_date' " +
-                            "               AND CAST(log.changed_at AS DATE) > ? " + // Chỉ khôi phục nếu ngày sửa sau ngày báo cáo
+                            "               AND CAST(log.changed_at AS DATE) > ? " +
                             "             ORDER BY log.changed_at ASC LIMIT 1), " +
                             "            lc.end_date" +
                             "        ) as end_date " +
@@ -59,11 +63,13 @@ public class HRReportDAO {
              * ================================================================= */
             String summarySql =
                     "SELECT COUNT(DISTINCT u.id) as total, "
-                            + "SUM(CASE WHEN u.gender = 'Male' THEN 1 ELSE 0 END) as males, "
-                            + "SUM(CASE WHEN lc.contract_type IN ('INDEFINITE_TERM', 'FIXED_TERM', 'PART_TIME') THEN 1 ELSE 0 END) as regulars, "
-                            + "SUM(CASE WHEN lc.contract_type = 'PROBATION' THEN 1 ELSE 0 END) as probations, "
-                            + "SUM(CASE WHEN p.name LIKE '%MANAGER%' THEN 1 ELSE 0 END) as managers, "
-                            + "SUM(CASE WHEN p.name NOT LIKE '%MANAGER%' THEN 1 ELSE 0 END) as employees "
+                            + "COUNT(DISTINCT CASE WHEN u.gender = 'Male' THEN u.id END) as males, "
+                            + "COUNT(DISTINCT CASE WHEN u.gender = 'Female' THEN u.id END) as females, "
+                            + "COUNT(DISTINCT CASE WHEN u.gender NOT IN ('Male', 'Female') OR u.gender IS NULL THEN u.id END) as others, "
+                            + "COUNT(DISTINCT CASE WHEN lc.contract_type IN ('INDEFINITE_TERM', 'FIXED_TERM', 'PART_TIME') THEN u.id END) as regulars, "
+                            + "COUNT(DISTINCT CASE WHEN lc.contract_type = 'PROBATION' THEN u.id END) as probations, "
+                            + "COUNT(DISTINCT CASE WHEN UPPER(p.name) LIKE '%MANAGER%' THEN u.id END) as managers, "
+                            + "COUNT(DISTINCT CASE WHEN p.name IS NULL OR UPPER(p.name) NOT LIKE '%MANAGER%' THEN u.id END) as employees "
                             + "FROM users u "
                             + "INNER JOIN " + activeContractsSubQuery + " ON u.id = lc.user_id "
                             + "LEFT JOIN positions p ON u.position_id = p.id "
@@ -75,29 +81,30 @@ public class HRReportDAO {
             }
 
             try (PreparedStatement ps = conn.prepareStatement(summarySql)) {
-                // Set tham số cho Sub-query khôi phục lịch sử hợp đồng
-                ps.setDate(1, sqlTargetDate); // contract_type log
-                ps.setDate(2, sqlTargetDate); // start_date log
-                ps.setDate(3, sqlTargetDate); // end_date log
+                int paramIdx = 1;
 
-                // Set tham số cho điều kiện WHERE lọc thời gian hợp đồng hợp lệ
-                ps.setDate(4, sqlTargetDate); // lc.start_date <= targetDate
-                ps.setDate(5, sqlTargetDate); // lc.end_date >= targetDate
+                // 1, 2, 3: Các tham số cho activeContractsSubQuery (nếu subquery dùng 3 dấu ?)
+                ps.setDate(paramIdx++, sqlTargetDate);
+                ps.setDate(paramIdx++, sqlTargetDate);
+                ps.setDate(paramIdx++, sqlTargetDate);
 
+                // 4, 5: Mệnh đề WHERE lọc thời hạn hợp đồng của lc
+                ps.setDate(paramIdx++, sqlTargetDate);
+                ps.setDate(paramIdx++, sqlTargetDate);
+
+                // 6: Lọc theo phòng ban (nếu có)
                 if (departmentId != null) {
-                    ps.setInt(6, departmentId);
+                    ps.setInt(paramIdx++, departmentId);
                 }
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        int total = rs.getInt("total");
-                        dto.setTotalEmployees(total);
+                        dto.setTotalEmployees(rs.getInt("total"));
                         dto.setMaleCount(rs.getInt("males"));
-                        dto.setFemaleCount(total - rs.getInt("males"));
+                        dto.setFemaleCount(rs.getInt("females"));
+                        dto.setOtherCount(rs.getInt("others"));
                         dto.setRegularCount(rs.getInt("regulars"));
                         dto.setProbationCount(rs.getInt("probations"));
-                        dto.setManagerCount(rs.getInt("managers"));
-                        dto.setEmployeeCount(rs.getInt("employees"));
                     }
                 }
             }
@@ -180,5 +187,181 @@ public class HRReportDAO {
         }
 
         return dto;
+    }
+
+    public List<DeptEmployeeChangeDTO> getDeptEmployeeChanges(LocalDate startDate, LocalDate endDate) {
+        List<DeptEmployeeChangeDTO> list = new ArrayList<>();
+
+        String sql =
+                "SELECT " +
+                        "    d.id AS department_id, " +
+                        "    d.name AS department_name, " +
+                        "    COALESCE(e_in.in_count, 0) AS in_count, " +
+                        "    COALESCE(e_out.out_count, 0) AS out_count " +
+                        "FROM departments d " +
+                        "LEFT JOIN ( " +
+                        "    /* Đếm số nhân sự DISTINCT CHUYỂN ĐẾN trong khoảng lọc */ " +
+                        "    SELECT department_id, COUNT(DISTINCT user_id) AS in_count " +
+                        "    FROM ( " +
+                        "        SELECT department_id, user_id FROM department_history WHERE start_date BETWEEN ? AND ? " +
+                        "        UNION " +
+                        "        SELECT department_id, user_id FROM department_after_update WHERE start_date BETWEEN ? AND ? " +
+                        "    ) t_in GROUP BY department_id " +
+                        ") e_in ON d.id = e_in.department_id " +
+                        "LEFT JOIN ( " +
+                        "    /* Đếm số nhân sự DISTINCT RỜI ĐI trong khoảng lọc */ " +
+                        "    SELECT department_id, COUNT(DISTINCT user_id) AS out_count " +
+                        "    FROM ( " +
+                        "        SELECT department_id, user_id FROM department_history WHERE end_date BETWEEN ? AND ? " +
+                        "        UNION " +
+                        "        SELECT department_id, user_id FROM department_after_update WHERE end_date BETWEEN ? AND ? " +
+                        "    ) t_out GROUP BY department_id " +
+                        ") e_out ON d.id = e_out.department_id " +
+                        "ORDER BY d.id ASC";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            java.sql.Date sqlStart = java.sql.Date.valueOf(startDate);
+            java.sql.Date sqlEnd = java.sql.Date.valueOf(endDate);
+
+            ps.setDate(1, sqlStart);
+            ps.setDate(2, sqlEnd);
+            ps.setDate(3, sqlStart);
+            ps.setDate(4, sqlEnd);
+            ps.setDate(5, sqlStart);
+            ps.setDate(6, sqlEnd);
+            ps.setDate(7, sqlStart);
+            ps.setDate(8, sqlEnd);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String deptName = rs.getString("department_name");
+                    int inCount = rs.getInt("in_count");
+                    int outCount = rs.getInt("out_count");
+
+                    list.add(new DeptEmployeeChangeDTO(deptName, inCount, outCount));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public List<Integer> getMonthlyHeadcountTrend(int year, Integer deptId, String contractType) {
+        List<Integer> trendData = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+
+        for (int month = 1; month <= 12; month++) {
+            LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();
+            LocalDate startOfMonth = LocalDate.of(year, month, 1);
+
+            // 1. Nếu tháng nằm hoàn toàn trong tương lai (đầu tháng > hôm nay) -> Trả về 0
+            if (startOfMonth.isAfter(today)) {
+                trendData.add(null);
+            }
+            // 2. Nếu là tháng hiện tại (Tháng 7) -> Đếm headcount tính tới NGÀY HÔM NAY (today)
+            else if (month == today.getMonthValue() && year == today.getYear()) {
+                int count = getHeadcountAtDate(today, deptId, contractType);
+                trendData.add(count);
+            }
+            // 3. Các tháng đã qua trong quá khứ -> Đếm tính tới NGÀY CUỐI THÁNG đó
+            else {
+                int count = getHeadcountAtDate(endOfMonth, deptId, contractType);
+                trendData.add(count);
+            }
+        }
+
+        return trendData;
+    }
+
+    private int getHeadcountAtDate(LocalDate targetDate, Integer deptId, String contractType) {
+        java.sql.Date sqlTargetDate = java.sql.Date.valueOf(targetDate);
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(DISTINCT lc.user_id) AS total ")
+                .append("FROM labor_contracts lc ")
+                .append("JOIN users u ON lc.user_id = u.id ")
+                .append("WHERE lc.start_date <= ? ")
+                .append("  AND (lc.end_date IS NULL OR lc.end_date >= ?) ");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIdx = 1;
+            ps.setDate(paramIdx++, sqlTargetDate);
+            ps.setDate(paramIdx++, sqlTargetDate);
+
+            if (deptId != null) {
+                ps.setInt(paramIdx++, deptId);
+            }
+            if (contractType != null && !contractType.trim().isEmpty() && !contractType.equalsIgnoreCase("all")) {
+                ps.setString(paramIdx++, contractType);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public Map<String, Integer> getEmployeeChanges(LocalDate startDate, LocalDate endDate) {
+        Map<String, Integer> result = new HashMap<>();
+        int inCount = 0;
+        int outCount = 0;
+
+        java.sql.Date sqlStart = java.sql.Date.valueOf(startDate);
+        java.sql.Date sqlEnd = java.sql.Date.valueOf(endDate);
+
+        // 1. Đếm số người MỚI GIA NHẬP công ty (Có hợp đồng đầu tiên bắt đầu trong kỳ)
+        String sqlIn = "SELECT COUNT(DISTINCT lc.user_id) AS total_in " +
+                "FROM labor_contracts lc " +
+                "JOIN users u ON lc.user_id = u.id " +
+                "WHERE lc.start_date BETWEEN ? AND ? " +
+                "  AND NOT EXISTS ( " +
+                "      SELECT 1 FROM labor_contracts prev " +
+                "      WHERE prev.user_id = lc.user_id AND prev.start_date < lc.start_date " +
+                "  )";
+
+        // 2. Đếm số người NGHỈ VIỆC / HẾT HẠN HỢP ĐỒNG (Có hợp đồng kết thúc trong kỳ và không ký tiếp)
+        String sqlOut = "SELECT COUNT(DISTINCT lc.user_id) AS total_out " +
+                "FROM labor_contracts lc " +
+                "JOIN users u ON lc.user_id = u.id " +
+                "WHERE lc.end_date BETWEEN ? AND ? " +
+                "  AND NOT EXISTS ( " +
+                "      SELECT 1 FROM labor_contracts next_lc " +
+                "      WHERE next_lc.user_id = lc.user_id AND next_lc.start_date > lc.end_date " +
+                "  )";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlIn)) {
+                ps.setDate(1, sqlStart);
+                ps.setDate(2, sqlEnd);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) inCount = rs.getInt("total_in");
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlOut)) {
+                ps.setDate(1, sqlStart);
+                ps.setDate(2, sqlEnd);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) outCount = rs.getInt("total_out");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        result.put("inCount", inCount);
+        result.put("outCount", outCount);
+        return result;
     }
 }
