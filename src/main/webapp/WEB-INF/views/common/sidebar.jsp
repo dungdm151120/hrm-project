@@ -406,9 +406,6 @@
                     <a href="${ctx}/attendance/records" class="submenu-item ${currentPath == ctx.concat('/attendance/records') || currentPath.startsWith(ctx.concat('/attendance/update')) ? 'active' : ''}">Update Attendance</a>
                     <a href="${ctx}/admin/attendance/import" class="submenu-item ${currentPath == ctx.concat('/admin/attendance/import') ? 'active' : ''}">Import Attendance</a>
                 </c:if>
-                <c:if test="${userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}">
-                    <a href="${ctx}/attendance/export" class="submenu-item ${currentPath == ctx.concat('/attendance/export') ? 'active' : ''}">Export Report</a>
-                </c:if>
                 <c:if test="${currentUser.roleName != 'BUSINESS ADMIN' && (userPermissions.contains('ATTENDANCE_CONFIRM_DEPT') || (currentUser.roleName == 'HR_MANAGER' && userPermissions.contains('ATTENDANCE_FINALIZE_HR')))}">
                     <a href="${ctx}/attendance/confirm" class="submenu-item ${currentPath == ctx.concat('/attendance/confirm') ? 'active' : ''}">Confirm Attendance</a>
                 </c:if>
@@ -436,11 +433,13 @@
                 </svg>
             </button>
             <div class="submenu" style="${reportActive ? 'display: flex !important;' : ''}">
-                <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}">
+                <c:if test="${userPermissions.contains('ATTENDANCE_REPORT_VIEW')}">
                     <a href="${ctx}/reports/attendance" class="submenu-item ${currentPath == ctx.concat('/reports/attendance') ? 'active' : ''}">Attendance Report</a>
+                </c:if>
+                <c:if test="${userPermissions.contains('HR_REPORT_VIEW')}">
                     <a href="${ctx}/reports/hr" class="submenu-item ${currentPath == ctx.concat('/reports/hr') ? 'active' : ''}">HR Report</a>
                 </c:if>
-                <c:if test="${userPermissions.contains('PAYROLL_VIEW_LIST') or userPermissions.contains('PAYROLL_EXPORT_REPORT')}">
+                <c:if test="${userPermissions.contains('PAYROLL_REPORT_VIEW')}">
                     <a href="${ctx}/reports/salary" class="submenu-item ${currentPath == ctx.concat('/reports/salary') ? 'active' : ''}">Salary Report</a>
                 </c:if>
             </div>

@@ -933,7 +933,12 @@ INSERT INTO permissions (code, name, description) VALUES
                                                       ('TASK_UPDATE_STATUS', 'Update task status', 'Can update task progress status'),
                                                       -- them quyen cho confirm attendance
                                                       ('ATTENDANCE_CONFIRM_DEPT', 'Confirm department attendance', 'Department Manager can confirm attendance of their department'),
-                                                      ('ATTENDANCE_FINALIZE_HR', 'Finalize attendance and create snapshot', 'HR Manager can finalize confirmed attendance and create the final snapshot');
+                                                      ('ATTENDANCE_FINALIZE_HR', 'Finalize attendance and create snapshot', 'HR Manager can finalize confirmed attendance and create the final snapshot'),
+
+                                                      -- report
+                                                      ('HR_REPORT_VIEW', 'View HR Overview Report', 'Can generate and view HR overview report'),
+                                                      ('ATTENDANCE_REPORT_VIEW', 'View Attendance Report', 'Can generate and view attendance report'),
+                                                      ('PAYROLL_REPORT_VIEW', 'View Payroll Report', 'Can generate and view payroll report');
 
 -- ============================================================
 -- 17. PHÂN QUYỀN CHO TỪNG VAI TRÒ
@@ -971,7 +976,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AN
                                                                                              'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
                                                                                              'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
                                                                                              'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
-                                                                                             'ATTENDANCE_CONFIRM_DEPT', 'ATTENDANCE_FINALIZE_HR'
+                                                                                             'ATTENDANCE_CONFIRM_DEPT', 'ATTENDANCE_FINALIZE_HR',
+                                                                                             'HR_REPORT_VIEW', 'ATTENDANCE_REPORT_VIEW', 'PAYROLL_REPORT_VIEW'
     );
 
 -- HR_STAFF
@@ -1003,7 +1009,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_MANAGE
                                                                                                   'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
                                                                                                   'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
                                                                                                   'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
-                                                                                                  'ATTENDANCE_CONFIRM_DEPT'
+                                                                                                  'ATTENDANCE_CONFIRM_DEPT',
+                                                                                                  'HR_REPORT_VIEW', 'ATTENDANCE_REPORT_VIEW', 'PAYROLL_REPORT_VIEW'
     );
 
 -- PAYROLL_STAFF
@@ -1035,7 +1042,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'DEPARTMENT_MAN
                                                                                                      'VIEW_MY_REQUEST', 'VIEW_REQUEST_DETAIL', 'PROCESS_REQUEST', 'CREATE_REQUEST',
                                                                                                      'ANNOUNCEMENT_VIEW_LIST', 'ANNOUNCEMENT_VIEW_DETAIL', 'ANNOUNCEMENT_CREATE',
                                                                                                      'TASK_VIEW', 'TASK_CREATE', 'TASK_UPDATE', 'TASK_DELETE', 'TASK_MANAGE_CHECKLIST', 'TASK_UPDATE_STATUS',
-                                                                                                     'ATTENDANCE_CONFIRM_DEPT'
+                                                                                                     'ATTENDANCE_CONFIRM_DEPT',
+                                                                                                     'HR_REPORT_VIEW', 'ATTENDANCE_REPORT_VIEW'
     );
 
 -- EMPLOYEE
@@ -1069,16 +1077,16 @@ CREATE TABLE department_history (
                                     CONSTRAINT fk_dept_history_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
 );
 
--- Bảng lưu thông tin phòng ban hiện tại sau lần
+-- Bảng lưu thông tin phòng ban hiện tại sau khi add/move/remove
 CREATE TABLE department_after_update (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL UNIQUE,
-    department_id INT,
-    start_date DATE NOT NULL,
-    end_date DATE DEFAULT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_dept_after_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_dept_after_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
+                                         id INT AUTO_INCREMENT PRIMARY KEY,
+                                         user_id INT NOT NULL UNIQUE,
+                                         department_id INT,
+                                         start_date DATE NOT NULL,
+                                         end_date DATE DEFAULT NULL,
+                                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                         CONSTRAINT fk_dept_after_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                                         CONSTRAINT fk_dept_after_dept FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
 );
 
 -- ============================================================

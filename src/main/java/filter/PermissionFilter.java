@@ -142,8 +142,6 @@ public class PermissionFilter implements Filter {
         if (path.equals("/attendance/confirm")) return "ATTENDANCE_CONFIRM_ACCESS";
         if (path.equals("/attendance/confirm_list") && "GET".equals(method)) return "ATTENDANCE_FINALIZED_ACCESS";
         if (path.equals("/attendance/confirm_detail") && "GET".equals(method)) return "ATTENDANCE_FINALIZED_ACCESS";
-        if (path.equals("/reports/attendance")) return "ATTENDANCE_REPORT_ACCESS";
-        if (path.equals("/reports/attendance/export")) return "ATTENDANCE_REPORT_ACCESS";
 
         // Payroll
         if (path.equals("/payroll/my") && "GET".equals(method)) return "PAYROLL_VIEW_OWN";
@@ -175,6 +173,7 @@ public class PermissionFilter implements Filter {
         if (path.equals("/create_request")) return "CREATE_REQUEST";
         if (path.equals("/create_overtime_request") && "POST".equals(method)) return "CREATE_REQUEST";
         if (path.equals("/overtime/available-employees") && "GET".equals(method)) return "CREATE_REQUEST";
+
         // Task
         if (path.equals("/tasks") && "GET".equals(method)) return "TASK_VIEW";
         if (path.equals("/tasks/all") && "GET".equals(method)) return "TASK_VIEW_ALL";
@@ -188,6 +187,13 @@ public class PermissionFilter implements Filter {
         if (path.equals("/tasks/checklist/assign") && "POST".equals(method)) return "TASK_MANAGE_CHECKLIST";
         if (path.equals("/tasks/checklist/delete") && "POST".equals(method)) return "TASK_MANAGE_CHECKLIST";
         if (path.equals("/tasks/status") && "POST".equals(method)) return "TASK_UPDATE_STATUS";
+
+        // Reports
+        if (path.equals("/reports/hr")) return "HR_REPORT_VIEW";
+        if (path.equals("/reports/salary")) return "PAYROLL_REPORT_VIEW";
+        if (path.equals("/reports/attendance")) return "ATTENDANCE_REPORT_VIEW";
+        if (path.equals("/reports/attendance/export")) return "ATTENDANCE_REPORT_VIEW";
+
         return null;
     }
 
