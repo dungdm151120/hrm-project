@@ -8,6 +8,7 @@ public class HRReportDTO {
     private int totalEmployees;
     private int maleCount;
     private int femaleCount;
+    private int otherCount;
     private int managerCount;
     private int employeeCount;
     private int regularCount;
@@ -42,6 +43,14 @@ public class HRReportDTO {
 
     public int getManagerCount() {
         return managerCount;
+    }
+
+    public int getOtherCount() {
+        return otherCount;
+    }
+
+    public void setOtherCount(int otherCount) {
+        this.otherCount = otherCount;
     }
 
     public void setManagerCount(int managerCount) {

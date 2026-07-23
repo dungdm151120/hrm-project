@@ -1134,7 +1134,6 @@ public class UserDAO {
     }
 
     public String moveDepartmentMember2(int userId, int newDeptId) {
-        // Sửa câu check để lấy thêm cả department_id hiện tại của user trước khi move
         String checkPositionSql = "SELECT p.name, u.department_id FROM users u " +
                 "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
         String getDeptNameSql = "SELECT name FROM departments WHERE id = ?";
@@ -1143,7 +1142,6 @@ public class UserDAO {
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
-            // Bắt đầu Transaction
             conn.setAutoCommit(false);
 
             int oldDeptId = -1;
@@ -1167,13 +1165,12 @@ public class UserDAO {
                 }
             }
 
-            // Nếu phòng ban mới trùng với phòng ban cũ thì không cần làm gì cả
             if (oldDeptId == newDeptId) {
                 conn.rollback();
                 return "SUCCESS";
             }
 
-            // 2. Lấy tên phòng ban mới
+            // 2. Lấy phòng ban mới
             String deptName = null;
             try (PreparedStatement psDept = conn.prepareStatement(getDeptNameSql)) {
                 psDept.setInt(1, newDeptId);
@@ -1218,8 +1215,8 @@ public class UserDAO {
             /* =================================================================
              * XỬ LÝ LƯU TRỮ LỊCH SỬ PHÒNG BAN THEO LOGIC MỚI (CHỐNG ĐỨT GÃY CHUỖI)
              * ================================================================= */
-            java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
-            java.sql.Date oldStartDate = null;
+            Date today = new Date(System.currentTimeMillis());
+            Date oldStartDate = null;
 
             // BƯỚC A: Tìm start_date của phòng cũ trong bảng department_after_update
             String selectCurrentSql = "SELECT start_date FROM department_after_update WHERE user_id = ?";
@@ -1233,7 +1230,7 @@ public class UserDAO {
                 }
             }
 
-            // Nếu oldStartDate vẫn là null (Đây là LẦN ĐẦU TIÊN move trong đời nhân viên này)
+            // Nếu oldStartDate vẫn là null (lần đầu move)
             if (oldStartDate == null) {
                 // Lấy ngày bắt đầu của hợp đồng đầu tiên làm start_date gốc
                 String selectContractSql = "SELECT MIN(start_date) as contract_start FROM labor_contracts WHERE user_id = ?";
@@ -1244,10 +1241,6 @@ public class UserDAO {
                             oldStartDate = rs.getDate("contract_start");
                         }
                     }
-                }
-                // Phòng hờ nếu nhân viên chưa có hợp đồng nào thì lấy ngày hôm nay làm mốc start_date gốc
-                if (oldStartDate == null) {
-                    oldStartDate = today;
                 }
             }
 
@@ -1262,7 +1255,6 @@ public class UserDAO {
             }
 
             // BƯỚC C: Cập nhật phòng mới vào bảng hiện tại `department_after_update`
-            // Sử dụng cú pháp UPSERT (INSERT ... ON DUPLICATE KEY UPDATE)
             String upsertAfterUpdateSql =
                     "INSERT INTO department_after_update (user_id, department_id, start_date, end_date) " +
                             "VALUES (?, ?, ?, NULL) " +
@@ -1288,17 +1280,17 @@ public class UserDAO {
                 int rows = psUpdate.executeUpdate();
 
                 if (rows > 0) {
-                    conn.commit(); // Thành công rực rỡ -> Commit toàn bộ dữ liệu
+                    conn.commit();
                     return "SUCCESS";
                 }
             }
 
-            conn.rollback(); // Nếu không update được bảng users -> Rollback
+            conn.rollback();
         } catch (Exception e) {
             e.printStackTrace();
             if (conn != null) {
                 try {
-                    conn.rollback(); // Có lỗi hệ thống -> Rollback sạch sẽ
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -1398,41 +1390,7 @@ public class UserDAO {
         return users;
     }
 
-    // Remove
     public String removeMemberFromDepartment(int userId) {
-        String checkPositionSql = "SELECT p.name FROM users u " +
-                "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
-
-        String removeSql = "UPDATE users SET department_id = NULL, " +
-                "position_id = (SELECT id FROM positions WHERE name = 'Employee' LIMIT 1)" +
-                "WHERE id = ?";
-
-        try (Connection conn = DBConnection.getConnection()) {
-            // 1. Kiểm tra xem có phải Manager không
-            try (PreparedStatement psCheck = conn.prepareStatement(checkPositionSql)) {
-                psCheck.setInt(1, userId);
-                try (ResultSet rs = psCheck.executeQuery()) {
-                    if (rs.next()) {
-                        String pos = rs.getString("name");
-                        if (pos != null && pos.toLowerCase().contains("manager")) {
-                            return "ERROR_IS_MANAGER";
-                        }
-                    }
-                }
-            }
-
-            // 2. Thực hiện cập nhật
-            try (PreparedStatement psUpdate = conn.prepareStatement(removeSql)) {
-                psUpdate.setInt(1, userId);
-                return psUpdate.executeUpdate() > 0 ? "SUCCESS" : "FAILED";
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "ERROR_SYSTEM";
-        }
-    }
-
-    public String removeMemberFromDepartment2(int userId) {
         String checkUserSql = "SELECT u.department_id, p.name FROM users u " +
                 "LEFT JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
 

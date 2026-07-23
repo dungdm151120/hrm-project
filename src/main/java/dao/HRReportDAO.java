@@ -63,11 +63,13 @@ public class HRReportDAO {
              * ================================================================= */
             String summarySql =
                     "SELECT COUNT(DISTINCT u.id) as total, "
-                            + "SUM(CASE WHEN u.gender = 'Male' THEN 1 ELSE 0 END) as males, "
-                            + "SUM(CASE WHEN lc.contract_type IN ('INDEFINITE_TERM', 'FIXED_TERM', 'PART_TIME') THEN 1 ELSE 0 END) as regulars, "
-                            + "SUM(CASE WHEN lc.contract_type = 'PROBATION' THEN 1 ELSE 0 END) as probations, "
-                            + "SUM(CASE WHEN p.name LIKE '%MANAGER%' THEN 1 ELSE 0 END) as managers, "
-                            + "SUM(CASE WHEN p.name NOT LIKE '%MANAGER%' THEN 1 ELSE 0 END) as employees "
+                            + "COUNT(DISTINCT CASE WHEN u.gender = 'Male' THEN u.id END) as males, "
+                            + "COUNT(DISTINCT CASE WHEN u.gender = 'Female' THEN u.id END) as females, "
+                            + "COUNT(DISTINCT CASE WHEN u.gender NOT IN ('Male', 'Female') OR u.gender IS NULL THEN u.id END) as others, "
+                            + "COUNT(DISTINCT CASE WHEN lc.contract_type IN ('INDEFINITE_TERM', 'FIXED_TERM', 'PART_TIME') THEN u.id END) as regulars, "
+                            + "COUNT(DISTINCT CASE WHEN lc.contract_type = 'PROBATION' THEN u.id END) as probations, "
+                            + "COUNT(DISTINCT CASE WHEN UPPER(p.name) LIKE '%MANAGER%' THEN u.id END) as managers, "
+                            + "COUNT(DISTINCT CASE WHEN p.name IS NULL OR UPPER(p.name) NOT LIKE '%MANAGER%' THEN u.id END) as employees "
                             + "FROM users u "
                             + "INNER JOIN " + activeContractsSubQuery + " ON u.id = lc.user_id "
                             + "LEFT JOIN positions p ON u.position_id = p.id "
@@ -79,22 +81,28 @@ public class HRReportDAO {
             }
 
             try (PreparedStatement ps = conn.prepareStatement(summarySql)) {
-                ps.setDate(1, sqlTargetDate);
-                ps.setDate(2, sqlTargetDate);
-                ps.setDate(3, sqlTargetDate);
-                ps.setDate(4, sqlTargetDate);
-                ps.setDate(5, sqlTargetDate);
+                int paramIdx = 1;
 
+                // 1, 2, 3: Các tham số cho activeContractsSubQuery (nếu subquery dùng 3 dấu ?)
+                ps.setDate(paramIdx++, sqlTargetDate);
+                ps.setDate(paramIdx++, sqlTargetDate);
+                ps.setDate(paramIdx++, sqlTargetDate);
+
+                // 4, 5: Mệnh đề WHERE lọc thời hạn hợp đồng của lc
+                ps.setDate(paramIdx++, sqlTargetDate);
+                ps.setDate(paramIdx++, sqlTargetDate);
+
+                // 6: Lọc theo phòng ban (nếu có)
                 if (departmentId != null) {
-                    ps.setInt(6, departmentId);
+                    ps.setInt(paramIdx++, departmentId);
                 }
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        int total = rs.getInt("total");
-                        dto.setTotalEmployees(total);
+                        dto.setTotalEmployees(rs.getInt("total"));
                         dto.setMaleCount(rs.getInt("males"));
-                        dto.setFemaleCount(total - rs.getInt("males"));
+                        dto.setFemaleCount(rs.getInt("females"));
+                        dto.setOtherCount(rs.getInt("others")); // Hoặc tên setter tương ứng trong DTO của bạn
                         dto.setRegularCount(rs.getInt("regulars"));
                         dto.setProbationCount(rs.getInt("probations"));
                         dto.setManagerCount(rs.getInt("managers"));
@@ -186,7 +194,6 @@ public class HRReportDAO {
     public List<DeptEmployeeChangeDTO> getDeptEmployeeChanges(LocalDate startDate, LocalDate endDate) {
         List<DeptEmployeeChangeDTO> list = new ArrayList<>();
 
-        // Thêm user_id / employee_id vào subquery và dùng COUNT(DISTINCT user_id)
         String sql =
                 "SELECT " +
                         "    d.id AS department_id, " +
@@ -199,7 +206,7 @@ public class HRReportDAO {
                         "    SELECT department_id, COUNT(DISTINCT user_id) AS in_count " +
                         "    FROM ( " +
                         "        SELECT department_id, user_id FROM department_history WHERE start_date BETWEEN ? AND ? " +
-                        "        UNION " + // Dùng UNION thay vì UNION ALL để tự loại bỏ bản ghi ghi trùng ở 2 bảng
+                        "        UNION " +
                         "        SELECT department_id, user_id FROM department_after_update WHERE start_date BETWEEN ? AND ? " +
                         "    ) t_in GROUP BY department_id " +
                         ") e_in ON d.id = e_in.department_id " +
@@ -208,7 +215,7 @@ public class HRReportDAO {
                         "    SELECT department_id, COUNT(DISTINCT user_id) AS out_count " +
                         "    FROM ( " +
                         "        SELECT department_id, user_id FROM department_history WHERE end_date BETWEEN ? AND ? " +
-                        "        UNION " + // Dùng UNION để de-duplicate
+                        "        UNION " +
                         "        SELECT department_id, user_id FROM department_after_update WHERE end_date BETWEEN ? AND ? " +
                         "    ) t_out GROUP BY department_id " +
                         ") e_out ON d.id = e_out.department_id " +

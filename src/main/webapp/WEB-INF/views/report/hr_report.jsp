@@ -15,7 +15,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        /* Khống chế chiều rộng và ẩn overflow gây thừa trang */
+        .rainbow-text {
+            font-weight: bold;
+            font-size: 16px;
+            background: linear-gradient(to right, #E40303, #FF8C00, #FFED00, #008026, #004CFF, #732982);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
         .pdf-export-mode {
             background: #ffffff !important;
             padding: 10px !important;
@@ -24,7 +32,6 @@
             box-sizing: border-box !important;
         }
 
-        /* Giảm nhẹ margin-bottom của các phần tử bên trong để không bị đẩy qua trang 2 */
         .pdf-export-mode .stat-cards-grid {
             display: flex !important;
             flex-direction: row !important;
@@ -43,22 +50,20 @@
             border: 1px solid #e5e7eb !important;
             box-shadow: none !important;
             padding: 12px !important;
-            margin-bottom: 12px !important; /* Giảm margin bottom */
+            margin-bottom: 12px !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
         }
 
-        /* Đảm bảo phần tử cuối cùng không có margin-bottom đẩy thêm trang */
         .pdf-export-mode .chart-full-wrapper:last-child {
             margin-bottom: 0 !important;
         }
 
         .pdf-export-mode .chart-container {
-            height: 250px !important; /* Giảm bớt chiều cao chart để fit đẹp trong 1 trang */
+            height: 250px !important;
             width: 100% !important;
         }
 
-        /* Ép Cards xếp 1 hàng ngang */
         .stat-cards-grid {
             display: flex !important;
             flex-direction: row !important;
@@ -80,7 +85,6 @@
             font-size: 14px !important;
         }
 
-        /* Ép 2 chart đầu tiên xếp 2 cột bằng nhau */
         .charts-section-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
@@ -88,23 +92,22 @@
             margin-bottom: 20px !important;
         }
 
-        /* Ép tất cả khung Chart co giãn 100% */
         .chart-full-wrapper {
             border: 1px solid #e5e7eb !important;
             box-shadow: none !important;
             padding: 15px !important;
-            page-break-inside: avoid !important; /* Chặn ngắt trang giữa chừng biểu đồ */
+            page-break-inside: avoid !important;
             break-inside: avoid !important;
             margin-bottom: 20px !important;
         }
 
         .chart-container {
-            height: 260px !important; /* Chiều cao tối ưu cho trang A4 */
+            height: 260px !important;
             width: 100% !important;
         }
 
         canvas {
-            width: 100% !important; /* Ép canvas tràn hết khung */
+            width: 100% !important;
         }
 
         .report-filter-card {
@@ -439,7 +442,8 @@
                         </div>
                         <div class="stat-value" style="font-size: 16px; margin-top: 5px;">
                             <span style="color: #2563EB;">${reportData.maleCount} Male</span> | <span
-                                style="color: #EC4899;">${reportData.femaleCount} Female</span>
+                                style="color: #EC4899;">${reportData.femaleCount} Female</span> | <span
+                                class="rainbow-text">${reportData.otherCount} Other</span>
                         </div>
                     </div>
 
