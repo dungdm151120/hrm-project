@@ -685,26 +685,6 @@ public class PayrollDAO {
         return getLatestPayrollSetting();
     }
 
-    public PayrollSetting getPayrollSettingByDate(LocalDate calculationDate) {
-        String sql = "SELECT * FROM payroll_settings WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
-
-            ps.setDate(1, Date.valueOf(calculationDate));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToSetting(rs);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
     public boolean isUnionMember(int userId) {
         String sql = "SELECT is_member FROM user_union_membership WHERE user_id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -837,44 +817,6 @@ public class PayrollDAO {
         return false;
     }
 
-
-    public int countPayrollSettings(Integer month, Integer year) {
-        StringBuilder sql = new StringBuilder("""
-        SELECT COUNT(*) FROM payroll_settings 
-        WHERE 1=1
-        """);
-
-        if (month != null) {
-            sql.append(" AND MONTH(effective_date) = ? ");
-        }
-        if (year != null) {
-            sql.append(" AND YEAR(effective_date) = ? ");
-        }
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-
-            int idx = 1;
-            if (month != null) {
-                ps.setInt(idx++, month);
-            }
-            if (year != null) {
-                ps.setInt(idx++, year);
-            }
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return 0;
-    }
-
     public List<PitBracketVersion> getPitBracketVersions(Integer month, Integer year, int offset, int limit) {
         List<PitBracketVersion> pitBracketVersions = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
@@ -969,24 +911,6 @@ public class PayrollDAO {
         return null;
     }
 
-    public PitBracketVersion getActivePitVersionIdByDate(LocalDate calculationDate) {
-        String sql = "SELECT * FROM pit_bracket_versions WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
-
-            ps.setDate(1, java.sql.Date.valueOf(calculationDate));
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToBracketVersion(rs);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return getLatestPitBracketVersion();
-    }
-
     public List<PitBracket> getPitBracketsByDate(LocalDate calculationDate) {
         PitBracketVersion version = getActivePitVersionIdByDate(calculationDate);
 
@@ -996,37 +920,42 @@ public class PayrollDAO {
         return new ArrayList<>();
     }
 
-    public boolean updatePitBrackets(List<PitBracket> bracketList, java.time.LocalDate effectiveDate) {
-        String sql = "UPDATE pit_brackets SET min_value = ?, max_value = ?, tax_rate = ?, effective_date = ? WHERE id = ?";
+    public int getPayrollSettingCount(Integer month, Integer year) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(*) 
+            FROM payroll_settings
+            WHERE 1=1
+        """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (month != null && month > 0) {
+            sql.append(" AND MONTH(effective_date) = ?");
+            params.add(month);
+        }
+
+        if (year != null && year > 0) {
+            sql.append(" AND YEAR(effective_date) = ?");
+            params.add(year);
+        }
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            conn.setAutoCommit(false);
-
-            for (model.PitBracket b : bracketList) {
-                ps.setLong(1, b.getMinValue());
-
-                if (b.getMaxValue() != null) {
-                    ps.setLong(2, b.getMaxValue());
-                } else {
-                    ps.setNull(2, java.sql.Types.BIGINT);
-                }
-
-                ps.setDouble(3, b.getTaxRate());
-                ps.setDate(4, java.sql.Date.valueOf(effectiveDate));
-                ps.setInt(5, b.getId());
-
-                ps.addBatch();
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
 
-            ps.executeBatch();
-            conn.commit();
-            return true;
-        } catch (SQLException e) {
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+
+        return 0;
     }
 
     public int countPitBracketVersions(Integer month, Integer year) {
@@ -1173,5 +1102,93 @@ public class PayrollDAO {
             version.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toLocalDate());
         }
         return version;
+    }
+
+    public PayrollSetting getCurrentlyActivePayrollSetting() {
+        String sql = "SELECT * FROM payroll_settings WHERE effective_date <= CURRENT_DATE ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return mapResultSetToSetting(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public PayrollSetting getPayrollSettingByDate(LocalDate calculationDate) {
+        if (calculationDate == null) calculationDate = LocalDate.now();
+
+        String sql = "SELECT * FROM payroll_settings WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(calculationDate));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToSetting(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public PitBracketVersion getCurrentlyActivePitVersion() {
+        String sql = "SELECT * FROM pit_bracket_versions WHERE effective_date <= CURRENT_DATE ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return mapResultSetToBracketVersion(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public PitBracketVersion getActivePitVersionIdByDate(LocalDate calculationDate) {
+        if (calculationDate == null) calculationDate = LocalDate.now();
+
+        String sql = "SELECT * FROM pit_bracket_versions WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(calculationDate));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToBracketVersion(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return getCurrentlyActivePitVersion();
+    }
+
+    public boolean deletePayrollSetting(int id) {
+        String sql = "DELETE FROM payroll_settings WHERE id = ?";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }
