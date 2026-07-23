@@ -53,6 +53,8 @@
                                         </c:when>
                                         <c:when test="${param.error == 'missing_approver'}">Please select an approver.
                                         </c:when>
+                                        <c:when test="${param.error == 'invalid_approver'}">The selected approver must
+                                            be an active HR Manager.</c:when>
                                         <c:when test="${param.error == 'missing_department'}">You must be assigned to a
                                             department to create this request.</c:when>
                                         <c:when test="${param.error == 'missing_date'}">Please select an overtime date.
@@ -68,6 +70,8 @@
                                             500 characters.</c:when>
                                         <c:when test="${param.error == 'missing_employees'}">Please select at least one
                                             employee to work overtime.</c:when>
+                                        <c:when test="${param.error == 'invalid_employee'}">One or more selected
+                                            employees are invalid or outside your department.</c:when>
                                         <c:when test="${param.error == 'duplicate_overtime'}">One or more selected
                                             employees already have an overtime request (pending or approved) on this
                                             date.</c:when>

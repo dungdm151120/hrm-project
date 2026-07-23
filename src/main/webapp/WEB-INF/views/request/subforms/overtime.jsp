@@ -19,10 +19,12 @@
     
     <div class="request-group">
         <label>Approver <span class="required-star">*</span></label>
-        <select name="approverId" class="request-select select2-dynamic" required>
-            <option value="" disabled selected>-- Select Approver (HR Manager) --</option>
+        <select name="approverId" class="request-select" required>
+            <option value="" disabled>-- Select Approver (HR Manager) --</option>
             <c:forEach var="mgr" items="${approverList}">
-                <option value="${mgr.id}">${mgr.fullName} - ${mgr.positionName}</option>
+                <option value="${mgr.id}" ${mgr.id == defaultApproverId ? 'selected' : ''}>
+                    <c:out value="${mgr.fullName}"/> - <c:out value="${mgr.positionName}"/>
+                </option>
             </c:forEach>
         </select>
     </div>
@@ -40,10 +42,11 @@
 
 <div class="request-group" style="margin-top: 15px;">
     <label>Employees (Select who will work OT) <span class="required-star">*</span></label>
-    <div class="checkbox-list-container" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px;">
+    <div id="overtimeEmployeeList" class="checkbox-list-container" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px;">
         <c:forEach var="emp" items="${deptEmployees}">
             <label style="display: block; margin-bottom: 5px;">
-                <input type="checkbox" name="employeeIds" value="${emp.id}"> ${emp.fullName} - ${emp.positionName}
+                <input type="checkbox" name="employeeIds" value="${emp.id}">
+                <c:out value="${emp.fullName}"/> - <c:out value="${emp.positionName}"/>
             </label>
         </c:forEach>
         <c:if test="${empty deptEmployees}">
@@ -68,12 +71,32 @@
 </div>
 
 <script>
-    document.getElementById('overtimeDate').addEventListener('change', function(e) {
-        var date = new Date(this.value);
+    document.getElementById('overtimeDate').addEventListener('change', async function() {
+        var employeeList = document.getElementById('overtimeEmployeeList');
+        if (!this.value) {
+            return;
+        }
+
+        var date = new Date(this.value + 'T00:00:00Z');
         var day = date.getUTCDay();
         if (day === 0 || day === 6) {
             alert('OT Date must be from Monday to Friday.');
             this.value = '';
+            employeeList.replaceChildren();
+            return;
+        }
+
+        try {
+            var response = await fetch('${pageContext.request.contextPath}/overtime/available-employees?date=' + this.value);
+            var employeeHtml = await response.text();
+            if (!response.ok) {
+                throw new Error(employeeHtml || 'Unable to load available employees.');
+            }
+            employeeList.innerHTML = employeeHtml;
+        } catch (error) {
+            alert(error.message);
+            this.value = '';
+            employeeList.replaceChildren();
         }
     });
 </script>

@@ -9,25 +9,30 @@ import java.util.List;
 
 public class OvertimeParticipantDAO {
 
-    public void addParticipants(List<OvertimeParticipant> participants) {
+    public boolean addParticipants(List<OvertimeParticipant> participants) {
         String sql = "INSERT INTO overtime_participants (overtime_request_id, user_id, status, hours_actual, created_at) " +
                      "VALUES (?, ?, ?, ?, NOW())";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
-            for (OvertimeParticipant p : participants) {
-                ps.setInt(1, p.getOvertimeRequestId());
-                ps.setInt(2, p.getUserId());
-                ps.setString(3, p.getStatus() != null ? p.getStatus() : "PENDING");
-                ps.setDouble(4, p.getHoursActual());
-                ps.addBatch();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (OvertimeParticipant p : participants) {
+                    ps.setInt(1, p.getOvertimeRequestId());
+                    ps.setInt(2, p.getUserId());
+                    ps.setString(3, p.getStatus() != null ? p.getStatus() : "PENDING");
+                    ps.setDouble(4, p.getHoursActual());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
-            ps.executeBatch();
-            conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
