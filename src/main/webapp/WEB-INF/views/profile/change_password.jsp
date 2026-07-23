@@ -33,7 +33,7 @@
             </c:if>
 
             <div class="detail-wrapper">
-                <form action="${pageContext.request.contextPath}/change-password" method="post">
+                <form action="${pageContext.request.contextPath}/change_password" method="post">
                     <div class="form-group">
                         <label for="oldPassword">Old Password <span class="required-star">*</span></label>
                         <input type="password" id="oldPassword" name="oldPassword"
@@ -54,6 +54,7 @@
 
                     <div class="form-actions">
                         <button type="submit" class="btn-save">Change Password</button>
+                        <a href="${pageContext.request.contextPath}/profile" class="btn-cancel">Back to Profile</a>
                     </div>
                 </form>
             </div>

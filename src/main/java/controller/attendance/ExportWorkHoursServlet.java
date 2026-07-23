@@ -30,7 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet("/attendance/work-hours/export")
+@WebServlet("/attendance/work_hours/export")
 public class ExportWorkHoursServlet extends HttpServlet {
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM");
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();

@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-@WebServlet("/attendance/confirm-detail")
+@WebServlet("/attendance/confirm_detail")
 public class AttendanceConfirmDetailServlet extends HttpServlet {
     private final AttendanceConfirmDAO confirmedDAO = new AttendanceConfirmDAO();
 
@@ -49,7 +49,7 @@ public class AttendanceConfirmDetailServlet extends HttpServlet {
             month = Integer.parseInt(request.getParameter("month"));
             year = Integer.parseInt(request.getParameter("year"));
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/attendance/confirm-list");
+            response.sendRedirect(request.getContextPath() + "/attendance/confirm_list");
             return;
         }
 

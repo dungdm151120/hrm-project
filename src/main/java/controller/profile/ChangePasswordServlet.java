@@ -8,7 +8,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 
-@WebServlet("/change-password")
+@WebServlet("/change_password")
 public class ChangePasswordServlet extends HttpServlet {
 
     private final UserService userService = new UserService();

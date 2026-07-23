@@ -124,7 +124,7 @@
 
                     <div class="form-actions">
                         <button type="submit" class="btn-save">Update Profile</button>
-                        <a href="${pageContext.request.contextPath}/change-password" class="btn-cancel">Change Password</a>
+                        <a href="${pageContext.request.contextPath}/change_password" class="btn-cancel">Change Password</a>
                     </div>
                 </form>
             </c:if>

@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
-@WebServlet("/attendance/confirm-list")
+@WebServlet("/attendance/confirm_list")
 public class AttendanceConfirmListServlet extends HttpServlet {
     private final AttendanceConfirmDAO confirmedDAO = new AttendanceConfirmDAO();
 

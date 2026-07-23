@@ -73,7 +73,7 @@ public class PermissionFilter implements Filter {
 
         // Profile
         if (path.equals("/profile")) return "PROFILE_VIEW";
-        if (path.equals("/change-password")) return "PROFILE_CHANGE_PASSWORD";
+        if (path.equals("/change_password")) return "PROFILE_CHANGE_PASSWORD";
 
         // User
         if (path.equals("/user_list") && "GET".equals(method)) return "USER_VIEW_LIST";
@@ -129,8 +129,8 @@ public class PermissionFilter implements Filter {
         if (path.equals("/attendance/records") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/department") && "GET".equals(method)) return "ATTENDANCE_VIEW_DEPARTMENT";
         if (path.equals("/attendance/view_all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
-        if (path.equals("/attendance/work-hours") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
-        if (path.equals("/attendance/work-hours/export") && "GET".equals(method)) return "ATTENDANCE_EXPORT_REPORT";
+        if (path.equals("/attendance/work_hours") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
+        if (path.equals("/attendance/work_hours/export") && "GET".equals(method)) return "ATTENDANCE_EXPORT_REPORT";
         if (path.equals("/attendance/all") && "GET".equals(method)) return "ATTENDANCE_VIEW_ALL";
         if (path.equals("/attendance/my") && "GET".equals(method)) return "ATTENDANCE_VIEW_OWN";
         if (path.equals("/attendance/employee") && "GET".equals(method)) return "ATTENDANCE_VIEW_SUMMARY";
@@ -140,8 +140,8 @@ public class PermissionFilter implements Filter {
         if (path.equals("/admin/attendance/exportPersonal") && "GET".equals(method)) return "ATTENDANCE_VIEW_SUMMARY";
         if (path.equals("/admin/attendance/import")) return "ATTENDANCE_UPDATE";
         if (path.equals("/attendance/confirm")) return "ATTENDANCE_CONFIRM_ACCESS";
-        if (path.equals("/attendance/confirm-list") && "GET".equals(method)) return "ATTENDANCE_FINALIZED_ACCESS";
-        if (path.equals("/attendance/confirm-detail") && "GET".equals(method)) return "ATTENDANCE_FINALIZED_ACCESS";
+        if (path.equals("/attendance/confirm_list") && "GET".equals(method)) return "ATTENDANCE_FINALIZED_ACCESS";
+        if (path.equals("/attendance/confirm_detail") && "GET".equals(method)) return "ATTENDANCE_FINALIZED_ACCESS";
         if (path.equals("/reports/attendance")) return "ATTENDANCE_REPORT_ACCESS";
         if (path.equals("/reports/attendance/export")) return "ATTENDANCE_REPORT_ACCESS";
 
