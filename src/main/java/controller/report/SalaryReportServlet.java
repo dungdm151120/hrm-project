@@ -56,7 +56,8 @@ public class SalaryReportServlet extends HttpServlet {
         int selectedQuarter = parseIntInRange(request.getParameter("quarter"),
                 ((today.getMonthValue() - 1) / 3) + 1, 1, 4);
         int selectedYear = parseIntInRange(request.getParameter("year"), currentYear, 2020, currentYear + 3);
-        boolean isGenerated = "generate".equalsIgnoreCase(request.getParameter("action"));
+        String action = request.getParameter("action");
+        boolean isGenerated = action == null || "generate".equalsIgnoreCase(action);
 
         List<Integer> years = new ArrayList<>();
         for (int y = currentYear - 3; y <= currentYear + 3; y++) {
