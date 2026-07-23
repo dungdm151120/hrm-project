@@ -155,17 +155,20 @@ public class LoadSubFormServlet extends HttpServlet {
 
             List<User> hrManagers = userDAO.getUserByPosition("HR Manager");
             request.setAttribute("approverList", hrManagers);
+            if (hrManagers != null && !hrManagers.isEmpty()) {
+                request.setAttribute("defaultApproverId", hrManagers.get(0).getId());
+            }
 
             List<User> deptEmployees = userDAO.getAllEmployeesByDepartment(deptId);
             List<User> deptEmployeesFiltered = new ArrayList<>();
             if (deptEmployees != null) {
                 for (User emp : deptEmployees) {
-                    if (emp.getId() != currentUser.getId() && emp.isActive()) {
+                    if (emp.isActive()) {
                         deptEmployeesFiltered.add(emp);
                     }
                 }
             }
-            request.setAttribute("deptEmployees", deptEmployees);
+            request.setAttribute("deptEmployees", deptEmployeesFiltered);
 
             List<User> observers = new ArrayList<>();
             List<User> allManagers = userDAO.getAllDeptManager();

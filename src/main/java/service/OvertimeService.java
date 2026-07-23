@@ -58,8 +58,7 @@ public class OvertimeService {
                         p.setHoursActual(0.0);
                         participants.add(p);
                     }
-                    overtimeParticipantDAO.addParticipants(participants);
-                    return true;
+                    return overtimeParticipantDAO.addParticipants(participants);
                 }
             }
         } catch (Exception e) {

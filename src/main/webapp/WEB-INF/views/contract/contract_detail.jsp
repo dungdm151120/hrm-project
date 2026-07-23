@@ -121,9 +121,10 @@
                       onsubmit="return confirm('Terminate this contract?')">
                     <input type="hidden" name="id" value="${contract.id}">
                     <div class="form-group">
-                        <label for="terminationReason">Termination Reason</label>
+                        <label for="terminationReason">Termination Reason <span class="required-star">*</span></label>
                         <textarea id="terminationReason" name="terminationReason"
-                                  placeholder="Optional reason for terminating this contract"></textarea>
+                                  maxlength="1000" required
+                                  placeholder="Enter reason for terminating this contract"></textarea>
                     </div>
                     <button type="submit" class="btn btn-danger">Terminate Contract</button>
                 </form>

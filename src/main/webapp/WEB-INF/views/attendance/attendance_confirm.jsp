@@ -80,7 +80,7 @@
                         </c:choose>
                     </h3>
                     
-                    <c:if test="${overallStatus == 'PENDING'}">
+                    <c:if test="${overallStatus == 'PENDING' && confirmationAllowed}">
                         <c:if test="${isHRManager}">
                             <p style="margin-bottom:0; color:#6c757d; font-size:14px;">All department confirmations are required before HR can finalize attendance.</p>
                             <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" style="margin-top:10px;">
@@ -91,6 +91,9 @@
                             </form>
                         </c:if>
                     </c:if>
+                    <c:if test="${overallStatus == 'PENDING' && !confirmationAllowed}">
+                        <p style="margin-bottom:0; color:#6c757d; font-size:14px;">Attendance can only be confirmed for the previous month from day 5 to day 10.</p>
+                    </c:if>
                     
                 </div>
 
@@ -98,7 +101,6 @@
                     <table class="attendance-matrix-table">
                         <thead>
                         <tr>
-                            <th style="min-width:50px;">ID</th>
                             <th>Department Name</th>
                             <th>Manager</th>
                             <th>Status</th>
@@ -109,7 +111,6 @@
                         <tbody>
                         <c:forEach var="dept" items="${deptStatuses}">
                             <tr>
-                                <td style="text-align:center;">${dept.departmentId}</td>
                                 <td><strong>${dept.departmentName}</strong></td>
                                 <td>${dept.managerName != null ? dept.managerName : 'No Manager'}</td>
                                 <td>
@@ -128,7 +129,7 @@
                                     </c:if>
                                 </td>
                                 <td>
-                                    <c:if test="${dept.status == 'PENDING' && overallStatus == 'PENDING'}">
+                                    <c:if test="${dept.status == 'PENDING' && overallStatus == 'PENDING' && confirmationAllowed}">
                                         <c:if test="${dept.managerUserId == currentUser.id}">
                                             <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" style="display:inline;">
                                                 <input type="hidden" name="month" value="${selectedMonth}">
@@ -144,7 +145,7 @@
                         </c:forEach>
                         <c:if test="${empty deptStatuses}">
                             <tr>
-                                <td colspan="6" class="matrix-empty-state">No departments found.</td>
+                                <td colspan="5" class="matrix-empty-state">No departments found.</td>
                             </tr>
                         </c:if>
                         </tbody>

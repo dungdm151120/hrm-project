@@ -1,12 +1,6 @@
 package controller.request;
 
-import dao.OvertimeParticipantDAO;
-import dao.OvertimeRequestDAO;
-import dao.RequestDAO;
 import dao.UserDAO;
-import model.OvertimeParticipant;
-import model.OvertimeRequest;
-import model.Request;
 import model.User;
 
 import jakarta.servlet.ServletException;
@@ -19,17 +13,13 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 @WebServlet("/create_overtime_request")
 public class CreateOvertimeRequestServlet extends HttpServlet {
-    private final RequestDAO requestDAO = new RequestDAO();
-    private final OvertimeRequestDAO overtimeRequestDAO = new OvertimeRequestDAO();
-    private final OvertimeParticipantDAO overtimeParticipantDAO = new OvertimeParticipantDAO();
+    private static final int MAX_REASON_LENGTH = 500;
     private final UserDAO userDAO = new UserDAO();
 
     @Override
@@ -73,14 +63,32 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
             }
 
             String reason = request.getParameter("reason");
-            if (reason == null || reason.trim().length() < 10) {
-                response.sendRedirect("create_request?error=reason_too_short");
+            if (reason == null || reason.trim().isEmpty()) {
+                response.sendRedirect("create_request?error=missing_reason");
+                return;
+            }
+            reason = reason.trim();
+            if (reason.length() > MAX_REASON_LENGTH) {
+                response.sendRedirect("create_request?error=reason_too_long");
                 return;
             }
 
             String approverIdParam = request.getParameter("approverId");
             if (approverIdParam == null || approverIdParam.trim().isEmpty()) {
                 response.sendRedirect("create_request?error=missing_approver");
+                return;
+            }
+            int approverId;
+            try {
+                approverId = Integer.parseInt(approverIdParam);
+            } catch (NumberFormatException e) {
+                response.sendRedirect("create_request?error=invalid_approver");
+                return;
+            }
+            boolean validApprover = userDAO.getUserByPosition("HR Manager").stream()
+                    .anyMatch(manager -> manager.getId() == approverId);
+            if (!validApprover) {
+                response.sendRedirect("create_request?error=invalid_approver");
                 return;
             }
 
@@ -90,15 +98,33 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
                 return;
             }
 
-            // Check duplicate OT
             service.OvertimeService overtimeService = new service.OvertimeService();
+            Set<Integer> uniqueEmployeeIds = new LinkedHashSet<>();
             for (String empIdStr : employeeIds) {
-                int empId = Integer.parseInt(empIdStr);
+                int empId;
+                try {
+                    empId = Integer.parseInt(empIdStr);
+                } catch (NumberFormatException e) {
+                    response.sendRedirect("create_request?error=invalid_employee");
+                    return;
+                }
+                User employee = userDAO.findById(empId);
+                if (employee == null
+                        || !employee.isActive()
+                        || employee.getDepartmentId() == null
+                        || !employee.getDepartmentId().equals(currentUser.getDepartmentId())) {
+                    response.sendRedirect("create_request?error=invalid_employee");
+                    return;
+                }
                 if (overtimeService.checkDuplicateOvertime(empId, overtimeDate)) {
                     response.sendRedirect("create_request?error=duplicate_overtime");
                     return;
                 }
+                uniqueEmployeeIds.add(empId);
             }
+            String[] validatedEmployeeIds = uniqueEmployeeIds.stream()
+                    .map(String::valueOf)
+                    .toArray(String[]::new);
 
             String[] observerIds = request.getParameterValues("observerIds");
             Set<Integer> uniqueObsIds = new LinkedHashSet<>();
@@ -111,8 +137,8 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
             }
 
             boolean success = overtimeService.createOvertimeRequest(
-                currentUser, overtimeDate, reason, employeeIds, 
-                new ArrayList<>(uniqueObsIds), Integer.parseInt(approverIdParam)
+                currentUser, overtimeDate, reason, validatedEmployeeIds,
+                new ArrayList<>(uniqueObsIds), approverId
             );
 
             if (success) {

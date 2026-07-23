@@ -400,7 +400,7 @@
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_ALL')}">
                     <a href="${ctx}/attendance/view_all" class="submenu-item ${currentPath == ctx.concat('/attendance/view_all') ? 'active' : ''}">All Attendance</a>
-                    <a href="${ctx}/attendance/work-hours" class="submenu-item ${currentPath == ctx.concat('/attendance/work-hours') ? 'active' : ''}">Work Hours Summary</a>
+                    <a href="${ctx}/attendance/work_hours" class="submenu-item ${currentPath == ctx.concat('/attendance/work_hours') ? 'active' : ''}">Work Hours Summary</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_UPDATE')}">
                     <a href="${ctx}/attendance/records" class="submenu-item ${currentPath == ctx.concat('/attendance/records') || currentPath.startsWith(ctx.concat('/attendance/update')) ? 'active' : ''}">Update Attendance</a>
@@ -413,7 +413,7 @@
                     <a href="${ctx}/attendance/confirm" class="submenu-item ${currentPath == ctx.concat('/attendance/confirm') ? 'active' : ''}">Confirm Attendance</a>
                 </c:if>
                 <c:if test="${currentUser.roleName == 'HR_MANAGER' || currentUser.manager || currentUser.roleName == 'PAYROLL_MANAGER' || currentUser.roleName == 'PAYROLL_STAFF'}">
-                    <a href="${ctx}/attendance/confirm-list" class="submenu-item ${currentPath.startsWith(ctx.concat('/attendance/confirm-list')) or currentPath.startsWith(ctx.concat('/attendance/confirm-detail')) ? 'active' : ''}">Confirmed Attendance List</a>
+                    <a href="${ctx}/attendance/confirm_list" class="submenu-item ${currentPath.startsWith(ctx.concat('/attendance/confirm_list')) or currentPath.startsWith(ctx.concat('/attendance/confirm_detail')) ? 'active' : ''}">Confirmed Attendance List</a>
                 </c:if>
             </div>
         </div>
@@ -656,7 +656,7 @@
       </div>
       <div class="dropdown-menu" data-profile-dropdown>
         <a href="${ctx}/profile" class="dropdown-item">View My Profile</a>
-        <a href="${ctx}/change-password" class="dropdown-item">Change Password</a>
+        <a href="${ctx}/change_password" class="dropdown-item">Change Password</a>
         <a href="${ctx}/logout" class="dropdown-item">Logout</a>
       </div>
     </div>
