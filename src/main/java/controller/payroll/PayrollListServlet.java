@@ -54,14 +54,14 @@ public class PayrollListServlet extends HttpServlet {
         }
 
         Integer departmentId = null;
-        if (deptParam != null && !deptParam.isEmpty()) {
+        if (deptParam != null && !deptParam.isEmpty() && !"all".equalsIgnoreCase(deptParam)) {
             try {
                 departmentId = Integer.parseInt(deptParam);
             } catch (NumberFormatException ignored) {}
         }
 
         int currentPage = 1;
-        int pageSize = 10;
+        int pageSize = 7;
         if (pageParam != null && !pageParam.isEmpty()) {
             try {
                 currentPage = Integer.parseInt(pageParam);
@@ -85,6 +85,12 @@ public class PayrollListServlet extends HttpServlet {
         List<Department> departmentList = departmentDAO.getAllDepartments();
         Payroll totalSummary = payrollDAO.calculatePayrollSummary(keyword, statusParam, userId, month, year, departmentId);
 
+        long sumActualBasicSalary = 0;
+        for (Payroll p : payrollList) {
+            sumActualBasicSalary += p.getActualBasicSalary();
+        }
+
+        request.setAttribute("actualBasicSalary", sumActualBasicSalary);
         request.setAttribute("totalSummary", totalSummary);
         request.setAttribute("departmentList", departmentList);
         request.setAttribute("payrollList", payrollList);

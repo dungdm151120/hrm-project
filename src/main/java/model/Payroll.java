@@ -313,4 +313,9 @@ public class Payroll {
     public void setSickLeavePay(long sickLeavePay) {
         this.sickLeavePay = sickLeavePay;
     }
+
+    public long getActualBasicSalary() {
+        if (expectedHours <= 0) return 0;
+        return Math.round((basicSalary / expectedHours) * actualHours);
+    }
 }

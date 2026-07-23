@@ -100,7 +100,7 @@
             background: #f8fafc;
             border-left: 2px solid #3b82f6;
             padding: 3px 6px;
-            margin: 2px 0 4px 0;
+            margin: 4px 0;
             border-radius: 0 4px 4px 0;
         }
     </style>
@@ -139,7 +139,7 @@
 
                 <div style="margin-bottom: 8px;">
                     <a class="back-link" href="${pageContext.request.contextPath}/payroll/list?month=${param.month}&year=${param.year}" style="font-size: 0.8rem;">
-                    Return to payroll list
+                        Return to payroll list
                     </a>
                 </div>
 
@@ -179,20 +179,15 @@
                                 <span class="item-value"><fmt:formatNumber value='${payroll.basicSalary}' type='number' maxFractionDigits='0'/> VND</span>
                             </div>
                             <div class="item-row">
-                                <span class="item-label">Overtime Pay <span class="badge-sub">${overtimeHours != null ? overtimeHours : 0.0}h</span></span>
-                                <span class="item-value" style="color: #059669;">+<fmt:formatNumber value='${payroll.overtimePay}' type='number' maxFractionDigits='0'/> VND</span>
+                                <span class="item-label" style="font-weight: 600; color: #1e40af;">Actual Base Income</span>
+                                <span class="item-value" style="font-weight: 700; color: #1e40af;"><fmt:formatNumber value='${payroll.actualBasicSalary}' type='number' maxFractionDigits='0'/> VND</span>
                             </div>
-                            <div class="item-row">
-                                <span class="item-label">Sick Leave Pay <span class="badge-sub">${sickLeaveDays != null ? sickLeaveDays : 0}d</span></span>
-                                <span class="item-value" style="color: #059669;">+<fmt:formatNumber value='${payroll.sickLeavePay}' type='number' maxFractionDigits='0'/> VND</span>
-                            </div>
-
                             <div class="item-row" style="border-bottom: none; padding-bottom: 0;">
-                                <span class="item-label" style="font-weight: 600; color: #1e40af;">Bonus / Position Allowance</span>
+                                <span class="item-label" style="font-weight: 600; color: #1e40af;">Allowance</span>
                                 <span class="item-value" style="color: #059669;">+<fmt:formatNumber value='${payroll.bonus}' type='number' maxFractionDigits='0'/> VND</span>
                             </div>
                             <div class="bonus-desc">
-                                <strong>Reason:</strong> <c:out value="${not empty payroll.description ? payroll.description : 'Position allowance & performance bonus'}" />
+                                <strong>Note:</strong> <c:out value="${not empty payroll.description ? payroll.description : 'Position allowance & fixed allowances'}" />
                             </div>
                         </div>
 
@@ -207,7 +202,7 @@
                     <div class="payslip-card">
                         <div>
                             <div class="card-header-title" style="color: #991b1b; border-color: #ef4444;">
-                                <span>2. Deductions & Tax Exemptions</span>
+                                <span>2. Deductions & Tax Reliefs</span>
                             </div>
 
                             <div style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Mandatory Insurances</div>
@@ -228,7 +223,7 @@
                                 <span class="item-value" style="color: #dc2626;">-<fmt:formatNumber value='${payroll.unionFee}' type='number' maxFractionDigits='0'/></span>
                             </div>
 
-                            <div style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 8px; margin-bottom: 2px;">PIT Tax Reliefs & Exemptions (2026)</div>
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 8px; margin-bottom: 2px;">PIT Tax Reliefs</div>
                             <div class="item-row">
                                 <span class="item-label">Personal Relief Allowance</span>
                                 <span class="item-value"><fmt:formatNumber value='${setting.selfDeduction}' type='number' maxFractionDigits='0'/></span>
@@ -236,13 +231,6 @@
                             <div class="item-row">
                                 <span class="item-label">Dependents Relief <span class="badge-sub">${numberOfDependents} pers</span></span>
                                 <span class="item-value"><fmt:formatNumber value='${setting.dependentDeduction * numberOfDependents}' type='number' maxFractionDigits='0'/></span>
-                            </div>
-
-                            <div class="item-row" style="background: #f0fdf4; padding: 3px 5px; border-radius: 4px; margin-top: 3px;">
-                                <span class="item-label" style="font-weight: 600; color: #166534;">100% OT Tax Exemption</span>
-                                <span class="item-value" style="color: #166534;">
-                                    -<fmt:formatNumber value='${payroll.overtimePay}' type='number' maxFractionDigits='0'/> VND
-                                </span>
                             </div>
                         </div>
 
@@ -265,12 +253,22 @@
                                 <span class="item-value"><fmt:formatNumber value='${payroll.incomeBeforeTax}' type='number' maxFractionDigits='0'/> VND</span>
                             </div>
                             <div class="item-row">
-                                <span class="item-label">Taxable Income (Sau trừ 100% OT)</span>
+                                <span class="item-label">Taxable Income</span>
                                 <span class="item-value"><fmt:formatNumber value='${payroll.taxableIncome}' type='number' maxFractionDigits='0'/> VND</span>
                             </div>
-                            <div class="item-row" style="background: #fef2f2; padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
+                            <div class="item-row" style="background: #fef2f2; padding: 4px 6px; border-radius: 4px; margin-top: 4px; margin-bottom: 6px;">
                                 <span class="item-label" style="font-weight: 700; color: #b91c1c;">Personal Income Tax (PIT)</span>
                                 <span class="item-value" style="font-weight: 800; color: #b91c1c;">-<fmt:formatNumber value='${payroll.incomeTax}' type='number' maxFractionDigits='0'/> VND</span>
+                            </div>
+
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 8px; margin-bottom: 2px;">Non-Taxable Additions</div>
+                            <div class="item-row">
+                                <span class="item-label">Overtime Pay <span class="badge-sub">${overtimeHours != null ? overtimeHours : 0.0}h</span></span>
+                                <span class="item-value" style="color: #059669;">+<fmt:formatNumber value='${payroll.overtimePay}' type='number' maxFractionDigits='0'/> VND</span>
+                            </div>
+                            <div class="item-row">
+                                <span class="item-label">Sick Leave Pay <span class="badge-sub">${sickLeaveDays != null ? sickLeaveDays : 0}d</span></span>
+                                <span class="item-value" style="color: #059669;">+<fmt:formatNumber value='${payroll.sickLeavePay}' type='number' maxFractionDigits='0'/> VND</span>
                             </div>
                         </div>
 
@@ -286,11 +284,11 @@
                             </div>
 
                             <c:if test="${statusLower == 'draft' && userPermissions.contains('PAYROLL_CONFIRM')}">
-                                 <div style="margin-top: 8px;">
-                                      <button type="submit" class="btn-save" style="width: 100%; padding: 7px; font-size: 0.85rem; font-weight: bold; text-align: center; justify-content: center;">
-                                          Confirm Payroll Statement
-                                      </button>
-                                 </div>
+                                <div style="margin-top: 8px;">
+                                    <button type="submit" class="btn-save" style="width: 100%; padding: 7px; font-size: 0.85rem; font-weight: bold; text-align: center; justify-content: center;">
+                                        Confirm Payroll Statement
+                                    </button>
+                                </div>
                             </c:if>
                         </div>
                     </div>
