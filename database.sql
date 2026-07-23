@@ -137,6 +137,7 @@ CREATE TABLE labor_contracts (
                                  work_location VARCHAR(255) NOT NULL,
                                  status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                                  note TEXT,
+                                 union_member TINYINT(1) NOT NULL DEFAULT 0,
                                  terminated_at DATETIME,
                                  terminated_by INT,
                                  termination_reason TEXT,
@@ -145,7 +146,7 @@ CREATE TABLE labor_contracts (
                                  CONSTRAINT chk_labor_contract_code_not_blank
                                      CHECK (CHAR_LENGTH(TRIM(contract_code)) > 0),
                                  CONSTRAINT chk_labor_contract_type
-                                     CHECK (contract_type IN ('FIXED_TERM', 'INDEFINITE_TERM', 'PROBATION', 'PART_TIME')),
+                                     CHECK (contract_type IN ('FIXED_TERM', 'INDEFINITE_TERM', 'PROBATION')),
                                  CONSTRAINT chk_labor_contract_status
                                      CHECK (status IN ('ACTIVE', 'EXPIRED', 'TERMINATED')),
                                  CONSTRAINT chk_labor_contract_salary
@@ -161,18 +162,18 @@ CREATE TABLE labor_contracts (
                                  CONSTRAINT chk_labor_contract_fixed_term_duration
                                      CHECK (
                                          contract_type <> 'FIXED_TERM'
-                                         OR (
+                                             OR (
                                              end_date IS NOT NULL
-                                             AND end_date BETWEEN DATE_ADD(start_date, INTERVAL 1 MONTH)
+                                                 AND end_date BETWEEN DATE_ADD(start_date, INTERVAL 1 MONTH)
                                                  AND DATE_ADD(start_date, INTERVAL 36 MONTH)
-                                         )
-                                     ),
+                                             )
+                                         ),
                                  CONSTRAINT chk_labor_contract_active_end_date
                                      CHECK (
                                          status <> 'ACTIVE'
-                                         OR (contract_type = 'INDEFINITE_TERM' AND end_date IS NULL)
-                                         OR (contract_type <> 'INDEFINITE_TERM' AND end_date IS NOT NULL)
-                                     ),
+                                             OR (contract_type = 'INDEFINITE_TERM' AND end_date IS NULL)
+                                             OR (contract_type <> 'INDEFINITE_TERM' AND end_date IS NOT NULL)
+                                         ),
                                  CONSTRAINT fk_labor_contracts_users
                                      FOREIGN KEY (user_id) REFERENCES users(id),
                                  CONSTRAINT fk_labor_contracts_terminated_by
@@ -474,13 +475,6 @@ CREATE TABLE dependent_number (
                                   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE user_union_membership (
-                                       user_id INT PRIMARY KEY,
-                                       is_member TINYINT(1) DEFAULT 0,
-                                       joined_date DATE NULL,
-                                       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
 -- ============================================================
 -- 10. TASK MANAGEMENT
 -- ============================================================
@@ -767,25 +761,25 @@ UPDATE departments SET manager_user_id = (SELECT id FROM users WHERE email = 'pa
 UPDATE departments SET manager_user_id = (SELECT id FROM users WHERE email = 'salesmanager@company.com') WHERE name = 'Sales';
 
 -- 13.7. HỢP ĐỒNG LAO ĐỘNG
-INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, end_date, base_salary, working_time, work_location, status, note) VALUES
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'admin@company.com'), 'HDLD-2024-001', 'FIXED_TERM', '2024-01-01', '2027-01-01', 30000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for System Admin'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'minhquan.it@company.com'), 'HDLD-2024-018', 'FIXED_TERM', '2024-05-01', '2027-05-01', 28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for IT Dept Manager'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'hrmanager@company.com'), 'HDLD-2024-002', 'FIXED_TERM', '2024-01-15', '2027-01-15', 25000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for HR Manager'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'maianh.hr@company.com'), 'HDLD-2024-003', 'FIXED_TERM', '2024-02-01', '2027-02-01', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for HR Staff'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'), 'HDLD-2024-004', 'FIXED_TERM', '2024-02-20', '2027-02-20', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for HR Staff'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'haiyen.hr@company.com'), 'HDLD-2024-005', 'FIXED_TERM', '2024-03-01', '2027-03-01', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for HR Staff'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'ducanh.it@company.com'), 'HDLD-2024-006', 'FIXED_TERM', '2024-01-10', '2027-01-10', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for IT Employee'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'giahuy.it@company.com'), 'HDLD-2024-007', 'FIXED_TERM', '2024-02-01', '2027-02-01', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for IT Employee'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'hoangnam.it@company.com'), 'HDLD-2024-008', 'FIXED_TERM', '2024-02-15', '2027-02-15', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for IT Employee'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'payrollmanager@company.com'), 'HDLD-2024-009', 'FIXED_TERM', '2024-01-20', '2027-01-20', 22000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Manager'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'thaovy.payroll@company.com'), 'HDLD-2024-010', 'FIXED_TERM', '2024-02-10', '2027-02-10', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Staff'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'minhkhang.payroll@company.com'), 'HDLD-2024-011', 'FIXED_TERM', '2024-03-05', '2027-03-05', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Payroll Staff'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'phuonganh.payroll@company.com'), 'HDLD-2024-012', 'FIXED_TERM', '2024-03-18', '2027-03-18', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for Payroll Staff'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'payroll@company.com'), 'HDLD-2024-013', 'FIXED_TERM', '2024-04-10', '2027-04-10', 16000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Staff'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'salesmanager@company.com'), 'HDLD-2024-014', 'FIXED_TERM', '2024-01-25', '2027-01-25', 20000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Sales Manager'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'khanhly.sales@company.com'), 'HDLD-2024-015', 'FIXED_TERM', '2024-02-12', '2027-02-12', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Sales Employee'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'quocbao.sales@company.com'), 'HDLD-2024-016', 'FIXED_TERM', '2024-03-08', '2027-03-08', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for Sales Employee'),
-                                                                                                                                                      ((SELECT id FROM users WHERE email = 'businessadmin@company.com'), 'HDLD-2024-017', 'FIXED_TERM', '2024-04-01', '2027-04-01', 28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Business Admin');
+INSERT INTO labor_contracts (user_id, contract_code, contract_type, start_date, end_date, base_salary, working_time, work_location, status, note, union_member) VALUES
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'admin@company.com'), 'HDLD-2024-001', 'FIXED_TERM', '2024-01-01', '2027-01-01', 30000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for System Admin', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'minhquan.it@company.com'), 'HDLD-2024-018', 'FIXED_TERM', '2024-05-01', '2027-05-01', 28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for IT Dept Manager', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'hrmanager@company.com'), 'HDLD-2024-002', 'FIXED_TERM', '2024-01-15', '2027-01-15', 25000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for HR Manager', 0),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'maianh.hr@company.com'), 'HDLD-2024-003', 'FIXED_TERM', '2024-02-01', '2027-02-01', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for HR Staff', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'ngoclinh.hr@company.com'), 'HDLD-2024-004', 'FIXED_TERM', '2024-02-20', '2027-02-20', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for HR Staff', 0),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'haiyen.hr@company.com'), 'HDLD-2024-005', 'FIXED_TERM', '2024-03-01', '2027-03-01', 15000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for HR Staff', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'ducanh.it@company.com'), 'HDLD-2024-006', 'FIXED_TERM', '2024-01-10', '2027-01-10', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for IT Employee', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'giahuy.it@company.com'), 'HDLD-2024-007', 'FIXED_TERM', '2024-02-01', '2027-02-01', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for IT Employee', 0),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'hoangnam.it@company.com'), 'HDLD-2024-008', 'FIXED_TERM', '2024-02-15', '2027-02-15', 12000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for IT Employee', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'payrollmanager@company.com'), 'HDLD-2024-009', 'FIXED_TERM', '2024-01-20', '2027-01-20', 22000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Manager', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'thaovy.payroll@company.com'), 'HDLD-2024-010', 'FIXED_TERM', '2024-02-10', '2027-02-10', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Staff', 0),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'minhkhang.payroll@company.com'), 'HDLD-2024-011', 'FIXED_TERM', '2024-03-05', '2027-03-05', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Payroll Staff', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'phuonganh.payroll@company.com'), 'HDLD-2024-012', 'FIXED_TERM', '2024-03-18', '2027-03-18', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for Payroll Staff', 0),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'payroll@company.com'), 'HDLD-2024-013', 'FIXED_TERM', '2024-04-10', '2027-04-10', 16000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Payroll Staff', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'salesmanager@company.com'), 'HDLD-2024-014', 'FIXED_TERM', '2024-01-25', '2027-01-25', 20000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Sales Manager', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'khanhly.sales@company.com'), 'HDLD-2024-015', 'FIXED_TERM', '2024-02-12', '2027-02-12', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Ho Chi Minh Office', 'ACTIVE', 'Contract for Sales Employee', 0),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'quocbao.sales@company.com'), 'HDLD-2024-016', 'FIXED_TERM', '2024-03-08', '2027-03-08', 11000000, 'Monday to Friday, 8:00 - 17:00', 'Da Nang Office', 'ACTIVE', 'Contract for Sales Employee', 1),
+                                                                                                                                                      ((SELECT id FROM users WHERE email = 'businessadmin@company.com'), 'HDLD-2024-017', 'FIXED_TERM', '2024-04-01', '2027-04-01', 28000000, 'Monday to Friday, 8:00 - 17:00', 'Ha Noi Office', 'ACTIVE', 'Contract for Business Admin', 0);
 
 
 INSERT INTO holidays (holiday_date, holiday_name) VALUES
@@ -823,25 +817,6 @@ INSERT INTO pit_brackets (version_id, bracket_level, min_value, max_value, tax_r
                                                                                          (1, 3, 30000001, 60000000, 20.0),
                                                                                          (1, 4, 60000001, 100000000, 30.0),
                                                                                          (1, 5, 100000000, NULL, 35.0);
-
-INSERT INTO user_union_membership (user_id, is_member, joined_date) VALUES
-                                                                        (2, 1, '2024-03-15'),
-                                                                        (3, 1, '2023-05-20'),
-                                                                        (4, 0, NULL),
-                                                                        (5, 1, '2025-01-10'),
-                                                                        (6, 1, '2022-11-01'),
-                                                                        (7, 1, '2023-02-15'),
-                                                                        (8, 0, NULL),
-                                                                        (9, 1, '2024-06-18'),
-                                                                        (10, 1, '2021-08-25'),
-                                                                        (11, 1, '2024-09-10'),
-                                                                        (12, 0, NULL),
-                                                                        (13, 1, '2023-11-12'),
-                                                                        (14, 0, NULL),
-                                                                        (15, 1, '2024-01-05'),
-                                                                        (16, 1, '2024-07-19'),
-                                                                        (17, 1, '2025-02-11'),
-                                                                        (18, 0, NULL);
 
 INSERT INTO dependent_number (user_id, dependent, effective_date) VALUES
                                                                       (2, 1, '2026-01-01'),
@@ -934,7 +909,6 @@ INSERT INTO permissions (code, name, description) VALUES
                                                       -- them quyen cho confirm attendance
                                                       ('ATTENDANCE_CONFIRM_DEPT', 'Confirm department attendance', 'Department Manager can confirm attendance of their department'),
                                                       ('ATTENDANCE_FINALIZE_HR', 'Finalize attendance and create snapshot', 'HR Manager can finalize confirmed attendance and create the final snapshot'),
-
                                                       -- report
                                                       ('HR_REPORT_VIEW', 'View HR Overview Report', 'Can generate and view HR overview report'),
                                                       ('ATTENDANCE_REPORT_VIEW', 'View Attendance Report', 'Can generate and view attendance report'),

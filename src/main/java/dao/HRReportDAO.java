@@ -66,7 +66,7 @@ public class HRReportDAO {
                             + "COUNT(DISTINCT CASE WHEN u.gender = 'Male' THEN u.id END) as males, "
                             + "COUNT(DISTINCT CASE WHEN u.gender = 'Female' THEN u.id END) as females, "
                             + "COUNT(DISTINCT CASE WHEN u.gender NOT IN ('Male', 'Female') OR u.gender IS NULL THEN u.id END) as others, "
-                            + "COUNT(DISTINCT CASE WHEN lc.contract_type IN ('INDEFINITE_TERM', 'FIXED_TERM', 'PART_TIME') THEN u.id END) as regulars, "
+                            + "COUNT(DISTINCT CASE WHEN lc.contract_type IN ('INDEFINITE_TERM', 'FIXED_TERM') THEN u.id END) as regulars, "
                             + "COUNT(DISTINCT CASE WHEN lc.contract_type = 'PROBATION' THEN u.id END) as probations, "
                             + "COUNT(DISTINCT CASE WHEN UPPER(p.name) LIKE '%MANAGER%' THEN u.id END) as managers, "
                             + "COUNT(DISTINCT CASE WHEN p.name IS NULL OR UPPER(p.name) NOT LIKE '%MANAGER%' THEN u.id END) as employees "

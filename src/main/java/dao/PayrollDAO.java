@@ -685,14 +685,25 @@ public class PayrollDAO {
         return getLatestPayrollSetting();
     }
 
-    public boolean isUnionMember(int userId) {
-        String sql = "SELECT is_member FROM user_union_membership WHERE user_id = ?";
+    public boolean isUnionMember(int userId, int month, int year) {
+        YearMonth payrollMonth = YearMonth.of(year, month);
+        String sql = """
+                SELECT union_member
+                FROM labor_contracts
+                WHERE user_id = ?
+                  AND start_date <= ?
+                  AND (end_date IS NULL OR end_date >= ?)
+                ORDER BY start_date DESC, id DESC
+                LIMIT 1
+                """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(payrollMonth.atEndOfMonth()));
+            ps.setDate(3, Date.valueOf(payrollMonth.atDay(1)));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getBoolean("is_member");
+                    return rs.getBoolean("union_member");
                 }
             }
         } catch (Exception e) {

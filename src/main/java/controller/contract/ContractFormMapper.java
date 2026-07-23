@@ -16,7 +16,7 @@ final class ContractFormMapper {
     private static final String CONTRACT_CODE_PATTERN = "^[A-Za-z0-9/_-]+$";
 
     private static final Set<String> VALID_CONTRACT_TYPES = Set.of(
-            "FIXED_TERM", "INDEFINITE_TERM", "PROBATION", "PART_TIME"
+            "FIXED_TERM", "INDEFINITE_TERM", "PROBATION"
     );
     private static final Set<String> VALID_STATUSES = Set.of(
             "ACTIVE"
@@ -28,6 +28,7 @@ final class ContractFormMapper {
     static LaborContract fromRequest(HttpServletRequest request) {
         LaborContract contract = new LaborContract();
         contract.setUserId(parseInt(request.getParameter("userId"), "Employee is required."));
+        contract.setUnionMember(request.getParameter("unionMember") != null);
         contract.setContractCode(validContractCode(request.getParameter("contractCode")));
         contract.setContractType(validContractType(request.getParameter("contractType")));
         contract.setStartDate(parseDate(request.getParameter("startDate"), "Start date is required."));

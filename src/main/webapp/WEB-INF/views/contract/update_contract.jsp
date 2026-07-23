@@ -60,7 +60,6 @@
                         <option value="FIXED_TERM" ${contract.contractType == 'FIXED_TERM' ? 'selected' : ''}>FIXED_TERM</option>
                         <option value="INDEFINITE_TERM" ${contract.contractType == 'INDEFINITE_TERM' ? 'selected' : ''}>INDEFINITE_TERM</option>
                         <option value="PROBATION" ${contract.contractType == 'PROBATION' ? 'selected' : ''}>PROBATION</option>
-                        <option value="PART_TIME" ${contract.contractType == 'PART_TIME' ? 'selected' : ''}>PART_TIME</option>
                     </select>
                 </div>
 
@@ -84,6 +83,14 @@
                     <label for="workingTime">Working Time <span class="required-star">*</span></label>
                     <input type="text" id="workingTime" name="workingTime" value="${contract.workingTime}"
                            maxlength="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="unionMember" value="true"
+                               ${contract.unionMember ? 'checked' : ''}>
+                        Union member
+                    </label>
                 </div>
 
                 <div class="form-group">

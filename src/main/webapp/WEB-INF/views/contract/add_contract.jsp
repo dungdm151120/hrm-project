@@ -58,7 +58,6 @@
                         <option value="FIXED_TERM" ${contract.contractType == 'FIXED_TERM' ? 'selected' : ''}>FIXED_TERM</option>
                         <option value="INDEFINITE_TERM" ${contract.contractType == 'INDEFINITE_TERM' ? 'selected' : ''}>INDEFINITE_TERM</option>
                         <option value="PROBATION" ${contract.contractType == 'PROBATION' ? 'selected' : ''}>PROBATION</option>
-                        <option value="PART_TIME" ${contract.contractType == 'PART_TIME' ? 'selected' : ''}>PART_TIME</option>
                     </select>
                 </div>
 
@@ -73,15 +72,24 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="baseSalary">Base Salary <span class="required-star">*</span></label>
-                    <input type="number" id="baseSalary" name="baseSalary" min="0.01" max="9999999999999.99"
-                           step="0.01" value="${contract.baseSalary}" required>
+                    <label for="baseSalaryDisplay">Base Salary <span class="required-star">*</span></label>
+                    <input type="text" id="baseSalaryDisplay" inputmode="decimal"
+                           value="${contract.baseSalary}" placeholder="e.g. 15,000,000" required>
+                    <input type="hidden" id="baseSalary" name="baseSalary" value="${contract.baseSalary}">
                 </div>
 
                 <div class="form-group">
                     <label for="workingTime">Working Time <span class="required-star">*</span></label>
-                    <input type="text" id="workingTime" name="workingTime" value="${contract.workingTime}"
-                           maxlength="100" required>
+                    <input type="text" id="workingTime" name="workingTime"
+                           value="Monday to Friday, 08:00 - 17:00" readonly required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="unionMember" value="true"
+                               ${contract.unionMember ? 'checked' : ''}>
+                        Union member
+                    </label>
                 </div>
 
                 <div class="form-group">
@@ -119,7 +127,34 @@
         const employeeSearch = document.getElementById('employeeSearch');
         const employeeSelect = document.getElementById('userId');
         const employeeOptions = Array.from(employeeSelect.options);
+        const baseSalaryDisplay = document.getElementById('baseSalaryDisplay');
+        const baseSalary = document.getElementById('baseSalary');
         const today = new Date().toISOString().split('T')[0];
+
+        function formatSalary() {
+            let value = baseSalaryDisplay.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+            const decimalPoint = value.indexOf('.');
+
+            if (decimalPoint >= 0) {
+                value = value.substring(0, decimalPoint + 1)
+                        + value.substring(decimalPoint + 1).replace(/\./g, '').substring(0, 2);
+            }
+
+            let parts = value.split('.');
+            let integerPart = parts[0].replace(/^0+(?=\d)/, '');
+            const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+
+            baseSalary.value = integerPart + decimalPart;
+            baseSalaryDisplay.value = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + decimalPart;
+
+            const numericSalary = Number(baseSalary.value);
+            const isValid = baseSalary.value !== ''
+                    && numericSalary > 0
+                    && numericSalary <= 9999999999999.99;
+            baseSalaryDisplay.setCustomValidity(
+                    isValid ? '' : 'Base salary must be between 0.01 and 9,999,999,999,999.99.'
+            );
+        }
 
         function addDays(dateValue, days) {
             const date = new Date(dateValue + 'T00:00:00Z');
@@ -181,6 +216,8 @@
         contractType.addEventListener('change', handleContractTypeChange);
         startDate.addEventListener('change', updateEndDateRange);
         employeeSearch.addEventListener('input', handleEmployeeSearch);
+        baseSalaryDisplay.addEventListener('input', formatSalary);
+        formatSalary();
         handleContractTypeChange();
     });
 </script>

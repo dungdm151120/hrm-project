@@ -31,7 +31,7 @@ public class PayrollService {
         String positionName = (user.getPositionName() != null) ? user.getPositionName().toLowerCase() : "";
         int numberOfDependents = payrollDAO.countDependentByUserId(user.getId(), month, year);
         double expectedHours = calculateExpectedHours(month, year);
-        boolean isUnionMember = payrollDAO.isUnionMember(user.getId());
+        boolean isUnionMember = payrollDAO.isUnionMember(user.getId(), month, year);
         int sickLeaveDays = attendanceDAO.countSickLeaveByUserId(user.getId(), month, year);
 
         if (summary == null || setting == null || brackets == null || brackets.isEmpty()) {
