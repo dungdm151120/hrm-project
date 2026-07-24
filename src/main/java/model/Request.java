@@ -158,7 +158,6 @@ public class Request {
         if (this.type == null) return "N/A";
         switch (this.type) {
             case "LEAVE_REQUEST": return "Leave request";
-            case "LATE_EARLY_REQUEST": return "Late arrival/Early departure";
             case "EMP_MOVE_REMOVE": return "Move/Remove employee";
             case "POSITION_HANDOVER": return "Position handover";
             case "OVERTIME": return "Overtime";
@@ -173,7 +172,6 @@ public class Request {
     public static Map<String, String> getAllType() {
         Map<String, String> type = new LinkedHashMap<>();
         type.put("LEAVE_REQUEST", "Leave request");
-        type.put("LATE_EARLY_REQUEST", "Late arrival/Early departure");
         type.put("EMP_MOVE_REMOVE", "Move/Remove employee");
         type.put("POSITION_HANDOVER", "Position handover");
         type.put("OVERTIME", "Overtime");

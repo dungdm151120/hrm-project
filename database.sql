@@ -289,7 +289,7 @@ CREATE TABLE requests (
                           id INT AUTO_INCREMENT PRIMARY KEY,
                           user_id INT NOT NULL,
                           department_id INT NULL,
-                          type ENUM('LEAVE_REQUEST', 'LATE_EARLY_REQUEST', 'EMP_MOVE_REMOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST', 'SICK_LEAVE_REQUEST', 'DEPENDENT_CHANGE_REQUEST') NOT NULL,
+                          type ENUM('LEAVE_REQUEST', 'EMP_MOVE_REMOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST', 'SICK_LEAVE_REQUEST', 'DEPENDENT_CHANGE_REQUEST') NOT NULL,
                           status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'CONFIRMED') DEFAULT 'PENDING',
                           reason TEXT,
                           approver_id INT,
