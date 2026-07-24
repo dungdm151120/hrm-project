@@ -294,14 +294,12 @@ CREATE TABLE requests (
                           reason TEXT,
                           approver_id INT,
                           approver_comment TEXT NULL,
-                          observer_id INT,
                           handler_id INT,
                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                           processed_at TIMESTAMP NULL,
                           CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users(id),
                           CONSTRAINT fk_request_dept FOREIGN KEY (department_id) REFERENCES departments(id),
                           CONSTRAINT fk_request_approver FOREIGN KEY (approver_id) REFERENCES users(id),
-                          CONSTRAINT fk_request_observer FOREIGN KEY (observer_id) REFERENCES users(id),
                           CONSTRAINT fk_request_handler FOREIGN KEY (handler_id) REFERENCES users(id)
 );
 
@@ -367,38 +365,6 @@ CREATE TABLE announcement_recipients (
 );
 
 -- ============================================================
--- 8. CHAT (CONVERSATIONS & MESSAGES)
--- ============================================================
-
-CREATE TABLE conversations (
-                               id INT PRIMARY KEY AUTO_INCREMENT,
-                               is_group BOOLEAN NOT NULL DEFAULT FALSE,
-                               name VARCHAR(100) NULL COMMENT 'Tên nhóm (chỉ dùng khi is_group = TRUE)',
-                               created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE conversation_participants (
-                                           conversation_id INT NOT NULL,
-                                           user_id INT NOT NULL,
-                                           joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                           PRIMARY KEY (conversation_id, user_id),
-                                           CONSTRAINT fk_cp_conversation FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
-                                           CONSTRAINT fk_cp_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE messages (
-                          id INT PRIMARY KEY AUTO_INCREMENT,
-                          conversation_id INT NOT NULL,
-                          sender_id INT NOT NULL,
-                          content TEXT NOT NULL,
-                          sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          is_read BOOLEAN NOT NULL DEFAULT FALSE,
-                          CONSTRAINT fk_messages_conversation FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
-                          CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-                          INDEX idx_messages_conversation_time (conversation_id, sent_at)
-);
-
--- ============================================================
 -- 9. PAYROLL
 -- ============================================================
 
@@ -430,7 +396,11 @@ CREATE TABLE payrolls (
                           company_union_fee BIGINT NOT NULL DEFAULT 0,
                           status VARCHAR(20) DEFAULT 'DRAFT',
                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                          CONSTRAINT unique_user_month_year UNIQUE (user_id, month, year)
+                          CONSTRAINT chk_payroll_month CHECK (month BETWEEN 1 AND 12),
+                          CONSTRAINT chk_payroll_year CHECK (year >= 2000),
+                          CONSTRAINT unique_user_month_year UNIQUE (user_id, month, year),
+                          CONSTRAINT fk_payrolls_user
+                              FOREIGN KEY (user_id) REFERENCES users(id)
 );
 CREATE TABLE payroll_settings (
                                   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -448,13 +418,15 @@ CREATE TABLE payroll_settings (
                                   sick_leave_rate DECIMAL(5, 2) DEFAULT 75.0,
                                   self_deduction BIGINT DEFAULT 15500000,
                                   dependent_deduction BIGINT DEFAULT 6200000,
-                                  effective_date DATE DEFAULT '2025-07-01'
+                                  effective_date DATE NOT NULL DEFAULT '2025-07-01',
+                                  CONSTRAINT uq_payroll_settings_effective_date UNIQUE (effective_date)
 );
 CREATE TABLE pit_bracket_versions(
                                      id INT PRIMARY KEY AUTO_INCREMENT,
                                      version_name VARCHAR(100) NOT NULL,
                                      effective_date DATE NOT NULL,
-                                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                     CONSTRAINT uq_pit_bracket_versions_effective_date UNIQUE (effective_date)
 );
 
 CREATE TABLE pit_brackets (
@@ -464,6 +436,7 @@ CREATE TABLE pit_brackets (
                               min_value DECIMAL(15,2) NOT NULL,
                               max_value DECIMAL(15,2),
                               tax_rate DECIMAL(5,2) NOT NULL,
+                              CONSTRAINT uq_pit_brackets_version_level UNIQUE (version_id, bracket_level),
                               FOREIGN KEY (version_id) REFERENCES pit_bracket_versions(id) ON DELETE CASCADE
 );
 
@@ -566,6 +539,7 @@ CREATE TABLE attendance_change_requests (
                                             desired_check_in TIME NULL,
                                             desired_check_out TIME NULL,
                                             reason TEXT,
+                                            is_applied BOOLEAN NOT NULL DEFAULT FALSE,
                                             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                             CONSTRAINT fk_attendance_change_request FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE
 );
@@ -623,6 +597,8 @@ CREATE TABLE sick_leave_dates (
                                   id INT PRIMARY KEY AUTO_INCREMENT,
                                   sick_leave_request_id INT NOT NULL,
                                   leave_date DATE NOT NULL,
+                                  CONSTRAINT uq_sick_leave_dates_request_date
+                                      UNIQUE (sick_leave_request_id, leave_date),
                                   CONSTRAINT fk_sick_leave_dates FOREIGN KEY (sick_leave_request_id) REFERENCES sick_leave_requests(id) ON DELETE CASCADE
 );
 
