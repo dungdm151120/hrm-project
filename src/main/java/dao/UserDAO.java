@@ -517,6 +517,7 @@ public class UserDAO {
     public boolean addUser(User user) {
         String sql = """
                 INSERT INTO users (
+                    employee_code,
                     full_name,
                     email,
                     password,
@@ -528,30 +529,56 @@ public class UserDAO {
                     role_id,
                     active
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection()) {
+            String newEmployeeCode = generateNextEmployeeCode(conn);
+            user.setEmployeeCode(newEmployeeCode);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, user.getEmployeeCode());
+                ps.setString(2, user.getFullName());
+                ps.setString(3, user.getEmail());
+                ps.setString(4, user.getPassword());
+                ps.setString(5, user.getPhone());
+                ps.setString(6, user.getGender());
+                setNullableTimestamp(ps, 7, user.getDateOfBirth());
+                ps.setString(8, user.getAddress());
+                ps.setString(9, user.getAvatarUrl());
+                ps.setInt(10, user.getRoleId());
+                ps.setBoolean(11, user.isActive());
 
-            ps.setString(1, user.getFullName());
-            ps.setString(2, user.getEmail());
-            ps.setString(3, user.getPassword());
-            ps.setString(4, user.getPhone());
-            ps.setString(5, user.getGender());
-            setNullableTimestamp(ps, 6, user.getDateOfBirth());
-            ps.setString(7, user.getAddress());
-            ps.setString(8, user.getAvatarUrl());
-            ps.setInt(9, user.getRoleId());
-            ps.setBoolean(10, user.isActive());
-
-            return ps.executeUpdate() > 0;
-
+                return ps.executeUpdate() > 0;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return false;
+    }
+
+    private String generateNextEmployeeCode(Connection conn) {
+        String sql = """
+            SELECT MAX(CAST(SUBSTRING(employee_code, 4) AS UNSIGNED)) AS max_num 
+            FROM users 
+            WHERE employee_code LIKE 'EMP%'
+            """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                int maxNum = rs.getInt("max_num");
+                if (maxNum > 0) {
+                    int nextNum = maxNum + 1;
+                    return String.format("EMP%03d", nextNum);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return "EMP001";
     }
 
     public boolean updateUser(User user) {
