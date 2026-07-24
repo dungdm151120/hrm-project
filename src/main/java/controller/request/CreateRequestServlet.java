@@ -87,7 +87,8 @@ public class CreateRequestServlet extends HttpServlet {
             req.setType(request.getParameter("type"));
             String reason = request.getParameter("reason");
             if (reason != null && reason.trim().length() > 1000) {
-                response.sendRedirect("create_request?error=reason_too_long");
+                String typeParam = req.getType() != null ? req.getType() : "";
+                response.sendRedirect("create_request?type=" + typeParam + "&error=reason_too_long");
                 return;
             }
             req.setReason(reason);

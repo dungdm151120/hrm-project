@@ -37,5 +37,5 @@
 
 <div class="request-group">
     <label>Request description: <span class="required-star">*</span></label>
-    <textarea name="reason" class="request-textarea" rows="5" required placeholder="Please describe your request description.."></textarea>
+    <textarea name="reason" class="request-textarea" rows="5" maxlength="1000" required placeholder="Please describe your request description.."></textarea>
 </div>
