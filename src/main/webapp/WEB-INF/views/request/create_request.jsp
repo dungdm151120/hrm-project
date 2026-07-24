@@ -24,50 +24,38 @@
                     </div>
 
                     <div class="dashboard-content">
-                        <c:if test="${not empty param.error}">
-                            <div class="alert alert-error" style="margin-bottom:1.5rem;">
-                                <span class="alert-icon">⚠️</span>
-                                <span>
+                        <div id="globalErrorAlert" class="alert alert-error" style="margin-bottom:1.5rem; ${empty param.error ? 'display:none;' : ''}">
+                            <span class="alert-icon">⚠️</span>
+                            <span id="globalErrorText">
+                                <c:if test="${not empty param.error}">
                                     <c:choose>
-                                        <c:when test="${param.error == 'missing_leave_date'}">Please select a leave
-                                            date.</c:when>
-                                        <c:when test="${param.error == 'leave_date_past'}">Leave date cannot be in the
-                                            past.</c:when>
-                                        <c:when test="${param.error == 'leave_date_weekend'}">Weekends are not allowed
-                                            for leave requests.</c:when>
-                                        <c:when test="${param.error == 'leave_date_holiday'}">Leave date cannot be a
-                                            holiday.</c:when>
-                                        <c:when test="${param.error == 'leave_date_already_on_leave'}">You already have
-                                            an approved leave on this date.</c:when>
-                                        <c:when test="${param.error == 'leave_date_already_marked'}">This date is
-                                            already marked as leave or absent.</c:when>
-                                        <c:when test="${param.error == 'leave_date_duplicate_request'}">A leave request
-                                            for this date already exists (pending or approved).</c:when>
-                                        <c:when test="${param.error == 'leave_balance_exhausted'}">You have no remaining
-                                            leave balance. Cannot submit request.</c:when>
-                                        <c:when test="${param.error == 'absent_balance_exhausted'}">You have no
-                                            remaining unpaid leave balance. Cannot submit request.</c:when>
-                                        <c:when test="${param.error == 'missing_leave_info'}">Please fill in all leave
-                                            request information.</c:when>
-                                        <c:when test="${param.error == 'invalid_leave_type'}">Invalid leave type.
-                                        </c:when>
-                                        <c:when test="${param.error == 'missing_approver'}">Please select an approver.
-                                        </c:when>
-                                        <c:when test="${param.error == 'invalid_approver'}">The selected approver must
-                                            be an active HR Manager.</c:when>
-                                        <c:when test="${param.error == 'missing_department'}">You must be assigned to a
-                                            department to create this request.</c:when>
-                                        <c:when test="${param.error == 'missing_date'}">Please select an overtime date.
-                                        </c:when>
-                                        <c:when test="${param.error == 'date_past'}">Overtime date cannot be in the
-                                            past.</c:when>
-                                        <c:when test="${param.error == 'date_weekend'}">Sick leave and overtime are only
-                                            allowed from Monday to Friday.</c:when>
-                                        <c:when test="${param.error == 'overtime_date_holiday'}">Overtime date cannot be
-                                            a holiday.</c:when>
-                                        <c:when test="${param.error == 'missing_reason'}">Please enter a reason.</c:when>
-                                        <c:when test="${param.error == 'reason_too_long'}">The reason must not exceed
-                                            500 characters.</c:when>
+                                         <c:when test="${param.error == 'conflict_detail'}">
+                                             Cannot submit request due to existing requests/records/holidays on the following dates:
+                                             <br/><strong>${sessionScope.requestConflictMsg}</strong>
+                                             <c:remove var="requestConflictMsg" scope="session"/>
+                                         </c:when>
+                                         <c:when test="${param.error == 'invalid_date_range'}">Start date cannot be after end date.</c:when>
+                                         <c:when test="${param.error == 'no_working_days'}">Selected date range contains no working days (weekends only).</c:when>
+                                         <c:when test="${param.error == 'missing_leave_date'}">Please select leave dates.</c:when>
+                                         <c:when test="${param.error == 'leave_date_past'}">Leave date cannot be in the past.</c:when>
+                                         <c:when test="${param.error == 'leave_date_weekend'}">Weekends are not allowed for leave requests.</c:when>
+                                         <c:when test="${param.error == 'leave_date_holiday'}">Leave date cannot be a holiday.</c:when>
+                                         <c:when test="${param.error == 'leave_date_already_on_leave'}">You already have an approved leave on this date.</c:when>
+                                         <c:when test="${param.error == 'leave_date_already_marked'}">This date is already marked as leave or absent.</c:when>
+                                         <c:when test="${param.error == 'leave_date_duplicate_request'}">A leave request for this date already exists (pending or approved).</c:when>
+                                         <c:when test="${param.error == 'leave_balance_exhausted'}">Requested days exceed your remaining leave balance.</c:when>
+                                         <c:when test="${param.error == 'absent_balance_exhausted'}">Requested days exceed your remaining unpaid leave balance.</c:when>
+                                         <c:when test="${param.error == 'missing_leave_info'}">Please fill in all leave request information.</c:when>
+                                         <c:when test="${param.error == 'invalid_leave_type'}">Invalid leave type.</c:when>
+                                         <c:when test="${param.error == 'missing_approver'}">Please select an approver.</c:when>
+                                         <c:when test="${param.error == 'invalid_approver'}">The selected approver must be an active HR Manager.</c:when>
+                                         <c:when test="${param.error == 'missing_department'}">You must be assigned to a department to create this request.</c:when>
+                                         <c:when test="${param.error == 'missing_date'}">Please select an overtime date.</c:when>
+                                         <c:when test="${param.error == 'date_past'}">Overtime date cannot be in the past.</c:when>
+                                         <c:when test="${param.error == 'date_weekend'}">Sick leave and overtime are only allowed from Monday to Friday.</c:when>
+                                         <c:when test="${param.error == 'overtime_date_holiday'}">Overtime date cannot be a holiday.</c:when>
+                                         <c:when test="${param.error == 'missing_reason'}">Please enter a reason.</c:when>
+                                         <c:when test="${param.error == 'reason_too_long'}">The reason must not exceed 1000 characters.</c:when>
                                         <c:when test="${param.error == 'missing_employees'}">Please select at least one
                                             employee to work overtime.</c:when>
                                         <c:when test="${param.error == 'invalid_employee'}">One or more selected
@@ -111,9 +99,21 @@
                                             try again later.</c:when>
                                         <c:otherwise>${param.error}</c:otherwise>
                                     </c:choose>
-                                </span>
-                            </div>
-                        </c:if>
+                                </c:if>
+                            </span>
+                        </div>
+
+                        <script>
+                            window.showGlobalError = function(msg) {
+                                $('#globalErrorText').html(msg);
+                                $('#globalErrorAlert').show();
+                                $('html, body').animate({ scrollTop: $('#globalErrorAlert').offset().top - 20 }, 'fast');
+                            };
+                            window.clearGlobalError = function() {
+                                $('#globalErrorText').empty();
+                                $('#globalErrorAlert').hide();
+                            };
+                        </script>
 
                         <div class="request-card">
                             <form action="create_request" method="POST">

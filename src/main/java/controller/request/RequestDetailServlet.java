@@ -50,6 +50,10 @@ public class RequestDetailServlet extends HttpServlet {
                 LeaveRequestDAO leaveRequestDAO = new LeaveRequestDAO();
                 LeaveRequest lr = leaveRequestDAO.getByRequestId(id);
                 request.setAttribute("leaveRequest", lr);
+                if (lr != null) {
+                    List<LocalDate> dates = leaveRequestDAO.getDatesByLeaveRequestId(lr.getId());
+                    request.setAttribute("leaveDates", dates);
+                }
             } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
                 AttendanceChangeRequestDAO acrDAO = new AttendanceChangeRequestDAO();
                 AttendanceChangeRequest acr = acrDAO.getByRequestId(id);

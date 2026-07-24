@@ -123,195 +123,17 @@
     </select>
 </div>
 
-<div class="request-group" style="grid-column: 1 / -1; max-width: 50%;">
-    <label>Sick Dates <span class="required-star">*</span></label>
-    <div id="sickDatesContainer">
-        <div class="sick-calendar" id="sickCalendar"></div>
-        <div id="selectedDatesTags" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:5px;"></div>
-        <small style="color:#666;">
-            Only past or today dates are allowed. Weekends cannot be selected.
-            Maximum <span id="maxDaysHint">${remainingSickDays}</span> days remaining.
-        </small>
-    </div>
+<div class="request-group">
+    <label for="startDate">Start Date <span class="required-star">*</span></label>
+    <input type="date" name="startDate" id="startDate" class="request-input"
+           max="${today}" required onchange="updateSickDays()" />
 </div>
 
-<script>
-(function () {
-    function tryInit() {
-        var calEl     = document.getElementById('sickCalendar');
-        var tagsEl    = document.getElementById('selectedDatesTags');
-        var container = document.getElementById('sickDatesContainer');
-        var remEl     = document.getElementById('remainingSickDays');
-
-        if (!calEl || !tagsEl || !container) {
-            setTimeout(tryInit, 50);
-            return;
-        }
-
-        var rawMax  = parseInt('${remainingSickDays}', 10);
-        var maxDays = (isNaN(rawMax) || rawMax <= 0) ? 999 : rawMax;
-
-        var selectedDates = [];
-        var today = new Date();
-        today.setHours(0, 0, 0, 0);
-        var viewYear  = today.getFullYear();
-        var viewMonth = today.getMonth();
-
-        function pad2(n) { return n < 10 ? '0' + n : '' + n; }
-
-        function toStr(date) {
-            return date.getFullYear() + '-' + pad2(date.getMonth() + 1) + '-' + pad2(date.getDate());
-        }
-
-        function fromStr(s) {
-            var p = s.split('-');
-            return new Date(+p[0], +p[1] - 1, +p[2]);
-        }
-
-        function isWeekend(date) {
-            var day = date.getDay();
-            return day === 0 || day === 6;
-        }
-
-        function renderCalendar() {
-            var firstDay    = new Date(viewYear, viewMonth, 1);
-            var lastDay     = new Date(viewYear, viewMonth + 1, 0);
-            var startDOW    = (firstDay.getDay() + 6) % 7;
-            var monthLabel  = firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-            var totalDays   = lastDay.getDate();
-
-            var h = '';
-
-            h += '<div class="cal-header">';
-            h += '<button type="button" id="calPrev" aria-label="Previous month">&lt;</button>';
-            h += '<span>' + monthLabel + '</span>';
-            h += '<button type="button" id="calNext" aria-label="Next month">&gt;</button>';
-            h += '</div>';
-
-            h += '<div class="cal-weekdays">';
-            ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d){ h += '<div>' + d + '</div>'; });
-            h += '</div>';
-
-            h += '<div class="cal-days">';
-
-            var prevLast = new Date(viewYear, viewMonth, 0).getDate();
-            for (var i = startDOW - 1; i >= 0; i--) {
-                h += '<div class="cal-day other-month">' + (prevLast - i) + '</div>';
-            }
-
-            for (var d = 1; d <= totalDays; d++) {
-                var date    = new Date(viewYear, viewMonth, d);
-                var dateStr = toStr(date);
-                var cls     = 'cal-day';
-
-                if (date.getTime() > today.getTime()) {
-                    cls += ' future';
-                } else if (isWeekend(date)) {
-                    cls += ' weekend';
-                } else if (selectedDates.indexOf(dateStr) !== -1) {
-                    cls += ' selected';
-                }
-                if (date.getTime() === today.getTime()) cls += ' today';
-
-                h += '<div class="' + cls + '" data-d="' + dateStr + '">' + d + '</div>';
-            }
-
-            var totalCells = startDOW + totalDays;
-            var trailing   = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-            for (var j = 1; j <= trailing; j++) {
-                h += '<div class="cal-day other-month">' + j + '</div>';
-            }
-
-            h += '</div>';
-            calEl.innerHTML = h;
-
-            calEl.querySelectorAll('.cal-day[data-d]:not(.future):not(.weekend)').forEach(function(el) {
-                el.addEventListener('click', function () { toggleDate(this.getAttribute('data-d')); });
-            });
-            document.getElementById('calPrev').addEventListener('click', function () { changeMonth(-1); });
-            document.getElementById('calNext').addEventListener('click', function () { changeMonth(1); });
-        }
-
-        function toggleDate(dateStr) {
-            var date = fromStr(dateStr);
-            if (date.getTime() > today.getTime()) return;
-            if (isWeekend(date)) return;
-
-            var idx = selectedDates.indexOf(dateStr);
-            if (idx !== -1) {
-                selectedDates.splice(idx, 1);
-            } else {
-                if (selectedDates.length >= maxDays) {
-                    alert('You can only select up to ' + maxDays + ' day(s).');
-                    return;
-                }
-                selectedDates.push(dateStr);
-                selectedDates.sort();
-            }
-
-            renderCalendar();
-            renderTags();
-            syncHiddenInputs();
-            updateRemaining();
-        }
-
-        function changeMonth(delta) {
-            viewMonth += delta;
-            if (viewMonth > 11) { viewMonth = 0;  viewYear++; }
-            if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
-            if (viewYear > today.getFullYear() ||
-                (viewYear === today.getFullYear() && viewMonth > today.getMonth())) {
-                viewYear  = today.getFullYear();
-                viewMonth = today.getMonth();
-            }
-            renderCalendar();
-        }
-
-        function renderTags() {
-            tagsEl.innerHTML = selectedDates.map(function (d) {
-                return '<span class="date-tag">' + d +
-                       ' <button type="button" data-rm="' + d + '">&times;</button></span>';
-            }).join('');
-
-            tagsEl.querySelectorAll('[data-rm]').forEach(function (btn) {
-                btn.addEventListener('click', function () { removeDate(this.getAttribute('data-rm')); });
-            });
-        }
-
-        function removeDate(dateStr) {
-            var idx = selectedDates.indexOf(dateStr);
-            if (idx !== -1) selectedDates.splice(idx, 1);
-            renderCalendar();
-            renderTags();
-            syncHiddenInputs();
-            updateRemaining();
-        }
-
-        function syncHiddenInputs() {
-            container.querySelectorAll('input[name="sickDates"]').forEach(function (el) { el.remove(); });
-            selectedDates.forEach(function (s) {
-                var inp   = document.createElement('input');
-                inp.type  = 'hidden';
-                inp.name  = 'sickDates';
-                inp.value = s;
-                container.appendChild(inp);
-            });
-        }
-
-        function updateRemaining() {
-            if (remEl) remEl.textContent = Math.max(0, maxDays - selectedDates.length);
-        }
-
-        renderCalendar();
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', tryInit);
-    } else {
-        tryInit();
-    }
-})();
-</script>
+<div class="request-group">
+    <label for="endDate">End Date <span class="required-star">*</span></label>
+    <input type="date" name="endDate" id="endDate" class="request-input"
+           max="${today}" required onchange="updateSickDays()" />
+</div>
 
 <div class="request-group">
     <label>Attachment (Medical Certificate) <span class="required-star">*</span></label>
@@ -329,16 +151,21 @@
 
 <div class="request-group">
     <div class="balance-text-italic-red">
-        Remaining sick leave: <span id="remainingSickDays">${remainingSickDays}</span> / ${totalSickDays} days
+        Remaining sick leave: <span id="remainingSickDays">${remainingSickDays}</span> / ${totalSickDays} days<br/>
+        Requested workdays (excl. weekends): <span id="requestedSickDays">0</span>
     </div>
 </div>
 
 <div class="request-group" style="grid-column: 1 / -1;">
-    <label for="reasonEditor">Reason <span class="required-star">*</span></label>
-    <textarea name="reason" id="reasonEditor" class="request-textarea" rows="5" required></textarea>
+    <label for="reasonEditor">Reason <span class="required-star">*</span> <small style="color:#666; font-weight:normal;">(Max 1000 characters)</small></label>
+    <textarea name="reason" id="reasonEditor" class="request-textarea" rows="5" maxlength="1000" required></textarea>
+    <div style="font-size:12px; color:#666; text-align:right; margin-top:2px;">
+        <span id="charCount">0</span>/1000 characters
+    </div>
 </div>
 
 <script>
+    var reasonEditorInstance = null;
     ClassicEditor
         .create(document.querySelector('#reasonEditor'), {
             toolbar: ['heading', '|', 'bold', 'italic', 'underline', 'link',
@@ -346,5 +173,107 @@
                       'alignment', 'fontColor', 'fontFamily', 'fontSize', '|',
                       'insertTable', 'blockQuote', 'undo', 'redo']
         })
+        .then(editor => {
+            reasonEditorInstance = editor;
+            editor.model.document.on('change:data', () => {
+                var text = editor.getData().replace(/<[^>]*>/g, '').trim();
+                var count = text.length;
+                var charCountEl = document.getElementById('charCount');
+                if (charCountEl) charCountEl.innerText = count;
+                if (count > 1000) {
+                    charCountEl.style.color = 'red';
+                    charCountEl.style.fontWeight = 'bold';
+                } else {
+                    charCountEl.style.color = '#666';
+                    charCountEl.style.fontWeight = 'normal';
+                }
+            });
+        })
         .catch(function(error) { console.error(error); });
+
+    function updateSickDays() {
+        var startInput = document.getElementById('startDate');
+        var endInput = document.getElementById('endDate');
+        var daysSpan = document.getElementById('requestedSickDays');
+        var remSpan = document.getElementById('remainingSickDays');
+
+        var rawMax = parseInt('${remainingSickDays}', 10);
+        var maxDays = (isNaN(rawMax) || rawMax <= 0) ? 0 : rawMax;
+
+        if (!startInput.value || !endInput.value) {
+            daysSpan.innerText = '0';
+            if (remSpan) remSpan.innerText = maxDays;
+            return;
+        }
+
+        var start = new Date(startInput.value);
+        var end = new Date(endInput.value);
+
+        if (start > end) {
+            daysSpan.innerText = '0';
+            return;
+        }
+
+        var count = 0;
+        var cur = new Date(start);
+        while (cur <= end) {
+            var day = cur.getDay();
+            if (day !== 0 && day !== 6) { // Exclude Sunday (0) and Saturday (6)
+                count++;
+            }
+            cur.setDate(cur.getDate() + 1);
+        }
+
+        daysSpan.innerText = count;
+        if (remSpan) remSpan.innerText = Math.max(0, maxDays - count);
+    }
+
+    $('form').on('submit', function(e) {
+        if (window.clearGlobalError) window.clearGlobalError();
+
+        var reasonText = reasonEditorInstance ? reasonEditorInstance.getData().replace(/<[^>]*>/g, '').trim() : $('#reasonEditor').val().trim();
+        if (reasonText.length > 1000) {
+            if (window.showGlobalError) window.showGlobalError('Reason must not exceed 1000 characters.');
+            e.preventDefault();
+            return false;
+        }
+
+        var startInput = document.getElementById('startDate');
+        var endInput = document.getElementById('endDate');
+        if (!startInput || !endInput || !startInput.value || !endInput.value) {
+            if (window.showGlobalError) window.showGlobalError('Please select start date and end date.');
+            e.preventDefault();
+            return false;
+        }
+
+        var start = new Date(startInput.value);
+        var end = new Date(endInput.value);
+        if (start > end) {
+            if (window.showGlobalError) window.showGlobalError('Start date cannot be after end date.');
+            e.preventDefault();
+            return false;
+        }
+
+        var count = 0;
+        var cur = new Date(start);
+        while (cur <= end) {
+            var day = cur.getDay();
+            if (day !== 0 && day !== 6) count++;
+            cur.setDate(cur.getDate() + 1);
+        }
+
+        if (count === 0) {
+            if (window.showGlobalError) window.showGlobalError('Selected date range contains no working days (weekends only).');
+            e.preventDefault();
+            return false;
+        }
+
+        var rawMax = parseInt('${remainingSickDays}', 10);
+        var maxDays = (isNaN(rawMax) || rawMax <= 0) ? 0 : rawMax;
+        if (count > maxDays) {
+            if (window.showGlobalError) window.showGlobalError('Requested days (' + count + ') exceed remaining sick leave (' + maxDays + ').');
+            e.preventDefault();
+            return false;
+        }
+    });
 </script>

@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 public class LeaveRequest {
     private int id;
     private int requestId;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private LocalDate leaveDate;
     private String leaveType; // ON_LEAVE hoặc LEAVE
     private LocalDateTime createdAt;
@@ -16,11 +18,15 @@ public class LeaveRequest {
     public LeaveRequest(int requestId, LocalDate leaveDate) {
         this.requestId = requestId;
         this.leaveDate = leaveDate;
+        this.startDate = leaveDate;
+        this.endDate = leaveDate;
     }
 
-    public LeaveRequest(int requestId, LocalDate leaveDate, String leaveType) {
+    public LeaveRequest(int requestId, LocalDate startDate, LocalDate endDate, String leaveType) {
         this.requestId = requestId;
-        this.leaveDate = leaveDate;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.leaveDate = startDate;
         this.leaveType = leaveType;
     }
 
@@ -40,8 +46,31 @@ public class LeaveRequest {
         this.requestId = requestId;
     }
 
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public String getFormattedDateRange() {
+        if (startDate != null && endDate != null && !startDate.equals(endDate)) {
+            return startDate + " to " + endDate;
+        }
+        return getLeaveDate() != null ? getLeaveDate().toString() : "";
+    }
+
     public LocalDate getLeaveDate() {
-        return leaveDate;
+        return leaveDate != null ? leaveDate : startDate;
     }
 
     public void setLeaveDate(LocalDate leaveDate) {

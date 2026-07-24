@@ -80,7 +80,7 @@
                                     </c:when>
                                     <c:when test="${req.type == 'LEAVE_REQUEST'}">
                                         <jsp:useBean id="lrDao_my" class="dao.LeaveRequestDAO"/>
-                                        <br><small style="color: #666;">Date: ${lrDao_my.getByRequestId(req.id).leaveDate}</small>
+                                        <br><small style="color: #666;">Date: ${lrDao_my.getByRequestId(req.id).formattedDateRange}</small>
                                     </c:when>
                                 </c:choose>
                             </td>

@@ -103,12 +103,11 @@ public class SickLeaveRequestDAO {
         return 0;
     }
 
-    public int countPendingOrApprovedFuture(int userId, int year) {
-        String sql = "SELECT COUNT(*) FROM sick_leave_dates sd " +
+    public int countPendingSickLeaveDays(int userId, int year) {
+        String sql = "SELECT COUNT(DISTINCT sd.leave_date) FROM sick_leave_dates sd " +
                 "JOIN sick_leave_requests sr ON sd.sick_leave_request_id = sr.id " +
                 "JOIN requests r ON sr.request_id = r.id " +
-                "WHERE r.user_id = ? AND r.status IN ('PENDING', 'APPROVED') AND YEAR(sd.leave_date) = ? " +
-                "AND sd.leave_date > CURDATE()";
+                "WHERE r.user_id = ? AND r.status = 'PENDING' AND YEAR(sd.leave_date) = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);

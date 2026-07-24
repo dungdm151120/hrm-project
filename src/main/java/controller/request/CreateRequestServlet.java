@@ -85,7 +85,12 @@ public class CreateRequestServlet extends HttpServlet {
             req.setDepartmentId(currentUser.getDepartmentId());
 
             req.setType(request.getParameter("type"));
-            req.setReason(request.getParameter("reason"));
+            String reason = request.getParameter("reason");
+            if (reason != null && reason.trim().length() > 1000) {
+                response.sendRedirect("create_request?error=reason_too_long");
+                return;
+            }
+            req.setReason(reason);
 
             String approverIdParam = request.getParameter("approverId");
             if (approverIdParam == null || approverIdParam.trim().isEmpty()) {
@@ -126,43 +131,45 @@ public class CreateRequestServlet extends HttpServlet {
             }
 
             if ("LEAVE_REQUEST".equals(req.getType())) {
-                String leaveDateStr = request.getParameter("leaveDate");
+                String startDateStr = request.getParameter("startDate");
+                String endDateStr = request.getParameter("endDate");
                 String leaveType = request.getParameter("leaveType");
 
-                if (leaveDateStr == null || leaveDateStr.trim().isEmpty() || leaveType == null
-                        || leaveType.trim().isEmpty()) {
-                    response.sendRedirect("create_request?error=missing_leave_info");
+                if (startDateStr == null || startDateStr.trim().isEmpty() ||
+                    endDateStr == null || endDateStr.trim().isEmpty() ||
+                    leaveType == null || leaveType.trim().isEmpty()) {
+                    response.sendRedirect("create_request?type=LEAVE_REQUEST&error=missing_leave_info");
                     return;
                 }
 
-                LocalDate leaveDate = LocalDate.parse(leaveDateStr);
+                LocalDate startDate = LocalDate.parse(startDateStr);
+                LocalDate endDate = LocalDate.parse(endDateStr);
 
-                if (leaveDate.isBefore(LocalDate.now())) {
-                    response.sendRedirect("create_request?error=leave_date_past");
+                if (startDate.isAfter(endDate)) {
+                    response.sendRedirect("create_request?type=LEAVE_REQUEST&error=invalid_date_range");
                     return;
                 }
 
-                DayOfWeek dayOfWeek = leaveDate.getDayOfWeek();
-                if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-                    response.sendRedirect("create_request?error=leave_date_weekend");
+                List<LocalDate> requestedDates = new ArrayList<>();
+                LocalDate curr = startDate;
+                while (!curr.isAfter(endDate)) {
+                    DayOfWeek dow = curr.getDayOfWeek();
+                    if (dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY) {
+                        requestedDates.add(curr);
+                    }
+                    curr = curr.plusDays(1);
+                }
+
+                if (requestedDates.isEmpty()) {
+                    response.sendRedirect("create_request?type=LEAVE_REQUEST&error=no_working_days");
                     return;
                 }
 
-                HolidayDAO holidayDAO = new HolidayDAO();
-                if (holidayDAO.isHoliday(leaveDate)) {
-                    response.sendRedirect("create_request?error=leave_date_holiday");
-                    return;
-                }
-
-                AttendanceRecord existingRecord = attendanceDAO.getRecordByUserAndDate(currentUser.getId(), leaveDate);
-                if (existingRecord != null && ("ON_LEAVE".equals(existingRecord.getStatus())
-                        || "ABSENT".equals(existingRecord.getStatus()))) {
-                    response.sendRedirect("create_request?error=leave_date_already_marked");
-                    return;
-                }
-
-                if (leaveRequestDAO.existsLeaveRequestForDate(currentUser.getId(), leaveDate)) {
-                    response.sendRedirect("create_request?error=leave_date_duplicate_request");
+                List<String> conflicts = leaveRequestDAO.checkDateConflicts(currentUser.getId(), requestedDates);
+                if (!conflicts.isEmpty()) {
+                    String conflictMsg = String.join(" | ", conflicts);
+                    session.setAttribute("requestConflictMsg", conflictMsg);
+                    response.sendRedirect("create_request?type=LEAVE_REQUEST&error=conflict_detail");
                     return;
                 }
 
@@ -172,22 +179,22 @@ public class CreateRequestServlet extends HttpServlet {
                         LocalDate.now());
 
                 if ("ON_LEAVE".equals(leaveType)) {
-                    if (summary.getRemainingLeaveDays() <= 0) {
-                        response.sendRedirect("create_request?error=leave_balance_exhausted");
+                    if (summary.getRemainingLeaveDays() < requestedDates.size()) {
+                        response.sendRedirect("create_request?type=LEAVE_REQUEST&error=leave_balance_exhausted");
                         return;
                     }
                 } else if ("LEAVE".equals(leaveType)) {
-                    if (summary.getRemainingAbsentDays() <= 0) {
-                        response.sendRedirect("create_request?error=absent_balance_exhausted");
+                    if (summary.getRemainingAbsentDays() < requestedDates.size()) {
+                        response.sendRedirect("create_request?type=LEAVE_REQUEST&error=absent_balance_exhausted");
                         return;
                     }
                 } else {
-                    response.sendRedirect("create_request?error=invalid_leave_type");
+                    response.sendRedirect("create_request?type=LEAVE_REQUEST&error=invalid_leave_type");
                     return;
                 }
 
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
-                leaveRequestDAO.createLeaveRequest(requestId, leaveDate, leaveType);
+                leaveRequestDAO.createLeaveRequest(requestId, startDate, endDate, leaveType, requestedDates);
             } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
                 int currentDay = LocalDate.now().getDayOfMonth();
                 if (currentDay > 5 && currentDay <= 10) {
@@ -245,7 +252,7 @@ public class CreateRequestServlet extends HttpServlet {
             } else if ("DEPENDENT_CHANGE_REQUEST".equals(req.getType())) {
                 String changeType = request.getParameter("changeType");
                 if (changeType == null || changeType.trim().isEmpty()) {
-                    response.sendRedirect("create_request?error=missing_change_type");
+                    response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=missing_change_type");
                     return;
                 }
 
@@ -253,13 +260,13 @@ public class CreateRequestServlet extends HttpServlet {
                 if ("UPDATE".equals(changeType) || "REMOVE".equals(changeType)) {
                     String dependentIdStr = request.getParameter("dependentId");
                     if (dependentIdStr == null || dependentIdStr.trim().isEmpty()) {
-                        response.sendRedirect("create_request?error=missing_dependent_id");
+                        response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=missing_dependent_id");
                         return;
                     }
                     try {
                         dependentId = Integer.parseInt(dependentIdStr);
                     } catch (NumberFormatException e) {
-                        response.sendRedirect("create_request?error=invalid_dependent_id");
+                        response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=invalid_dependent_id");
                         return;
                     }
                 }
@@ -279,24 +286,24 @@ public class CreateRequestServlet extends HttpServlet {
                         dependentDobStr == null || dependentDobStr.trim().isEmpty() ||
                         dependentIdNumber == null || dependentIdNumber.trim().isEmpty() ||
                         relationship == null || relationship.trim().isEmpty()) {
-                        response.sendRedirect("create_request?error=missing_dependent_info");
+                        response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=missing_dependent_info");
                         return;
                     }
 
                     dependentIdNumber = dependentIdNumber.trim();
                     if (!dependentIdNumber.matches("^[0-9]{12}$")) {
-                        response.sendRedirect("create_request?error=invalid_dependent_id_number");
+                        response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=invalid_dependent_id_number");
                         return;
                     }
 
                     try {
                         dependentDob = LocalDate.parse(dependentDobStr);
                         if (dependentDob.isAfter(LocalDate.now())) {
-                            response.sendRedirect("create_request?error=future_dependent_dob");
+                            response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=future_dependent_dob");
                             return;
                         }
                     } catch (Exception e) {
-                        response.sendRedirect("create_request?error=invalid_dependent_dob");
+                        response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=invalid_dependent_dob");
                         return;
                     }
                 }
@@ -304,7 +311,7 @@ public class CreateRequestServlet extends HttpServlet {
                 Part filePart = request.getPart("dependentFile");
                 if ("ADD".equals(changeType) || "UPDATE".equals(changeType)) {
                     if (filePart == null || filePart.getSize() == 0) {
-                        response.sendRedirect("create_request?error=missing_evidence_file");
+                        response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=missing_evidence_file");
                         return;
                     }
                 }
@@ -339,50 +346,61 @@ public class CreateRequestServlet extends HttpServlet {
             } else if ("SICK_LEAVE_REQUEST".equals(req.getType())) {
                 Part filePart = request.getPart("sickFile");
                 if (filePart == null || filePart.getSize() == 0) {
-                    response.sendRedirect("create_request?error=missing_file");
+                    response.sendRedirect("create_request?type=SICK_LEAVE_REQUEST&error=missing_file");
                     return;
                 }
 
-                String[] sickDates = request.getParameterValues("sickDates");
-                if (sickDates == null || sickDates.length == 0) {
-                    response.sendRedirect("create_request?error=missing_sick_dates");
+                String startDateStr = request.getParameter("startDate");
+                String endDateStr = request.getParameter("endDate");
+                if (startDateStr == null || startDateStr.trim().isEmpty() ||
+                    endDateStr == null || endDateStr.trim().isEmpty()) {
+                    response.sendRedirect("create_request?type=SICK_LEAVE_REQUEST&error=missing_sick_dates");
                     return;
                 }
-                List<LocalDate> dates = Arrays.stream(sickDates)
-                        .map(LocalDate::parse)
-                        .sorted()
-                        .collect(Collectors.toList());
 
+                LocalDate startDate = LocalDate.parse(startDateStr);
+                LocalDate endDate = LocalDate.parse(endDateStr);
+
+                if (startDate.isAfter(endDate)) {
+                    response.sendRedirect("create_request?type=SICK_LEAVE_REQUEST&error=invalid_date_range");
+                    return;
+                }
+
+                List<LocalDate> requestedDates = new ArrayList<>();
+                LocalDate curr = startDate;
                 LocalDate today = LocalDate.now();
-                HolidayDAO holidayDAO = new HolidayDAO();
-                for (LocalDate date : dates) {
-                    if (date.isAfter(today)) {
-                        response.sendRedirect("create_request?error=invalid_date");
+                while (!curr.isAfter(endDate)) {
+                    if (curr.isAfter(today)) {
+                        response.sendRedirect("create_request?type=SICK_LEAVE_REQUEST&error=invalid_date");
                         return;
                     }
-                    DayOfWeek dayOfWeek = date.getDayOfWeek();
-                    if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-                        response.sendRedirect("create_request?error=date_weekend");
-                        return;
+                    DayOfWeek dow = curr.getDayOfWeek();
+                    if (dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY) {
+                        requestedDates.add(curr);
                     }
-                    if (holidayDAO.isHoliday(date)) {
-                        response.sendRedirect("create_request?error=sick_date_holiday");
-                        return;
-                    }
+                    curr = curr.plusDays(1);
+                }
+
+                if (requestedDates.isEmpty()) {
+                    response.sendRedirect("create_request?type=SICK_LEAVE_REQUEST&error=no_working_days");
+                    return;
+                }
+
+                List<String> conflicts = leaveRequestDAO.checkDateConflicts(currentUser.getId(), requestedDates);
+                if (!conflicts.isEmpty()) {
+                    String conflictMsg = String.join(" | ", conflicts);
+                    session.setAttribute("requestConflictMsg", conflictMsg);
+                    response.sendRedirect("create_request?type=SICK_LEAVE_REQUEST&error=conflict_detail");
+                    return;
                 }
 
                 SickLeaveRequestDAO sickDAO = new SickLeaveRequestDAO();
                 int year = today.getYear();
                 int usedDays = sickDAO.countSickLeaveDaysUsed(currentUser.getId(), year);
-                int pendingDays = sickDAO.countPendingOrApprovedFuture(currentUser.getId(), year);
+                int pendingDays = sickDAO.countPendingSickLeaveDays(currentUser.getId(), year);
                 int remaining = 30 - usedDays - pendingDays;
-                if (remaining < dates.size()) {
-                    response.sendRedirect("create_request?error=insufficient_sick_days");
-                    return;
-                }
-
-                if (sickDAO.hasDuplicateRequest(currentUser.getId(), dates)) {
-                    response.sendRedirect("create_request?error=duplicate_sick_request");
+                if (remaining < requestedDates.size()) {
+                    response.sendRedirect("create_request?type=SICK_LEAVE_REQUEST&error=insufficient_sick_days");
                     return;
                 }
 
@@ -396,7 +414,7 @@ public class CreateRequestServlet extends HttpServlet {
                 String relativePath = "/uploads/sick_leave/" + fileName;
 
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
-                sickDAO.createSickLeaveRequest(requestId, relativePath, dates);
+                sickDAO.createSickLeaveRequest(requestId, relativePath, requestedDates);
             } else {
                 requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
             }

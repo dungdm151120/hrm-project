@@ -63,6 +63,10 @@ public class ProcessRequestServlet extends HttpServlet {
                             response.sendRedirect("request_detail?id=" + requestId + "&error=comment_required");
                             return;
                         }
+                        if (comment.trim().length() > 1000) {
+                            response.sendRedirect("request_detail?id=" + requestId + "&error=comment_too_long");
+                            return;
+                        }
 
                         String newStatus = action.equals("APPROVE") ? "APPROVED" : "REJECTED";
                         notificationEventType = newStatus;
@@ -76,16 +80,32 @@ public class ProcessRequestServlet extends HttpServlet {
                             if ("APPROVE".equals(action) && "LEAVE_REQUEST".equals(req.getType())) {
                                 LeaveRequest lr = leaveRequestDAO.getByRequestId(requestId);
                                 if (lr != null) {
-                                    if ("ON_LEAVE".equals(lr.getLeaveType())) {
-                                        attendanceDAO.markOnLeave(req.getUserId(), lr.getLeaveDate());
-                                    } else if ("LEAVE".equals(lr.getLeaveType())) {
-                                        attendanceDAO.markAbsent(req.getUserId(), lr.getLeaveDate());
+                                    List<LocalDate> dates = leaveRequestDAO.getDatesByLeaveRequestId(lr.getId());
+                                    if (dates.isEmpty() && lr.getStartDate() != null && lr.getEndDate() != null) {
+                                        LocalDate curr = lr.getStartDate();
+                                        while (!curr.isAfter(lr.getEndDate())) {
+                                            if (curr.getDayOfWeek() != java.time.DayOfWeek.SATURDAY
+                                                    && curr.getDayOfWeek() != java.time.DayOfWeek.SUNDAY) {
+                                                dates.add(curr);
+                                            }
+                                            curr = curr.plusDays(1);
+                                        }
+                                    } else if (dates.isEmpty() && lr.getLeaveDate() != null) {
+                                        dates.add(lr.getLeaveDate());
+                                    }
+                                    for (LocalDate d : dates) {
+                                        if ("ON_LEAVE".equals(lr.getLeaveType())) {
+                                            attendanceDAO.markOnLeave(req.getUserId(), d);
+                                        } else if ("LEAVE".equals(lr.getLeaveType())) {
+                                            attendanceDAO.markAbsent(req.getUserId(), d);
+                                        }
                                     }
                                 }
                             } else if ("APPROVE".equals(action) && "SICK_LEAVE_REQUEST".equals(req.getType())) {
                                 SickLeaveRequest sickReq = sickLeaveRequestDAO.getByRequestId(requestId);
                                 if (sickReq != null) {
-                                    List<LocalDate> dates = sickLeaveRequestDAO.getDatesBySickRequestId(sickReq.getId());
+                                    List<LocalDate> dates = sickLeaveRequestDAO
+                                            .getDatesBySickRequestId(sickReq.getId());
                                     for (LocalDate date : dates) {
                                         attendanceDAO.markSickLeave(req.getUserId(), date);
                                     }
@@ -105,10 +125,12 @@ public class ProcessRequestServlet extends HttpServlet {
                     break;
 
                 case "APPLY_CHANGES":
-                    if (("HR Staff".equals(position) || currentUser.getId() == req.getHandlerId()) && "APPROVED".equals(req.getStatus()) && "ATTENDANCE_ADJUST".equals(req.getType())) {
+                    if (("HR Staff".equals(position) || currentUser.getId() == req.getHandlerId())
+                            && "APPROVED".equals(req.getStatus()) && "ATTENDANCE_ADJUST".equals(req.getType())) {
                         AttendanceChangeRequest acr = attendanceChangeRequestDAO.getByRequestId(requestId);
                         if (acr != null) {
-                            AttendanceRecord record = attendanceDAO.getRecordByUserAndDate(req.getUserId(), acr.getWorkDate());
+                            AttendanceRecord record = attendanceDAO.getRecordByUserAndDate(req.getUserId(),
+                                    acr.getWorkDate());
                             if (record == null) {
                                 record = new AttendanceRecord();
                                 record.setUserId(req.getUserId());
@@ -136,7 +158,8 @@ public class ProcessRequestServlet extends HttpServlet {
                     break;
 
                 case "CANCEL":
-                    if (String.valueOf(req.getUserId()).equals(String.valueOf(userId)) && "PENDING".equals(req.getStatus())) {
+                    if (String.valueOf(req.getUserId()).equals(String.valueOf(userId))
+                            && "PENDING".equals(req.getStatus())) {
                         success = dao.updateRequestStatus(requestId, "CANCELLED", null);
                         notificationEventType = "CANCELLED";
 
@@ -151,10 +174,14 @@ public class ProcessRequestServlet extends HttpServlet {
                         String pageFilter = request.getParameter("page");
 
                         StringBuilder redirectParams = new StringBuilder("view_my_request?success=true");
-                        if (statusFilter != null && !statusFilter.isEmpty()) redirectParams.append("&status=").append(statusFilter);
-                        if (typeFilter != null && !typeFilter.isEmpty()) redirectParams.append("&type=").append(typeFilter);
-                        if (sortFilter != null && !sortFilter.isEmpty()) redirectParams.append("&sort=").append(sortFilter);
-                        if (pageFilter != null && !pageFilter.isEmpty()) redirectParams.append("&page=").append(pageFilter);
+                        if (statusFilter != null && !statusFilter.isEmpty())
+                            redirectParams.append("&status=").append(statusFilter);
+                        if (typeFilter != null && !typeFilter.isEmpty())
+                            redirectParams.append("&type=").append(typeFilter);
+                        if (sortFilter != null && !sortFilter.isEmpty())
+                            redirectParams.append("&sort=").append(sortFilter);
+                        if (pageFilter != null && !pageFilter.isEmpty())
+                            redirectParams.append("&page=").append(pageFilter);
 
                         returnUrl = redirectParams.toString();
                     }
@@ -168,7 +195,8 @@ public class ProcessRequestServlet extends HttpServlet {
                 response.sendRedirect(returnUrl + "&success=true");
             } else {
                 String encodedComment = URLEncoder.encode(comment != null ? comment : "", "UTF-8");
-                response.sendRedirect("request_detail?id=" + requestId + "&error=action_failed&oldComment=" + encodedComment);
+                response.sendRedirect(
+                        "request_detail?id=" + requestId + "&error=action_failed&oldComment=" + encodedComment);
             }
         } catch (Exception e) {
             e.printStackTrace();
