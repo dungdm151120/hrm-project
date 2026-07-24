@@ -27,14 +27,40 @@ public class PayrollConfirmServlet extends HttpServlet {
         String redirectMonth = request.getParameter("redirectMonth");
         String redirectYear = request.getParameter("redirectYear");
 
-        Integer deptId = (redirectDept != null && !redirectDept.isEmpty()) ? Integer.parseInt(redirectDept) : null;
-        Integer month = (redirectMonth != null && !redirectMonth.isEmpty()) ? Integer.parseInt(redirectMonth) : null;
-        Integer year = (redirectYear != null && !redirectYear.isEmpty()) ? Integer.parseInt(redirectYear) : null;
+        Integer deptId = null;
+        if (redirectDept != null && !redirectDept.isEmpty() && !"all".equalsIgnoreCase(redirectDept)) {
+            try {
+                deptId = Integer.parseInt(redirectDept);
+            } catch (NumberFormatException e) {
+                deptId = null;
+            }
+        }
+
+        Integer month = null;
+        if (redirectMonth != null && !redirectMonth.isEmpty()) {
+            try { month = Integer.parseInt(redirectMonth); } catch (NumberFormatException ignored) {}
+        }
+
+        Integer year = null;
+        if (redirectYear != null && !redirectYear.isEmpty()) {
+            try { year = Integer.parseInt(redirectYear); } catch (NumberFormatException ignored) {}
+        }
 
         StringBuilder redirectUrl = new StringBuilder(request.getContextPath() + "/payroll/list?");
-        if (redirectDept != null && !redirectDept.isEmpty()) redirectUrl.append("departmentId=").append(redirectDept).append("&");
-        if (redirectMonth != null && !redirectMonth.isEmpty()) redirectUrl.append("month=").append(redirectMonth).append("&");
-        if (redirectYear != null && !redirectYear.isEmpty()) redirectUrl.append("year=").append(redirectYear);
+        if (redirectDept != null && !redirectDept.isEmpty()) {
+            redirectUrl.append("departmentId=").append(redirectDept).append("&");
+        }
+        if (redirectMonth != null && !redirectMonth.isEmpty()) {
+            redirectUrl.append("month=").append(redirectMonth).append("&");
+        }
+        if (redirectYear != null && !redirectYear.isEmpty()) {
+            redirectUrl.append("year=").append(redirectYear).append("&");
+        }
+
+        String finalRedirectUrl = redirectUrl.toString();
+        if (finalRedirectUrl.endsWith("&") || finalRedirectUrl.endsWith("?")) {
+            finalRedirectUrl = finalRedirectUrl.substring(0, finalRedirectUrl.length() - 1);
+        }
 
         try {
             if ("all".equalsIgnoreCase(allParam)) {

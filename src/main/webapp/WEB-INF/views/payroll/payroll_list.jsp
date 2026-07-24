@@ -120,7 +120,7 @@
                 <c:if test="${userPermissions.contains('PAYROLL_CONFIRM')}">
                     <form action="${pageContext.request.contextPath}/payroll/confirm" method="POST" onsubmit="return confirm('Confirm all payrolls?')">
                         <input type="hidden" name="all" value="all">
-                        <input type="hidden" name="redirectDepartmentId" value="${departmentId}">
+                        <input type="hidden" name="redirectDepartmentId" value="${currentDeptParam}">
                         <input type="hidden" name="redirectMonth" value="${month}">
                         <input type="hidden" name="redirectYear" value="${year}">
 
@@ -299,9 +299,11 @@
                                         </a>
 
                                         <c:if test="${statusLower == 'draft' && userPermissions.contains('PAYROLL_CONFIRM')}">
+                                            <c:set var="currentDeptParam" value="${not empty requestScope.departmentId ? requestScope.departmentId : 'all'}" />
+
                                             <form action="${pageContext.request.contextPath}/payroll/confirm" method="POST" onsubmit="return confirm('Confirm this payroll?')">
                                                 <input type="hidden" name="id" value="${p.id}">
-                                                <input type="hidden" name="redirectDepartmentId" value="${departmentId}">
+                                                <input type="hidden" name="redirectDepartmentId" value="${currentDeptParam}">
                                                 <input type="hidden" name="redirectMonth" value="${month}">
                                                 <input type="hidden" name="redirectYear" value="${year}">
 

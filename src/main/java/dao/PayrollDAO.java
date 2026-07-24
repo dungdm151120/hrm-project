@@ -245,8 +245,8 @@ public class PayrollDAO {
                     payroll.setDepartmentName(rs.getString("department_name"));
                     payroll.setPositionName(rs.getString("position_name"));
 
-                    payroll.setExpectedHours(rs.getInt("expected_hours"));
-                    payroll.setActualHours(rs.getInt("actual_hours"));
+                    payroll.setExpectedHours(rs.getDouble("expected_hours"));
+                    payroll.setActualHours(rs.getDouble("actual_hours"));
 
                     payroll.setBasicSalary(rs.getLong("basic_salary"));
                     payroll.setTotalIncome(rs.getLong("total_income"));
