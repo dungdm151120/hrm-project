@@ -16,19 +16,17 @@ public class PayrollCalculator {
         payroll.setExpectedHours(expectedHours);
         payroll.setBasicSalary(basicSalary);
 
-        double rateMultiplier = 1.0;
         long bonus = 0;
         String description = null;
 
         if (positionName.contains("manager") || positionName.equals("system administrator")) {
-            rateMultiplier = 2.0;
-            bonus = 2000000;
+            bonus += 2000000;
             description = "Lương thưởng cho Manager";
         } else if (positionName.contains("staff")) {
-            rateMultiplier = 1.5;
+            bonus += 500000;
+            description = "Lương thưởng cho Staff";
         }
 
-        payroll.setRateMultiplier(rateMultiplier);
         payroll.setBonus(bonus);
         payroll.setDescription(description);
 
@@ -37,7 +35,7 @@ public class PayrollCalculator {
         payroll.setActualHours(totalActualHours);
 
         // Calculate Gross Income
-        long grossIncome = Math.round(((basicSalary * rateMultiplier) / expectedHours) * totalActualHours);
+        long grossIncome = Math.round((basicSalary / expectedHours) * totalActualHours + bonus);
         payroll.setTotalIncome(grossIncome);
 
         // Calculate Insurance for Employee
@@ -76,7 +74,7 @@ public class PayrollCalculator {
         payroll.setSickLeavePay(sickLeavePay);
 
         // Net Income
-        long netPay = incomeBeforeTax - incomeTax + bonus + overtimePay + sickLeavePay;
+        long netPay = incomeBeforeTax - incomeTax + overtimePay + sickLeavePay;
         payroll.setNetPay(netPay);
 
         // Calculate Insurance Employer pay for each Employee

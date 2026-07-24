@@ -7,6 +7,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import model.User;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -14,6 +16,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @WebServlet("/reports/attendance/export")
 public class ExportAttendanceReportServlet extends HttpServlet {
@@ -22,6 +25,20 @@ public class ExportAttendanceReportServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
+            HttpSession session = req.getSession(false);
+            User currentUser = session == null ? null : (User) session.getAttribute("currentUser");
+            if (currentUser == null) {
+                resp.sendRedirect(req.getContextPath() + "/login");
+                return;
+            }
+
+            @SuppressWarnings("unchecked")
+            Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
+            if (userPermissions == null) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
             // Read parameters
             String periodType = req.getParameter("periodType");
             if (periodType == null || periodType.isEmpty()) {
@@ -43,7 +60,15 @@ public class ExportAttendanceReportServlet extends HttpServlet {
                 year = Integer.parseInt(yParam);
             }
             
-            Integer departmentId = parseInteger(req.getParameter("departmentId"));
+            boolean isRestricted = !userPermissions.contains("ATTENDANCE_VIEW_ALL")
+                    && userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
+            Integer departmentId = isRestricted
+                    ? currentUser.getDepartmentId()
+                    : parseInteger(req.getParameter("departmentId"));
+            if (isRestricted && departmentId == null) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "No department assigned.");
+                return;
+            }
 
             LocalDate startDate = LocalDate.now();
             LocalDate endDate = LocalDate.now();
@@ -124,6 +149,11 @@ public class ExportAttendanceReportServlet extends HttpServlet {
             AttendanceReportRowDTO mostPunctual = null;
             double minIrregularities = Double.MAX_VALUE;
 
+            AttendanceReportRowDTO lowestWorking = null;
+            double minHours = Double.MAX_VALUE;
+            AttendanceReportRowDTO leastPunctual = null;
+            int maxIrregularities = 0;
+
             for (AttendanceReportRowDTO row : reportRows) {
                 row.setExpectedWorkdays(expectedWorkdays);
                 
@@ -143,11 +173,24 @@ public class ExportAttendanceReportServlet extends HttpServlet {
 
                 // Most punctual check
                 if (row.getPresentDays() > 0) {
-                    double irregularities = row.getLateDays() + row.getEarlyLeaveDays() + row.getForgotCheckInDays();
+                    double irregularities = row.getLateDays() + row.getEarlyLeaveDays()
+                            + row.getForgotCheckInDays() + row.getForgotCheckOutDays();
                     if (irregularities < minIrregularities) {
                         minIrregularities = irregularities;
                         mostPunctual = row;
                     }
+
+                    if (workAndOt < minHours) {
+                        minHours = workAndOt;
+                        lowestWorking = row;
+                    }
+                }
+
+                int irregularities = row.getLateDays() + row.getEarlyLeaveDays()
+                        + row.getForgotCheckInDays() + row.getForgotCheckOutDays();
+                if (irregularities > maxIrregularities) {
+                    maxIrregularities = irregularities;
+                    leastPunctual = row;
                 }
 
                 Row dr = sheet1.createRow(r1++);
@@ -222,7 +265,7 @@ public class ExportAttendanceReportServlet extends HttpServlet {
             // Stat 2
             Row stat2 = sheet2.createRow(r2++);
             stat2.createCell(0).setCellValue("Hiệu suất làm thêm (OT)");
-            double otPercent = totalRegisteredOvertimeHours > 0 ? (totalActualOvertimeHours / totalRegisteredOvertimeHours) * 100 : 100.0;
+            double otPercent = totalRegisteredOvertimeHours > 0 ? (totalActualOvertimeHours / totalRegisteredOvertimeHours) * 100 : 0.0;
             stat2.createCell(1).setCellValue(String.format("%.1f%%", otPercent));
             stat2.createCell(2).setCellValue(String.format("%.1f / %.1f giờ OT", totalActualOvertimeHours, totalRegisteredOvertimeHours));
             stat2.createCell(3);
@@ -315,6 +358,42 @@ public class ExportAttendanceReportServlet extends HttpServlet {
                     if (row.getCell(i) != null) {
                         row.getCell(i).setCellStyle(dataStyle);
                     }
+                }
+            }
+
+            r2 += 2;
+            Row secHeader3 = sheet2.createRow(r2++);
+            Cell secCell3 = secHeader3.createCell(0);
+            secCell3.setCellValue("III. EMPLOYEES NEEDING ATTENTION");
+            secCell3.setCellStyle(sectionHeaderStyle);
+            sheet2.addMergedRegion(new CellRangeAddress(r2 - 1, r2 - 1, 0, 4));
+
+            String[] attentionLabels = {
+                "Lowest total work + OT hours",
+                "Least punctual employee"
+            };
+            AttendanceReportRowDTO[] attentionRows = {
+                lowestWorking, leastPunctual
+            };
+            String[] attentionDetails = {
+                lowestWorking == null ? "No data" : String.format("%.1f work + OT hours", lowestWorking.getTotalWorkHours() + lowestWorking.getTotalOvertimeHours()),
+                leastPunctual == null ? "No data" : "Late: " + leastPunctual.getLateDays()
+                        + " | Early leave: " + leastPunctual.getEarlyLeaveDays()
+                        + " | Missing check-in: " + leastPunctual.getForgotCheckInDays()
+                        + " | Missing check-out: " + leastPunctual.getForgotCheckOutDays()
+            };
+
+            for (int i = 0; i < attentionLabels.length; i++) {
+                Row row = sheet2.createRow(r2++);
+                AttendanceReportRowDTO employee = attentionRows[i];
+                row.createCell(0).setCellValue(attentionLabels[i]);
+                row.createCell(1).setCellValue(employee == null ? "No data" : employee.getEmployeeName());
+                row.createCell(2).setCellValue(employee == null ? "-" : employee.getEmployeeCode());
+                row.createCell(3).setCellValue(employee == null ? "-" : employee.getDepartmentName());
+                row.createCell(4).setCellValue(attentionDetails[i]);
+                row.getCell(0).setCellStyle(boldDataStyle);
+                for (int cellIndex = 1; cellIndex <= 4; cellIndex++) {
+                    row.getCell(cellIndex).setCellStyle(dataStyle);
                 }
             }
 

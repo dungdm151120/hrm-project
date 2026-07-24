@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -54,7 +55,9 @@
             <form class="login-form" action="<%= request.getContextPath() %>/login" method="post">
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                    <input type="email" id="email" name="email" placeholder="your@email.com"
+                           maxlength="100" autocomplete="username"
+                           value="<c:out value='${email}'/>" required>
                 </div>
 
                 <div class="form-group">
@@ -62,7 +65,8 @@
                         <label for="password">Password</label>
                         <a href="<%= request.getContextPath() %>/forgot-password" class="forgot-link">Forgot?</a>
                     </div>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    <input type="password" id="password" name="password" placeholder="••••••••"
+                           maxlength="72" autocomplete="current-password" required>
                 </div>
 
                 <button type="submit" class="btn-login">

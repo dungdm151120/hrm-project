@@ -38,7 +38,8 @@
 
                 <div class="form-group">
                     <label for="content">Content <span class="required-star">*</span></label>
-                    <textarea id="content" name="content" rows="8" required><c:out value="${announcement.content}"/></textarea>
+                    <textarea id="content" name="content" rows="8"
+                              maxlength="5000" required><c:out value="${announcement.content}"/></textarea>
                 </div>
 
                 <div class="form-group">

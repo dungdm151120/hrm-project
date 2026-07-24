@@ -7,11 +7,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import model.Department;
 import model.User;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 @WebServlet("/admin/departments/employees")
 public class EmployeeListServlet extends HttpServlet {
@@ -89,6 +91,17 @@ public class EmployeeListServlet extends HttpServlet {
         request.setAttribute("totalEmployees", totalEmployees);
         request.setAttribute("pageSize", PAGE_SIZE);
         request.setAttribute("id", id);
+
+        HttpSession session = request.getSession(false);
+        @SuppressWarnings("unchecked")
+        Set<String> permissions = session == null
+                ? null
+                : (Set<String>) session.getAttribute("userPermissions");
+        boolean canMoveMember = permissions != null && permissions.contains("DEPARTMENT_MOVE_MEMBER");
+        boolean canAssignManager = permissions != null && permissions.contains("DEPARTMENT_ASSIGN_MANAGER");
+        request.setAttribute("canMoveMember", canMoveMember);
+        request.setAttribute("canAssignManager", canAssignManager);
+        request.setAttribute("showActions", canMoveMember || canAssignManager);
 
         request.getRequestDispatcher("/WEB-INF/views/department/employee_list.jsp")
                 .forward(request, response);

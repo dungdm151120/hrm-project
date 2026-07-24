@@ -125,6 +125,12 @@ public class AttendanceUpdateServlet extends HttpServlet {
         attendanceDAO.calculateWorkingHours(record);
         record.setStatus(attendanceDAO.determineStatus(record));
 
+        AttendanceRecordDTO latestRecord = attendanceDAO.getAttendanceRecordDetailById(id);
+        if (latestRecord == null || isRecordLocked(latestRecord)) {
+            redirectToRecords(request, response, "record_locked");
+            return;
+        }
+
         if (!attendanceDAO.updateAttendanceRecord(record)) {
             recordDetail.setStatus(record.getStatus());
             recordDetail.setTotalWorkHours(record.getTotalWorkHours());

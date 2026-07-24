@@ -25,32 +25,36 @@
         </div>
 
         <div class="dashboard-content">
-            <c:if test="${not empty error}">
-                <div class="alert alert-error">${error}</div>
+            <c:if test="${not empty passwordError}">
+                <div class="alert alert-error">${passwordError}</div>
             </c:if>
-            <c:if test="${not empty success}">
-                <div class="alert alert-success">✓ ${success}</div>
+            <c:if test="${not empty passwordSuccess}">
+                <div class="alert alert-success">✓ ${passwordSuccess}</div>
             </c:if>
 
             <div class="detail-wrapper">
-                <form action="${pageContext.request.contextPath}/change-password" method="post">
+                <form action="${pageContext.request.contextPath}/change_password" method="post">
                     <div class="form-group">
                         <label for="oldPassword">Old Password <span class="required-star">*</span></label>
-                        <input type="password" id="oldPassword" name="oldPassword" placeholder="Nhập mật khẩu cũ" required>
+                        <input type="password" id="oldPassword" name="oldPassword"
+                               placeholder="Nhập mật khẩu cũ" maxlength="72" required>
                     </div>
 
                     <div class="form-group">
                         <label for="newPassword">New Password <span class="required-star">*</span></label>
-                        <input type="password" id="newPassword" name="newPassword" placeholder="Nhập mật khẩu mới" required>
+                        <input type="password" id="newPassword" name="newPassword"
+                               placeholder="Nhập mật khẩu mới" minlength="6" maxlength="72" required>
                     </div>
 
                     <div class="form-group">
                         <label for="confirmPassword">Confirm New Password <span class="required-star">*</span></label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Xác nhận mật khẩu mới" required>
+                        <input type="password" id="confirmPassword" name="confirmPassword"
+                               placeholder="Xác nhận mật khẩu mới" minlength="6" maxlength="72" required>
                     </div>
 
                     <div class="form-actions">
                         <button type="submit" class="btn-save">Change Password</button>
+                        <a href="${pageContext.request.contextPath}/profile" class="btn-cancel">Back to Profile</a>
                     </div>
                 </form>
             </div>

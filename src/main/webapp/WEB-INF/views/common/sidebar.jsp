@@ -215,6 +215,74 @@
                     </div>
                 </div>
                 </c:if>
+        <!-- Task Group -->
+        <c:if test="${showTasks}">
+        <c:set var="taskActive" value="${currentPath.startsWith(ctx.concat('/tasks'))}" />
+        <div class="nav-group">
+            <button class="nav-item nav-toggle ${taskActive ? 'open' : ''}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 11l3 3L22 4"/>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                <span>Tasks</span>
+                <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </button>
+            <div class="submenu" style="${taskActive ? 'display: flex !important;' : ''}">
+                <a href="${ctx}/tasks" class="submenu-item ${currentPath == ctx.concat('/tasks') ? 'active' : ''}">View tasks</a>
+                <c:if test="${userPermissions.contains('TASK_VIEW_ALL')}">
+                    <a href="${ctx}/tasks/all" class="submenu-item ${currentPath == ctx.concat('/tasks/all') ? 'active' : ''}">View all tasks</a>
+                </c:if>
+                <c:if test="${userPermissions.contains('TASK_CREATE')}">
+                    <a href="${ctx}/tasks/create" class="submenu-item ${currentPath == ctx.concat('/tasks/create') ? 'active' : ''}">Create task</a>
+                </c:if>
+            </div>
+        </div>
+        </c:if>
+
+        <!-- Request Group -->
+                <c:if test="${showRequests}">
+                    <c:set var="reqActive" value="${currentPath.startsWith(ctx.concat('/view_my_request')) ||
+                                            currentPath.startsWith(ctx.concat('/view_pending_request')) ||
+                                            currentPath.startsWith(ctx.concat('/view_observed_request')) ||
+                                            currentPath.startsWith(ctx.concat('/view_handled_request')) ||
+                                            currentPath.startsWith(ctx.concat('/view_all_request')) ||
+                                            currentPath.startsWith(ctx.concat('/create_request')) ||
+                                            currentPath.startsWith(ctx.concat('/request_detail'))}" />
+
+                    <div class="nav-group">
+                        <button class="nav-item nav-toggle ${reqActive ? 'open' : ''}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <span>Requests</span>
+                            <c:if test="${unreadRequestNotificationCount > 0}">
+                                <span class="sidebar-unread-dot" title="Unread request notifications"></span>
+                            </c:if>
+                            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <div class="submenu" style="${reqActive ? 'display: flex !important;' : ''}">
+                            <c:if test="${userPermissions.contains('VIEW_MY_REQUEST')}">
+                                <a href="${ctx}/view_my_request" class="submenu-item ${currentPath == ctx.concat('/view_my_request') ? 'active' : ''}">View my requests</a>
+                            </c:if>
+                            <!-- Mọi người dùng đăng nhập đều có thể được làm approver, nên cứ hiển thị menu Pending Approvals -->
+                            <a href="${ctx}/view_pending_request" class="submenu-item ${currentPath == ctx.concat('/view_pending_request') ? 'active' : ''}">Pending Approvals</a>
+                            <c:if test="${userPermissions.contains('VIEW_ALL_REQUEST')}">
+                                <a href="${ctx}/view_all_request" class="submenu-item ${currentPath == ctx.concat('/view_all_request') ? 'active' : ''}">View all requests</a>
+                            </c:if>
+                            <c:if test="${userPermissions.contains('CREATE_REQUEST')}">
+                                <a href="${ctx}/create_request" class="submenu-item ${currentPath == ctx.concat('/create_request') ? 'active' : ''}">Create request</a>
+                            </c:if>
+                        </div>
+                    </div>
+                </c:if>
 
         <!-- Employees Group -->
         <c:if test="${showEmployees}">
@@ -400,89 +468,20 @@
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_ALL')}">
                     <a href="${ctx}/attendance/view_all" class="submenu-item ${currentPath == ctx.concat('/attendance/view_all') ? 'active' : ''}">All Attendance</a>
-                    <a href="${ctx}/attendance/work-hours" class="submenu-item ${currentPath == ctx.concat('/attendance/work-hours') ? 'active' : ''}">Work Hours Summary</a>
+                    <a href="${ctx}/attendance/work_hours" class="submenu-item ${currentPath == ctx.concat('/attendance/work_hours') ? 'active' : ''}">Work Hours Summary</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('ATTENDANCE_UPDATE')}">
                     <a href="${ctx}/attendance/records" class="submenu-item ${currentPath == ctx.concat('/attendance/records') || currentPath.startsWith(ctx.concat('/attendance/update')) ? 'active' : ''}">Update Attendance</a>
                     <a href="${ctx}/admin/attendance/import" class="submenu-item ${currentPath == ctx.concat('/admin/attendance/import') ? 'active' : ''}">Import Attendance</a>
                 </c:if>
-                <c:if test="${userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}">
-                    <a href="${ctx}/attendance/export" class="submenu-item ${currentPath == ctx.concat('/attendance/export') ? 'active' : ''}">Export Report</a>
-                </c:if>
                 <c:if test="${currentUser.roleName != 'BUSINESS ADMIN' && (userPermissions.contains('ATTENDANCE_CONFIRM_DEPT') || (currentUser.roleName == 'HR_MANAGER' && userPermissions.contains('ATTENDANCE_FINALIZE_HR')))}">
                     <a href="${ctx}/attendance/confirm" class="submenu-item ${currentPath == ctx.concat('/attendance/confirm') ? 'active' : ''}">Confirm Attendance</a>
                 </c:if>
                 <c:if test="${currentUser.roleName == 'HR_MANAGER' || currentUser.manager || currentUser.roleName == 'PAYROLL_MANAGER' || currentUser.roleName == 'PAYROLL_STAFF'}">
-                    <a href="${ctx}/attendance/confirm-list" class="submenu-item ${currentPath.startsWith(ctx.concat('/attendance/confirm-list')) or currentPath.startsWith(ctx.concat('/attendance/confirm-detail')) ? 'active' : ''}">Confirmed Attendance List</a>
+                    <a href="${ctx}/attendance/confirm_list" class="submenu-item ${currentPath.startsWith(ctx.concat('/attendance/confirm_list')) or currentPath.startsWith(ctx.concat('/attendance/confirm_detail')) ? 'active' : ''}">Confirmed Attendance List</a>
                 </c:if>
             </div>
         </div>
-        </c:if>
-        
-        <!-- Reports Group -->
-        <c:set var="showReports" value="${userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}" />
-        <c:if test="${showReports}">
-        <c:set var="reportActive" value="${currentPath.startsWith(ctx.concat('/reports'))}" />
-        <div class="nav-group">
-            <button class="nav-item nav-toggle ${reportActive ? 'open' : ''}">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
-                    <line x1="18" y1="20" x2="18" y2="10"></line>
-                    <line x1="12" y1="20" x2="12" y2="4"></line>
-                    <line x1="6" y1="20" x2="6" y2="14"></line>
-                </svg>
-                <span>Reports</span>
-                <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </button>
-            <div class="submenu" style="${reportActive ? 'display: flex !important;' : ''}">
-                <a href="${ctx}/reports/attendance" class="submenu-item ${currentPath == ctx.concat('/reports/attendance') ? 'active' : ''}">Attendance Report</a>
-                <a href="${ctx}/reports/hr" class="submenu-item ${currentPath == ctx.concat('/reports/hr') ? 'active' : ''}">HR Report</a>
-            </div>
-        </div>
-        </c:if>
-
-        <!-- Request Group -->
-        <c:if test="${showRequests}">
-            <c:set var="reqActive" value="${currentPath.startsWith(ctx.concat('/view_my_request')) ||
-                                    currentPath.startsWith(ctx.concat('/view_pending_request')) ||
-                                    currentPath.startsWith(ctx.concat('/view_observed_request')) ||
-                                    currentPath.startsWith(ctx.concat('/view_handled_request')) ||
-                                    currentPath.startsWith(ctx.concat('/view_all_request')) ||
-                                    currentPath.startsWith(ctx.concat('/create_request')) ||
-                                    currentPath.startsWith(ctx.concat('/request_detail'))}" />
-
-            <div class="nav-group">
-                <button class="nav-item nav-toggle ${reqActive ? 'open' : ''}">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                    <span class="sidebar-menu-label">Requests</span>
-                    <c:if test="${unreadRequestNotificationCount > 0}">
-                        <span class="sidebar-unread-dot" title="Unread request notifications"></span>
-                    </c:if>
-                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"/>
-                    </svg>
-                </button>
-                <div class="submenu" style="${reqActive ? 'display: flex !important;' : ''}">
-                    <c:if test="${userPermissions.contains('VIEW_MY_REQUEST')}">
-                        <a href="${ctx}/view_my_request" class="submenu-item ${currentPath == ctx.concat('/view_my_request') ? 'active' : ''}">View my requests</a>
-                    </c:if>
-                    <!-- Mọi người dùng đăng nhập đều có thể được làm approver, nên cứ hiển thị menu Pending Approvals -->
-                    <a href="${ctx}/view_pending_request" class="submenu-item ${currentPath == ctx.concat('/view_pending_request') ? 'active' : ''}">Pending Approvals</a>
-                    <c:if test="${userPermissions.contains('VIEW_ALL_REQUEST')}">
-                        <a href="${ctx}/view_all_request" class="submenu-item ${currentPath == ctx.concat('/view_all_request') ? 'active' : ''}">View all requests</a>
-                    </c:if>
-                    <c:if test="${userPermissions.contains('CREATE_REQUEST')}">
-                        <a href="${ctx}/create_request" class="submenu-item ${currentPath == ctx.concat('/create_request') ? 'active' : ''}">Create request</a>
-                    </c:if>
-                </div>
-            </div>
         </c:if>
 
         <!-- Payroll Group -->
@@ -504,7 +503,7 @@
                     <a href="${ctx}/payroll/my" class="submenu-item ${currentPath == ctx.concat('/payroll/my') ? 'active' : ''}">My Payroll</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('PAYROLL_VIEW_LIST')}">
-                    <a href="${ctx}/payroll/department" class="submenu-item ${currentPath == ctx.concat('/payroll/department') ? 'active' : ''}">Payroll Department</a>
+                    <a href="${ctx}/payroll/list" class="submenu-item ${currentPath == ctx.concat('/payroll/list') ? 'active' : ''}">Payroll List</a>
                 </c:if>
                 <c:if test="${userPermissions.contains('PAYROLL_GENERATE')}">
                     <a href="${ctx}/payroll/generate" class="submenu-item ${currentPath == ctx.concat('/payroll/generate') ? 'active' : ''}">Generate Payroll</a>
@@ -519,27 +518,31 @@
         </div>
         </c:if>
 
-        <!-- Task Group -->
-        <c:if test="${showTasks}">
-        <c:set var="taskActive" value="${currentPath.startsWith(ctx.concat('/tasks'))}" />
+<!-- Reports Group -->
+        <c:set var="showReports" value="${userPermissions.contains('ATTENDANCE_VIEW_ALL') or userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') or userPermissions.contains('ATTENDANCE_EXPORT_REPORT') or userPermissions.contains('PAYROLL_VIEW_LIST') or userPermissions.contains('PAYROLL_EXPORT_REPORT')}" />
+        <c:if test="${showReports}">
+        <c:set var="reportActive" value="${currentPath.startsWith(ctx.concat('/reports'))}" />
         <div class="nav-group">
-            <button class="nav-item nav-toggle ${taskActive ? 'open' : ''}">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 11l3 3L22 4"/>
-                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            <button class="nav-item nav-toggle ${reportActive ? 'open' : ''}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
                 </svg>
-                <span>Tasks</span>
+                <span>Reports</span>
                 <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"/>
                 </svg>
             </button>
-            <div class="submenu" style="${taskActive ? 'display: flex !important;' : ''}">
-                <a href="${ctx}/tasks" class="submenu-item ${currentPath == ctx.concat('/tasks') ? 'active' : ''}">View tasks</a>
-                <c:if test="${userPermissions.contains('TASK_VIEW_ALL')}">
-                    <a href="${ctx}/tasks/all" class="submenu-item ${currentPath == ctx.concat('/tasks/all') ? 'active' : ''}">View all tasks</a>
+            <div class="submenu" style="${reportActive ? 'display: flex !important;' : ''}">
+                <c:if test="${userPermissions.contains('ATTENDANCE_REPORT_VIEW')}">
+                    <a href="${ctx}/reports/attendance" class="submenu-item ${currentPath == ctx.concat('/reports/attendance') ? 'active' : ''}">Attendance Report</a>
                 </c:if>
-                <c:if test="${userPermissions.contains('TASK_CREATE')}">
-                    <a href="${ctx}/tasks/create" class="submenu-item ${currentPath == ctx.concat('/tasks/create') ? 'active' : ''}">Create task</a>
+                <c:if test="${userPermissions.contains('HR_REPORT_VIEW')}">
+                    <a href="${ctx}/reports/hr" class="submenu-item ${currentPath == ctx.concat('/reports/hr') ? 'active' : ''}">HR Report</a>
+                </c:if>
+                <c:if test="${userPermissions.contains('PAYROLL_REPORT_VIEW')}">
+                    <a href="${ctx}/reports/salary" class="submenu-item ${currentPath == ctx.concat('/reports/salary') ? 'active' : ''}">Salary Report</a>
                 </c:if>
             </div>
         </div>
@@ -651,7 +654,7 @@
       </div>
       <div class="dropdown-menu" data-profile-dropdown>
         <a href="${ctx}/profile" class="dropdown-item">View My Profile</a>
-        <a href="${ctx}/change-password" class="dropdown-item">Change Password</a>
+        <a href="${ctx}/change_password" class="dropdown-item">Change Password</a>
         <a href="${ctx}/logout" class="dropdown-item">Logout</a>
       </div>
     </div>

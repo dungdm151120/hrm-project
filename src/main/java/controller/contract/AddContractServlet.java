@@ -14,6 +14,7 @@ import java.io.IOException;
 
 @WebServlet("/contracts/add")
 public class AddContractServlet extends HttpServlet {
+    private static final String DEFAULT_WORKING_TIME = "Monday to Friday, 08:00 - 17:00";
     private final LaborContractDAO contractDAO = new LaborContractDAO();
     private final UserDAO userDAO = new UserDAO();
 
@@ -29,6 +30,7 @@ public class AddContractServlet extends HttpServlet {
         LaborContract contract;
         try {
             contract = ContractFormMapper.fromRequest(request);
+            contract.setWorkingTime(DEFAULT_WORKING_TIME);
         } catch (IllegalArgumentException e) {
             forwardForm(request, response, null, e.getMessage());
             return;

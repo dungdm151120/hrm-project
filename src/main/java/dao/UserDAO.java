@@ -514,10 +514,10 @@ public class UserDAO {
         return users;
     }
 
-
     public boolean addUser(User user) {
         String sql = """
                 INSERT INTO users (
+                    employee_code,
                     full_name,
                     email,
                     password,
@@ -529,25 +529,27 @@ public class UserDAO {
                     role_id,
                     active
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection()) {
+            String newEmployeeCode = generateNextEmployeeCode(conn);
+            user.setEmployeeCode(newEmployeeCode);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, user.getEmployeeCode());
+                ps.setString(2, user.getFullName());
+                ps.setString(3, user.getEmail());
+                ps.setString(4, user.getPassword());
+                ps.setString(5, user.getPhone());
+                ps.setString(6, user.getGender());
+                setNullableTimestamp(ps, 7, user.getDateOfBirth());
+                ps.setString(8, user.getAddress());
+                ps.setString(9, user.getAvatarUrl());
+                ps.setInt(10, user.getRoleId());
+                ps.setBoolean(11, user.isActive());
 
-            ps.setString(1, user.getFullName());
-            ps.setString(2, user.getEmail());
-            ps.setString(3, user.getPassword());
-            ps.setString(4, user.getPhone());
-            ps.setString(5, user.getGender());
-            setNullableTimestamp(ps, 6, user.getDateOfBirth());
-            ps.setString(7, user.getAddress());
-            ps.setString(8, user.getAvatarUrl());
-            ps.setInt(9, user.getRoleId());
-            ps.setBoolean(10, user.isActive());
-
-            return ps.executeUpdate() > 0;
-
+                return ps.executeUpdate() > 0;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -555,6 +557,29 @@ public class UserDAO {
         return false;
     }
 
+    private String generateNextEmployeeCode(Connection conn) {
+        String sql = """
+            SELECT MAX(CAST(SUBSTRING(employee_code, 4) AS UNSIGNED)) AS max_num 
+            FROM users 
+            WHERE employee_code LIKE 'EMP%'
+            """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                int maxNum = rs.getInt("max_num");
+                if (maxNum > 0) {
+                    int nextNum = maxNum + 1;
+                    return String.format("EMP%03d", nextNum);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return "EMP001";
+    }
 
     public boolean updateUser(User user) {
         String sql = """
@@ -1136,7 +1161,6 @@ public class UserDAO {
     }
 
     public String moveDepartmentMember2(int userId, int newDeptId) {
-        // Sửa câu check để lấy thêm cả department_id hiện tại của user trước khi move
         String checkPositionSql = "SELECT p.name, u.department_id FROM users u " +
                 "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
         String getDeptNameSql = "SELECT name FROM departments WHERE id = ?";
@@ -1145,7 +1169,6 @@ public class UserDAO {
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
-            // Bắt đầu Transaction
             conn.setAutoCommit(false);
 
             int oldDeptId = -1;
@@ -1169,13 +1192,12 @@ public class UserDAO {
                 }
             }
 
-            // Nếu phòng ban mới trùng với phòng ban cũ thì không cần làm gì cả
             if (oldDeptId == newDeptId) {
                 conn.rollback();
                 return "SUCCESS";
             }
 
-            // 2. Lấy tên phòng ban mới
+            // 2. Lấy phòng ban mới
             String deptName = null;
             try (PreparedStatement psDept = conn.prepareStatement(getDeptNameSql)) {
                 psDept.setInt(1, newDeptId);
@@ -1220,8 +1242,8 @@ public class UserDAO {
             /* =================================================================
              * XỬ LÝ LƯU TRỮ LỊCH SỬ PHÒNG BAN THEO LOGIC MỚI (CHỐNG ĐỨT GÃY CHUỖI)
              * ================================================================= */
-            java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
-            java.sql.Date oldStartDate = null;
+            Date today = new Date(System.currentTimeMillis());
+            Date oldStartDate = null;
 
             // BƯỚC A: Tìm start_date của phòng cũ trong bảng department_after_update
             String selectCurrentSql = "SELECT start_date FROM department_after_update WHERE user_id = ?";
@@ -1235,7 +1257,7 @@ public class UserDAO {
                 }
             }
 
-            // Nếu oldStartDate vẫn là null (Đây là LẦN ĐẦU TIÊN move trong đời nhân viên này)
+            // Nếu oldStartDate vẫn là null (lần đầu move)
             if (oldStartDate == null) {
                 // Lấy ngày bắt đầu của hợp đồng đầu tiên làm start_date gốc
                 String selectContractSql = "SELECT MIN(start_date) as contract_start FROM labor_contracts WHERE user_id = ?";
@@ -1246,10 +1268,6 @@ public class UserDAO {
                             oldStartDate = rs.getDate("contract_start");
                         }
                     }
-                }
-                // Phòng hờ nếu nhân viên chưa có hợp đồng nào thì lấy ngày hôm nay làm mốc start_date gốc
-                if (oldStartDate == null) {
-                    oldStartDate = today;
                 }
             }
 
@@ -1264,7 +1282,6 @@ public class UserDAO {
             }
 
             // BƯỚC C: Cập nhật phòng mới vào bảng hiện tại `department_after_update`
-            // Sử dụng cú pháp UPSERT (INSERT ... ON DUPLICATE KEY UPDATE)
             String upsertAfterUpdateSql =
                     "INSERT INTO department_after_update (user_id, department_id, start_date, end_date) " +
                             "VALUES (?, ?, ?, NULL) " +
@@ -1290,17 +1307,17 @@ public class UserDAO {
                 int rows = psUpdate.executeUpdate();
 
                 if (rows > 0) {
-                    conn.commit(); // Thành công rực rỡ -> Commit toàn bộ dữ liệu
+                    conn.commit();
                     return "SUCCESS";
                 }
             }
 
-            conn.rollback(); // Nếu không update được bảng users -> Rollback
+            conn.rollback();
         } catch (Exception e) {
             e.printStackTrace();
             if (conn != null) {
                 try {
-                    conn.rollback(); // Có lỗi hệ thống -> Rollback sạch sẽ
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -1400,37 +1417,128 @@ public class UserDAO {
         return users;
     }
 
-    // Remove
     public String removeMemberFromDepartment(int userId) {
-        String checkPositionSql = "SELECT p.name FROM users u " +
-                "JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
+        String checkUserSql = "SELECT u.department_id, p.name FROM users u " +
+                "LEFT JOIN positions p ON u.position_id = p.id WHERE u.id = ?";
 
         String removeSql = "UPDATE users SET department_id = NULL, " +
-                "position_id = (SELECT id FROM positions WHERE name = 'Employee' LIMIT 1)" +
+                "position_id = (SELECT id FROM positions WHERE name = 'Employee' LIMIT 1) " +
                 "WHERE id = ?";
 
-        try (Connection conn = DBConnection.getConnection()) {
-            // 1. Kiểm tra xem có phải Manager không
-            try (PreparedStatement psCheck = conn.prepareStatement(checkPositionSql)) {
+        String updateHistoryEndSql = "UPDATE department_history SET end_date = ? " +
+                "WHERE user_id = ? AND end_date IS NULL";
+
+        String insertHistoryEndSql = "INSERT INTO department_history (user_id, department_id, start_date, end_date) " +
+                "VALUES (?, ?, " +
+                "COALESCE(" +
+                "   (SELECT MIN(start_date) FROM labor_contracts WHERE user_id = ?), " +
+                "   (SELECT created_at FROM users WHERE id = ?), " +
+                "   '2000-01-01 00:00:00'" +
+                "), ?)";
+
+        String updateAfterUpdateEndSql = "UPDATE department_after_update SET end_date = ? " +
+                "WHERE user_id = ? AND end_date IS NULL";
+
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            Integer currentDeptId = null;
+
+            // 1. Kiểm tra vị trí & lấy phòng ban hiện tại
+            try (PreparedStatement psCheck = conn.prepareStatement(checkUserSql)) {
                 psCheck.setInt(1, userId);
                 try (ResultSet rs = psCheck.executeQuery()) {
                     if (rs.next()) {
                         String pos = rs.getString("name");
                         if (pos != null && pos.toLowerCase().contains("manager")) {
+                            conn.rollback();
                             return "ERROR_IS_MANAGER";
+                        }
+
+                        // Lấy department_id dạng Object để tránh rs.getInt() biến NULL thành 0
+                        Object deptObj = rs.getObject("department_id");
+                        if (deptObj != null) {
+                            currentDeptId = ((Number) deptObj).intValue();
                         }
                     }
                 }
             }
 
-            // 2. Thực hiện cập nhật
+            // Nếu user vốn dĩ không thuộc phòng ban nào thì không cần xóa
+            if (currentDeptId == null) {
+                conn.rollback();
+                return "FAILED";
+            }
+
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+
+// 1. Chốt end_date ở department_history cho phòng CŨ
+            int updatedHistRows = 0;
+            try (PreparedStatement psHist = conn.prepareStatement(updateHistoryEndSql)) {
+                psHist.setTimestamp(1, now);
+                psHist.setInt(2, userId);
+                updatedHistRows = psHist.executeUpdate();
+            }
+
+// Nếu NV cũ chưa có dòng history nào -> INSERT phòng CŨ với end_date = NOW
+            if (updatedHistRows == 0 && currentDeptId != null) {
+                try (PreparedStatement psInsHist = conn.prepareStatement(insertHistoryEndSql)) {
+                    psInsHist.setInt(1, userId);
+                    psInsHist.setInt(2, currentDeptId);
+                    psInsHist.setInt(3, userId);
+                    psInsHist.setInt(4, userId);
+                    psInsHist.setTimestamp(5, now);
+                    psInsHist.executeUpdate();
+                }
+            }
+
+// 2. Với department_after_update:
+// 2a. Chốt end_date cho record phòng CŨ
+            try (PreparedStatement psAfter = conn.prepareStatement(updateAfterUpdateEndSql)) {
+                psAfter.setTimestamp(1, now);
+                psAfter.setInt(2, userId);
+                psAfter.executeUpdate();
+            }
+
+// 2b. Ghi nhận trạng thái MỚI (department_id = NULL) vào department_after_update
+            String insertAfterUpdateNullSql =
+                    "INSERT INTO department_after_update (user_id, department_id, start_date, end_date) VALUES (?, NULL, ?, NULL)";
+
+            try (PreparedStatement psInsAfter = conn.prepareStatement(insertAfterUpdateNullSql)) {
+                psInsAfter.setInt(1, userId);
+                psInsAfter.setTimestamp(2, now); // start_date từ thời điểm remove
+                psInsAfter.executeUpdate();
+            }
+
+// 3. Cập nhật bảng users
             try (PreparedStatement psUpdate = conn.prepareStatement(removeSql)) {
                 psUpdate.setInt(1, userId);
-                return psUpdate.executeUpdate() > 0 ? "SUCCESS" : "FAILED";
+                int rows = psUpdate.executeUpdate();
+
+                if (rows == 0) {
+                    conn.rollback();
+                    return "FAILED";
+                }
             }
+
+            conn.commit();
+            return "SUCCESS";
+
         } catch (Exception e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
             e.printStackTrace();
             return "ERROR_SYSTEM";
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) { e.printStackTrace(); }
+            }
         }
     }
 
@@ -1537,6 +1645,89 @@ public class UserDAO {
             return false;
         }
     }
+
+    public boolean addMembersToDept2(int[] userIds, int deptId) {
+        String getDeptNameSql = "SELECT name FROM departments WHERE id = ?";
+        String getPositionIdSql = "SELECT id FROM positions WHERE name = ?";
+        String sql = "UPDATE users SET department_id = ?, position_id = ?, role_id = ?, active = 1 WHERE id = ?";
+
+        // Câu lệnh lưu lịch sử chuyển/thêm phòng ban mới
+        String insertHistorySql = "INSERT INTO department_after_update (user_id, department_id, start_date) VALUES (?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            String deptName = null;
+            try (PreparedStatement psDept = conn.prepareStatement(getDeptNameSql)) {
+                psDept.setInt(1, deptId);
+                try (ResultSet rs = psDept.executeQuery()) {
+                    if (rs.next()) deptName = rs.getString("name");
+                }
+            }
+
+            String defaultPositionName;
+            String roleName;
+            if ("Human Resources".equalsIgnoreCase(deptName)) {
+                defaultPositionName = "HR Staff";
+                roleName = "HR_STAFF";
+            } else if ("Finance".equalsIgnoreCase(deptName)) {
+                defaultPositionName = "Payroll Staff";
+                roleName = "PAYROLL_STAFF";
+            } else {
+                defaultPositionName = "Employee";
+                roleName = "EMPLOYEE";
+            }
+
+            int positionId = -1;
+            try (PreparedStatement psPos = conn.prepareStatement(getPositionIdSql)) {
+                psPos.setString(1, defaultPositionName);
+                try (ResultSet rs = psPos.executeQuery()) {
+                    if (rs.next()) positionId = rs.getInt("id");
+                }
+            }
+            if (positionId == -1) {
+                conn.rollback();
+                return false;
+            }
+
+            int roleId = getRoleIdByName(conn, roleName);
+            if (roleId == -1) {
+                conn.rollback();
+                return false;
+            }
+
+            // 1. Cập nhật thông tin phòng ban, chức vụ, role cho user
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (int userId : userIds) {
+                    ps.setInt(1, deptId);
+                    ps.setInt(2, positionId);
+                    ps.setInt(3, roleId);
+                    ps.setInt(4, userId);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
+            // 2. THÊM MỚI: Thêm bản ghi vào lịch sử để Query Report nhận diện đúng mốc thời gian
+            java.sql.Date today = java.sql.Date.valueOf(java.time.LocalDate.now());
+            try (PreparedStatement psHist = conn.prepareStatement(insertHistorySql)) {
+                for (int userId : userIds) {
+                    psHist.setInt(1, userId);
+                    psHist.setInt(2, deptId);
+                    psHist.setDate(3, today);
+                    psHist.addBatch();
+                }
+                psHist.executeBatch();
+            }
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public void clearDepartmentAndPosition(int userId) {
         String sql = "UPDATE users SET department_id = NULL, position_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();

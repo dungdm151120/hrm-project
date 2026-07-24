@@ -46,9 +46,8 @@ public class AttendanceReportServlet extends HttpServlet {
         }
 
         // Determine if user is restricted to their own department
-        boolean isRestricted = !userPermissions.contains("ATTENDANCE_VIEW_ALL") && 
-                              !userPermissions.contains("ATTENDANCE_EXPORT_REPORT") && 
-                              userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
+        boolean isRestricted = !userPermissions.contains("ATTENDANCE_VIEW_ALL")
+                && userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
 
         List<Department> departments = new ArrayList<>();
         if (isRestricted) {
@@ -105,7 +104,10 @@ public class AttendanceReportServlet extends HttpServlet {
             } catch (NumberFormatException ignored) {}
         }
 
-        boolean isGenerated = "generate".equalsIgnoreCase(request.getParameter("action"));
+        // Opening Attendance Report should immediately show the current month's report.
+        String action = request.getParameter("action");
+        boolean isGenerated = action == null || action.isEmpty()
+                || "generate".equalsIgnoreCase(action);
 
         if (isGenerated) {
             LocalDate startDate = LocalDate.now();
@@ -141,6 +143,11 @@ public class AttendanceReportServlet extends HttpServlet {
             AttendanceReportRowDTO mostPunctual = null;
             double minIrregularities = Double.MAX_VALUE;
 
+            AttendanceReportRowDTO lowestWorking = null;
+            double minHours = Double.MAX_VALUE;
+            AttendanceReportRowDTO leastPunctual = null;
+            int maxIrregularities = 0;
+
             for (AttendanceReportRowDTO row : reportRows) {
                 row.setExpectedWorkdays(expectedWorkdays);
                 
@@ -161,11 +168,24 @@ public class AttendanceReportServlet extends HttpServlet {
                 // Most punctual check: min (lateDays + earlyLeaveDays + forgotCheckInDays)
                 // Filter out employees who never worked in this period (presentDays = 0) to avoid false punctuality
                 if (row.getPresentDays() > 0) {
-                    double irregularities = row.getLateDays() + row.getEarlyLeaveDays() + row.getForgotCheckInDays();
+                    double irregularities = row.getLateDays() + row.getEarlyLeaveDays()
+                            + row.getForgotCheckInDays() + row.getForgotCheckOutDays();
                     if (irregularities < minIrregularities) {
                         minIrregularities = irregularities;
                         mostPunctual = row;
                     }
+
+                    if (workAndOt < minHours) {
+                        minHours = workAndOt;
+                        lowestWorking = row;
+                    }
+                }
+
+                int irregularities = row.getLateDays() + row.getEarlyLeaveDays()
+                        + row.getForgotCheckInDays() + row.getForgotCheckOutDays();
+                if (irregularities > maxIrregularities) {
+                    maxIrregularities = irregularities;
+                    leastPunctual = row;
                 }
             }
 
@@ -179,6 +199,8 @@ public class AttendanceReportServlet extends HttpServlet {
             request.setAttribute("totalAbsentDays", totalAbsentDays);
             request.setAttribute("hardestWorking", hardestWorking);
             request.setAttribute("mostPunctual", mostPunctual);
+            request.setAttribute("lowestWorking", lowestWorking);
+            request.setAttribute("leastPunctual", leastPunctual);
         }
 
         // Available years for dropdown option (e.g. current year +/- 3 years)

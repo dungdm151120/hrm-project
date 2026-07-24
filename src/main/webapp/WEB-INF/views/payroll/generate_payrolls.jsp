@@ -44,7 +44,7 @@
                 <div class="form-group">
                     <label for="departmentId">Department <span class="required-star">*</span></label>
                     <select id="departmentId" name="departmentId" required>
-                        <option value="0" ${param.departmentId == '0' ? 'selected' : ''}>-- All Departments (Whole Company) --</option>
+                        <option value="0" ${param.departmentId == '0' ? 'selected' : ''}>All Departments</option>
                         <c:forEach items="${departments}" var="dept">
                             <option value="${dept.id}" ${dept.id == param.departmentId ? 'selected' : ''}>
                                 ${dept.name}
@@ -59,7 +59,7 @@
                         <c:set var="monthNames" value="${fn:split('January,February,March,April,May,June,July,August,September,October,November,December', ',')}" />
 
                         <select name="month">
-                            <option value="" ${empty month ? 'selected' : ''}>All months</option>
+                            <option value="" disabled hidden ${empty param.month ? 'selected' : ''}>Select Month</option>
                             <c:forEach var="m" begin="1" end="12">
                                 <option value="${m}" ${month == m ? 'selected' : ''}>${monthNames[m - 1]}</option>
                             </c:forEach>

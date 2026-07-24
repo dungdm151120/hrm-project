@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -30,12 +31,14 @@
         <form class="forgot-password-form" action="<%= request.getContextPath() %>/forgot-password" method="post">
             <div class="form-group">
                 <label for="email">Email <span class="required-star">*</span></label>
-                <input type="email" id="email" name="email" placeholder="Nhập email đã đăng ký" required>
+                <input type="email" id="email" name="email" placeholder="Nhập email đã đăng ký"
+                       maxlength="100" value="<c:out value='${email}'/>" required>
             </div>
 
             <div class="form-group">
                 <label for="reason">Lý do</label>
-                <textarea id="reason" name="reason" rows="4" placeholder="Mô tả lý do cần reset mật khẩu..."></textarea>
+                <textarea id="reason" name="reason" rows="4" maxlength="255"
+                          placeholder="Mô tả lý do cần reset mật khẩu..."><c:out value="${reason}"/></textarea>
             </div>
 
             <button type="submit" class="btn-login">Gửi yêu cầu đến admin</button>

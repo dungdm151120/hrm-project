@@ -239,13 +239,31 @@ public class PayrollDAO {
                     payroll.setUserId(rs.getInt("user_id"));
                     payroll.setMonth(rs.getInt("month"));
                     payroll.setYear(rs.getInt("year"));
-                    payroll.setBasicSalary(rs.getLong("basic_salary"));
-                    payroll.setTotalIncome(rs.getLong("total_income"));
-                    payroll.setNetPay(rs.getLong("net_pay"));
                     payroll.setStatus(rs.getString("status"));
+
                     payroll.setEmployeeName(rs.getString("employee_name"));
                     payroll.setDepartmentName(rs.getString("department_name"));
                     payroll.setPositionName(rs.getString("position_name"));
+
+                    payroll.setExpectedHours(rs.getDouble("expected_hours"));
+                    payroll.setActualHours(rs.getDouble("actual_hours"));
+
+                    payroll.setBasicSalary(rs.getLong("basic_salary"));
+                    payroll.setTotalIncome(rs.getLong("total_income"));
+                    payroll.setNetPay(rs.getLong("net_pay"));
+
+                    payroll.setSocialInsurance(rs.getLong("social_insurance"));
+                    payroll.setHealthInsurance(rs.getLong("health_insurance"));
+                    payroll.setUnemploymentInsurance(rs.getLong("unemployment_insurance"));
+                    payroll.setUnionFee(rs.getLong("union_fee"));
+
+                    payroll.setIncomeBeforeTax(rs.getLong("income_before_tax"));
+                    payroll.setTaxableIncome(rs.getLong("taxable_income"));
+                    payroll.setIncomeTax(rs.getLong("income_tax"));
+
+                    payroll.setOvertimePay(rs.getLong("overtime_pay"));
+                    payroll.setSickLeavePay(rs.getLong("sick_leave_pay"));
+                    payroll.setBonus(rs.getLong("bonus"));
                     list.add(payroll);
                 }
             }
@@ -253,6 +271,84 @@ public class PayrollDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public Payroll calculatePayrollSummary(String keyword, String status, Integer userId, Integer month, Integer year, Integer departmentId) {
+        Payroll summary = new Payroll();
+
+        StringBuilder sql = new StringBuilder("""
+        SELECT 
+            SUM(p.expected_hours) AS sum_expected_hours,
+            SUM(p.actual_hours) AS sum_actual_hours,
+            SUM(p.basic_salary) AS sum_basic_salary,
+            SUM(p.total_income) AS sum_total_income,
+            SUM(p.social_insurance) AS sum_social_insurance,
+            SUM(p.health_insurance) AS sum_health_insurance,
+            SUM(p.unemployment_insurance) AS sum_unemployment_insurance,
+            SUM(p.union_fee) AS sum_union_fee,
+            SUM(p.income_before_tax) AS sum_income_before_tax,
+            SUM(p.taxable_income) AS sum_taxable_income,
+            SUM(p.income_tax) AS sum_income_tax,
+            SUM(p.overtime_pay) AS sum_overtime_pay,
+            SUM(p.sick_leave_pay) AS sum_sick_leave_pay,
+            SUM(p.bonus) AS sum_bonus,
+            SUM(p.net_pay) AS sum_net_pay
+        FROM payrolls p
+        JOIN users u ON p.user_id = u.id
+        WHERE 1=1
+    """);
+
+        // Thêm các điều kiện WHERE tương tự như hàm findPayrollsAdvanced...
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            boolean hasAccent = keyword.trim().matches(".*[áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴĐ].*");
+            if (hasAccent) {
+                sql.append(" AND LOWER(u.full_name) COLLATE utf8mb4_bin LIKE LOWER(?) ");
+            } else {
+                sql.append(" AND u.full_name COLLATE utf8mb4_general_ci LIKE ? ");
+            }
+        }
+        if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status)) {
+            sql.append(" AND LOWER(p.status) = LOWER(?) ");
+        }
+        if (userId != null) sql.append(" AND p.user_id = ? ");
+        if (month != null) sql.append(" AND p.month = ? ");
+        if (year != null) sql.append(" AND p.year = ? ");
+        if (departmentId != null) sql.append(" AND u.department_id = ? ");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+            if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status)) ps.setString(paramIndex++, status.trim());
+            if (userId != null) ps.setInt(paramIndex++, userId);
+            if (month != null) ps.setInt(paramIndex++, month);
+            if (year != null) ps.setInt(paramIndex++, year);
+            if (departmentId != null) ps.setInt(paramIndex++, departmentId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    summary.setExpectedHours(rs.getInt("sum_expected_hours"));
+                    summary.setActualHours(rs.getInt("sum_actual_hours"));
+                    summary.setBasicSalary(rs.getLong("sum_basic_salary"));
+                    summary.setTotalIncome(rs.getLong("sum_total_income"));
+                    summary.setSocialInsurance(rs.getLong("sum_social_insurance"));
+                    summary.setHealthInsurance(rs.getLong("sum_health_insurance"));
+                    summary.setUnemploymentInsurance(rs.getLong("sum_unemployment_insurance"));
+                    summary.setUnionFee(rs.getLong("sum_union_fee"));
+                    summary.setIncomeBeforeTax(rs.getLong("sum_income_before_tax"));
+                    summary.setTaxableIncome(rs.getLong("sum_taxable_income"));
+                    summary.setIncomeTax(rs.getLong("sum_income_tax"));
+                    summary.setOvertimePay(rs.getLong("sum_overtime_pay"));
+                    summary.setSickLeavePay(rs.getLong("sum_sick_leave_pay"));
+                    summary.setBonus(rs.getLong("sum_bonus"));
+                    summary.setNetPay(rs.getLong("sum_net_pay"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return summary;
     }
 
     public boolean updateStatus(int payrollId, String status) {
@@ -589,34 +685,25 @@ public class PayrollDAO {
         return getLatestPayrollSetting();
     }
 
-    public PayrollSetting getPayrollSettingByDate(LocalDate calculationDate) {
-        String sql = "SELECT * FROM payroll_settings WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
-
-            ps.setDate(1, Date.valueOf(calculationDate));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToSetting(rs);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    public boolean isUnionMember(int userId) {
-        String sql = "SELECT is_member FROM user_union_membership WHERE user_id = ?";
+    public boolean isUnionMember(int userId, int month, int year) {
+        YearMonth payrollMonth = YearMonth.of(year, month);
+        String sql = """
+                SELECT union_member
+                FROM labor_contracts
+                WHERE user_id = ?
+                  AND start_date <= ?
+                  AND (end_date IS NULL OR end_date >= ?)
+                ORDER BY start_date DESC, id DESC
+                LIMIT 1
+                """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
+            ps.setDate(2, Date.valueOf(payrollMonth.atEndOfMonth()));
+            ps.setDate(3, Date.valueOf(payrollMonth.atDay(1)));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getBoolean("is_member");
+                    return rs.getBoolean("union_member");
                 }
             }
         } catch (Exception e) {
@@ -741,44 +828,6 @@ public class PayrollDAO {
         return false;
     }
 
-
-    public int countPayrollSettings(Integer month, Integer year) {
-        StringBuilder sql = new StringBuilder("""
-        SELECT COUNT(*) FROM payroll_settings 
-        WHERE 1=1
-        """);
-
-        if (month != null) {
-            sql.append(" AND MONTH(effective_date) = ? ");
-        }
-        if (year != null) {
-            sql.append(" AND YEAR(effective_date) = ? ");
-        }
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-
-            int idx = 1;
-            if (month != null) {
-                ps.setInt(idx++, month);
-            }
-            if (year != null) {
-                ps.setInt(idx++, year);
-            }
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return 0;
-    }
-
     public List<PitBracketVersion> getPitBracketVersions(Integer month, Integer year, int offset, int limit) {
         List<PitBracketVersion> pitBracketVersions = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
@@ -873,24 +922,6 @@ public class PayrollDAO {
         return null;
     }
 
-    public PitBracketVersion getActivePitVersionIdByDate(LocalDate calculationDate) {
-        String sql = "SELECT * FROM pit_bracket_versions WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
-
-            ps.setDate(1, java.sql.Date.valueOf(calculationDate));
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToBracketVersion(rs);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return getLatestPitBracketVersion();
-    }
-
     public List<PitBracket> getPitBracketsByDate(LocalDate calculationDate) {
         PitBracketVersion version = getActivePitVersionIdByDate(calculationDate);
 
@@ -900,37 +931,42 @@ public class PayrollDAO {
         return new ArrayList<>();
     }
 
-    public boolean updatePitBrackets(List<PitBracket> bracketList, java.time.LocalDate effectiveDate) {
-        String sql = "UPDATE pit_brackets SET min_value = ?, max_value = ?, tax_rate = ?, effective_date = ? WHERE id = ?";
+    public int getPayrollSettingCount(Integer month, Integer year) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(*) 
+            FROM payroll_settings
+            WHERE 1=1
+        """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (month != null && month > 0) {
+            sql.append(" AND MONTH(effective_date) = ?");
+            params.add(month);
+        }
+
+        if (year != null && year > 0) {
+            sql.append(" AND YEAR(effective_date) = ?");
+            params.add(year);
+        }
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            conn.setAutoCommit(false);
-
-            for (model.PitBracket b : bracketList) {
-                ps.setLong(1, b.getMinValue());
-
-                if (b.getMaxValue() != null) {
-                    ps.setLong(2, b.getMaxValue());
-                } else {
-                    ps.setNull(2, java.sql.Types.BIGINT);
-                }
-
-                ps.setDouble(3, b.getTaxRate());
-                ps.setDate(4, java.sql.Date.valueOf(effectiveDate));
-                ps.setInt(5, b.getId());
-
-                ps.addBatch();
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
 
-            ps.executeBatch();
-            conn.commit();
-            return true;
-        } catch (SQLException e) {
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+
+        return 0;
     }
 
     public int countPitBracketVersions(Integer month, Integer year) {
@@ -1077,5 +1113,93 @@ public class PayrollDAO {
             version.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime().toLocalDate());
         }
         return version;
+    }
+
+    public PayrollSetting getCurrentlyActivePayrollSetting() {
+        String sql = "SELECT * FROM payroll_settings WHERE effective_date <= CURRENT_DATE ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return mapResultSetToSetting(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public PayrollSetting getPayrollSettingByDate(LocalDate calculationDate) {
+        if (calculationDate == null) calculationDate = LocalDate.now();
+
+        String sql = "SELECT * FROM payroll_settings WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(calculationDate));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToSetting(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public PitBracketVersion getCurrentlyActivePitVersion() {
+        String sql = "SELECT * FROM pit_bracket_versions WHERE effective_date <= CURRENT_DATE ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return mapResultSetToBracketVersion(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public PitBracketVersion getActivePitVersionIdByDate(LocalDate calculationDate) {
+        if (calculationDate == null) calculationDate = LocalDate.now();
+
+        String sql = "SELECT * FROM pit_bracket_versions WHERE effective_date <= ? ORDER BY effective_date DESC LIMIT 1";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(calculationDate));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToBracketVersion(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return getCurrentlyActivePitVersion();
+    }
+
+    public boolean deletePayrollSetting(int id) {
+        String sql = "DELETE FROM payroll_settings WHERE id = ?";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

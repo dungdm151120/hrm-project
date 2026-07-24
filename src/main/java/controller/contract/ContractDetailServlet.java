@@ -39,7 +39,6 @@ public class ContractDetailServlet extends HttpServlet {
         }
 
         request.setAttribute("contract", contract);
-        request.setAttribute("changeLogs", contractDAO.findChangeLogsByContractId(contract.getId()));
         request.setAttribute("canUpdateContract",
                 !ownContractView
                         && "ACTIVE".equals(contract.getStatus())

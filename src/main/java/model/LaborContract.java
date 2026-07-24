@@ -14,6 +14,7 @@ public class LaborContract {
     private String employeeCode;
     private String employeeName;
     private String employeeEmail;
+    private boolean unionMember;
     private String contractCode;
     private String contractType;
     private LocalDate startDate;
@@ -68,6 +69,14 @@ public class LaborContract {
 
     public void setEmployeeEmail(String employeeEmail) {
         this.employeeEmail = employeeEmail;
+    }
+
+    public boolean isUnionMember() {
+        return unionMember;
+    }
+
+    public void setUnionMember(boolean unionMember) {
+        this.unionMember = unionMember;
     }
 
     public String getContractCode() {

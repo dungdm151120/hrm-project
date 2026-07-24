@@ -19,13 +19,13 @@
         <header class="dashboard-header">
             <div class="header-left">
                 <h1 class="header-title">Attendance Confirmed List</h1>
-
+                <a href="${pageContext.request.contextPath}/attendance/confirm" class="btn-back">Back to Confirm Attendance</a>
             </div>
         </header>
 
         <div class="dashboard-content">
             <div class="filter-bar">
-                <form id="filterForm" action="${pageContext.request.contextPath}/attendance/confirm-list" method="get">
+                <form id="filterForm" action="${pageContext.request.contextPath}/attendance/confirm_list" method="get">
                     <label for="yearSelect">Year: </label>
                     <select id="yearSelect" name="year" class="year-select">
                         <c:forEach var="y" begin="${currentYear - 5}" end="${currentYear}">
@@ -57,7 +57,7 @@
                                     <td>${item.employeeCount}</td>
                                     <td><fmt:formatNumber value="${item.totalHours}" maxFractionDigits="2"/> h</td>
                                     <td>
-                                        <a href="${pageContext.request.contextPath}/attendance/confirm-detail?month=${item.month}&year=${item.year}" class="btn-view">📊 View Detail</a>
+                                        <a href="${pageContext.request.contextPath}/attendance/confirm_detail?month=${item.month}&year=${item.year}" class="btn-view">📊 View Detail</a>
                                     </td>
                                 </tr>
                             </c:forEach>

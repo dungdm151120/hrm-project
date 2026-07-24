@@ -98,9 +98,9 @@ public class LaborContractDAO {
         String sql = """
                 INSERT INTO labor_contracts (
                     user_id, contract_code, contract_type, start_date, end_date,
-                    base_salary, working_time, work_location, status, note
+                    base_salary, working_time, work_location, status, note, union_member
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -150,6 +150,7 @@ public class LaborContractDAO {
                     work_location = ?,
                     status = ?,
                     note = ?,
+                    union_member = ?,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
                 """;
@@ -158,7 +159,7 @@ public class LaborContractDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
             fillEditableFields(ps, contract);
-            ps.setInt(11, contract.getId());
+            ps.setInt(12, contract.getId());
             boolean updated = ps.executeUpdate() > 0;
             if (!updated) {
                 conn.rollback();
@@ -399,6 +400,7 @@ public class LaborContractDAO {
         ps.setString(8, contract.getWorkLocation());
         ps.setString(9, contract.getStatus());
         ps.setString(10, contract.getNote());
+        ps.setBoolean(11, contract.isUnionMember());
     }
 
     private void appendSearchFilters(StringBuilder sql, List<Object> params, Integer userId, String keyword,
@@ -445,6 +447,7 @@ public class LaborContractDAO {
         contract.setEmployeeCode(rs.getString("employee_code"));
         contract.setEmployeeName(rs.getString("employee_name"));
         contract.setEmployeeEmail(rs.getString("employee_email"));
+        contract.setUnionMember(rs.getBoolean("union_member"));
         contract.setContractCode(rs.getString("contract_code"));
         contract.setContractType(rs.getString("contract_type"));
         contract.setStartDate(getNullableLocalDate(rs, "start_date"));
@@ -490,6 +493,8 @@ public class LaborContractDAO {
         insertLog(conn, contract.getId(), "CREATE", "base_salary", null, formatValue(contract.getBaseSalary()), changedBy);
         insertLog(conn, contract.getId(), "CREATE", "working_time", null, contract.getWorkingTime(), changedBy);
         insertLog(conn, contract.getId(), "CREATE", "work_location", null, contract.getWorkLocation(), changedBy);
+        insertLog(conn, contract.getId(), "CREATE", "union_member", null,
+                String.valueOf(contract.isUnionMember()), changedBy);
         insertLog(conn, contract.getId(), "CREATE", "status", null, contract.getStatus(), changedBy);
         insertLog(conn, contract.getId(), "CREATE", "note", null, contract.getNote(), changedBy);
     }
@@ -508,6 +513,9 @@ public class LaborContractDAO {
                 oldContract.getWorkingTime(), newContract.getWorkingTime(), changedBy);
         insertIfChanged(conn, newContract.getId(), "UPDATE", "work_location",
                 oldContract.getWorkLocation(), newContract.getWorkLocation(), changedBy);
+        insertIfChanged(conn, newContract.getId(), "UPDATE", "union_member",
+                String.valueOf(oldContract.isUnionMember()),
+                String.valueOf(newContract.isUnionMember()), changedBy);
         insertIfChanged(conn, newContract.getId(), "UPDATE", "status",
                 oldContract.getStatus(), newContract.getStatus(), changedBy);
         insertIfChanged(conn, newContract.getId(), "UPDATE", "note",

@@ -97,6 +97,7 @@ public class AttendanceConfirmDAO {
 
     public boolean finalizeAttendance(int month, int year, int hrManagerId) throws SQLException {
         String existingSnapshotSql = "SELECT 1 FROM attendance_snapshot WHERE snapshot_month = ? AND snapshot_year = ? LIMIT 1";
+        String existingFinalizeSql = "SELECT 1 FROM attendance_lock_log WHERE month = ? AND year = ? AND action = 'HR_FINALIZE' LIMIT 1";
         String pendingDepartmentSql = "SELECT COUNT(*) FROM departments d WHERE d.active = TRUE AND NOT EXISTS " +
                 "(SELECT 1 FROM attendance_lock_log l WHERE l.month = ? AND l.year = ? " +
                 "AND l.department_id = d.id AND l.action = 'DEPT_CONFIRM')";
@@ -117,6 +118,17 @@ public class AttendanceConfirmDAO {
                 }
 
                 try (PreparedStatement ps = conn.prepareStatement(existingSnapshotSql)) {
+                    ps.setInt(1, month);
+                    ps.setInt(2, year);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(existingFinalizeSql)) {
                     ps.setInt(1, month);
                     ps.setInt(2, year);
                     try (ResultSet rs = ps.executeQuery()) {
@@ -226,7 +238,7 @@ public class AttendanceConfirmDAO {
         AttendanceConfirmedMonthOverviewDTO overview = new AttendanceConfirmedMonthOverviewDTO();
         StringBuilder sql = new StringBuilder(
             "SELECT COUNT(DISTINCT s.user_id) AS total_employees, " +
-            "COUNT(s.work_date) AS total_work_days, " +
+            "SUM(CASE WHEN s.status IN ('ON_TIME', 'LATE', 'EARLY_LEAVE', 'LATE_AND_EARLY_LEAVE', 'FORGOT_CHECK_IN', 'FORGOT_CHECK_OUT') THEN 1 ELSE 0 END) AS total_work_days, " +
             "SUM(s.total_work_hours) AS total_work_hours, " +
             "SUM(s.overtime_hours) AS total_overtime_hours " +
             "FROM attendance_snapshot s " +
@@ -310,7 +322,7 @@ public class AttendanceConfirmDAO {
         StringBuilder sql = new StringBuilder(
             "SELECT emp.id AS employee_id, emp.employee_code, emp.full_name AS employee_name, " +
             "d.name AS department_name, " +
-            "COUNT(s.work_date) AS work_days, " +
+            "SUM(CASE WHEN s.status IN ('ON_TIME', 'LATE', 'EARLY_LEAVE', 'LATE_AND_EARLY_LEAVE', 'FORGOT_CHECK_IN', 'FORGOT_CHECK_OUT') THEN 1 ELSE 0 END) AS work_days, " +
             "SUM(s.total_work_hours) AS total_hours, " +
             "SUM(s.overtime_hours) AS overtime_hours " +
             "FROM attendance_snapshot s " +

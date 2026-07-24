@@ -4,9 +4,13 @@ import dao.UserDAO;
 import model.User;
 import util.PasswordUtil;
 
+import java.net.URI;
 import java.time.LocalDate;
+import java.util.Set;
 
 public class UserService {
+    private static final int MAX_PASSWORD_LENGTH = 72;
+    private static final Set<String> VALID_GENDERS = Set.of("Male", "Female", "Other");
 
     private final UserDAO userDAO = new UserDAO();
 
@@ -15,12 +19,30 @@ public class UserService {
     }
 
     public String updateProfile(User user) {
-        if (user.getPhone() != null && user.getPhone().length() > 20) {
-            return "Phone must be 20 characters or fewer.";
+        if (user.getPhone() != null) {
+            if (user.getPhone().length() > 20) {
+                return "Phone must be 20 characters or fewer.";
+            }
+            if (!user.getPhone().matches("^[+]?[0-9][0-9 .()\\-]{7,19}$")) {
+                return "Phone format is invalid.";
+            }
         }
 
-        if (user.getAvatarUrl() != null && user.getAvatarUrl().length() > 500) {
-            return "Avatar URL must be 500 characters or fewer.";
+        if (user.getGender() != null && !VALID_GENDERS.contains(user.getGender())) {
+            return "Gender is invalid.";
+        }
+
+        if (user.getAddress() != null && user.getAddress().length() > 255) {
+            return "Address must be 255 characters or fewer.";
+        }
+
+        if (user.getAvatarUrl() != null) {
+            if (user.getAvatarUrl().length() > 255) {
+                return "Avatar URL must be 255 characters or fewer.";
+            }
+            if (!isValidAvatarUrl(user.getAvatarUrl())) {
+                return "Avatar URL must be a valid HTTP or HTTPS URL.";
+            }
         }
 
         if (user.getDateOfBirth() != null
@@ -30,6 +52,17 @@ public class UserService {
 
         boolean updated = userDAO.updateProfile(user);
         return updated ? null : "Update profile failed.";
+    }
+
+    private boolean isValidAvatarUrl(String value) {
+        try {
+            URI uri = URI.create(value);
+            String scheme = uri.getScheme();
+            return uri.getHost() != null
+                    && ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme));
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     public String changePassword(int userId, String oldPassword, String newPassword, String confirmPassword) {
@@ -47,6 +80,12 @@ public class UserService {
 
         if (!newPassword.equals(confirmPassword)) {
             return "Mật khẩu mới và xác nhận mật khẩu không khớp";
+        }
+
+        if (oldPassword.length() > MAX_PASSWORD_LENGTH
+                || newPassword.length() > MAX_PASSWORD_LENGTH
+                || confirmPassword.length() > MAX_PASSWORD_LENGTH) {
+            return "Mật khẩu không được vượt quá 72 ký tự";
         }
 
         if (newPassword.length() < 6) {

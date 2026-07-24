@@ -1,14 +1,14 @@
 package model;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HRReportDTO {
     private int totalEmployees;
     private int maleCount;
     private int femaleCount;
-    private int managerCount;
-    private int employeeCount;
+    private int otherCount;
     private int regularCount;
     private int probationCount;
 
@@ -39,20 +39,12 @@ public class HRReportDTO {
         this.femaleCount = femaleCount;
     }
 
-    public int getManagerCount() {
-        return managerCount;
+    public int getOtherCount() {
+        return otherCount;
     }
 
-    public void setManagerCount(int managerCount) {
-        this.managerCount = managerCount;
-    }
-
-    public int getEmployeeCount() {
-        return employeeCount;
-    }
-
-    public void setEmployeeCount(int employeeCount) {
-        this.employeeCount = employeeCount;
+    public void setOtherCount(int otherCount) {
+        this.otherCount = otherCount;
     }
 
     public int getRegularCount() {

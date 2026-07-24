@@ -49,7 +49,7 @@ public class AddMemberServlet extends HttpServlet {
                 userIds[i] = Integer.parseInt(userIdStrings[i]);
             }
 
-            if (userDAO.addMembersToDept(userIds, deptId)) {
+            if (userDAO.addMembersToDept2(userIds, deptId)) {
                 response.sendRedirect(request.getContextPath() + "/admin/departments/employees?id=" + deptId + "&msg=add_success");
                 return;
             }

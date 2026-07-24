@@ -37,7 +37,6 @@
                         <option value="FIXED_TERM" ${contractType == 'FIXED_TERM' ? 'selected' : ''}>FIXED_TERM</option>
                         <option value="INDEFINITE_TERM" ${contractType == 'INDEFINITE_TERM' ? 'selected' : ''}>INDEFINITE_TERM</option>
                         <option value="PROBATION" ${contractType == 'PROBATION' ? 'selected' : ''}>PROBATION</option>
-                        <option value="PART_TIME" ${contractType == 'PART_TIME' ? 'selected' : ''}>PART_TIME</option>
                     </select>
 
                     <select name="status">
