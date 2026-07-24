@@ -15,15 +15,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        .rainbow-text {
-            font-weight: bold;
-            font-size: 16px;
-            background: linear-gradient(to right, #E40303, #FF8C00, #FFED00, #008026, #004CFF, #732982);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
         .pdf-export-mode {
             background: #ffffff !important;
             padding: 10px !important;
@@ -123,7 +114,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            align-items: flex-end;
+            align-items: start !important;
         }
 
         .form-group {
@@ -180,6 +171,33 @@
 
         .btn-generate:active {
             transform: scale(0.98);
+        }
+
+        .btn-label-space {
+            display: block;
+            visibility: hidden;
+            margin-bottom: 0;
+        }
+
+        .action-buttons-group {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+        }
+
+        .action-buttons-group .btn-generate {
+            width: 100% !important;
+            margin: 0 !important;
+        }
+
+        .btn-export {
+            background-color: #dc2626 !important;
+            color: #ffffff !important;
+            border: none !important;
+        }
+
+        .btn-export:hover {
+            background-color: #b91c1c !important;
         }
 
         .stat-cards-grid {
@@ -336,7 +354,7 @@
                             </select>
                         </div>
 
-                        <!-- Month Select (January -> December) -->
+                        <!-- Month Select -->
                         <div class="form-group" id="monthGroup">
                             <label for="month">Month</label>
                             <select name="month" id="month">
@@ -375,7 +393,11 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
+                        <!-- Cụm chứa 2 nút bấm -->
+                        <div class="form-group action-buttons-group">
+                            <!-- Thẻ label ẩn này giúp tạo khoảng trống đúng bằng các nhãn "Reporting Period", "Month"... -->
+                            <label class="btn-label-space">&nbsp;</label>
+
                             <button type="submit" class="btn-generate">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                      fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
@@ -387,8 +409,7 @@
                                 Generate Report
                             </button>
 
-                            <button type="button" id="btnExportPDF" class="btn-generate"
-                                    style="background-color: #dc2626;">
+                            <button type="button" id="btnExportPDF" class="btn-generate btn-export">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                      stroke-linejoin="round">
@@ -422,7 +443,6 @@
                             </div>
                         </div>
 
-                        <!-- Số lượng Headcount tổng hiện tại -->
                         <div class="stat-value" style="margin-top: 5px; color: #1E3A8A;">
                             ${not empty totalHeadcount ? totalHeadcount : reportData.totalEmployees}
                         </div>
@@ -441,9 +461,9 @@
                             </div>
                         </div>
                         <div class="stat-value" style="margin-top: 5px;">
-                            <span style="color: #2563EB;">${reportData.maleCount} Male</span> | <span
-                                style="color: #EC4899;">${reportData.femaleCount} Female</span> | <span
-                                class="rainbow-text" style="font-size: 20px">${reportData.otherCount} Other</span>
+                            <span style="color: #2563EB;">${reportData.maleCount} Male</span> |
+                            <span style="color: #EC4899;">${reportData.femaleCount} Female</span> |
+                            <span style="color: #8B5CF6;">${reportData.otherCount} Other</span>
                         </div>
                     </div>
 
@@ -488,7 +508,7 @@
                     </div>
                 </div>
 
-                <!-- Charts Display Section -->
+                <!-- Charts -->
                 <div class="charts-section-grid">
 
                     <!-- Chart 1: Contracts -->
@@ -519,7 +539,7 @@
                     </div>
                 </div>
 
-                <!-- chart 4: headcount trend -->
+                <!-- chart 4: Headcount trend -->
                 <div class="chart-full-wrapper"
                      style="background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px;">
                     <div style="font-size: 16px; font-weight: 700; color: #1F2937; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
@@ -820,12 +840,11 @@
 
         /* Chart 4: Total Headcount Trend */
         <c:if test="${not empty headcountTrend}">
-        const rawTrendData = ${headcountTrend}; // [0, 0, 0, 0, 0, 0, 19, null, null, null, null, null]
+        const rawTrendData = ${headcountTrend};
         const periodTypeVal = "${periodType}";
         const selMonth = ${selectedMonth};
         const selQuarter = ${selectedQuarter};
 
-        // Tìm danh sách các tháng cần Highlight
         const highlightedMonths = [];
         if (periodTypeVal === 'month') {
             highlightedMonths.push(selMonth);
@@ -844,7 +863,6 @@
         for (let month = 1; month <= 12; month++) {
             const val = rawTrendData[month - 1];
 
-            // Nếu tháng có dữ liệu null -> Không hiển thị point
             if (val === null || val === undefined) {
                 trendPointRadius.push(0);
                 trendPointHoverRadius.push(0);
@@ -853,12 +871,12 @@
             } else if (highlightedMonths.includes(month)) {
                 trendPointRadius.push(6);
                 trendPointHoverRadius.push(9);
-                trendPointBgColor.push('#EF4444'); // Highlight màu đỏ
+                trendPointBgColor.push('#EF4444');
                 trendPointBorderColor.push('#FFFFFF');
             } else {
                 trendPointRadius.push(4);
                 trendPointHoverRadius.push(6);
-                trendPointBgColor.push('#2563EB'); // Điểm thường
+                trendPointBgColor.push('#2563EB');
                 trendPointBorderColor.push('#2563EB');
             }
         }
@@ -875,8 +893,8 @@
                     borderWidth: 2.5,
                     fill: true,
 
-                    spanGaps: false, // Ép ngắt đứt đường line ngay khi gặp giá trị null
-                    cubicInterpolationMode: 'monotone', // Chống võng đường line
+                    spanGaps: false,
+                    cubicInterpolationMode: 'monotone',
 
                     pointRadius: trendPointRadius,
                     pointHoverRadius: trendPointHoverRadius,
@@ -915,7 +933,7 @@
         });
         </c:if>
 
-        /* Đoạn mã xuất PDF tên cố định */
+        /* Xuất PDF */
         const exportBtn = document.getElementById('btnExportPDF');
         if (exportBtn) {
             exportBtn.addEventListener('click', function () {
@@ -924,15 +942,12 @@
 
                 const btn = this;
 
-                // 1. Đổi trạng thái nút bấm
                 const originalText = btn.innerHTML;
                 btn.innerHTML = 'Exporting...';
                 btn.disabled = true;
 
-                // 2. Ép style về layout PDF nếu có
                 element.classList.add('pdf-export-mode');
 
-                // 3. Cấu hình html2pdf tên mặc định
                 const opt = {
                     margin:       [5, 5, 5, 5],
                     filename:     'HR_Overview_Report.pdf',
@@ -947,14 +962,13 @@
                     pagebreak:    { mode: ['avoid-all', 'css'] }
                 };
 
-                // 4. Xuất file PDF và khôi phục nút bấm
                 setTimeout(() => {
                     html2pdf().set(opt).from(element).save().then(() => {
                         element.classList.remove('pdf-export-mode');
                         btn.innerHTML = originalText;
                         btn.disabled = false;
                     }).catch(err => {
-                        console.error("Lỗi xuất PDF:", err);
+                        console.error("Cannot export to PDF:", err);
                         element.classList.remove('pdf-export-mode');
                         btn.innerHTML = originalText;
                         btn.disabled = false;
