@@ -688,108 +688,107 @@ public class AttendanceDAO {
 
     private void calculateLeaveBalance(Connection conn, int userId, int year, int month,
                                        AttendanceSummary summary) throws SQLException {
-        double entitled = 12.0;
-        LocalDate startOfYear = LocalDate.of(year, 1, 1);
-        LocalDate endOfMonth = LocalDate.of(year, month, YearMonth.of(year, month).lengthOfMonth());
+        double entitledLeave = 12.0;
+        double entitledAbsent = 12.0;
+        double entitledSick = 30.0;
 
-        String sqlLeave = "SELECT COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS used_days " +
-                "FROM attendance_records WHERE user_id = ? " +
-                "AND work_date BETWEEN ? AND ?";
-        double usedLeave = 0;
+        LocalDate startOfYear = LocalDate.of(year, 1, 1);
+        LocalDate endOfYear = LocalDate.of(year, 12, 31);
+
+        // 1. Paid Leave (ON_LEAVE) balance calculation
+        String sqlLeave = "SELECT COUNT(DISTINCT d.workdate) FROM (" +
+                "  SELECT COALESCE(ld.leave_date, lr.leave_date, lr.start_date) AS workdate " +
+                "  FROM leave_requests lr " +
+                "  JOIN requests r ON lr.request_id = r.id " +
+                "  LEFT JOIN leave_dates ld ON ld.leave_request_id = lr.id " +
+                "  WHERE r.user_id = ? AND lr.leave_type = 'ON_LEAVE' " +
+                "  AND r.status IN ('PENDING', 'APPROVED') " +
+                "  AND COALESCE(ld.leave_date, lr.leave_date, lr.start_date) BETWEEN ? AND ? " +
+                "  UNION " +
+                "  SELECT work_date AS workdate " +
+                "  FROM attendance_records " +
+                "  WHERE user_id = ? AND status = 'ON_LEAVE' " +
+                "  AND work_date BETWEEN ? AND ?" +
+                ") d";
+        double totalUsedLeave = 0;
         try (PreparedStatement ps = conn.prepareStatement(sqlLeave)) {
             ps.setInt(1, userId);
             ps.setDate(2, Date.valueOf(startOfYear));
-            ps.setDate(3, Date.valueOf(endOfMonth));
+            ps.setDate(3, Date.valueOf(endOfYear));
+            ps.setInt(4, userId);
+            ps.setDate(5, Date.valueOf(startOfYear));
+            ps.setDate(6, Date.valueOf(endOfYear));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    usedLeave = rs.getDouble("used_days");
+                    totalUsedLeave = rs.getDouble(1);
                 }
             }
         }
+        summary.setEntitledLeaveDays(entitledLeave);
+        summary.setRemainingLeaveDays(entitledLeave - totalUsedLeave);
 
-        String sqlRequestsOnLeave = "SELECT COUNT(*) FROM leave_requests lr " +
-                "JOIN requests r ON lr.request_id = r.id " +
-                "WHERE r.user_id = ? AND lr.leave_type = 'ON_LEAVE' " +
-                "AND r.status IN ('PENDING', 'APPROVED') " +
-                "AND lr.leave_date > ? AND lr.leave_date <= ?";
-        double pendingApprovedOnLeave = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlRequestsOnLeave)) {
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(endOfMonth));
-            ps.setDate(3, Date.valueOf(LocalDate.of(year, 12, 31)));
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    pendingApprovedOnLeave = rs.getInt(1);
-                }
-            }
-        }
-
-        double totalUsedLeave = usedLeave + pendingApprovedOnLeave;
-        summary.setEntitledLeaveDays(entitled);
-        summary.setRemainingLeaveDays(entitled - totalUsedLeave);
-
-        double entitledAbsent = month;
-        String sqlAbsent = "SELECT COALESCE(SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END), 0) AS used_days " +
-                "FROM attendance_records WHERE user_id = ? " +
-                "AND work_date BETWEEN ? AND ?";
-        double usedAbsent = 0;
+        // 2. Unpaid Leave / Absent (LEAVE) balance calculation (independent 12 days)
+        String sqlAbsent = "SELECT COUNT(DISTINCT d.workdate) FROM (" +
+                "  SELECT COALESCE(ld.leave_date, lr.leave_date, lr.start_date) AS workdate " +
+                "  FROM leave_requests lr " +
+                "  JOIN requests r ON lr.request_id = r.id " +
+                "  LEFT JOIN leave_dates ld ON ld.leave_request_id = lr.id " +
+                "  WHERE r.user_id = ? AND lr.leave_type = 'LEAVE' " +
+                "  AND r.status IN ('PENDING', 'APPROVED') " +
+                "  AND COALESCE(ld.leave_date, lr.leave_date, lr.start_date) BETWEEN ? AND ? " +
+                "  UNION " +
+                "  SELECT work_date AS workdate " +
+                "  FROM attendance_records " +
+                "  WHERE user_id = ? AND status = 'ABSENT' " +
+                "  AND work_date BETWEEN ? AND ?" +
+                ") d";
+        double totalUsedAbsent = 0;
         try (PreparedStatement ps = conn.prepareStatement(sqlAbsent)) {
             ps.setInt(1, userId);
             ps.setDate(2, Date.valueOf(startOfYear));
-            ps.setDate(3, Date.valueOf(endOfMonth));
+            ps.setDate(3, Date.valueOf(endOfYear));
+            ps.setInt(4, userId);
+            ps.setDate(5, Date.valueOf(startOfYear));
+            ps.setDate(6, Date.valueOf(endOfYear));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    usedAbsent = rs.getDouble("used_days");
+                    totalUsedAbsent = rs.getDouble(1);
                 }
             }
         }
-
-        String sqlRequestsLeave = "SELECT COUNT(*) FROM leave_requests lr " +
-                "JOIN requests r ON lr.request_id = r.id " +
-                "WHERE r.user_id = ? AND lr.leave_type = 'LEAVE' " +
-                "AND r.status IN ('PENDING', 'APPROVED') " +
-                "AND lr.leave_date > ? AND lr.leave_date <= ?";
-        double pendingApprovedLeave = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlRequestsLeave)) {
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(endOfMonth));
-            ps.setDate(3, Date.valueOf(LocalDate.of(year, 12, 31)));
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    pendingApprovedLeave = rs.getInt(1);
-                }
-            }
-        }
-
-        double totalUsedAbsent = usedAbsent + pendingApprovedLeave;
         summary.setEntitledAbsentDays(entitledAbsent);
         summary.setRemainingAbsentDays(entitledAbsent - totalUsedAbsent);
 
-        double entitledSick = 30;
-        String sqlSickUsed = "SELECT COALESCE(COUNT(*), 0) FROM attendance_records WHERE user_id = ? AND status = 'SICK_LEAVE' AND work_date BETWEEN ? AND ?";
-        double usedSick = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlSickUsed)) {
+        // 3. Sick Leave (SICK_LEAVE) balance calculation (30 days)
+        String sqlSick = "SELECT COUNT(DISTINCT d.workdate) FROM (" +
+                "  SELECT sd.leave_date AS workdate " +
+                "  FROM sick_leave_dates sd " +
+                "  JOIN sick_leave_requests sr ON sd.sick_leave_request_id = sr.id " +
+                "  JOIN requests r ON sr.request_id = r.id " +
+                "  WHERE r.user_id = ? AND r.status IN ('PENDING', 'APPROVED') " +
+                "  AND sd.leave_date BETWEEN ? AND ? " +
+                "  UNION " +
+                "  SELECT work_date AS workdate " +
+                "  FROM attendance_records " +
+                "  WHERE user_id = ? AND status = 'SICK_LEAVE' " +
+                "  AND work_date BETWEEN ? AND ?" +
+                ") d";
+        double totalUsedSick = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sqlSick)) {
             ps.setInt(1, userId);
             ps.setDate(2, Date.valueOf(startOfYear));
-            ps.setDate(3, Date.valueOf(endOfMonth));
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) usedSick = rs.getInt(1);
-        }
-
-        String sqlSickPending = "SELECT COUNT(*) FROM sick_leave_dates sd " +
-                "JOIN sick_leave_requests sr ON sd.sick_leave_request_id = sr.id " +
-                "JOIN requests r ON sr.request_id = r.id " +
-                "WHERE r.user_id = ? AND r.status IN ('PENDING','APPROVED') AND sd.leave_date > ? AND sd.leave_date <= ?";
-        double pendingSick = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlSickPending)) {
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(endOfMonth));
-            ps.setDate(3, Date.valueOf(LocalDate.of(year, 12, 31)));
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) pendingSick = rs.getInt(1);
+            ps.setDate(3, Date.valueOf(endOfYear));
+            ps.setInt(4, userId);
+            ps.setDate(5, Date.valueOf(startOfYear));
+            ps.setDate(6, Date.valueOf(endOfYear));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    totalUsedSick = rs.getDouble(1);
+                }
+            }
         }
         summary.setEntitledSickLeaveDays(entitledSick);
-        summary.setRemainingSickLeaveDays(entitledSick - usedSick - pendingSick);
+        summary.setRemainingSickLeaveDays(entitledSick - totalUsedSick);
     }
 
     public List<AttendanceRecordDTO> getAttendanceDetailByUserAndMonth(int userId, int month, int year) {

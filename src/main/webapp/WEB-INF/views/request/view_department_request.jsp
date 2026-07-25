@@ -100,7 +100,7 @@
                                                                     <jsp:useBean id="lrDao_dept"
                                                                         class="dao.LeaveRequestDAO" />
                                                                     <br><small style="color: #666;">Date:
-                                                                        ${lrDao_dept.getByRequestId(req.id).leaveDate}</small>
+                                                                        ${lrDao_dept.getByRequestId(req.id).formattedDateRange}</small>
                                                                 </c:when>
                                                             </c:choose>
                                                         </td>
