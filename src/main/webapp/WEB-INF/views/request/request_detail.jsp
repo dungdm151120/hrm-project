@@ -9,6 +9,24 @@
     <title>Request Detail - #${request.id} | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <style>
+        .detail-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .detail-label {
+            width: 160px;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            flex: 1;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
         /* ── Sick date tags ── */
         .sick-date-list {
             display: flex;
@@ -145,7 +163,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Reason:</span>
-                        <span class="detail-value">${request.reason}</span>
+                        <span class="detail-value" style="word-break: break-word">${request.reason}</span>
                     </div>
 
                     <%-- ══════════════ LEAVE REQUEST ══════════════ --%>
@@ -501,7 +519,12 @@
                                 <c:when test="${request.status == 'PENDING' && sessionScope.currentUser.id eq request.approverId}">
                                     <form action="process_request" method="POST">
                                         <input type="hidden" name="requestId" value="${request.id}">
-                                        <textarea name="comment" class="form-control" required placeholder="Enter approver comment..."></textarea>
+                                        <textarea name="comment"
+                                                  class="form-control"
+                                                  rows="4"
+                                                  style="width: 100%; min-height: 100px; resize: vertical;"
+                                                  required
+                                                  placeholder="Enter approver comment..."></textarea>
                                         <div style="margin-top: 10px;">
                                             <button type="submit" name="action" value="APPROVE" class="btn btn-primary">Approve</button>
                                             <button type="submit" name="action" value="REJECT" class="btn btn-danger">Reject</button>

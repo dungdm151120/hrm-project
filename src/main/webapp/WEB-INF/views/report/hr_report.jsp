@@ -603,13 +603,22 @@
         rawDeptData["${entry.key}"] = ${entry.value};
         </c:forEach>
 
-        let deptLabels = Object.keys(rawDeptData);
-        let deptValues = Object.values(rawDeptData);
+        // --- BẮT ĐẦU CẬP NHẬT CHART 2 (Lọc phòng ban không có người) ---
+        let deptLabels = [];
+        let deptValues = [];
+
+        for (const [key, value] of Object.entries(rawDeptData)) {
+            if (value > 0) {
+                deptLabels.push(key);
+                deptValues.push(value);
+            }
+        }
 
         if (deptLabels.length === 0) {
             deptLabels = ["No Data"];
             deptValues = [0];
         }
+        // --- KẾT THÚC CẬP NHẬT CHART 2 ---
 
         const topLabelsPlugin = {
             id: 'topLabels',
@@ -734,10 +743,12 @@
         const netData = [];
 
         <c:forEach var="item" items="${deptChanges}">
-        deptChangeLabels.push("${item.deptName}");
-        inData.push(${item.inCount});
-        outData.push(${item.outCount});
-        netData.push(${item.netCount});
+        if (${item.inCount} > 0 || ${item.outCount} > 0) {
+            deptChangeLabels.push("${item.deptName}");
+            inData.push(${item.inCount});
+            outData.push(${item.outCount});
+            netData.push(${item.netCount});
+        }
         </c:forEach>
 
         new Chart(document.getElementById('deptChangeChart').getContext('2d'), {

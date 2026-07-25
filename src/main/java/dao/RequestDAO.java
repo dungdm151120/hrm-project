@@ -76,6 +76,7 @@ public class RequestDAO {
             if (conn != null) conn.close();
         }
     }
+
     public int createRequestAndGetId(Request req, List<Integer> observerIds) throws SQLException {
         String sqlRequest = "INSERT INTO requests (user_id, department_id, type, reason, approver_id, created_at, status, handler_id) VALUES (?, ?, ?, ?, ?, NOW(), 'PENDING', ?)";
         String sqlObserver = "INSERT INTO request_observers (request_id, observer_id) VALUES (?, ?)";
@@ -139,6 +140,7 @@ public class RequestDAO {
             if (conn != null) conn.close();
         }
     }
+
     public List<Request> getRequestByUserId(int userId, String status, String type, String sort, int offset, int limit) {
         List<Request> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
