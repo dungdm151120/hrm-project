@@ -101,7 +101,7 @@ public class AttendanceConfirmServlet extends HttpServlet {
         try {
             if ("dept_confirm".equals(action)) {
                 int deptId = Integer.parseInt(request.getParameter("departmentId"));
-                if ("APPROVED".equals(confirmDAO.getOverallStatus(month, year))) {
+                if ("FINALIZED".equals(confirmDAO.getOverallStatus(month, year))) {
                     session.setAttribute("errorMsg", "Attendance has already been finalized for this month.");
                 } else {
                     List<DepartmentConfirmStatusDTO> deptStatuses = confirmDAO.getDepartmentLockStatuses(month, year);
@@ -123,7 +123,7 @@ public class AttendanceConfirmServlet extends HttpServlet {
                 Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
                 boolean isHRManager = "HR_MANAGER".equalsIgnoreCase(currentUser.getRoleName());
                 if (isHRManager && userPermissions != null && canFinalizeAttendance(userPermissions)) {
-                    if ("APPROVED".equals(confirmDAO.getOverallStatus(month, year))) {
+                    if ("FINALIZED".equals(confirmDAO.getOverallStatus(month, year))) {
                         session.setAttribute("errorMsg", "Attendance has already been finalized for this month.");
                     } else {
                         List<DepartmentConfirmStatusDTO> deptStatuses = confirmDAO.getDepartmentLockStatuses(month, year);

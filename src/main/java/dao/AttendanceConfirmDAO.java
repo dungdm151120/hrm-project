@@ -66,7 +66,7 @@ public class AttendanceConfirmDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     String action = rs.getString("action");
-                    if ("HR_FINALIZE".equals(action)) return "APPROVED";
+                    if ("HR_FINALIZE".equals(action)) return "FINALIZED";
                 }
             }
         } catch (SQLException e) {

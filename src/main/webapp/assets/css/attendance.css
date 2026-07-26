@@ -130,6 +130,62 @@
     text-decoration: none;
 }
 
+.attendance-confirm-summary {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.attendance-confirm-summary-title {
+    margin: 0;
+    color: #495057;
+    font-size: 16px;
+}
+
+.attendance-confirm-status {
+    font-weight: 600;
+}
+
+.attendance-confirm-status.finalized,
+.attendance-confirm-status.confirmed {
+    color: #28a745;
+}
+
+.attendance-confirm-status.pending {
+    color: #6c757d;
+}
+
+.attendance-matrix-table .attendance-confirm-status.pending {
+    color: #dc3545;
+}
+
+.attendance-confirm-note {
+    margin: 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.attendance-confirm-finalize-form {
+    margin-top: 10px;
+}
+
+.attendance-confirm-finalize-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.attendance-confirm-action-form {
+    display: inline;
+}
+
+.attendance-confirm-action-btn {
+    height: auto;
+    padding: 4px 12px;
+    font-size: 13px;
+}
+
 /* ========== Legend ========== */
 .attendance-legend {
     display: flex;

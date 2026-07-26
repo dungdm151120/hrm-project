@@ -86,7 +86,7 @@ public class AttendanceRecordServlet extends HttpServlet {
         for (DepartmentConfirmStatusDTO ds : deptStatuses) {
             lockedDepartments.put(ds.getDepartmentId(), "CONFIRMED".equals(ds.getStatus()));
         }
-        boolean isOverallLocked = "HR_SENT".equals(overallStatus) || "APPROVED".equals(overallStatus);
+        boolean isOverallLocked = "FINALIZED".equals(overallStatus);
 
         Map<Integer, AttendanceRecordDTO> employeeMap = new LinkedHashMap<>();
         Map<String, AttendanceRecordDTO> attendanceMap = new LinkedHashMap<>();

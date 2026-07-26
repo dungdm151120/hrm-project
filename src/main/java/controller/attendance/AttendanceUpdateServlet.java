@@ -147,7 +147,7 @@ public class AttendanceUpdateServlet extends HttpServlet {
         int year = record.getWorkDate().getYear();
         
         String overallStatus = confirmDAO.getOverallStatus(month, year);
-        if ("HR_SENT".equals(overallStatus) || "APPROVED".equals(overallStatus)) {
+        if ("FINALIZED".equals(overallStatus)) {
             return true;
         }
         
