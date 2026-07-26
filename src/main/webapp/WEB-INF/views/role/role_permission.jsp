@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,18 +19,12 @@
                 <h1 class="header-title">Permissions of ${role.name}</h1>
             </div>
             <div class="header-right">
+                <a href="${pageContext.request.contextPath}/admin/roles" class="btn-secondary">← Back to Role List</a>
                 <a href="${pageContext.request.contextPath}/admin/roles/edit_permissions?roleId=${role.id}" class="btn-primary">Edit Permissions</a>
             </div>
         </div>
 
         <div class="dashboard-content">
-            <nav class="breadcrumb">
-                <a href="${pageContext.request.contextPath}/home">Home</a>
-                <span class="separator">›</span>
-                <a href="${pageContext.request.contextPath}/admin/roles">Roles</a>
-                <span class="separator">›</span>
-                <span class="current">${role.name}</span>
-            </nav>
 
             <div class="role-detail">
                 <div class="role-meta">
@@ -76,6 +70,7 @@
                                     <c:when test="${entry.key eq 'ANNOUNCEMENT'}">Announcement</c:when>
                                     <c:when test="${entry.key eq 'REQUEST'}">Request</c:when>
                                     <c:when test="${entry.key eq 'TASK'}">Task</c:when>
+                                    <c:when test="${entry.key eq 'REPORT'}">Report</c:when>
                                     <c:otherwise>Other</c:otherwise>
                                 </c:choose>
                             </div>

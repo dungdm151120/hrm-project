@@ -211,7 +211,7 @@
                                                             <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}">
                                                                 <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge" style="text-decoration:none;" title="View OT Detail">OT</a>
                                                             </c:if>
-                                                            <c:if test="${record.edited}">
+                                                            <c:if test="${record.edited and record.status ne 'HOLIDAY' and record.status ne 'ON_LEAVE' and record.status ne 'SICK_LEAVE'}">
                                                                 <span class="matrix-edited-badge">Edited</span>
                                                             </c:if>
                                                         <c:choose>

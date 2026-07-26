@@ -50,22 +50,32 @@ public class AttendanceDAO {
                 "VALUES (?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE check_in = VALUES(check_in), check_out = VALUES(check_out)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
-            for (AttendanceLog log : logs) {
-                ps.setDate(1, Date.valueOf(log.getWorkDate()));
-                ps.setInt(2, log.getEmployeeId());
-                setNullableTimestamp(ps, 3, log.getCheckIn());
-                setNullableTimestamp(ps, 4, log.getCheckOut());
-                ps.addBatch();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (AttendanceLog log : logs) {
+                    ps.setDate(1, Date.valueOf(log.getWorkDate()));
+                    ps.setInt(2, log.getEmployeeId());
+                    setNullableTimestamp(ps, 3, log.getCheckIn());
+                    setNullableTimestamp(ps, 4, log.getCheckOut());
+                    ps.addBatch();
+                }
+                int[] results = ps.executeBatch();
+                conn.commit();
+                return results.length;
+            } catch (Exception e) {
+                if (conn != null) conn.rollback();
+                throw e;
             }
-            int[] results = ps.executeBatch();
-            conn.commit();
-            return results.length;
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
+        } finally {
+            if (conn != null) {
+                try { conn.close(); } catch (SQLException ignored) {}
+            }
         }
     }
 
@@ -466,7 +476,7 @@ public class AttendanceDAO {
             employeeFilter.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            employeeFilter.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+            employeeFilter.append(" AND (u.full_name LIKE BINARY ? OR u.employee_code LIKE BINARY ?)");
         }
 
         String sql =
@@ -476,8 +486,8 @@ public class AttendanceDAO {
                         "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ar.updated_at, " +
                         "ot.status AS ot_status " +
                         "FROM (" +
-                        "SELECT DISTINCT u.id, u.full_name " + employeeFilter +
-                        " ORDER BY u.full_name, u.id LIMIT ? OFFSET ?" +
+                        "SELECT u.id, u.full_name " + employeeFilter +
+                        " GROUP BY u.id, u.full_name ORDER BY u.full_name, u.id LIMIT ? OFFSET ?" +
                         ") page_users " +
                         "JOIN users u ON u.id = page_users.id " +
                         "LEFT JOIN departments d ON d.id = u.department_id " +
@@ -534,7 +544,7 @@ public class AttendanceDAO {
             sql.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            sql.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+            sql.append(" AND (u.full_name LIKE BINARY ? OR u.employee_code LIKE BINARY ?)");
         }
 
         try (Connection conn = DBConnection.getConnection();
@@ -833,7 +843,8 @@ public class AttendanceDAO {
                     dto.setNote(rs.getString("note"));
                     dto.setCheckInText(checkIn == null ? "" : checkIn.format(MATRIX_TIME_FORMAT));
                     dto.setCheckOutText(checkOut == null ? "" : checkOut.format(MATRIX_TIME_FORMAT));
-                    dto.setEdited(rs.getTimestamp("updated_at") != null && !"ON_LEAVE".equals(dto.getStatus()));
+                    boolean isSystemStatus = "ON_LEAVE".equals(dto.getStatus()) || "HOLIDAY".equals(dto.getStatus()) || "SICK_LEAVE".equals(dto.getStatus());
+                    dto.setEdited(rs.getTimestamp("updated_at") != null && !isSystemStatus);
                     dto.setOtStatus(rs.getString("ot_status"));
                     list.add(dto);
                 }
@@ -1061,7 +1072,8 @@ public class AttendanceDAO {
         dto.setNote(rs.getString("note"));
         dto.setCheckInText(checkIn == null ? "--" : checkIn.format(MATRIX_TIME_FORMAT));
         dto.setCheckOutText(checkOut == null ? "--" : checkOut.format(MATRIX_TIME_FORMAT));
-        dto.setEdited(rs.getTimestamp("updated_at") != null);
+        boolean isSystemStatus = "ON_LEAVE".equals(status) || "HOLIDAY".equals(status) || "SICK_LEAVE".equals(status);
+        dto.setEdited(rs.getTimestamp("updated_at") != null && !isSystemStatus);
         dto.setCssClass(resolveMatrixCssClass(status));
         dto.setOtStatus(rs.getString("ot_status"));
         return dto;

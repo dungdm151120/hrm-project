@@ -52,7 +52,7 @@ public class RolePermissionServlet extends HttpServlet {
         Map<String, List<Permission>> moduleMap = new LinkedHashMap<>();
         String[] moduleOrder = {
                 "HOMEPAGE", "PROFILE", "AUTH", "USER", "ROLE", "DEPARTMENT", "POSITION",
-                "CONTRACT", "ATTENDANCE", "PAYROLL", "ANNOUNCEMENT", "REQUEST", "TASK"
+                "CONTRACT", "ATTENDANCE", "PAYROLL", "ANNOUNCEMENT", "REQUEST", "TASK", "REPORT"
         };
         for (String mod : moduleOrder) {
             moduleMap.put(mod, new ArrayList<>());
@@ -60,6 +60,11 @@ public class RolePermissionServlet extends HttpServlet {
 
         for (Permission p : allPermissions) {
             String code = p.getCode();
+            // Gom các permission chứa "REPORT" vào module REPORT
+            if (code.contains("REPORT")) {
+                moduleMap.get("REPORT").add(p);
+                continue;
+            }
             // Gom các permission chứa "REQUEST" vào module REQUEST
             if (code.contains("REQUEST")) {
                 moduleMap.get("REQUEST").add(p);
