@@ -135,7 +135,8 @@ public class EmployeeAttendanceServlet extends HttpServlet {
         dto.setStatus(record.getStatus());
         dto.setNote(record.getNote());
         dto.setCssClass(resolveCssClass(record.getStatus()));
-        dto.setEdited(record.getUpdatedAt() != null && !"ON_LEAVE".equals(record.getStatus()));
+        boolean isSystemStatus = "ON_LEAVE".equals(record.getStatus()) || "HOLIDAY".equals(record.getStatus()) || "SICK_LEAVE".equals(record.getStatus());
+        dto.setEdited(record.getUpdatedAt() != null && !isSystemStatus);
         dto.setHoliday("HOLIDAY".equals(record.getStatus()));
         return dto;
     }

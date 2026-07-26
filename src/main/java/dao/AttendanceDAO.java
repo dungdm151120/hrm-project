@@ -843,7 +843,8 @@ public class AttendanceDAO {
                     dto.setNote(rs.getString("note"));
                     dto.setCheckInText(checkIn == null ? "" : checkIn.format(MATRIX_TIME_FORMAT));
                     dto.setCheckOutText(checkOut == null ? "" : checkOut.format(MATRIX_TIME_FORMAT));
-                    dto.setEdited(rs.getTimestamp("updated_at") != null && !"ON_LEAVE".equals(dto.getStatus()));
+                    boolean isSystemStatus = "ON_LEAVE".equals(dto.getStatus()) || "HOLIDAY".equals(dto.getStatus()) || "SICK_LEAVE".equals(dto.getStatus());
+                    dto.setEdited(rs.getTimestamp("updated_at") != null && !isSystemStatus);
                     dto.setOtStatus(rs.getString("ot_status"));
                     list.add(dto);
                 }
@@ -1071,7 +1072,8 @@ public class AttendanceDAO {
         dto.setNote(rs.getString("note"));
         dto.setCheckInText(checkIn == null ? "--" : checkIn.format(MATRIX_TIME_FORMAT));
         dto.setCheckOutText(checkOut == null ? "--" : checkOut.format(MATRIX_TIME_FORMAT));
-        dto.setEdited(rs.getTimestamp("updated_at") != null);
+        boolean isSystemStatus = "ON_LEAVE".equals(status) || "HOLIDAY".equals(status) || "SICK_LEAVE".equals(status);
+        dto.setEdited(rs.getTimestamp("updated_at") != null && !isSystemStatus);
         dto.setCssClass(resolveMatrixCssClass(status));
         dto.setOtStatus(rs.getString("ot_status"));
         return dto;

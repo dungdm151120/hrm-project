@@ -97,7 +97,7 @@
                         <c:set var="currentDay" value="${firstDayOfMonth.minusDays(dayOfWeekIndex)}" />
                         <c:set var="lastDayOfMonth" value="${daysInMonth[daysInMonth.size() - 1]}" />
 
-                        <c:forEach var="week" begin="0" end="4">
+                        <c:forEach var="week" begin="0" end="5">
                             <c:if test="${currentDay <= lastDayOfMonth}">
                                 <div class="calendar-week">
                                     <c:forEach var="dayOfWeek" begin="0" end="6">
@@ -124,7 +124,7 @@
                                                             <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}">
                                                                 <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="record-chip chip-ot" style="text-decoration:none;" title="View OT Detail">OT</a>
                                                             </c:if>
-                                                            <c:if test="${record.edited}">
+                                                            <c:if test="${record.edited and record.status ne 'HOLIDAY' and record.status ne 'ON_LEAVE' and record.status ne 'SICK_LEAVE'}">
                                                                 <span class="record-chip chip-edited">Edited</span>
                                                             </c:if>
                                                         </c:when>
