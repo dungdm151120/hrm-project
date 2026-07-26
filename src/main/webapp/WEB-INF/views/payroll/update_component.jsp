@@ -164,6 +164,7 @@
         </div>
 
         <div class="dashboard-content">
+            <a class="back-link" href="${pageContext.request.contextPath}/payroll/list">Return to payroll list</a>
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>
             </c:if>

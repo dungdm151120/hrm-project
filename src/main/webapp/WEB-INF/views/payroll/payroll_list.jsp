@@ -130,6 +130,7 @@
                 <h1 class="header-title">Payroll List</h1>
             </div>
             <div class="header-right">
+                <a href="${pageContext.request.contextPath}/home" class="btn-secondary">Back to Home</a>
                 <c:if test="${userPermissions.contains('PAYROLL_CONFIRM')}">
                     <form action="${pageContext.request.contextPath}/payroll/confirm" method="POST" onsubmit="return confirm('Confirm all payrolls?')">
                         <input type="hidden" name="all" value="all">

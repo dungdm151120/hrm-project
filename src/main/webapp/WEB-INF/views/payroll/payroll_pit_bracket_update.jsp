@@ -233,7 +233,7 @@
                     <% session.removeAttribute("error"); %>
                 </c:if>
 
-                <form action="${pageContext.request.contextPath}/payroll/pit/update" method="POST">
+                <form id="pitForm" action="${pageContext.request.contextPath}/payroll/pit/update" method="POST">
 
                     <div class="card-box">
                         <div class="card-title">
@@ -246,7 +246,7 @@
                                 <select name="month" required class="form-control">
                                     <option value="">-- Select Month --</option>
                                     <c:forEach var="m" begin="1" end="12">
-                                        <option value="${m}">Month ${m}</option>
+                                        <option value="${m}" ${month == m ? 'selected' : ''}>Month ${m}</option>
                                     </c:forEach>
                                 </select>
                             </div>
@@ -256,8 +256,8 @@
                                 <select name="year" required class="form-control">
                                     <option value="">-- Select Year --</option>
                                     <c:set var="currentYear" value="<%= java.time.Year.now().getValue() %>"/>
-                                    <c:forEach var="y" begin="${currentYear - 3}" end="${currentYear + 3}">
-                                        <option value="${y}">Year ${y}</option>
+                                    <c:forEach var="y" begin="${currentYear - 3}" end="${currentYear + 1}">
+                                        <option value="${y}" ${year == y ? 'selected' : ''}>Year ${y}</option>
                                     </c:forEach>
                                 </select>
                             </div>
@@ -290,10 +290,10 @@
                                             <span class="level-badge">${status.index + 1}</span>
                                         </td>
                                         <td>
-                                            <input type="number" name="minValues" class="form-control" value="${b.minValue}" required>
+                                            <input type="text" name="minValues" class="form-control format-currency" value="${b.minValue}" required placeholder="0">
                                         </td>
                                         <td>
-                                            <input type="number" name="maxValues" class="form-control" value="${b.maxValue}" placeholder="Blank for Infinity (∞)">
+                                            <input type="text" name="maxValues" class="form-control format-currency" value="${b.maxValue}" placeholder="Blank for Infinity (∞)">
                                         </td>
                                         <td>
                                             <div class="rate-input-wrapper">
@@ -327,6 +327,38 @@
 </div>
 
 <script>
+    function formatCurrency(value) {
+        if (!value) return "";
+        let cleanValue = value.toString().replace(/\D/g, "");
+        if (!cleanValue) return "";
+        return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".format-currency").forEach(input => {
+            input.value = formatCurrency(input.value);
+        });
+    });
+
+    document.getElementById("bracketTableBody").addEventListener("input", function(e) {
+        if (e.target && e.target.classList.contains("format-currency")) {
+            const input = e.target;
+            const cursorPosition = input.selectionStart;
+            const originalLength = input.value.length;
+
+            input.value = formatCurrency(input.value);
+
+            const newLength = input.value.length;
+            input.setSelectionRange(cursorPosition + (newLength - originalLength), cursorPosition + (newLength - originalLength));
+        }
+    });
+
+    document.getElementById("pitForm").addEventListener("submit", function() {
+        document.querySelectorAll(".format-currency").forEach(input => {
+            input.value = input.value.replace(/\./g, "");
+        });
+    });
+
     function addNewRow() {
         const tbody = document.getElementById("bracketTableBody");
         const nextLevel = tbody.children.length + 1;
@@ -337,10 +369,10 @@
                 <span class="level-badge">${'${nextLevel}'}</span>
             </td>
             <td>
-                <input type="number" name="minValues" class="form-control" required>
+                <input type="text" name="minValues" class="form-control format-currency" required placeholder="0">
             </td>
             <td>
-                <input type="number" name="maxValues" class="form-control" placeholder="Blank for Infinity (∞)">
+                <input type="text" name="maxValues" class="form-control format-currency" placeholder="Blank for Infinity (∞)">
             </td>
             <td>
                 <div class="rate-input-wrapper">

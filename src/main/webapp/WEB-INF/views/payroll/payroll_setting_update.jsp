@@ -161,12 +161,12 @@
 
                         <div class="form-group" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
                             <label style="color: #1e293b; font-weight: 700;">Self Deduction (VND)</label>
-                            <input type="number" name="selfDeduction" class="form-control" value="${setting.selfDeduction}" required>
+                            <input type="text" name="selfDeduction" class="form-control format-currency" value="${setting.selfDeduction}" required placeholder="0">
                         </div>
 
                         <div class="form-group">
                             <label style="color: #1e293b; font-weight: 700;">Dependent Deduction (VND)</label>
-                            <input type="number" name="dependentDeduction" class="form-control" value="${setting.dependentDeduction}" required>
+                            <input type="text" name="dependentDeduction" class="form-control format-currency" value="${setting.dependentDeduction}" required placeholder="0">
                         </div>
                     </div>
 
@@ -263,6 +263,40 @@
         </div>
     </div>
 </div>
+
+<script>
+    function formatCurrency(value) {
+        if (!value) return "";
+        let cleanValue = value.toString().replace(/\D/g, "");
+        if (!cleanValue) return "";
+        return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".format-currency").forEach(input => {
+            input.value = formatCurrency(input.value);
+        });
+    });
+
+    document.addEventListener("input", function(e) {
+        if (e.target && e.target.classList.contains("format-currency")) {
+            const input = e.target;
+            const cursorPosition = input.selectionStart;
+            const originalLength = input.value.length;
+
+            input.value = formatCurrency(input.value);
+
+            const newLength = input.value.length;
+            input.setSelectionRange(cursorPosition + (newLength - originalLength), cursorPosition + (newLength - originalLength));
+        }
+    });
+
+    document.getElementById("settingForm").addEventListener("submit", function() {
+        document.querySelectorAll(".format-currency").forEach(input => {
+            input.value = input.value.replace(/\./g, "");
+        });
+    });
+</script>
 
 </body>
 </html>
