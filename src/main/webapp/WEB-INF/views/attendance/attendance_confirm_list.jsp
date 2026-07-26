@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Confirmed List | HRM</title>
+    <title>Finalized Attendance List | HRM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance.css">
@@ -18,8 +18,8 @@
     <main class="dashboard-main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Attendance Confirmed List</h1>
-                <a href="${pageContext.request.contextPath}/attendance/confirm" class="btn-back">Back to Confirm Attendance</a>
+                <h1 class="header-title">Finalized Attendance List</h1>
+                <a href="${pageContext.request.contextPath}/attendance/confirm" class="btn-back">Back</a>
             </div>
         </header>
 
@@ -28,7 +28,7 @@
                 <form id="filterForm" action="${pageContext.request.contextPath}/attendance/confirm_list" method="get">
                     <label for="yearSelect">Year: </label>
                     <select id="yearSelect" name="year" class="year-select">
-                        <c:forEach var="y" begin="${currentYear - 5}" end="${currentYear}">
+                        <c:forEach var="y" items="${finalizedYears}">
                             <option value="${y}" ${y == selectedYear ? 'selected' : ''}>${y}</option>
                         </c:forEach>
                     </select>
@@ -57,14 +57,14 @@
                                     <td>${item.employeeCount}</td>
                                     <td><fmt:formatNumber value="${item.totalHours}" maxFractionDigits="2"/> h</td>
                                     <td>
-                                        <a href="${pageContext.request.contextPath}/attendance/confirm_detail?month=${item.month}&year=${item.year}" class="btn-view">📊 View Detail</a>
+                                        <a href="${pageContext.request.contextPath}/attendance/confirm_detail?month=${item.month}&year=${item.year}" class="btn-view">View Detail</a>
                                     </td>
                                 </tr>
                             </c:forEach>
                         </c:when>
                         <c:otherwise>
                             <tr>
-                                <td colspan="6" class="empty-table-msg">No confirmed attendance data found for this year.</td>
+                                <td colspan="6" class="empty-table-msg">No finalized attendance records found for this year.</td>
                             </tr>
                         </c:otherwise>
                     </c:choose>

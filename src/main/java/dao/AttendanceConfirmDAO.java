@@ -234,6 +234,37 @@ public class AttendanceConfirmDAO {
         return list;
     }
 
+    public List<Integer> getFinalizedYears(Integer departmentId) {
+        List<Integer> years = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT DISTINCT s.snapshot_year " +
+                "FROM attendance_snapshot s " +
+                "JOIN users emp ON s.user_id = emp.id "
+        );
+
+        if (departmentId != null) {
+            sql.append("WHERE emp.department_id = ? ");
+        }
+
+        sql.append("ORDER BY s.snapshot_year DESC");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            if (departmentId != null) {
+                ps.setInt(1, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    years.add(rs.getInt("snapshot_year"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return years;
+    }
+
     public AttendanceConfirmedMonthOverviewDTO getConfirmedMonthOverview(int month, int year, Integer departmentId) {
         AttendanceConfirmedMonthOverviewDTO overview = new AttendanceConfirmedMonthOverviewDTO();
         StringBuilder sql = new StringBuilder(
