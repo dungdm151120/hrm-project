@@ -6,6 +6,9 @@ import util.PasswordUtil;
 
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public class UserService {
@@ -18,48 +21,75 @@ public class UserService {
         return userDAO.findProfileById(userId);
     }
 
-    public String updateProfile(User user) {
-        if (user.getPhone() != null) {
-            if (user.getPhone().length() > 20) {
-                return "Phone must be 20 characters or fewer.";
-            }
-            if (!user.getPhone().matches("^[+]?[0-9][0-9 .()\\-]{7,19}$")) {
-                return "Phone format is invalid.";
-            }
+    public Map<String, String> updateProfile(User user) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        if (user.getPhone() == null || !user.getPhone().matches("^\\d{10,15}$")) {
+            errors.put("phone", "Phone number must be 10-15 digits.");
+        } else if (userDAO.isPhoneUsedByAnotherUser(user.getPhone(), user.getId())) {
+            errors.put("phone", "Phone number is already in use.");
         }
 
-        if (user.getGender() != null && !VALID_GENDERS.contains(user.getGender())) {
-            return "Gender is invalid.";
+        if (user.getGender() == null || !VALID_GENDERS.contains(user.getGender())) {
+            errors.put("gender", "Please select a valid gender.");
+        }
+
+        if (user.getDateOfBirth() == null) {
+            errors.put("dateOfBirth", "Date of birth is required.");
+        } else {
+            LocalDate dateOfBirth = user.getDateOfBirth().toLocalDate();
+            LocalDate today = LocalDate.now();
+            if (!dateOfBirth.isBefore(today)) {
+                errors.put("dateOfBirth", "Date of birth must be in the past.");
+            } else if (dateOfBirth.plusYears(18).isAfter(today)) {
+                errors.put("dateOfBirth", "You must be at least 18 years old.");
+            }
         }
 
         if (user.getAddress() != null && user.getAddress().length() > 255) {
-            return "Address must be 255 characters or fewer.";
+            errors.put("address", "Address must be 255 characters or fewer.");
         }
 
         if (user.getAvatarUrl() != null) {
-            if (user.getAvatarUrl().length() > 255) {
-                return "Avatar URL must be 255 characters or fewer.";
-            }
-            if (!isValidAvatarUrl(user.getAvatarUrl())) {
-                return "Avatar URL must be a valid HTTP or HTTPS URL.";
+            if (user.getAvatarUrl().length() > 1000) {
+                errors.put("avatarUrl", "Avatar URL must be 1000 characters or fewer.");
+            } else if (isNewAvatarUrl(user) && !isValidAvatarUrl(user.getAvatarUrl())) {
+                errors.put("avatarUrl", "Avatar URL must be a valid JPG, JPEG, PNG, or WEBP image URL.");
             }
         }
 
-        if (user.getDateOfBirth() != null
-                && user.getDateOfBirth().toLocalDate().isAfter(LocalDate.now())) {
-            return "Date of birth cannot be in the future.";
+        if (!errors.isEmpty()) {
+            return errors;
         }
 
         boolean updated = userDAO.updateProfile(user);
-        return updated ? null : "Update profile failed.";
+        if (!updated) {
+            errors.put("global", "Update profile failed.");
+        }
+        return errors;
+    }
+
+    private boolean isNewAvatarUrl(User user) {
+        User currentProfile = userDAO.findProfileById(user.getId());
+        return currentProfile == null || !user.getAvatarUrl().equals(currentProfile.getAvatarUrl());
     }
 
     private boolean isValidAvatarUrl(String value) {
         try {
             URI uri = URI.create(value);
             String scheme = uri.getScheme();
-            return uri.getHost() != null
-                    && ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme));
+            String path = uri.getPath();
+            if (uri.getHost() == null
+                    || !("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
+                    || path == null) {
+                return false;
+            }
+
+            String lowerPath = path.toLowerCase(Locale.ROOT);
+            return lowerPath.endsWith(".jpg")
+                    || lowerPath.endsWith(".jpeg")
+                    || lowerPath.endsWith(".png")
+                    || lowerPath.endsWith(".webp");
         } catch (IllegalArgumentException e) {
             return false;
         }

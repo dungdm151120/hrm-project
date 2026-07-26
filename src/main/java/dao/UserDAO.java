@@ -650,6 +650,31 @@ public class UserDAO {
         return false;
     }
 
+    public boolean isPhoneUsedByAnotherUser(String phone, int userId) {
+        String sql = """
+                SELECT 1
+                FROM users
+                WHERE phone = ?
+                  AND id <> ?
+                LIMIT 1
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, phone);
+            ps.setInt(2, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
 
     public boolean updateUserStatus(int userId, boolean active) {
         String sql = """
