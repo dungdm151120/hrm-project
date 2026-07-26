@@ -3,11 +3,11 @@
 
 <c:choose>
     <c:when test="${empty availableEmployees}">
-        <p style="color: #888;">No available employees for this date.</p>
+        <p class="overtime-empty-employees">No available employees for this date.</p>
     </c:when>
     <c:otherwise>
         <c:forEach var="emp" items="${availableEmployees}">
-            <label style="display: block; margin-bottom: 5px;">
+            <label class="overtime-employee-option">
                 <input type="checkbox" name="employeeIds" value="${emp.id}">
                 <c:out value="${emp.fullName}"/> - <c:out value="${emp.positionName}"/>
             </label>
