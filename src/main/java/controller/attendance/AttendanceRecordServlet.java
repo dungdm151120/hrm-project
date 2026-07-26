@@ -33,6 +33,7 @@ public class AttendanceRecordServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         boolean isUpdateMode = "/attendance/records".equals(request.getServletPath());
+        boolean includeEmployeesWithoutRecords = !isUpdateMode;
         String actionUrl = request.getContextPath() + request.getServletPath();
 
         LocalDate today = LocalDate.now();
@@ -59,7 +60,8 @@ public class AttendanceRecordServlet extends HttpServlet {
                 selectedMonth,
                 selectedYear,
                 selectedDepartmentId,
-                keyword
+                keyword,
+                includeEmployeesWithoutRecords
         );
         int totalPages = (int) Math.ceil((double) totalEmployees / PAGE_SIZE);
         if (totalPages > 0 && currentPage > totalPages) {
@@ -72,7 +74,8 @@ public class AttendanceRecordServlet extends HttpServlet {
                 selectedDepartmentId,
                 keyword,
                 currentPage,
-                PAGE_SIZE
+                PAGE_SIZE,
+                includeEmployeesWithoutRecords
         );
 
         AttendanceConfirmDAO confirmDAO = new AttendanceConfirmDAO();
@@ -92,7 +95,9 @@ public class AttendanceRecordServlet extends HttpServlet {
             record.setLocked(isOverallLocked || isDeptLocked);
 
             employeeMap.putIfAbsent(record.getUserId(), record);
-            attendanceMap.put(buildAttendanceKey(record.getUserId(), record.getWorkDate()), record);
+            if (record.getWorkDate() != null) {
+                attendanceMap.put(buildAttendanceKey(record.getUserId(), record.getWorkDate()), record);
+            }
         }
 
         // Lấy danh sách ngày lễ trong tháng
