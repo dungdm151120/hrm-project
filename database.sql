@@ -291,9 +291,9 @@ CREATE TABLE requests (
                           department_id INT NULL,
                           type ENUM('LEAVE_REQUEST', 'EMP_MOVE_REMOVE', 'POSITION_HANDOVER', 'OVERTIME', 'ATTENDANCE_ADJUST', 'SICK_LEAVE_REQUEST', 'DEPENDENT_CHANGE_REQUEST') NOT NULL,
                           status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'CONFIRMED') DEFAULT 'PENDING',
-                          reason TEXT,
+                          reason VARCHAR(500),
                           approver_id INT,
-                          approver_comment TEXT NULL,
+                          approver_comment VARCHAR(500),
                           handler_id INT,
                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                           processed_at TIMESTAMP NULL,
@@ -945,7 +945,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AN
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_STAFF' AND p.code IN (
                                                                                            'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                           'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
+                                                                                           'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_UPDATE',
                                                                                            'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
                                                                                            'POSITION_VIEW_LIST',
                                                                                            'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE',
@@ -978,7 +978,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_MANAGE
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_STAFF' AND p.code IN (
                                                                                                 'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                                'USER_VIEW_LIST',
+                                                                                                'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
                                                                                                 'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
                                                                                                 'POSITION_VIEW_LIST',
                                                                                                 'CONTRACT_VIEW_OWN',
@@ -1041,7 +1041,7 @@ CREATE TABLE department_history (
 -- Bảng lưu thông tin phòng ban hiện tại sau khi add/move/remove
 CREATE TABLE department_after_update (
                                          id INT AUTO_INCREMENT PRIMARY KEY,
-                                         user_id INT NOT NULL UNIQUE,
+                                         user_id INT NOT NULL,
                                          department_id INT,
                                          start_date DATE NOT NULL,
                                          end_date DATE DEFAULT NULL,
