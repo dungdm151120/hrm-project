@@ -222,7 +222,7 @@ public class UserDAO {
     public List<User> getEmployeesByDepartment(int departmentId, String keyword, String status, String sort,
                                                int page, int pageSize, Integer managerUserId) {
         List<User> employees = getAllEmployeesByDepartment(departmentId);
-        employees = searchEmployeesByKeyword(employees, keyword);
+        employees = searchDepartmentEmployeesByNameOrEmail(employees, keyword);
         employees = filterEmployeesByStatus(employees, status);
         employees = sortEmployeesByName(employees, sort, managerUserId);
         return pagingEmployees(employees, page, pageSize);
@@ -303,6 +303,35 @@ public class UserDAO {
                     valueOrEmpty(user.getEmail()),
                     valueOrEmpty(user.getPhone()),
                     valueOrEmpty(user.getPositionName())
+            ), accentSensitive);
+
+            boolean matchesAllTerms = true;
+            for (String term : searchTerms) {
+                if (!searchableText.contains(term)) {
+                    matchesAllTerms = false;
+                    break;
+                }
+            }
+            if (matchesAllTerms) {
+                result.add(user);
+            }
+        }
+        return result;
+    }
+
+    private List<User> searchDepartmentEmployeesByNameOrEmail(List<User> employees, String keyword) {
+        boolean accentSensitive = containsVietnameseDiacritics(keyword);
+        String normalizedKeyword = normalizeSearchText(keyword, accentSensitive);
+        if (normalizedKeyword.isEmpty()) {
+            return employees;
+        }
+
+        String[] searchTerms = normalizedKeyword.split(" ");
+        List<User> result = new ArrayList<>();
+        for (User user : employees) {
+            String searchableText = normalizeSearchText(String.join(" ",
+                    valueOrEmpty(user.getFullName()),
+                    valueOrEmpty(user.getEmail())
             ), accentSensitive);
 
             boolean matchesAllTerms = true;
@@ -428,7 +457,7 @@ public class UserDAO {
 
     public int countEmployeesByDepartment(int departmentId, String keyword, String status) {
         List<User> employees = getAllEmployeesByDepartment(departmentId);
-        employees = searchEmployeesByKeyword(employees, keyword);
+        employees = searchDepartmentEmployeesByNameOrEmail(employees, keyword);
         employees = filterEmployeesByStatus(employees, status);
         return employees.size();
     }
