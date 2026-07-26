@@ -476,7 +476,7 @@ public class AttendanceDAO {
             employeeFilter.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            employeeFilter.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+            employeeFilter.append(" AND (u.full_name LIKE BINARY ? OR u.employee_code LIKE BINARY ?)");
         }
 
         String sql =
@@ -486,8 +486,8 @@ public class AttendanceDAO {
                         "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ar.updated_at, " +
                         "ot.status AS ot_status " +
                         "FROM (" +
-                        "SELECT DISTINCT u.id, u.full_name " + employeeFilter +
-                        " ORDER BY u.full_name, u.id LIMIT ? OFFSET ?" +
+                        "SELECT u.id, u.full_name " + employeeFilter +
+                        " GROUP BY u.id, u.full_name ORDER BY u.full_name, u.id LIMIT ? OFFSET ?" +
                         ") page_users " +
                         "JOIN users u ON u.id = page_users.id " +
                         "LEFT JOIN departments d ON d.id = u.department_id " +
@@ -544,7 +544,7 @@ public class AttendanceDAO {
             sql.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            sql.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+            sql.append(" AND (u.full_name LIKE BINARY ? OR u.employee_code LIKE BINARY ?)");
         }
 
         try (Connection conn = DBConnection.getConnection();
