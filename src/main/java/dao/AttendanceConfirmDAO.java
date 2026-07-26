@@ -265,6 +265,36 @@ public class AttendanceConfirmDAO {
         return years;
     }
 
+    public boolean hasFinalizedSnapshot(int month, int year, Integer departmentId) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT 1 FROM attendance_snapshot s " +
+                "JOIN users emp ON s.user_id = emp.id " +
+                "WHERE s.snapshot_month = ? AND s.snapshot_year = ? "
+        );
+
+        if (departmentId != null) {
+            sql.append("AND emp.department_id = ? ");
+        }
+
+        sql.append("LIMIT 1");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            if (departmentId != null) {
+                ps.setInt(3, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public AttendanceConfirmedMonthOverviewDTO getConfirmedMonthOverview(int month, int year, Integer departmentId) {
         AttendanceConfirmedMonthOverviewDTO overview = new AttendanceConfirmedMonthOverviewDTO();
         StringBuilder sql = new StringBuilder(
