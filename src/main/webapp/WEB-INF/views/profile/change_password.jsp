@@ -33,7 +33,7 @@
                     <div class="form-group">
                         <label for="oldPassword">Old Password <span class="required-star">*</span></label>
                         <input type="password" id="oldPassword" name="oldPassword"
-                               placeholder="Enter current password" maxlength="72" required>
+                               placeholder="Enter current password" maxlength="32" required>
                         <c:if test="${not empty passwordErrors.oldPassword}">
                             <small class="field-error"><c:out value="${passwordErrors.oldPassword}"/></small>
                         </c:if>
@@ -42,7 +42,7 @@
                     <div class="form-group">
                         <label for="newPassword">New Password <span class="required-star">*</span></label>
                         <input type="password" id="newPassword" name="newPassword"
-                               placeholder="Enter new password" minlength="6" maxlength="72" required>
+                               placeholder="Enter new password" minlength="6" maxlength="32" required>
                         <c:if test="${not empty passwordErrors.newPassword}">
                             <small class="field-error"><c:out value="${passwordErrors.newPassword}"/></small>
                         </c:if>
@@ -51,7 +51,7 @@
                     <div class="form-group">
                         <label for="confirmPassword">Confirm New Password <span class="required-star">*</span></label>
                         <input type="password" id="confirmPassword" name="confirmPassword"
-                               placeholder="Confirm new password" maxlength="72" required>
+                               placeholder="Confirm new password" maxlength="32" required>
                         <c:if test="${not empty passwordErrors.confirmPassword}">
                             <small class="field-error"><c:out value="${passwordErrors.confirmPassword}"/></small>
                         </c:if>

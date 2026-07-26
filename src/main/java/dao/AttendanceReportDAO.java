@@ -26,7 +26,8 @@ public class AttendanceReportDAO {
                 COALESCE(SUM(CASE WHEN ar.status IN ('EARLY_LEAVE', 'LATE_AND_EARLY_LEAVE') OR ar.early_leave_hours > 0 THEN 1 ELSE 0 END), 0) AS early_leave_days,
                 COALESCE(SUM(CASE WHEN ar.status = 'FORGOT_CHECK_IN' THEN 1 ELSE 0 END), 0) AS forgot_check_in_days,
                 COALESCE(SUM(CASE WHEN ar.status = 'FORGOT_CHECK_OUT' THEN 1 ELSE 0 END), 0) AS forgot_check_out_days,
-                COALESCE(SUM(ar.total_work_hours), 0.0) AS total_work_hours,
+                COALESCE(SUM(CASE WHEN ar.status NOT IN ('ON_LEAVE', 'SICK_LEAVE')
+                                  THEN ar.total_work_hours ELSE 0.0 END), 0.0) AS total_work_hours,
                 COALESCE(SUM(ar.overtime_hours), 0.0) AS total_overtime_hours,
                 COALESCE(SUM(CASE WHEN ar.status IN ('ON_LEAVE', 'SICK_LEAVE') THEN 1 ELSE 0 END), 0) AS leave_days,
                 COALESCE(ot_reg.registered_ot_hours, 0.0) AS registered_ot_hours
@@ -35,7 +36,8 @@ public class AttendanceReportDAO {
             LEFT JOIN departments d ON u.department_id = d.id
             LEFT JOIN attendance_records ar ON u.id = ar.user_id AND ar.work_date BETWEEN ? AND ?
             LEFT JOIN (
-                SELECT op.user_id, COALESCE(SUM(otr.total_hours), 0.0) AS registered_ot_hours
+                SELECT op.user_id,
+                       COALESCE(SUM(TIME_TO_SEC(TIMEDIFF(otr.shift_end, otr.shift_start)) / 3600.0), 0.0) AS registered_ot_hours
                 FROM overtime_participants op
                 JOIN overtime_requests otr ON op.overtime_request_id = otr.id
                 JOIN requests r ON otr.request_id = r.id

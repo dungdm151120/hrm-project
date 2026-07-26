@@ -463,6 +463,28 @@ public class AttendanceDAO {
         return getAttendanceRecordsForMatrix(month, year, departmentId, keyword, page, pageSize, false);
     }
 
+    private List<Integer> findMatchingUserIds(String keyword) {
+        return new UserDAO().findUserIdsMatchingPersonSearch(keyword);
+    }
+
+    private void appendUserIdFilter(StringBuilder sql, List<Integer> userIds) {
+        sql.append(" AND u.id IN (");
+        for (int i = 0; i < userIds.size(); i++) {
+            if (i > 0) {
+                sql.append(", ");
+            }
+            sql.append('?');
+        }
+        sql.append(')');
+    }
+
+    private int bindUserIds(PreparedStatement ps, int index, List<Integer> userIds) throws SQLException {
+        for (Integer userId : userIds) {
+            ps.setInt(index++, userId);
+        }
+        return index;
+    }
+
     public List<AttendanceRecordDTO> getAttendanceRecordsForMatrix(
             int month,
             int year,
@@ -478,6 +500,10 @@ public class AttendanceDAO {
         LocalDate endDate = period.atEndOfMonth();
         int offset = Math.max(0, page - 1) * pageSize;
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        List<Integer> matchingUserIds = findMatchingUserIds(normalizedKeyword);
+        if (!normalizedKeyword.isEmpty() && matchingUserIds.isEmpty()) {
+            return records;
+        }
 
         StringBuilder employeeFilter = includeEmployeesWithoutRecords
                 ? new StringBuilder(
@@ -494,7 +520,7 @@ public class AttendanceDAO {
             employeeFilter.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            employeeFilter.append(" AND (u.full_name LIKE BINARY ? OR u.employee_code LIKE BINARY ?)");
+            appendUserIdFilter(employeeFilter, matchingUserIds);
         }
 
         String sql =
@@ -526,9 +552,7 @@ public class AttendanceDAO {
                 ps.setInt(index++, departmentId);
             }
             if (!normalizedKeyword.isEmpty()) {
-                String likeKeyword = "%" + normalizedKeyword + "%";
-                ps.setString(index++, likeKeyword);
-                ps.setString(index++, likeKeyword);
+                index = bindUserIds(ps, index, matchingUserIds);
             }
             ps.setInt(index++, pageSize);
             ps.setInt(index++, offset);
@@ -564,6 +588,10 @@ public class AttendanceDAO {
     ) {
         YearMonth period = YearMonth.of(year, month);
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        List<Integer> matchingUserIds = findMatchingUserIds(normalizedKeyword);
+        if (!normalizedKeyword.isEmpty() && matchingUserIds.isEmpty()) {
+            return 0;
+        }
         StringBuilder sql = includeEmployeesWithoutRecords
                 ? new StringBuilder(
                         "SELECT COUNT(DISTINCT u.id) " +
@@ -581,7 +609,7 @@ public class AttendanceDAO {
             sql.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            sql.append(" AND (u.full_name LIKE BINARY ? OR u.employee_code LIKE BINARY ?)");
+            appendUserIdFilter(sql, matchingUserIds);
         }
 
         try (Connection conn = DBConnection.getConnection();
@@ -595,9 +623,7 @@ public class AttendanceDAO {
                 ps.setInt(index++, departmentId);
             }
             if (!normalizedKeyword.isEmpty()) {
-                String likeKeyword = "%" + normalizedKeyword + "%";
-                ps.setString(index++, likeKeyword);
-                ps.setString(index, likeKeyword);
+                index = bindUserIds(ps, index, matchingUserIds);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
@@ -900,6 +926,10 @@ public class AttendanceDAO {
         LocalDate startDate = period.atDay(1);
         LocalDate endDate = period.atEndOfMonth();
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        List<Integer> matchingUserIds = findMatchingUserIds(normalizedKeyword);
+        if (!normalizedKeyword.isEmpty() && matchingUserIds.isEmpty()) {
+            return records;
+        }
 
         StringBuilder sql = new StringBuilder(
                 "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
@@ -918,7 +948,7 @@ public class AttendanceDAO {
             sql.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            sql.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+            appendUserIdFilter(sql, matchingUserIds);
         }
         sql.append(" ORDER BY u.full_name, u.id, ar.work_date");
 
@@ -931,9 +961,7 @@ public class AttendanceDAO {
                 ps.setInt(idx++, departmentId);
             }
             if (!normalizedKeyword.isEmpty()) {
-                String likeKeyword = "%" + normalizedKeyword + "%";
-                ps.setString(idx++, likeKeyword);
-                ps.setString(idx++, likeKeyword);
+                idx = bindUserIds(ps, idx, matchingUserIds);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
