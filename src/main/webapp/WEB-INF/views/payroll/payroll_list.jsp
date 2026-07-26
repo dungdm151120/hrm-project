@@ -38,7 +38,6 @@
             min-width: 140px;
         }
 
-        /* Tăng padding giúp các cột không bị dính ríu vào nhau */
         .table-wrapper table th,
         .table-wrapper table td {
             padding: 8px 12px !important;
@@ -72,7 +71,6 @@
             letter-spacing: 0.3px;
         }
 
-        /* Style sắp xếp nút View và Confirm nằm ngang */
         .action-group {
             display: flex !important;
             flex-direction: row !important;
@@ -102,6 +100,21 @@
         .text-minus, .text-danger {
             color: #dc2626 !important;
             font-weight: 600;
+        }
+        .table-wrapper table tfoot tr {
+            background-color: #1e293b !important;
+            border-top: 3px solid #0f172a;
+            box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+        }
+        .table-wrapper table tfoot td {
+            color: #f1f5f9 !important;
+            padding: 12px 12px !important;
+            font-size: 0.85rem !important;
+            font-weight: 600;
+        }
+        .table-wrapper table tfoot td strong {
+            color: #38bdf8 !important;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -372,7 +385,7 @@
                                 <td style="text-align: right;">
                                     <fmt:formatNumber value="${totalSummary.sickLeavePay}" type="number" maxFractionDigits="0"/>
                                 </td>
-                                <td style="text-align: right; color: var(--primary-dark);">
+                                <td style="text-align: right; color: #4ade80 !important; font-weight: bold;">
                                     <fmt:formatNumber value="${totalSummary.netPay}" type="number" maxFractionDigits="0"/> VND
                                 </td>
                                 <td></td>

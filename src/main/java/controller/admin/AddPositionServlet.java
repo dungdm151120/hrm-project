@@ -45,12 +45,21 @@ public class AddPositionServlet extends HttpServlet {
             position.setCreatedAt(LocalDateTime.now());
 
             PositionDAO dao = new PositionDAO();
+            DepartmentDAO deptDAO = new DepartmentDAO();
+
+            if (dao.isPositionNameExists(name)) {
+                request.setAttribute("departments", deptDAO.getAllDepartments());
+                request.setAttribute("error", "Position name already exists!");
+                request.setAttribute("newPosition", position);
+                request.getRequestDispatcher("/WEB-INF/views/admin/add_position.jsp").forward(request, response);
+                return;
+            }
+
             boolean isSuccess = dao.addPosition(position);
 
             if (isSuccess) {
                 response.sendRedirect(request.getContextPath() + "/position/list");
             } else {
-                DepartmentDAO deptDAO = new DepartmentDAO();
                 request.setAttribute("departments", deptDAO.getAllDepartments());
                 request.setAttribute("error", "Add new position failed in database!");
                 request.setAttribute("newPosition", position);

@@ -18,6 +18,7 @@ import java.util.List;
 
 @WebServlet("/admin/users/add")
 public class AddUserServlet extends HttpServlet {
+    UserDAO dao = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -70,6 +71,8 @@ public class AddUserServlet extends HttpServlet {
 
             if (email.isEmpty() || email.length() > 100 || !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 errorMsg.append("Invalid email format or email length exceeds 100 characters.<br/>");
+            } else if (dao.isEmailExists(email)) {
+                errorMsg.append("Email is already registered in the system.<br/>");
             }
 
             if (password == null || password.length() < 6 || password.length() > 32) {
@@ -79,6 +82,8 @@ public class AddUserServlet extends HttpServlet {
             if (!phone.isEmpty()) {
                 if (!phone.matches("\\d{9,11}")) {
                     errorMsg.append("Phone number must contain only digits and be between 9 and 11 numbers.<br/>");
+                } else if (dao.isPhoneExists(phone)) {
+                    errorMsg.append("Phone number is already registered in the system.<br/>");
                 }
             }
 
