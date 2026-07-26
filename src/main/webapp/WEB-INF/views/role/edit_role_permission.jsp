@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,31 +18,23 @@
                 <h1 class="header-title">Edit permissions: ${role.name}</h1>
             </div>
             <div class="header-right">
-                <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}" class="btn-secondary">← Back to permissions</a>
+                <a href="${pageContext.request.contextPath}/admin/roles" class="btn-secondary">← Back to Role List</a>
+               
             </div>
         </div>
 
         <div class="dashboard-content">
-            <nav class="breadcrumb">
-                <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
-                <span class="separator">›</span>
-                <a href="${pageContext.request.contextPath}/admin/roles">Danh sách vai trò</a>
-                <span class="separator">›</span>
-                <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}">Quyền của "${role.name}"</a>
-                <span class="separator">›</span>
-                <span class="current">Chỉnh sửa</span>
-            </nav>
 
-            <p class="role-description">Mô tả: ${role.description}</p>
+            <p class="role-description">Description: ${role.description}</p>
 
             <form action="${pageContext.request.contextPath}/admin/roles/edit_permissions" method="post">
                 <input type="hidden" name="roleId" value="${role.id}">
 
                 <div class="toolbar">
-                    <button type="button" class="btn-secondary" onclick="selectAll()">Chọn tất cả</button>
-                    <button type="button" class="btn-secondary" onclick="clearAll()">Bỏ chọn tất cả</button>
+                    <button type="button" class="btn-secondary" onclick="selectAll()">Select All</button>
+                    <button type="button" class="btn-secondary" onclick="clearAll()">Deselect All</button>
                     <span class="selected-count-wrapper">
-                        Đã chọn: <span id="selectedCount" class="selected-count">0</span> / ${allPermissions.size()} quyền
+                        Selected: <span id="selectedCount" class="selected-count">0</span> / ${allPermissions.size()} permissions
                     </span>
                 </div>
 
@@ -66,6 +58,7 @@
                                         <c:when test="${entry.key eq 'ANNOUNCEMENT'}">Announcement</c:when>
                                         <c:when test="${entry.key eq 'REQUEST'}">Request</c:when>
                                         <c:when test="${entry.key eq 'TASK'}">Task</c:when>
+                                        <c:when test="${entry.key eq 'REPORT'}">Report</c:when>
                                         <c:otherwise>Other</c:otherwise>
                                     </c:choose>
                                 </div>
@@ -97,8 +90,8 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn-save">Lưu thay đổi</button>
-                    <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}" class="btn-cancel">Hủy</a>
+                    <button type="submit" class="btn-save">Save Changes</button>
+                    <a href="${pageContext.request.contextPath}/admin/roles/permissions?roleId=${role.id}" class="btn-cancel">Cancel</a>
                 </div>
             </form>
         </div>
