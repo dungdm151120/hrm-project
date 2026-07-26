@@ -1,16 +1,18 @@
 <%@ page import="model.User" %>
+<%@ page import="java.time.LocalDate" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%
     User user = (User) request.getAttribute("user");
     String dob = "";
+    String maxDob = LocalDate.now().minusYears(18).toString();
     if (user != null && user.getDateOfBirth() != null) {
         dob = user.getDateOfBirth().toLocalDate().toString();
     }
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,6 +40,9 @@
             <c:if test="${not empty profileError}">
                 <div class="alert alert-error"><c:out value="${profileError}"/></div>
             </c:if>
+            <c:if test="${not empty profileErrors.global}">
+                <div class="alert alert-error"><c:out value="${profileErrors.global}"/></div>
+            </c:if>
 
             <c:if test="${empty user}">
                 <div class="empty-state">Profile not found.</div>
@@ -46,7 +51,6 @@
             <c:if test="${not empty user}">
                 <form action="${pageContext.request.contextPath}/profile" method="post">
                     <div class="detail-card">
-                        <!-- Avatar tròn căn giữa -->
                         <div class="detail-avatar-wrapper">
                             <c:choose>
                                 <c:when test="${not empty user.avatarUrl}">
@@ -61,7 +65,6 @@
                             </c:choose>
                         </div>
 
-                        <!-- Thông tin cá nhân -->
                         <div class="detail-info">
                             <div class="form-group">
                                 <label for="fullName">Full Name</label>
@@ -76,34 +79,52 @@
                             <div class="form-group">
                                 <label for="phone">Phone</label>
                                 <input type="text" id="phone" name="phone"
-                                       value="${fn:escapeXml(user.phone)}" maxlength="20">
+                                       value="${fn:escapeXml(user.phone)}" maxlength="15" required
+                                       inputmode="numeric" pattern="\d{10,15}"
+                                       title="Phone number must be 10-15 digits.">
+                                <c:if test="${not empty profileErrors.phone}">
+                                    <small class="field-error"><c:out value="${profileErrors.phone}"/></small>
+                                </c:if>
                             </div>
 
                             <div class="form-group">
                                 <label for="gender">Gender</label>
-                                <select id="gender" name="gender">
-                                    <option value="">Not updated</option>
+                                <select id="gender" name="gender" required>
+                                    <option value="" disabled ${empty user.gender ? 'selected' : ''}>Select gender</option>
                                     <option value="Male" ${user.gender == 'Male' ? 'selected' : ''}>Male</option>
                                     <option value="Female" ${user.gender == 'Female' ? 'selected' : ''}>Female</option>
                                     <option value="Other" ${user.gender == 'Other' ? 'selected' : ''}>Other</option>
                                 </select>
+                                <c:if test="${not empty profileErrors.gender}">
+                                    <small class="field-error"><c:out value="${profileErrors.gender}"/></small>
+                                </c:if>
                             </div>
 
                             <div class="form-group">
                                 <label for="dateOfBirth">Date of Birth</label>
-                                <input type="date" id="dateOfBirth" name="dateOfBirth" value="<%= dob %>">
+                                <input type="date" id="dateOfBirth" name="dateOfBirth" value="<%= dob %>"
+                                       max="<%= maxDob %>" required title="DD/MM/YYYY">
+                                <c:if test="${not empty profileErrors.dateOfBirth}">
+                                    <small class="field-error"><c:out value="${profileErrors.dateOfBirth}"/></small>
+                                </c:if>
                             </div>
 
                             <div class="form-group">
                                 <label for="address">Address</label>
-                                <input type="text" id="address" name="address"
-                                       value="${fn:escapeXml(user.address)}" maxlength="255">
+                                <textarea id="address" name="address" maxlength="255" rows="3"><c:out value="${user.address}"/></textarea>
+                                <c:if test="${not empty profileErrors.address}">
+                                    <small class="field-error"><c:out value="${profileErrors.address}"/></small>
+                                </c:if>
                             </div>
 
                             <div class="form-group">
                                 <label for="avatarUrl">Avatar URL</label>
                                 <input type="url" id="avatarUrl" name="avatarUrl"
-                                       value="${fn:escapeXml(user.avatarUrl)}" maxlength="255">
+                                       value="${fn:escapeXml(user.avatarUrl)}" maxlength="1000"
+                                       title="Use a JPG, JPEG, PNG, or WEBP image URL.">
+                                <c:if test="${not empty profileErrors.avatarUrl}">
+                                    <small class="field-error"><c:out value="${profileErrors.avatarUrl}"/></small>
+                                </c:if>
                             </div>
 
                             <div class="form-group">

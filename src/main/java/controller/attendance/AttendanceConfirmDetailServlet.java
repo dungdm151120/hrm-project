@@ -52,6 +52,11 @@ public class AttendanceConfirmDetailServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/attendance/confirm_list");
             return;
         }
+        if (month < 1 || month > 12 || year < 2000 || year > 9999
+                || !confirmedDAO.hasFinalizedSnapshot(month, year, departmentIdFilter)) {
+            response.sendRedirect(request.getContextPath() + "/attendance/confirm_list");
+            return;
+        }
 
         String searchQuery = request.getParameter("search");
         
@@ -69,14 +74,10 @@ public class AttendanceConfirmDetailServlet extends HttpServlet {
 
         int offset = (page - 1) * pageSize;
 
-        // Get Overview (Summary Cards)
         AttendanceConfirmedMonthOverviewDTO overview = confirmedDAO.getConfirmedMonthOverview(month, year, departmentIdFilter);
-        
-        // Get Total Records for Pagination
         int totalRecords = confirmedDAO.getConfirmedDetailsCount(month, year, searchQuery, departmentIdFilter);
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
 
-        // Get Details
         List<AttendanceConfirmedDetailDTO> details = confirmedDAO.getConfirmedDetails(month, year, searchQuery, departmentIdFilter, offset, pageSize);
 
         request.setAttribute("month", month);

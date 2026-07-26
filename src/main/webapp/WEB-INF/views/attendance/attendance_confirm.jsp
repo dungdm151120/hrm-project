@@ -68,31 +68,31 @@
                     <button type="submit" class="matrix-btn matrix-search-btn">Check Status</button>
                 </form>
 
-                <div style="margin-top: 20px; padding: 20px; border-radius: 8px; background-color: #f8f9fa; border: 1px solid #e9ecef; margin-bottom: 20px;">
-                    <h3 style="margin-top:0; font-size: 16px; color: #495057;">Overall Month Status: 
+                <div class="attendance-confirm-summary">
+                    <h3 class="attendance-confirm-summary-title">Overall Month Status:
                         <c:choose>
-                            <c:when test="${overallStatus == 'APPROVED'}">
-                                <span style="color: #28a745; font-weight: bold;">Finalized</span>
+                            <c:when test="${overallStatus == 'FINALIZED'}">
+                                <span class="attendance-confirm-status finalized">Finalized</span>
                             </c:when>
                             <c:otherwise>
-                                <span style="color: #6c757d; font-weight: bold;">PENDING DEPARTMENT CONFIRMATIONS</span>
+                                <span class="attendance-confirm-status pending">PENDING DEPARTMENT CONFIRMATIONS</span>
                             </c:otherwise>
                         </c:choose>
                     </h3>
                     
                     <c:if test="${overallStatus == 'PENDING' && confirmationAllowed}">
                         <c:if test="${isHRManager}">
-                            <p style="margin-bottom:0; color:#6c757d; font-size:14px;">All department confirmations are required before HR can finalize attendance.</p>
-                            <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" style="margin-top:10px;">
+                            <p class="attendance-confirm-note">All department confirmations are required before HR can finalize attendance.</p>
+                            <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" class="attendance-confirm-finalize-form">
                                 <input type="hidden" name="month" value="${selectedMonth}">
                                 <input type="hidden" name="year" value="${selectedYear}">
                                 <input type="hidden" name="action" value="hr_finalize">
-                                <button type="submit" class="matrix-btn matrix-search-btn" ${!allConfirmed ? 'disabled' : ''} style="${!allConfirmed ? 'opacity:0.5; cursor:not-allowed;' : ''}" onclick="return confirm('Are you sure? This will create a permanent snapshot.');">Finalize Attendance</button>
+                                <button type="submit" class="matrix-btn matrix-search-btn attendance-confirm-finalize-btn" ${!allConfirmed ? 'disabled' : ''} onclick="return confirm('Are you sure? This will create a permanent snapshot.');">Finalize Attendance</button>
                             </form>
                         </c:if>
                     </c:if>
                     <c:if test="${overallStatus == 'PENDING' && !confirmationAllowed}">
-                        <p style="margin-bottom:0; color:#6c757d; font-size:14px;">Attendance can only be confirmed for the previous month from day 5 to day 10.</p>
+                        <p class="attendance-confirm-note">Attendance can only be confirmed for the previous month from day 5 to day 10.</p>
                     </c:if>
                     
                 </div>
@@ -115,11 +115,14 @@
                                 <td>${dept.managerName != null ? dept.managerName : 'No Manager'}</td>
                                 <td>
                                     <c:choose>
+                                        <c:when test="${overallStatus == 'FINALIZED'}">
+                                            <span class="attendance-confirm-status finalized">FINALIZED</span>
+                                        </c:when>
                                         <c:when test="${dept.status == 'CONFIRMED'}">
-                                            <span style="color:#28a745; font-weight:600;">CONFIRMED</span>
+                                            <span class="attendance-confirm-status confirmed">CONFIRMED</span>
                                         </c:when>
                                         <c:otherwise>
-                                            <span style="color:#dc3545; font-weight:600;">PENDING</span>
+                                            <span class="attendance-confirm-status pending">PENDING</span>
                                         </c:otherwise>
                                     </c:choose>
                                 </td>
@@ -131,12 +134,12 @@
                                 <td>
                                     <c:if test="${dept.status == 'PENDING' && overallStatus == 'PENDING' && confirmationAllowed}">
                                         <c:if test="${dept.managerUserId == currentUser.id}">
-                                            <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" style="display:inline;">
+                                            <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" class="attendance-confirm-action-form">
                                                 <input type="hidden" name="month" value="${selectedMonth}">
                                                 <input type="hidden" name="year" value="${selectedYear}">
                                                 <input type="hidden" name="departmentId" value="${dept.departmentId}">
                                                 <input type="hidden" name="action" value="dept_confirm">
-                                                <button type="submit" class="matrix-btn matrix-search-btn" style="padding: 4px 12px; font-size: 13px;" onclick="return confirm('Confirm attendance for ${dept.departmentName}?');">Confirm</button>
+                                                <button type="submit" class="matrix-btn matrix-search-btn attendance-confirm-action-btn" onclick="return confirm('Confirm attendance for ${dept.departmentName}?');">Confirm</button>
                                             </form>
                                         </c:if>
                                     </c:if>

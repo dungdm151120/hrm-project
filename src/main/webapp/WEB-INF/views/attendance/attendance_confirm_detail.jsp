@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Confirmed Detail | HRM</title>
+    <title>Finalized Attendance Detail | HRM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance.css">
@@ -18,23 +18,15 @@
     <main class="dashboard-main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title"> Confirmed Detail - <fmt:formatNumber value="${month}" minIntegerDigits="2"/>/${year}</h1>
-
-            </div>
-            <div class="header-right">
-                 <!-- Export button placeholder as requested -->
-                 <a href="#" class="btn-export" title="Export feature coming soon" onclick="alert('Export Excel functionality will be implemented soon.'); return false;">
-                     📤 Export Excel
-                 </a>
+                <h1 class="header-title">Finalized Attendance Detail - <fmt:formatNumber value="${month}" minIntegerDigits="2"/>/${year}</h1>
             </div>
         </header>
 
         <div class="dashboard-content">
             <div class="detail-header">
-                <a href="${pageContext.request.contextPath}/attendance/confirm_list" class="btn-back">🔙 Back to List</a>
+                <a href="${pageContext.request.contextPath}/attendance/confirm_list" class="btn-back">Back</a>
             </div>
 
-            <!-- Summary Cards -->
             <div class="summary-cards">
                 <div class="summary-card">
                     <h3>Total Employees</h3>
@@ -54,7 +46,6 @@
                 </div>
             </div>
 
-            <!-- Toolbar & Search -->
             <div class="toolbar">
                 <form id="searchForm" action="${pageContext.request.contextPath}/attendance/confirm_detail" method="get">
                     <input type="hidden" name="month" value="${month}">
@@ -64,7 +55,6 @@
                 </form>
             </div>
 
-            <!-- Data Table -->
             <table class="data-table">
                 <thead>
                     <tr>
@@ -99,7 +89,6 @@
                 </tbody>
             </table>
 
-            <!-- Pagination -->
             <c:if test="${totalPages > 1}">
                 <div class="pagination">
                     <c:if test="${currentPage > 1}">
