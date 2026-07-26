@@ -17,6 +17,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @WebServlet("/attendance/update")
 public class AttendanceUpdateServlet extends HttpServlet {
@@ -43,7 +45,7 @@ public class AttendanceUpdateServlet extends HttpServlet {
             return;
         }
 
-        forwardToForm(request, response, record, null);
+        forwardToForm(request, response, record, Map.of());
     }
 
     @Override
@@ -75,47 +77,40 @@ public class AttendanceUpdateServlet extends HttpServlet {
         recordDetail.setCheckOutText(checkOutText);
         recordDetail.setNote(note);
 
+        Map<String, String> errors = new LinkedHashMap<>();
         if (note.isEmpty()) {
-            forwardToForm(
-                    request,
-                    response,
-                    recordDetail,
-                    "Reason for change is required."
-            );
-            return;
-        }
-        if (note.length() > 1000) {
-            forwardToForm(
-                    request,
-                    response,
-                    recordDetail,
-                    "Reason for change must not exceed 1000 characters."
-            );
-            return;
+            errors.put("note", "Reason for change is required.");
+        } else if (note.length() > 500) {
+            errors.put("note", "Reason for change must not exceed 500 characters.");
         }
 
-        LocalDateTime checkIn;
-        LocalDateTime checkOut;
+        if (record.getCheckIn() != null && checkInText.isEmpty()) {
+            errors.put("checkIn", "Check-in time cannot be blank.");
+        }
+        if (record.getCheckOut() != null && checkOutText.isEmpty()) {
+            errors.put("checkOut", "Check-out time cannot be blank.");
+        }
+
+        LocalDateTime checkIn = null;
+        LocalDateTime checkOut = null;
         try {
             checkIn = parseNullableTime(checkInText, record.getWorkDate());
-            checkOut = parseNullableTime(checkOutText, record.getWorkDate());
         } catch (DateTimeParseException e) {
-            forwardToForm(
-                    request,
-                    response,
-                    recordDetail,
-                    "Check-in or check-out has an invalid time format."
-            );
-            return;
+            errors.put("checkIn", "Check-in time has an invalid format.");
         }
 
-        if (checkIn != null && checkOut != null && checkOut.isBefore(checkIn)) {
-            forwardToForm(
-                    request,
-                    response,
-                    recordDetail,
-                    "Check-out time cannot be before check-in time."
-            );
+        try {
+            checkOut = parseNullableTime(checkOutText, record.getWorkDate());
+        } catch (DateTimeParseException e) {
+            errors.put("checkOut", "Check-out time has an invalid format.");
+        }
+
+        if (checkIn != null && checkOut != null && !checkOut.isAfter(checkIn)) {
+            errors.put("checkOut", "Check-out time must be after check-in time.");
+        }
+
+        if (!errors.isEmpty()) {
+            forwardToForm(request, response, recordDetail, errors);
             return;
         }
 
@@ -134,12 +129,8 @@ public class AttendanceUpdateServlet extends HttpServlet {
         if (!attendanceDAO.updateAttendanceRecord(record)) {
             recordDetail.setStatus(record.getStatus());
             recordDetail.setTotalWorkHours(record.getTotalWorkHours());
-            forwardToForm(
-                    request,
-                    response,
-                    recordDetail,
-                    "Unable to update the attendance record. Please try again."
-            );
+            errors.put("global", "Unable to update the attendance record. Please try again.");
+            forwardToForm(request, response, recordDetail, errors);
             return;
         }
 
@@ -175,10 +166,10 @@ public class AttendanceUpdateServlet extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response,
             AttendanceRecordDTO record,
-            String error
+            Map<String, String> errors
     ) throws ServletException, IOException {
         request.setAttribute("record", record);
-        request.setAttribute("error", error);
+        request.setAttribute("errors", errors);
         request.getRequestDispatcher("/WEB-INF/views/attendance/update_attendance_record.jsp")
                 .forward(request, response);
     }

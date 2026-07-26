@@ -31,9 +31,9 @@
                     <p>Correct attendance data and provide a reason for the change.</p>
                 </div>
 
-                <c:if test="${not empty error}">
+                <c:if test="${not empty errors.global}">
                     <div class="attendance-update-error" role="alert">
-                        <c:out value="${error}"/>
+                        <c:out value="${errors.global}"/>
                     </div>
                 </c:if>
 
@@ -72,6 +72,9 @@
                                type="time"
                                name="checkIn"
                                value="${record.checkInText}">
+                        <c:if test="${not empty errors.checkIn}">
+                            <small class="field-error"><c:out value="${errors.checkIn}"/></small>
+                        </c:if>
                     </div>
 
                     <div class="attendance-update-row">
@@ -80,6 +83,9 @@
                                type="time"
                                name="checkOut"
                                value="${record.checkOutText}">
+                        <c:if test="${not empty errors.checkOut}">
+                            <small class="field-error"><c:out value="${errors.checkOut}"/></small>
+                        </c:if>
                     </div>
 
                     <div class="attendance-update-row">
@@ -101,10 +107,13 @@
                     <div class="attendance-update-row attendance-note-row">
                         <label for="note">Reason / Note</label>
                         <textarea id="note"
-                                  name="note"
-                                  maxlength="1000"
-                                  required
-                                  placeholder="Enter the reason for this attendance correction"><c:out value="${record.note}"/></textarea>
+                                   name="note"
+                                   maxlength="500"
+                                   required
+                                   placeholder="Enter the reason for this attendance correction"><c:out value="${record.note}"/></textarea>
+                        <c:if test="${not empty errors.note}">
+                            <small class="field-error"><c:out value="${errors.note}"/></small>
+                        </c:if>
                     </div>
 
                     <div class="attendance-update-actions">
