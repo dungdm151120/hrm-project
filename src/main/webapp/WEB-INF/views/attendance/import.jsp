@@ -76,7 +76,7 @@
                         <%-- INSTRUCTIONS --%>
                         <div class="info-note" style="margin-top: 0; margin-bottom: 1.5rem;">
                             <strong>📋 Instructions:</strong> The Excel file (.xlsx) must contain columns: <em>Employee Code, Date, Check-in Time, Check-out Time</em>.
-                            The system will automatically validate and import valid records. Rows with errors will be skipped.
+                            The system will strictly validate all rows before importing. If any row contains an error, no data will be saved.
                         </div>
 
                         <%-- UPLOAD FORM --%>
@@ -124,11 +124,10 @@
                     </div>
                     <div class="card-content">
                         <ul style="padding-left: 1.2rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8;">
-                            <li>Date format must be <strong>dd/MM/yyyy</strong> (e.g., 25/12/2024).</li>
+                            <li>Date format must be <strong>dd/MM/yyyy</strong> or <strong>yyyy-MM-dd</strong>.</li>
                             <li>Time format must be <strong>HH:mm</strong> in 24-hour format (e.g., 08:00, 17:30).</li>
-                            <li>Employee codes must exist in the system, otherwise those rows will be skipped.</li>
-                            <li>After a successful import, data will appear in the attendance table.</li>
-                            <li>It is recommended to <strong>backup data</strong> before performing bulk imports.</li>
+                            <li>Employee codes must exist in the system, check-in must be before check-out, and dates must be working days (not weekends or holidays).</li>
+                            <li>If any row fails validation, no data will be written to the database.</li>
                         </ul>
                     </div>
                 </div>

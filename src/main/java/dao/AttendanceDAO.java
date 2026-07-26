@@ -50,22 +50,32 @@ public class AttendanceDAO {
                 "VALUES (?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE check_in = VALUES(check_in), check_out = VALUES(check_out)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
-            for (AttendanceLog log : logs) {
-                ps.setDate(1, Date.valueOf(log.getWorkDate()));
-                ps.setInt(2, log.getEmployeeId());
-                setNullableTimestamp(ps, 3, log.getCheckIn());
-                setNullableTimestamp(ps, 4, log.getCheckOut());
-                ps.addBatch();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (AttendanceLog log : logs) {
+                    ps.setDate(1, Date.valueOf(log.getWorkDate()));
+                    ps.setInt(2, log.getEmployeeId());
+                    setNullableTimestamp(ps, 3, log.getCheckIn());
+                    setNullableTimestamp(ps, 4, log.getCheckOut());
+                    ps.addBatch();
+                }
+                int[] results = ps.executeBatch();
+                conn.commit();
+                return results.length;
+            } catch (Exception e) {
+                if (conn != null) conn.rollback();
+                throw e;
             }
-            int[] results = ps.executeBatch();
-            conn.commit();
-            return results.length;
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
+        } finally {
+            if (conn != null) {
+                try { conn.close(); } catch (SQLException ignored) {}
+            }
         }
     }
 
