@@ -13,8 +13,10 @@ import jakarta.servlet.http.HttpSession;
 import model.Task;
 import model.TaskChecklistItem;
 import model.User;
+import util.DBConnection;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -27,6 +29,9 @@ import java.util.Set;
 public class TaskUpdateServlet extends HttpServlet {
     private static final String TASK_MANAGE_CHECKLIST = "TASK_MANAGE_CHECKLIST";
     private static final String TASK_VIEW_ALL = "TASK_VIEW_ALL";
+    private static final int MAX_TITLE_LENGTH = 255;
+    private static final int MAX_DESCRIPTION_LENGTH = 2000;
+    private static final int MAX_CHECKLIST_CONTENT_LENGTH = 255;
 
     private final TaskDAO taskDAO = new TaskDAO();
     private final TaskChecklistItemDAO checklistItemDAO = new TaskChecklistItemDAO();
@@ -79,16 +84,21 @@ public class TaskUpdateServlet extends HttpServlet {
             List<User> departmentUsers = getDepartmentUsersForTask(existingTask);
             validateDepartmentAssignee(task.getAssignedTo(), departmentUsers);
             List<Long> participantIds = allowedUserIds(departmentUsers, request.getParameterValues("participantIds"));
-            taskDAO.updateTask(task);
-            taskDAO.replaceTaskRelations(task, participantIds, parseLongValues(request.getParameterValues("observerIds")));
-
-            if (hasPermission(request, TASK_MANAGE_CHECKLIST) && !"PAUSED".equals(existingTask.getStatus())) {
-                updateChecklistItems(request, taskId, new LinkedHashSet<>(participantIds));
-            }
-            taskDAO.refreshProgressAndAutoComplete(taskId);
-            recordTaskUpdateHistory(existingTask, task, currentUserId(request));
+            List<Long> observerIds = allowedUserIds(
+                    userDAO.getActiveUsersForTaskSelection(),
+                    request.getParameterValues("observerIds"));
+            List<TaskChecklistItem> checklistItems =
+                    hasPermission(request, TASK_MANAGE_CHECKLIST) && !"PAUSED".equals(existingTask.getStatus())
+                            ? buildChecklistItems(request, taskId, new LinkedHashSet<>(participantIds))
+                            : List.of();
+            updateTask(existingTask, task, participantIds, observerIds, checklistItems, currentUserId(request));
             request.getSession().setAttribute("message", "Task updated successfully.");
             response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
+        } catch (IllegalArgumentException e) {
+            request.getSession().setAttribute("error", e.getMessage());
+            long taskId = parseLong(request.getParameter("id"), 0);
+            response.sendRedirect(request.getContextPath()
+                    + (taskId > 0 ? "/tasks/edit?id=" + taskId : "/tasks"));
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -96,8 +106,10 @@ public class TaskUpdateServlet extends HttpServlet {
 
     private Task buildTaskFromRequest(HttpServletRequest request, Task existingTask) {
         Task task = new Task();
-        task.setTitle(requiredTrim(request.getParameter("title"), "Task name"));
-        task.setDescription(trim(request.getParameter("description")));
+        task.setTitle(requiredTrimMaxLength(
+                request.getParameter("title"), "Task name", MAX_TITLE_LENGTH));
+        task.setDescription(optionalTrimMaxLength(
+                request.getParameter("description"), "Task description", MAX_DESCRIPTION_LENGTH));
         task.setAssignedTo(parseLong(request.getParameter("assignedTo"), 0));
         task.setDeadline(parseRequiredDate(request.getParameter("deadline"), existingTask.getDeadline()));
         task.setAllowParticipantsCompleteChecklist(request.getParameter("allowParticipantsCompleteChecklist") != null);
@@ -107,18 +119,24 @@ public class TaskUpdateServlet extends HttpServlet {
         return task;
     }
 
-    private void updateChecklistItems(HttpServletRequest request, long taskId, Set<Long> allowedParticipantIds) throws Exception {
+    private List<TaskChecklistItem> buildChecklistItems(HttpServletRequest request, long taskId,
+                                                        Set<Long> allowedParticipantIds) {
         String[] itemIds = request.getParameterValues("checklistId");
         String[] contents = request.getParameterValues("checklistContent");
         String[] assignedToValues = request.getParameterValues("checklistAssignedTo");
+        List<TaskChecklistItem> items = new ArrayList<>();
         if (contents == null) {
-            return;
+            return items;
         }
 
         for (int i = 0; i < contents.length; i++) {
             String content = trim(contents[i]);
             if (content == null) {
                 continue;
+            }
+            if (content.length() > MAX_CHECKLIST_CONTENT_LENGTH) {
+                throw new IllegalArgumentException(
+                        "Work item content must not exceed 255 characters.");
             }
             Long assignedTo = assignedToValues != null && i < assignedToValues.length
                     ? allowedNullableUserId(assignedToValues[i], allowedParticipantIds)
@@ -130,22 +148,43 @@ public class TaskUpdateServlet extends HttpServlet {
             item.setTaskId(taskId);
             item.setContent(content);
             item.setAssignedTo(assignedTo);
-            if (itemId > 0) {
-                checklistItemDAO.updateChecklistItem(item);
-            } else {
-                checklistItemDAO.insertChecklistItem(item);
+            items.add(item);
+        }
+        return items;
+    }
+
+    private void updateTask(Task oldTask, Task newTask, List<Long> participantIds, List<Long> observerIds,
+                            List<TaskChecklistItem> checklistItems, long userId) throws Exception {
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                taskDAO.updateTask(conn, newTask);
+                taskDAO.replaceTaskRelations(conn, newTask, participantIds, observerIds);
+                for (TaskChecklistItem item : checklistItems) {
+                    if (item.getId() > 0) {
+                        checklistItemDAO.updateChecklistItem(conn, item);
+                    } else {
+                        checklistItemDAO.insertChecklistItem(conn, item);
+                    }
+                }
+                taskDAO.refreshProgressAndAutoComplete(conn, newTask.getId());
+                recordTaskUpdateHistory(conn, oldTask, newTask, userId);
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
         }
     }
 
-    private void recordTaskUpdateHistory(Task oldTask, Task newTask, long userId) throws Exception {
-        historyDAO.insertHistory(newTask.getId(), userId, "Update", "Task information was updated");
+    private void recordTaskUpdateHistory(Connection conn, Task oldTask, Task newTask, long userId) throws Exception {
+        historyDAO.insertHistory(conn, newTask.getId(), userId, "Update", "Task information was updated");
         if (oldTask.getAssignedTo() != newTask.getAssignedTo()) {
-            historyDAO.insertHistory(newTask.getId(), userId, "Assignee changed",
+            historyDAO.insertHistory(conn, newTask.getId(), userId, "Assignee changed",
                     "Updated assignee: " + userDisplayName(oldTask.getAssignedTo()) + " -> " + userDisplayName(newTask.getAssignedTo()));
         }
         if (!Objects.equals(oldTask.getDeadline(), newTask.getDeadline())) {
-            historyDAO.insertHistory(newTask.getId(), userId, "Deadline changed",
+            historyDAO.insertHistory(conn, newTask.getId(), userId, "Deadline changed",
                     "Updated deadline: " + dateText(oldTask.getDeadline()) + " -> " + dateText(newTask.getDeadline()));
         }
     }
@@ -279,10 +318,23 @@ public class TaskUpdateServlet extends HttpServlet {
         }
     }
 
-    private String requiredTrim(String value, String fieldName) {
+    private String requiredTrimMaxLength(String value, String fieldName, int maxLength) {
         String trimmed = trim(value);
         if (trimmed == null) {
             throw new IllegalArgumentException(fieldName + " is required.");
+        }
+        if (trimmed.length() > maxLength) {
+            throw new IllegalArgumentException(
+                    fieldName + " must not exceed " + maxLength + " characters.");
+        }
+        return trimmed;
+    }
+
+    private String optionalTrimMaxLength(String value, String fieldName, int maxLength) {
+        String trimmed = trim(value);
+        if (trimmed != null && trimmed.length() > maxLength) {
+            throw new IllegalArgumentException(
+                    fieldName + " must not exceed " + maxLength + " characters.");
         }
         return trimmed;
     }

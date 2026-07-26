@@ -25,6 +25,8 @@ public class MyContractServlet extends HttpServlet {
             return;
         }
 
+        contractDAO.expireEndedActiveContracts();
+
         String status = trimToNull(request.getParameter("status"));
         int pageSize = 10;
         int currentPage = parsePositiveInt(request.getParameter("page"), 1);

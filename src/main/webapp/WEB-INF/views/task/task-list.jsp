@@ -40,11 +40,11 @@
 
         <div class="dashboard-content">
             <c:if test="${not empty sessionScope.message}">
-                <div class="alert alert-success">${sessionScope.message}</div>
+                <div class="alert alert-success"><c:out value="${sessionScope.message}"/></div>
                 <c:remove var="message" scope="session"/>
             </c:if>
             <c:if test="${not empty sessionScope.error}">
-                <div class="alert alert-error">${sessionScope.error}</div>
+                <div class="alert alert-error"><c:out value="${sessionScope.error}"/></div>
                 <c:remove var="error" scope="session"/>
             </c:if>
 
@@ -73,7 +73,7 @@
 
             <div class="search-filter">
                 <form action="${pageContext.request.contextPath}${listAction}" method="get">
-                    <input type="text" name="keyword" placeholder="Search by task name" value="${keyword}">
+                    <input type="text" name="keyword" placeholder="Search by task name" value="${fn:escapeXml(keyword)}">
                     <select name="status">
                         <option value="" ${empty status ? 'selected' : ''}>All statuses</option>
                         <option value="TODO" ${status == 'TODO' ? 'selected' : ''}>To do</option>
@@ -110,7 +110,7 @@
                             <td><c:out value="${task.assignedToName}"/></td>
                             <td><fmt:formatDate value="${task.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                             <td>
-                                <span class="badge badge-${fn:toLowerCase(task.displayStatus)}">${task.readableStatus}</span>
+                                <span class="badge badge-${fn:toLowerCase(task.displayStatus)}"><c:out value="${task.readableStatus}"/></span>
                             </td>
                             <td>
                                 <div class="task-progress">

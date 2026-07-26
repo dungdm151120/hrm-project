@@ -60,13 +60,19 @@
 <div class="dashboard-wrapper">
     <jsp:include page="/WEB-INF/views/common/sidebar.jsp"/>
     <div class="dashboard-main">
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1 class="header-title">Task Detail</h1>
+            </div>
+        </div>
+
         <div class="task-detail-page">
             <c:if test="${not empty sessionScope.message}">
-                <div class="alert alert-success">${sessionScope.message}</div>
+                <div class="alert alert-success"><c:out value="${sessionScope.message}"/></div>
                 <c:remove var="message" scope="session"/>
             </c:if>
             <c:if test="${not empty sessionScope.error}">
-                <div class="alert alert-error">${sessionScope.error}</div>
+                <div class="alert alert-error"><c:out value="${sessionScope.error}"/></div>
                 <c:remove var="error" scope="session"/>
             </c:if>
 
@@ -109,10 +115,15 @@
                                 <div class="checklist-item">
                                     <div>
                                         <c:choose>
-                                            <c:when test="${canToggleChecklist}">
-                                                <input type="checkbox"
-                                                       onchange="location.href='${pageContext.request.contextPath}/tasks/checklist/toggle?itemId=${item.id}&taskId=${task.id}'"
-                                                       ${item.completed ? 'checked' : ''}>
+                                            <c:when test="${toggleableChecklistItemIds.contains(item.id)}">
+                                                <form action="${pageContext.request.contextPath}/tasks/checklist/toggle"
+                                                      method="post">
+                                                    <input type="hidden" name="itemId" value="${item.id}">
+                                                    <input type="hidden" name="taskId" value="${task.id}">
+                                                    <input type="hidden" name="completed" value="${not item.completed}">
+                                                    <input type="checkbox" onchange="this.form.submit()"
+                                                           ${item.completed ? 'checked' : ''}>
+                                                </form>
                                             </c:when>
                                             <c:otherwise>
                                                 <input type="checkbox" disabled ${item.completed ? 'checked' : ''}>
@@ -166,7 +177,8 @@
                             <h3>Add subtask</h3>
                             <form class="inline-form" action="${pageContext.request.contextPath}/tasks/checklist/add" method="post">
                                 <input type="hidden" name="taskId" value="${task.id}">
-                                <input type="text" name="content" placeholder="Subtask content" required>
+                                <input type="text" name="content" maxlength="255"
+                                       placeholder="Subtask content" required>
                                 <select name="assignedTo">
                                     <option value="">No specific assignee</option>
                                     <c:forEach items="${participants}" var="participant">
@@ -225,7 +237,9 @@
                             </div>
                             <form class="inline-form" action="${pageContext.request.contextPath}/tasks/comment" method="post">
                                 <input type="hidden" name="taskId" value="${task.id}">
-                                <textarea name="content" rows="3" placeholder="Write a comment" required style="width: 100%;"></textarea>
+                                <textarea name="content" rows="3" maxlength="2000"
+                                          placeholder="Write a comment" required
+                                          style="width: 100%;"></textarea>
                                 <button type="submit" class="btn-primary">Send comment</button>
                             </form>
                         </div>

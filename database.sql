@@ -158,16 +158,7 @@ CREATE TABLE labor_contracts (
                                  CONSTRAINT chk_labor_contract_note_length
                                      CHECK (note IS NULL OR CHAR_LENGTH(note) <= 1000),
                                  CONSTRAINT chk_labor_contract_date_order
-                                     CHECK (end_date IS NULL OR end_date >= start_date),
-                                 CONSTRAINT chk_labor_contract_fixed_term_duration
-                                     CHECK (
-                                         contract_type <> 'FIXED_TERM'
-                                             OR (
-                                             end_date IS NOT NULL
-                                                 AND end_date BETWEEN DATE_ADD(start_date, INTERVAL 1 MONTH)
-                                                 AND DATE_ADD(start_date, INTERVAL 36 MONTH)
-                                             )
-                                         ),
+                                     CHECK (end_date IS NULL OR end_date > start_date),
                                  CONSTRAINT chk_labor_contract_active_end_date
                                      CHECK (
                                          status <> 'ACTIVE'
@@ -945,7 +936,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_MANAGER' AN
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'HR_STAFF' AND p.code IN (
                                                                                            'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                           'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
+                                                                                           'USER_VIEW_LIST', 'USER_VIEW_DETAIL', 'USER_UPDATE',
                                                                                            'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
                                                                                            'POSITION_VIEW_LIST',
                                                                                            'CONTRACT_VIEW_LIST', 'CONTRACT_VIEW_DETAIL', 'CONTRACT_VIEW_OWN', 'CONTRACT_CREATE', 'CONTRACT_UPDATE',
@@ -978,7 +969,7 @@ SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_MANAGE
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r JOIN permissions p WHERE r.name = 'PAYROLL_STAFF' AND p.code IN (
                                                                                                 'HOMEPAGE_VIEW', 'AUTH_LOGIN', 'AUTH_LOGOUT', 'AUTH_FORGOT_PASSWORD', 'PROFILE_VIEW', 'PROFILE_CHANGE_PASSWORD',
-                                                                                                'USER_VIEW_LIST',
+                                                                                                'USER_VIEW_LIST', 'USER_VIEW_DETAIL',
                                                                                                 'DEPARTMENT_VIEW_LIST', 'DEPARTMENT_VIEW_DETAIL', 'DEPARTMENT_VIEW_EMPLOYEES',
                                                                                                 'POSITION_VIEW_LIST',
                                                                                                 'CONTRACT_VIEW_OWN',
@@ -1041,7 +1032,7 @@ CREATE TABLE department_history (
 -- Bảng lưu thông tin phòng ban hiện tại sau khi add/move/remove
 CREATE TABLE department_after_update (
                                          id INT AUTO_INCREMENT PRIMARY KEY,
-                                         user_id INT NOT NULL UNIQUE,
+                                         user_id INT NOT NULL,
                                          department_id INT,
                                          start_date DATE NOT NULL,
                                          end_date DATE DEFAULT NULL,

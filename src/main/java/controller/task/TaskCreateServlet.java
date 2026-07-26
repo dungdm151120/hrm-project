@@ -14,8 +14,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Task;
 import model.TaskChecklistItem;
 import model.User;
+import util.DBConnection;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,6 +27,10 @@ import java.util.Set;
 
 @WebServlet("/tasks/create")
 public class TaskCreateServlet extends HttpServlet {
+    private static final int MAX_TITLE_LENGTH = 255;
+    private static final int MAX_DESCRIPTION_LENGTH = 2000;
+    private static final int MAX_CHECKLIST_CONTENT_LENGTH = 255;
+
     private final TaskDAO taskDAO = new TaskDAO();
     private final TaskParticipantDAO participantDAO = new TaskParticipantDAO();
     private final TaskObserverDAO observerDAO = new TaskObserverDAO();
@@ -56,15 +62,16 @@ public class TaskCreateServlet extends HttpServlet {
 
             List<String> checklistContents = cleanTextValues(request.getParameterValues("checklistContent"));
             List<Long> participantIds = allowedUserIds(departmentUsers, request.getParameterValues("participantIds"));
-            long taskId = taskDAO.insertTask(task);
-            participantDAO.insertParticipants(taskId, participantIds);
-            observerDAO.insertObservers(taskId, parseLongValues(request.getParameterValues("observerIds")));
-            insertChecklistItems(taskId, checklistContents);
-            taskDAO.refreshProgressAndAutoComplete(taskId);
-            historyDAO.insertHistory(taskId, task.getCreatedBy(), "Created", "Task was created");
+            List<Long> observerIds = allowedUserIds(
+                    userDAO.getActiveUsersForTaskSelection(),
+                    request.getParameterValues("observerIds"));
+            long taskId = createTask(task, participantIds, observerIds, checklistContents);
 
             request.getSession().setAttribute("message", "Task created successfully.");
             response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
+        } catch (IllegalArgumentException e) {
+            request.getSession().setAttribute("error", e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/tasks/create");
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -72,8 +79,10 @@ public class TaskCreateServlet extends HttpServlet {
 
     private Task buildTaskFromRequest(HttpServletRequest request) {
         Task task = new Task();
-        task.setTitle(requiredTrim(request.getParameter("title"), "Task name"));
-        task.setDescription(trim(request.getParameter("description")));
+        task.setTitle(requiredTrimMaxLength(
+                request.getParameter("title"), "Task name", MAX_TITLE_LENGTH));
+        task.setDescription(optionalTrimMaxLength(
+                request.getParameter("description"), "Task description", MAX_DESCRIPTION_LENGTH));
         task.setAssignedTo(parseLong(request.getParameter("assignedTo"), 0));
         task.setDeadline(parseRequiredDate(request.getParameter("deadline")));
         task.setAllowParticipantsCompleteChecklist(request.getParameter("allowParticipantsCompleteChecklist") != null);
@@ -83,12 +92,32 @@ public class TaskCreateServlet extends HttpServlet {
         return task;
     }
 
-    private void insertChecklistItems(long taskId, List<String> contents) throws Exception {
+    private long createTask(Task task, List<Long> participantIds, List<Long> observerIds,
+                            List<String> checklistContents) throws Exception {
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                long taskId = taskDAO.insertTask(conn, task);
+                participantDAO.insertParticipants(conn, taskId, participantIds);
+                observerDAO.insertObservers(conn, taskId, observerIds);
+                insertChecklistItems(conn, taskId, checklistContents);
+                taskDAO.refreshProgressAndAutoComplete(conn, taskId);
+                historyDAO.insertHistory(conn, taskId, task.getCreatedBy(), "Created", "Task was created");
+                conn.commit();
+                return taskId;
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
+    private void insertChecklistItems(Connection conn, long taskId, List<String> contents) throws Exception {
         for (String content : contents) {
             TaskChecklistItem item = new TaskChecklistItem();
             item.setTaskId(taskId);
             item.setContent(content);
-            checklistItemDAO.insertChecklistItem(item);
+            checklistItemDAO.insertChecklistItem(conn, item);
         }
     }
 
@@ -158,6 +187,10 @@ public class TaskCreateServlet extends HttpServlet {
         for (String value : values) {
             String trimmed = trim(value);
             if (trimmed != null) {
+                if (trimmed.length() > MAX_CHECKLIST_CONTENT_LENGTH) {
+                    throw new IllegalArgumentException(
+                            "Work item content must not exceed 255 characters.");
+                }
                 result.add(trimmed);
             }
         }
@@ -191,10 +224,23 @@ public class TaskCreateServlet extends HttpServlet {
         }
     }
 
-    private String requiredTrim(String value, String fieldName) {
+    private String requiredTrimMaxLength(String value, String fieldName, int maxLength) {
         String trimmed = trim(value);
         if (trimmed == null) {
             throw new IllegalArgumentException(fieldName + " is required.");
+        }
+        if (trimmed.length() > maxLength) {
+            throw new IllegalArgumentException(
+                    fieldName + " must not exceed " + maxLength + " characters.");
+        }
+        return trimmed;
+    }
+
+    private String optionalTrimMaxLength(String value, String fieldName, int maxLength) {
+        String trimmed = trim(value);
+        if (trimmed != null && trimmed.length() > maxLength) {
+            throw new IllegalArgumentException(
+                    fieldName + " must not exceed " + maxLength + " characters.");
         }
         return trimmed;
     }
