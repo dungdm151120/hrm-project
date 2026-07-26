@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,13 +31,31 @@
 
         <div class="dashboard-content">
             <c:if test="${not empty param.error}">
-                <div class="alert alert-error">⚠ ${param.error}</div>
+                <div class="alert alert-error">
+                    <c:choose>
+                        <c:when test="${param.error == 'cannot_remove_manager'}">Cannot remove an employee who is currently a Department Manager.</c:when>
+                        <c:when test="${param.error == 'is_manager'}">Cannot move an employee who is currently a Department Manager.</c:when>
+                        <c:when test="${param.error == 'remove_failed'}">Failed to remove member. Please try again.</c:when>
+                        <c:when test="${param.error == 'add_failed'}">Failed to add member(s). Please try again.</c:when>
+                        <c:when test="${param.error == 'failed'}">Action failed. Please try again.</c:when>
+                        <c:when test="${param.error == 'no_manager_assigned'}">This department does not have an assigned manager.</c:when>
+                        <c:when test="${param.error == 'not_current_manager'}">The specified user is not the current manager of this department.</c:when>
+                        <c:when test="${param.error == 'unassign_manager_failed'}">Failed to unassign manager. Please try again.</c:when>
+                        <c:when test="${param.error == 'invalid_data'}">Invalid data provided.</c:when>
+                        <c:when test="${param.error == 'invalid_access'}">Invalid access.</c:when>
+                        <c:when test="${param.error == 'invalid_id'}">Invalid department or user ID.</c:when>
+                        <c:otherwise>⚠ ${param.error}</c:otherwise>
+                    </c:choose>
+                </div>
             </c:if>
 
             <c:if test="${not empty param.msg}">
                 <div class="alert alert-success">
                     <c:choose>
                         <c:when test="${param.msg == 'unassign_manager_success'}">Manager unassigned successfully.</c:when>
+                        <c:when test="${param.msg == 'add_success'}">Member(s) added successfully.</c:when>
+                        <c:when test="${param.msg == 'move_success'}">Member moved successfully.</c:when>
+                        <c:when test="${param.msg == 'remove_success'}">Member removed successfully.</c:when>
                         <c:otherwise>${param.msg}</c:otherwise>
                     </c:choose>
                 </div>

@@ -1,11 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sơ đồ tổ chức | HRM</title>
+    <title>Company Structure | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <style>
         /* ══════════════════════════════════════════════════════
@@ -362,7 +362,7 @@
     <div class="dashboard-main">
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Sơ đồ tổ chức</h1>
+                <h1 class="header-title">Company Structure</h1>
             </div>
         </div>
 
@@ -376,19 +376,19 @@
 
             <%-- Toolbar --%>
             <div class="chart-toolbar">
-                <span class="chart-toolbar-label">Sơ đồ phân cấp tổ chức</span>
+                <span class="chart-toolbar-label">Organizational Hierarchy Chart</span>
                 <div class="chart-toolbar-actions">
-                    <button id="btn-zoom-out" title="Thu nhỏ">
+                    <button id="btn-zoom-out" title="Zoom Out">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Thu nhỏ
+                        Zoom Out
                     </button>
-                    <button id="btn-zoom-in" title="Phóng to">
+                    <button id="btn-zoom-in" title="Zoom In">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Phóng to
+                        Zoom In
                     </button>
-                    <button id="btn-reset" title="Đặt lại">
+                    <button id="btn-reset" title="Reset">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.13"/></svg>
-                        Đặt lại
+                        Reset
                     </button>
                 </div>
             </div>
@@ -501,7 +501,7 @@
                                     <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
                                     <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
                                 </svg>
-                                <p>Chưa có dữ liệu tổ chức.</p>
+                                <p>No organization data available.</p>
                             </div>
                         </c:otherwise>
                     </c:choose>
