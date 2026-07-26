@@ -273,7 +273,7 @@ public class LoadSubFormServlet extends HttpServlet {
             int year = LocalDate.now().getYear();
             SickLeaveRequestDAO sickDAO = new SickLeaveRequestDAO();
             int usedDays = sickDAO.countSickLeaveDaysUsed(currentUser.getId(), year);
-            int pendingDays = sickDAO.countPendingOrApprovedFuture(currentUser.getId(), year);
+            int pendingDays = sickDAO.countPendingSickLeaveDays(currentUser.getId(), year);
             int remainingSickDays = 30 - usedDays - pendingDays;
             request.setAttribute("remainingSickDays", Math.max(0, remainingSickDays));
             request.setAttribute("totalSickDays", 30);
