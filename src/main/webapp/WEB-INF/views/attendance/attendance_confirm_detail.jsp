@@ -50,7 +50,7 @@
                 <form id="searchForm" action="${pageContext.request.contextPath}/attendance/confirm_detail" method="get">
                     <input type="hidden" name="month" value="${month}">
                     <input type="hidden" name="year" value="${year}">
-                    <input type="text" name="search" class="search-box" placeholder="Search Employee Code or Name" value="${searchQuery}">
+                    <input type="text" name="search" class="search-box" placeholder="Search name, email or employee code" value="${searchQuery}">
                     <button type="submit" class="search-btn">Search</button>
                 </form>
             </div>

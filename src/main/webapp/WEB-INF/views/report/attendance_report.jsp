@@ -956,17 +956,41 @@
 
                             if (searchInput && deptSelect && sortSelect && sortOrderSelect && tableBody) {
                                 function filterTable() {
-                                    const query = searchInput.value.toLowerCase().trim();
+                                    const query = searchInput.value.trim();
                                     const selectedDept = deptSelect.value;
 
                                     tableBody.querySelectorAll(".employee-row").forEach(row => {
                                         const empName = row.dataset.name || "";
                                         const empDept = row.dataset.dept || "";
-                                        const matchesName = empName.includes(query);
+                                        const matchesName = matchesVietnameseNamePrefix(empName, query);
                                         const matchesDept = selectedDept === "all" || empDept === selectedDept;
 
                                         row.style.display = matchesName && matchesDept ? "" : "none";
                                     });
+                                }
+
+                                function normalizeVietnamese(value, preserveToneMarks) {
+                                    const normalized = (value || "").normalize(preserveToneMarks ? "NFC" : "NFD");
+                                    return normalized
+                                        .replace(preserveToneMarks ? /$^/ : /[\u0300-\u036f]/g, "")
+                                        .replace(/đ/g, "d")
+                                        .replace(/Đ/g, "D")
+                                        .toLowerCase()
+                                        .trim()
+                                        .replace(/\s+/g, " ");
+                                }
+
+                                function matchesVietnameseNamePrefix(name, query) {
+                                    const preserveToneMarks = /[\u0300-\u036f]/.test(query.normalize("NFD"));
+                                    const normalizedQuery = normalizeVietnamese(query, preserveToneMarks);
+                                    if (!normalizedQuery) {
+                                        return true;
+                                    }
+
+                                    const nameTokens = normalizeVietnamese(name, preserveToneMarks).split(" ");
+                                    return normalizedQuery.split(" ").every(queryToken =>
+                                        nameTokens.some(nameToken => nameToken.startsWith(queryToken))
+                                    );
                                 }
 
                                 function sortTable() {

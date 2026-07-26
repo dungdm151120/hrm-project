@@ -100,7 +100,7 @@
                                type="search"
                                name="keyword"
                                value="${keyword}"
-                               placeholder="Search name or employee code">
+                               placeholder="Search name, email or employee code">
                     </div>
 
                     <button type="submit" class="matrix-btn matrix-search-btn">Search</button>
