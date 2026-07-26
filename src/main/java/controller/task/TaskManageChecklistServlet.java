@@ -14,14 +14,17 @@ import model.Task;
 import model.TaskChecklistItem;
 import model.TaskParticipant;
 import model.User;
+import util.DBConnection;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @WebServlet(urlPatterns = {"/tasks/checklist/add", "/tasks/checklist/assign", "/tasks/checklist/delete"})
 public class TaskManageChecklistServlet extends HttpServlet {
     private static final String TASK_VIEW_ALL = "TASK_VIEW_ALL";
+    private static final int MAX_CHECKLIST_CONTENT_LENGTH = 255;
 
     private final TaskDAO taskDAO = new TaskDAO();
     private final TaskChecklistItemDAO checklistItemDAO = new TaskChecklistItemDAO();
@@ -70,14 +73,30 @@ public class TaskManageChecklistServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
             return;
         }
+        if (content.length() > MAX_CHECKLIST_CONTENT_LENGTH) {
+            request.getSession().setAttribute(
+                    "error", "Subtask content must not exceed 255 characters.");
+            response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
+            return;
+        }
 
         TaskChecklistItem item = new TaskChecklistItem();
         item.setTaskId(taskId);
         item.setContent(content);
         item.setAssignedTo(allowedNullableUserId(request.getParameter("assignedTo"), participantUserIdSet(task)));
-        checklistItemDAO.insertChecklistItem(item);
-        taskDAO.refreshProgressAndAutoComplete(taskId);
-        historyDAO.insertHistory(taskId, currentUserId(request), "Add subtask", "Added subtask: " + content);
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                checklistItemDAO.insertChecklistItem(conn, item);
+                taskDAO.refreshProgressAndAutoComplete(conn, taskId);
+                historyDAO.insertHistory(conn, taskId, currentUserId(request),
+                        "Add subtask", "Added subtask: " + content);
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
         response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
     }
 
@@ -103,11 +122,21 @@ public class TaskManageChecklistServlet extends HttpServlet {
 
         Long assignedTo = allowedNullableUserId(request.getParameter("assignedTo"), participantUserIdSet(task));
         item.setAssignedTo(assignedTo);
-        checklistItemDAO.updateChecklistItem(item);
-        historyDAO.insertHistory(item.getTaskId(), currentUserId(request), "Assign subtask",
-                assignedTo == null
-                        ? "Cleared assignee for subtask: " + item.getContent()
-                        : "Assigned subtask to " + userDisplayName(assignedTo) + ": " + item.getContent());
+        String historyContent = assignedTo == null
+                ? "Cleared assignee for subtask: " + item.getContent()
+                : "Assigned subtask to " + userDisplayName(assignedTo) + ": " + item.getContent();
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                checklistItemDAO.updateChecklistItem(conn, item);
+                historyDAO.insertHistory(conn, item.getTaskId(), currentUserId(request),
+                        "Assign subtask", historyContent);
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
         response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + item.getTaskId());
     }
 
@@ -129,9 +158,19 @@ public class TaskManageChecklistServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + item.getTaskId());
             return;
         }
-        checklistItemDAO.deleteChecklistItem(itemId, taskId);
-        taskDAO.refreshProgressAndAutoComplete(item.getTaskId());
-        historyDAO.insertHistory(item.getTaskId(), currentUserId(request), "Delete subtask", "Deleted subtask: " + item.getContent());
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                checklistItemDAO.deleteChecklistItem(conn, itemId, taskId);
+                taskDAO.refreshProgressAndAutoComplete(conn, item.getTaskId());
+                historyDAO.insertHistory(conn, item.getTaskId(), currentUserId(request),
+                        "Delete subtask", "Deleted subtask: " + item.getContent());
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
         response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + item.getTaskId());
     }
 

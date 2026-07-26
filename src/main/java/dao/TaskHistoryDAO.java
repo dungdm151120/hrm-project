@@ -37,9 +37,15 @@ public class TaskHistoryDAO {
     }
 
     public void insertHistory(long taskId, long userId, String actionType, String content) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            insertHistory(conn, taskId, userId, actionType, content);
+        }
+    }
+
+    public void insertHistory(Connection conn, long taskId, long userId,
+                              String actionType, String content) throws SQLException {
         String sql = "INSERT INTO task_histories (task_id, user_id, action_type, content) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, taskId);
             ps.setLong(2, userId);
             ps.setString(3, actionType);

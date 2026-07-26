@@ -32,6 +32,7 @@ public class AddContractServlet extends HttpServlet {
             contract = ContractFormMapper.fromRequest(request);
             contract.setWorkingTime(DEFAULT_WORKING_TIME);
         } catch (IllegalArgumentException e) {
+            request.setAttribute("formSubmitted", true);
             forwardForm(request, response, null, e.getMessage());
             return;
         }
@@ -61,6 +62,8 @@ public class AddContractServlet extends HttpServlet {
         Integer changedBy = currentUser == null ? null : currentUser.getId();
 
         if (contractDAO.add(contract, changedBy)) {
+            request.getSession().setAttribute(
+                    "contractSuccessMessage", "Contract added successfully.");
             response.sendRedirect(request.getContextPath() + "/contracts");
         } else {
             forwardForm(request, response, contract, "Add contract failed.");

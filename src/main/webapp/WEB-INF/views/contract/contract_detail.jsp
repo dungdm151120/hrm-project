@@ -18,7 +18,7 @@
     <div class="dashboard-main">
         <div class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Contract ${contract.contractCode}</h1>
+                <h1 class="header-title">Contract <c:out value="${contract.contractCode}"/></h1>
             </div>
             <div class="header-right">
                 <c:if test="${canUpdateContract}">
@@ -30,62 +30,79 @@
         <div class="dashboard-content">
             <a class="back-link" href="${backUrl}">Back</a>
 
-            <c:if test="${not empty param.error}">
-                <div class="alert alert-error">${param.error}</div>
+            <c:if test="${not empty sessionScope.contractSuccessMessage}">
+                <div class="alert alert-success">
+                    ✓ <c:out value="${sessionScope.contractSuccessMessage}"/>
+                </div>
+                <c:remove var="contractSuccessMessage" scope="session"/>
+            </c:if>
+
+            <c:if test="${not empty sessionScope.contractErrorMessage}">
+                <div class="alert alert-error">
+                    <c:out value="${sessionScope.contractErrorMessage}"/>
+                </div>
+                <c:remove var="contractErrorMessage" scope="session"/>
             </c:if>
 
             <div class="role-detail">
                 <div class="role-meta">
                     <span class="role-meta-label">Employee</span>
-                    <span class="role-meta-value">${contract.employeeName}</span>
+                    <span class="role-meta-value"><c:out value="${contract.employeeName}"/></span>
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">Employee Code</span>
-                    <span class="role-meta-value">${contract.employeeCode}</span>
+                    <span class="role-meta-value"><c:out value="${contract.employeeCode}"/></span>
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">Email</span>
-                    <span class="role-meta-value">${contract.employeeEmail}</span>
+                    <span class="role-meta-value"><c:out value="${contract.employeeEmail}"/></span>
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">Status</span>
-                    <span class="role-meta-value">${contract.status}</span>
+                    <span class="role-meta-value"><c:out value="${contract.status}"/></span>
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">Contract Type</span>
-                    <span class="role-meta-value">${contract.contractType}</span>
+                    <span class="role-meta-value"><c:out value="${contract.contractType}"/></span>
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">Base Salary</span>
-                    <span class="role-meta-value">${contract.baseSalary}</span>
+                    <span class="role-meta-value"><c:out value="${contract.baseSalary}"/></span>
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">Start Date</span>
-                    <span class="role-meta-value">${contract.startDateDisplay}</span>
+                    <span class="role-meta-value"><c:out value="${contract.startDateDisplay}"/></span>
                 </div>
                 <div class="role-meta">
-                    <span class="role-meta-label">End Date</span>
+                    <span class="role-meta-label">
+                        <c:choose>
+                            <c:when test="${contract.status == 'TERMINATED'}">Planned End Date</c:when>
+                            <c:otherwise>End Date</c:otherwise>
+                        </c:choose>
+                    </span>
                     <span class="role-meta-value">
                         <c:choose>
-                            <c:when test="${not empty contract.endDate}">${contract.endDateDisplay}</c:when>
+                            <c:when test="${not empty contract.endDate}">
+                                <c:out value="${contract.endDateDisplay}"/>
+                            </c:when>
                             <c:otherwise>Open-ended</c:otherwise>
                         </c:choose>
                     </span>
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">Working Time</span>
-                    <span class="role-meta-value">${contract.workingTime}</span>
+                    <span class="role-meta-value"><c:out value="${contract.workingTime}"/></span>
                 </div>
                 <div class="role-meta">
                     <span class="role-meta-label">Work Location</span>
-                    <span class="role-meta-value">${contract.workLocation}</span>
+                    <span class="role-meta-value"><c:out value="${contract.workLocation}"/></span>
                 </div>
             </div>
 
             <div class="role-detail">
                 <div class="role-meta" style="width: 100%;">
                     <span class="role-meta-label">Note</span>
-                    <span class="role-meta-value">${contract.note}</span>
+                    <span class="role-meta-value"><c:out value="${contract.note}" default="-"/></span>
                 </div>
             </div>
 
@@ -93,13 +110,15 @@
                 <div class="role-detail">
                     <div class="role-meta">
                         <span class="role-meta-label">Terminated At</span>
-                        <span class="role-meta-value">${contract.terminatedAtDisplay}</span>
+                        <span class="role-meta-value"><c:out value="${contract.terminatedAtDisplay}"/></span>
                     </div>
                     <div class="role-meta">
                         <span class="role-meta-label">Terminated By</span>
                         <span class="role-meta-value">
                             <c:choose>
-                                <c:when test="${not empty contract.terminatedByName}">${contract.terminatedByName}</c:when>
+                                <c:when test="${not empty contract.terminatedByName}">
+                                    <c:out value="${contract.terminatedByName}"/>
+                                </c:when>
                                 <c:otherwise>-</c:otherwise>
                             </c:choose>
                         </span>
@@ -108,7 +127,9 @@
                         <span class="role-meta-label">Termination Reason</span>
                         <span class="role-meta-value">
                             <c:choose>
-                                <c:when test="${not empty contract.terminationReason}">${contract.terminationReason}</c:when>
+                                <c:when test="${not empty contract.terminationReason}">
+                                    <c:out value="${contract.terminationReason}"/>
+                                </c:when>
                                 <c:otherwise>-</c:otherwise>
                             </c:choose>
                         </span>

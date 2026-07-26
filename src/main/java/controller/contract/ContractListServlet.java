@@ -18,6 +18,8 @@ public class ContractListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        contractDAO.expireEndedActiveContracts();
+
         String search = trimToNull(request.getParameter("search"));
         String contractType = trimToNull(request.getParameter("contractType"));
         String status = trimToNull(request.getParameter("status"));

@@ -158,16 +158,7 @@ CREATE TABLE labor_contracts (
                                  CONSTRAINT chk_labor_contract_note_length
                                      CHECK (note IS NULL OR CHAR_LENGTH(note) <= 1000),
                                  CONSTRAINT chk_labor_contract_date_order
-                                     CHECK (end_date IS NULL OR end_date >= start_date),
-                                 CONSTRAINT chk_labor_contract_fixed_term_duration
-                                     CHECK (
-                                         contract_type <> 'FIXED_TERM'
-                                             OR (
-                                             end_date IS NOT NULL
-                                                 AND end_date BETWEEN DATE_ADD(start_date, INTERVAL 1 MONTH)
-                                                 AND DATE_ADD(start_date, INTERVAL 36 MONTH)
-                                             )
-                                         ),
+                                     CHECK (end_date IS NULL OR end_date > start_date),
                                  CONSTRAINT chk_labor_contract_active_end_date
                                      CHECK (
                                          status <> 'ACTIVE'

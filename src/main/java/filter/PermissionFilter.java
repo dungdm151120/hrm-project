@@ -179,7 +179,7 @@ public class PermissionFilter implements Filter {
         if (path.equals("/tasks/all") && "GET".equals(method)) return "TASK_VIEW_ALL";
         if (path.equals("/tasks/detail") && "GET".equals(method)) return "TASK_VIEW";
         if (path.equals("/tasks/comment") && "POST".equals(method)) return "TASK_VIEW";
-        if (path.equals("/tasks/checklist/toggle")) return "TASK_VIEW";
+        if (path.equals("/tasks/checklist/toggle") && "POST".equals(method)) return "TASK_VIEW";
         if (path.equals("/tasks/create")) return "TASK_CREATE";
         if (path.equals("/tasks/edit")) return "TASK_UPDATE";
         if (path.equals("/tasks/delete") && "POST".equals(method)) return "TASK_DELETE";

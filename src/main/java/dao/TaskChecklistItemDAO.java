@@ -56,9 +56,14 @@ public class TaskChecklistItemDAO {
     }
 
     public void updateChecklistItem(TaskChecklistItem item) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            updateChecklistItem(conn, item);
+        }
+    }
+
+    public void updateChecklistItem(Connection conn, TaskChecklistItem item) throws SQLException {
         String sql = "UPDATE task_checklist_items SET content = ?, assigned_to = ? WHERE id = ? AND task_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, item.getContent());
             setNullableLong(ps, 2, item.getAssignedTo());
             ps.setLong(3, item.getId());
@@ -68,9 +73,14 @@ public class TaskChecklistItemDAO {
     }
 
     public void deleteChecklistItem(long itemId, long taskId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            deleteChecklistItem(conn, itemId, taskId);
+        }
+    }
+
+    public void deleteChecklistItem(Connection conn, long itemId, long taskId) throws SQLException {
         String sql = "DELETE FROM task_checklist_items WHERE id = ? AND task_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, itemId);
             ps.setLong(2, taskId);
             ps.executeUpdate();
@@ -113,10 +123,16 @@ public class TaskChecklistItemDAO {
     }
 
     public void toggleChecklistItem(long itemId, long taskId, boolean completed) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            toggleChecklistItem(conn, itemId, taskId, completed);
+        }
+    }
+
+    public void toggleChecklistItem(Connection conn, long itemId, long taskId,
+                                    boolean completed) throws SQLException {
         String sql = "UPDATE task_checklist_items SET is_completed = ?, completed_at = " +
                 (completed ? "CURRENT_TIMESTAMP" : "NULL") + " WHERE id = ? AND task_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setBoolean(1, completed);
             ps.setLong(2, itemId);
             ps.setLong(3, taskId);

@@ -6,11 +6,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.LaborContract;
 import model.User;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @WebServlet("/contracts/terminate")
 public class TerminateContractServlet extends HttpServlet {
@@ -42,20 +41,41 @@ public class TerminateContractServlet extends HttpServlet {
             return;
         }
 
-        boolean terminated = contractDAO.terminate(contractId, terminationReason, terminatedBy);
-        if (terminated) {
-            response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + contractId);
+        LaborContract contract = contractDAO.findById(contractId);
+        if (contract == null) {
+            redirectToListWithError(request, response, "Contract not found.");
+            return;
+        }
+        if (!"ACTIVE".equals(contract.getStatus())) {
+            redirectWithError(request, response, contractId,
+                    "Only active contracts can be terminated.");
             return;
         }
 
-        redirectWithError(request, response, contractId, "Only active contracts can be terminated.");
+        boolean terminated = contractDAO.terminate(contractId, terminationReason, terminatedBy);
+        if (terminated) {
+            request.getSession().setAttribute(
+                    "contractSuccessMessage", "Contract terminated successfully.");
+            response.sendRedirect(request.getContextPath()
+                    + "/contracts/detail?id=" + contractId);
+            return;
+        }
+
+        redirectWithError(request, response, contractId,
+                "Contract termination failed. Please try again.");
     }
 
     private void redirectWithError(HttpServletRequest request, HttpServletResponse response,
                                    int contractId, String message) throws IOException {
-        String error = URLEncoder.encode(message, StandardCharsets.UTF_8);
+        request.getSession().setAttribute("contractErrorMessage", message);
         response.sendRedirect(request.getContextPath()
-                + "/contracts/detail?id=" + contractId + "&error=" + error);
+                + "/contracts/detail?id=" + contractId);
+    }
+
+    private void redirectToListWithError(HttpServletRequest request, HttpServletResponse response,
+                                         String message) throws IOException {
+        request.getSession().setAttribute("contractErrorMessage", message);
+        response.sendRedirect(request.getContextPath() + "/contracts");
     }
 
     private String trimToNull(String value) {

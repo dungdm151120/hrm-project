@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,18 +36,19 @@
             </div>
         </div>
         <div class="dashboard-content">
-            <c:if test="${not empty error}">
-                <div class="alert alert-error">${error}</div>
+            <c:if test="${not empty sessionScope.error}">
+                <div class="alert alert-error"><c:out value="${sessionScope.error}"/></div>
+                <c:remove var="error" scope="session"/>
             </c:if>
             <form class="task-form" action="${pageContext.request.contextPath}/tasks/create" method="post">
                 <div class="form-row">
                     <label>Task name *</label>
-                    <input type="text" name="title" required>
+                    <input type="text" name="title" maxlength="255" required>
                 </div>
 
                 <div class="form-row">
                     <label>Task description</label>
-                    <textarea name="description" rows="7"></textarea>
+                    <textarea name="description" rows="7" maxlength="2000"></textarea>
                 </div>
 
                 <div class="form-row">
@@ -55,11 +57,11 @@
                         <input class="user-picker-search" type="text" placeholder="Search assignee" data-target="assigneePicker" oninput="filterUserPicker(this)">
                         <div id="assigneePicker" class="user-picker-list">
                             <c:forEach items="${departmentUsers}" var="user">
-                                <label class="user-picker-item" data-search="${user.fullName} ${user.positionName} ${user.roleName}">
+                                <label class="user-picker-item" data-search="${fn:escapeXml(user.fullName)} ${fn:escapeXml(user.positionName)} ${fn:escapeXml(user.roleName)}">
                                     <input type="radio" name="assignedTo" value="${user.id}" required>
                                     <span>
-                                        <span class="user-picker-name">${user.fullName}</span>
-                                        <span class="user-picker-meta">${not empty user.positionName ? user.positionName : user.roleName}</span>
+                                        <span class="user-picker-name"><c:out value="${user.fullName}"/></span>
+                                        <span class="user-picker-meta"><c:out value="${not empty user.positionName ? user.positionName : user.roleName}"/></span>
                                     </span>
                                 </label>
                             </c:forEach>
@@ -73,11 +75,11 @@
                         <input class="user-picker-search" type="text" placeholder="Search participants" data-target="participantPicker" oninput="filterUserPicker(this)">
                         <div id="participantPicker" class="user-picker-list">
                             <c:forEach items="${participantUsers}" var="user">
-                                <label class="user-picker-item" data-search="${user.fullName} ${user.positionName} ${user.roleName}">
+                                <label class="user-picker-item" data-search="${fn:escapeXml(user.fullName)} ${fn:escapeXml(user.positionName)} ${fn:escapeXml(user.roleName)}">
                                     <input type="checkbox" name="participantIds" value="${user.id}">
                                     <span>
-                                        <span class="user-picker-name">${user.fullName}</span>
-                                        <span class="user-picker-meta">${not empty user.positionName ? user.positionName : user.roleName}</span>
+                                        <span class="user-picker-name"><c:out value="${user.fullName}"/></span>
+                                        <span class="user-picker-meta"><c:out value="${not empty user.positionName ? user.positionName : user.roleName}"/></span>
                                     </span>
                                 </label>
                             </c:forEach>
@@ -91,11 +93,11 @@
                         <input class="user-picker-search" type="text" placeholder="Search observers" data-target="observerPicker" oninput="filterUserPicker(this)">
                         <div id="observerPicker" class="user-picker-list">
                             <c:forEach items="${users}" var="user">
-                                <label class="user-picker-item" data-search="${user.fullName} ${user.positionName} ${user.roleName}">
+                                <label class="user-picker-item" data-search="${fn:escapeXml(user.fullName)} ${fn:escapeXml(user.positionName)} ${fn:escapeXml(user.roleName)}">
                                     <input type="checkbox" name="observerIds" value="${user.id}">
                                     <span>
-                                        <span class="user-picker-name">${user.fullName}</span>
-                                        <span class="user-picker-meta">${not empty user.positionName ? user.positionName : user.roleName}</span>
+                                        <span class="user-picker-name"><c:out value="${user.fullName}"/></span>
+                                        <span class="user-picker-meta"><c:out value="${not empty user.positionName ? user.positionName : user.roleName}"/></span>
                                     </span>
                                 </label>
                             </c:forEach>
@@ -117,7 +119,8 @@
                     <label>Work item list</label>
                     <div id="checklistContainer">
                         <div class="checklist-row">
-                            <input type="text" name="checklistContent" placeholder="Work item content">
+                            <input type="text" name="checklistContent" maxlength="255"
+                                   placeholder="Work item content">
                             <button type="button" class="btn-reset" onclick="removeChecklistRow(this)">Delete</button>
                         </div>
                     </div>

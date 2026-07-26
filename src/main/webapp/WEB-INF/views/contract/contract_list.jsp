@@ -28,9 +28,24 @@
         </div>
 
         <div class="dashboard-content">
+            <c:if test="${not empty sessionScope.contractSuccessMessage}">
+                <div class="alert alert-success">
+                    ✓ <c:out value="${sessionScope.contractSuccessMessage}"/>
+                </div>
+                <c:remove var="contractSuccessMessage" scope="session"/>
+            </c:if>
+
+            <c:if test="${not empty sessionScope.contractErrorMessage}">
+                <div class="alert alert-error">
+                    <c:out value="${sessionScope.contractErrorMessage}"/>
+                </div>
+                <c:remove var="contractErrorMessage" scope="session"/>
+            </c:if>
+
             <div class="search-filter">
                 <form action="${pageContext.request.contextPath}/contracts" method="get">
-                    <input type="text" name="search" placeholder="Search code, employee, or email..." value="${search}">
+                    <input type="text" name="search" placeholder="Search code, employee, or email..."
+                           value="<c:out value='${search}'/>">
 
                     <select name="contractType">
                         <option value="all" ${empty contractType ? 'selected' : ''}>All Types</option>
@@ -59,7 +74,7 @@
                         <th>Employee</th>
                         <th>Type</th>
                         <th>Start Date</th>
-                        <th>End Date</th>
+                        <th>Planned End Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -67,18 +82,20 @@
                     <tbody>
                     <c:forEach items="${contracts}" var="contract">
                         <tr>
-                            <td><strong>${contract.contractCode}</strong></td>
+                            <td><strong><c:out value="${contract.contractCode}"/></strong></td>
                             <td>
-                                ${contract.employeeName}
+                                <c:out value="${contract.employeeName}"/>
                                 <c:if test="${not empty contract.employeeCode}">
-                                    (${contract.employeeCode})
+                                    (<c:out value="${contract.employeeCode}"/>)
                                 </c:if>
                             </td>
-                            <td>${contract.contractType}</td>
-                            <td>${contract.startDateDisplay}</td>
+                            <td><c:out value="${contract.contractType}"/></td>
+                            <td><c:out value="${contract.startDateDisplay}"/></td>
                             <td>
                                 <c:choose>
-                                    <c:when test="${not empty contract.endDate}">${contract.endDateDisplay}</c:when>
+                                    <c:when test="${not empty contract.endDate}">
+                                        <c:out value="${contract.endDateDisplay}"/>
+                                    </c:when>
                                     <c:otherwise>Open-ended</c:otherwise>
                                 </c:choose>
                             </td>
@@ -91,7 +108,7 @@
                                         <span class="badge badge-inactive">TERMINATED</span>
                                     </c:when>
                                     <c:otherwise>
-                                        <span class="badge badge-pending">${contract.status}</span>
+                                        <span class="badge badge-pending"><c:out value="${contract.status}"/></span>
                                     </c:otherwise>
                                 </c:choose>
                             </td>

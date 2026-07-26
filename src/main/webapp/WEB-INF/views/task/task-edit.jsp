@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,21 +37,26 @@
             </div>
         </div>
         <div class="dashboard-content">
+            <c:if test="${not empty sessionScope.error}">
+                <div class="alert alert-error"><c:out value="${sessionScope.error}"/></div>
+                <c:remove var="error" scope="session"/>
+            </c:if>
+
             <fmt:formatDate var="createdAtText" value="${task.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
             <form class="task-form" action="${pageContext.request.contextPath}/tasks/edit?id=${task.id}" method="post">
                 <div class="form-row">
                     <label>Task name *</label>
-                    <input type="text" name="title" value="${task.title}" required>
+                    <input type="text" name="title" value="${fn:escapeXml(task.title)}" maxlength="255" required>
                 </div>
 
                 <div class="form-row">
                     <label>Description</label>
-                    <textarea name="description" rows="7">${task.description}</textarea>
+                    <textarea name="description" rows="7" maxlength="2000"><c:out value="${task.description}"/></textarea>
                 </div>
 
                 <div class="form-row">
                     <label>Created by</label>
-                    <input type="text" value="${task.createdByName}" readonly>
+                    <input type="text" value="${fn:escapeXml(task.createdByName)}" readonly>
                 </div>
 
                 <div class="form-row">
@@ -64,11 +70,11 @@
                         <input class="user-picker-search" type="text" placeholder="Search assignee" data-target="assigneePicker" oninput="filterUserPicker(this)">
                         <div id="assigneePicker" class="user-picker-list">
                             <c:forEach items="${departmentUsers}" var="user">
-                                <label class="user-picker-item" data-search="${user.fullName} ${user.positionName} ${user.roleName}">
+                                <label class="user-picker-item" data-search="${fn:escapeXml(user.fullName)} ${fn:escapeXml(user.positionName)} ${fn:escapeXml(user.roleName)}">
                                     <input type="radio" name="assignedTo" value="${user.id}" required ${task.assignedTo == user.id ? 'checked' : ''}>
                                     <span>
-                                        <span class="user-picker-name">${user.fullName}</span>
-                                        <span class="user-picker-meta">${not empty user.positionName ? user.positionName : user.roleName}</span>
+                                        <span class="user-picker-name"><c:out value="${user.fullName}"/></span>
+                                        <span class="user-picker-meta"><c:out value="${not empty user.positionName ? user.positionName : user.roleName}"/></span>
                                     </span>
                                 </label>
                             </c:forEach>
@@ -88,11 +94,11 @@
                                         <c:set var="selectedParticipant" value="true"/>
                                     </c:if>
                                 </c:forEach>
-                                <label class="user-picker-item" data-search="${user.fullName} ${user.positionName} ${user.roleName}">
+                                <label class="user-picker-item" data-search="${fn:escapeXml(user.fullName)} ${fn:escapeXml(user.positionName)} ${fn:escapeXml(user.roleName)}">
                                     <input type="checkbox" name="participantIds" value="${user.id}" ${selectedParticipant ? 'checked' : ''}>
                                     <span>
-                                        <span class="user-picker-name">${user.fullName}</span>
-                                        <span class="user-picker-meta">${not empty user.positionName ? user.positionName : user.roleName}</span>
+                                        <span class="user-picker-name"><c:out value="${user.fullName}"/></span>
+                                        <span class="user-picker-meta"><c:out value="${not empty user.positionName ? user.positionName : user.roleName}"/></span>
                                     </span>
                                 </label>
                             </c:forEach>
@@ -112,11 +118,11 @@
                                         <c:set var="selectedObserver" value="true"/>
                                     </c:if>
                                 </c:forEach>
-                                <label class="user-picker-item" data-search="${user.fullName} ${user.positionName} ${user.roleName}">
+                                <label class="user-picker-item" data-search="${fn:escapeXml(user.fullName)} ${fn:escapeXml(user.positionName)} ${fn:escapeXml(user.roleName)}">
                                     <input type="checkbox" name="observerIds" value="${user.id}" ${selectedObserver ? 'checked' : ''}>
                                     <span>
-                                        <span class="user-picker-name">${user.fullName}</span>
-                                        <span class="user-picker-meta">${not empty user.positionName ? user.positionName : user.roleName}</span>
+                                        <span class="user-picker-name"><c:out value="${user.fullName}"/></span>
+                                        <span class="user-picker-meta"><c:out value="${not empty user.positionName ? user.positionName : user.roleName}"/></span>
                                     </span>
                                 </label>
                             </c:forEach>
@@ -141,11 +147,12 @@
                             <c:forEach items="${task.checklistItems}" var="item">
                                 <div class="checklist-row">
                                     <input type="hidden" name="checklistId" value="${item.id}">
-                                    <input type="text" name="checklistContent" value="${item.content}" placeholder="Work item content">
+                                    <input type="text" name="checklistContent" value="${fn:escapeXml(item.content)}"
+                                           maxlength="255" placeholder="Work item content">
                                     <select name="checklistAssignedTo">
                                         <option value="">No specific assignee</option>
                                         <c:forEach items="${task.participants}" var="participant">
-                                            <option value="${participant.userId}" ${item.assignedTo == participant.userId ? 'selected' : ''}>${participant.userName}</option>
+                                            <option value="${participant.userId}" ${item.assignedTo == participant.userId ? 'selected' : ''}><c:out value="${participant.userName}"/></option>
                                         </c:forEach>
                                     </select>
                                     <button type="submit" class="btn-reset"
@@ -158,11 +165,12 @@
                             <c:if test="${empty task.checklistItems}">
                                 <div class="checklist-row">
                                     <input type="hidden" name="checklistId" value="">
-                                    <input type="text" name="checklistContent" placeholder="Work item content">
+                                    <input type="text" name="checklistContent" maxlength="255"
+                                           placeholder="Work item content">
                                     <select name="checklistAssignedTo">
                                         <option value="">No specific assignee</option>
                                         <c:forEach items="${task.participants}" var="participant">
-                                            <option value="${participant.userId}">${participant.userName}</option>
+                                            <option value="${participant.userId}"><c:out value="${participant.userName}"/></option>
                                         </c:forEach>
                                     </select>
                                     <button type="button" class="btn-reset" onclick="removeChecklistRow(this)">Delete</button>

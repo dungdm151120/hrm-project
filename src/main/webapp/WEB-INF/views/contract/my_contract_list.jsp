@@ -46,7 +46,7 @@
                         <th>Code</th>
                         <th>Type</th>
                         <th>Start Date</th>
-                        <th>End Date</th>
+                        <th>Planned End Date</th>
                         <th>Base Salary</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -55,16 +55,18 @@
                     <tbody>
                     <c:forEach items="${contracts}" var="contract">
                         <tr>
-                            <td><strong>${contract.contractCode}</strong></td>
-                            <td>${contract.contractType}</td>
-                            <td>${contract.startDateDisplay}</td>
+                            <td><strong><c:out value="${contract.contractCode}"/></strong></td>
+                            <td><c:out value="${contract.contractType}"/></td>
+                            <td><c:out value="${contract.startDateDisplay}"/></td>
                             <td>
                                 <c:choose>
-                                    <c:when test="${not empty contract.endDate}">${contract.endDateDisplay}</c:when>
+                                    <c:when test="${not empty contract.endDate}">
+                                        <c:out value="${contract.endDateDisplay}"/>
+                                    </c:when>
                                     <c:otherwise>Open-ended</c:otherwise>
                                 </c:choose>
                             </td>
-                            <td>${contract.baseSalary}</td>
+                            <td><c:out value="${contract.baseSalary}"/></td>
                             <td>
                                 <c:choose>
                                     <c:when test="${contract.status == 'ACTIVE'}">
@@ -74,7 +76,7 @@
                                         <span class="badge badge-inactive">TERMINATED</span>
                                     </c:when>
                                     <c:otherwise>
-                                        <span class="badge badge-pending">${contract.status}</span>
+                                        <span class="badge badge-pending"><c:out value="${contract.status}"/></span>
                                     </c:otherwise>
                                 </c:choose>
                             </td>
