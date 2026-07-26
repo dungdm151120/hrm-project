@@ -37,17 +37,15 @@ public class AttendanceReportServlet extends HttpServlet {
 
         @SuppressWarnings("unchecked")
         Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
-        if (userPermissions == null || 
-            !(userPermissions.contains("ATTENDANCE_VIEW_ALL") || 
-              userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT") || 
-              userPermissions.contains("ATTENDANCE_EXPORT_REPORT"))) {
+        boolean canViewAll = userPermissions != null && userPermissions.contains("ATTENDANCE_VIEW_ALL");
+        boolean canViewDepartment = userPermissions != null && userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
+        boolean canViewReport = userPermissions != null && userPermissions.contains("ATTENDANCE_REPORT_VIEW");
+        if (!canViewReport || (!canViewAll && !canViewDepartment)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to view reports.");
             return;
         }
 
-        // Determine if user is restricted to their own department
-        boolean isRestricted = !userPermissions.contains("ATTENDANCE_VIEW_ALL")
-                && userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
+        boolean isRestricted = !canViewAll && canViewDepartment;
 
         List<Department> departments = new ArrayList<>();
         if (isRestricted) {
@@ -76,32 +74,40 @@ public class AttendanceReportServlet extends HttpServlet {
         }
 
         String periodType = request.getParameter("periodType");
-        if (periodType == null || periodType.isEmpty()) {
-            periodType = "month";
+        periodType = periodType == null || periodType.isEmpty() ? "month" : periodType.toLowerCase();
+        if (!"month".equals(periodType) && !"quarter".equals(periodType) && !"year".equals(periodType)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid report period.");
+            return;
         }
 
         int selectedMonth = today.getMonthValue();
-        String mParam = request.getParameter("month");
-        if (mParam != null && !mParam.isEmpty()) {
-            try {
-                selectedMonth = Integer.parseInt(mParam);
-            } catch (NumberFormatException ignored) {}
+        Integer requestedMonth = parseInteger(request.getParameter("month"));
+        if (request.getParameter("month") != null && !request.getParameter("month").isBlank()) {
+            if (requestedMonth == null || requestedMonth < 1 || requestedMonth > 12) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid month.");
+                return;
+            }
+            selectedMonth = requestedMonth;
         }
 
         int selectedQuarter = (today.getMonthValue() - 1) / 3 + 1;
-        String qParam = request.getParameter("quarter");
-        if (qParam != null && !qParam.isEmpty()) {
-            try {
-                selectedQuarter = Integer.parseInt(qParam);
-            } catch (NumberFormatException ignored) {}
+        Integer requestedQuarter = parseInteger(request.getParameter("quarter"));
+        if (request.getParameter("quarter") != null && !request.getParameter("quarter").isBlank()) {
+            if (requestedQuarter == null || requestedQuarter < 1 || requestedQuarter > 4) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid quarter.");
+                return;
+            }
+            selectedQuarter = requestedQuarter;
         }
 
         int selectedYear = today.getYear();
-        String yParam = request.getParameter("year");
-        if (yParam != null && !yParam.isEmpty()) {
-            try {
-                selectedYear = Integer.parseInt(yParam);
-            } catch (NumberFormatException ignored) {}
+        Integer requestedYear = parseInteger(request.getParameter("year"));
+        if (request.getParameter("year") != null && !request.getParameter("year").isBlank()) {
+            if (requestedYear == null || requestedYear < 2000 || requestedYear > today.getYear() + 1) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid year.");
+                return;
+            }
+            selectedYear = requestedYear;
         }
 
         // Opening Attendance Report should immediately show the current month's report.
@@ -147,6 +153,7 @@ public class AttendanceReportServlet extends HttpServlet {
             double minHours = Double.MAX_VALUE;
             AttendanceReportRowDTO leastPunctual = null;
             int maxIrregularities = 0;
+            int punctualLeaveLimit = getPunctualLeaveLimit(periodType);
 
             for (AttendanceReportRowDTO row : reportRows) {
                 row.setExpectedWorkdays(expectedWorkdays);
@@ -159,7 +166,7 @@ public class AttendanceReportServlet extends HttpServlet {
                 totalAbsentDays += row.getAbsentDays();
 
                 // Hardest working check
-                double workAndOt = row.getTotalWorkHours() + row.getTotalOvertimeHours();
+                double workAndOt = row.getOnsiteWorkAndOtHours();
                 if (workAndOt > maxHours) {
                     maxHours = workAndOt;
                     hardestWorking = row;
@@ -167,7 +174,8 @@ public class AttendanceReportServlet extends HttpServlet {
 
                 // Most punctual check: min (lateDays + earlyLeaveDays + forgotCheckInDays)
                 // Filter out employees who never worked in this period (presentDays = 0) to avoid false punctuality
-                if (row.getPresentDays() > 0) {
+                if (row.getPresentDays() > 0
+                        && row.getAbsentDays() + row.getLeaveDays() <= punctualLeaveLimit) {
                     double irregularities = row.getLateDays() + row.getEarlyLeaveDays()
                             + row.getForgotCheckInDays() + row.getForgotCheckOutDays();
                     if (irregularities < minIrregularities) {
@@ -232,5 +240,23 @@ public class AttendanceReportServlet extends HttpServlet {
             curr = curr.plusDays(1);
         }
         return count;
+    }
+
+    private Integer parseInteger(String value) {
+        try {
+            return value == null || value.isBlank() ? null : Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private int getPunctualLeaveLimit(String periodType) {
+        if ("quarter".equals(periodType)) {
+            return 4;
+        }
+        if ("year".equals(periodType)) {
+            return 12;
+        }
+        return 1;
     }
 }

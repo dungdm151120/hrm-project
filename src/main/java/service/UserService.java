@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class UserService {
-    private static final int MAX_PASSWORD_LENGTH = 72;
+    private static final int MAX_PASSWORD_LENGTH = 32;
     private static final Set<String> VALID_GENDERS = Set.of("Male", "Female", "Other");
 
     private final UserDAO userDAO = new UserDAO();
@@ -120,7 +120,7 @@ public class UserService {
         if (oldPassword == null || oldPassword.isEmpty()) {
             errors.put("oldPassword", "Current password is required.");
         } else if (oldPassword.length() > MAX_PASSWORD_LENGTH) {
-            errors.put("oldPassword", "Current password cannot exceed 72 characters.");
+            errors.put("oldPassword", "Current password cannot exceed 32 characters.");
         }
     }
 
@@ -130,7 +130,7 @@ public class UserService {
         } else if (newPassword.length() < 6) {
             errors.put("newPassword", "New password must be at least 6 characters.");
         } else if (newPassword.length() > MAX_PASSWORD_LENGTH) {
-            errors.put("newPassword", "New password cannot exceed 72 characters.");
+            errors.put("newPassword", "New password cannot exceed 32 characters.");
         }
     }
 
@@ -138,7 +138,7 @@ public class UserService {
         if (confirmPassword == null || confirmPassword.isEmpty()) {
             errors.put("confirmPassword", "Password confirmation is required.");
         } else if (confirmPassword.length() > MAX_PASSWORD_LENGTH) {
-            errors.put("confirmPassword", "Password confirmation cannot exceed 72 characters.");
+            errors.put("confirmPassword", "Password confirmation cannot exceed 32 characters.");
         } else if (newPassword != null && !newPassword.equals(confirmPassword)) {
             errors.put("confirmPassword", "Password confirmation does not match.");
         }

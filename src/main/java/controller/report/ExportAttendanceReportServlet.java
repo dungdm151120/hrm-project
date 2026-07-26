@@ -34,34 +34,51 @@ public class ExportAttendanceReportServlet extends HttpServlet {
 
             @SuppressWarnings("unchecked")
             Set<String> userPermissions = (Set<String>) session.getAttribute("userPermissions");
-            if (userPermissions == null) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            boolean canViewAll = userPermissions != null && userPermissions.contains("ATTENDANCE_VIEW_ALL");
+            boolean canViewDepartment = userPermissions != null && userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
+            boolean canViewReport = userPermissions != null && userPermissions.contains("ATTENDANCE_REPORT_VIEW");
+            boolean canExport = userPermissions != null && userPermissions.contains("ATTENDANCE_EXPORT_REPORT");
+            if (!canViewReport || (!canViewAll && !canViewDepartment) || !canExport) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to export this report.");
                 return;
             }
 
-            // Read parameters
             String periodType = req.getParameter("periodType");
-            if (periodType == null || periodType.isEmpty()) {
-                periodType = "month";
+            periodType = periodType == null || periodType.isEmpty() ? "month" : periodType.toLowerCase();
+            if (!"month".equals(periodType) && !"quarter".equals(periodType) && !"year".equals(periodType)) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid report period.");
+                return;
             }
-            int month = 1;
-            String mParam = req.getParameter("month");
-            if (mParam != null && !mParam.isEmpty()) {
-                month = Integer.parseInt(mParam);
+            LocalDate today = LocalDate.now();
+            int month = today.getMonthValue();
+            Integer requestedMonth = parseInteger(req.getParameter("month"));
+            if (req.getParameter("month") != null && !req.getParameter("month").isBlank()) {
+                if (requestedMonth == null || requestedMonth < 1 || requestedMonth > 12) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid month.");
+                    return;
+                }
+                month = requestedMonth;
             }
-            int quarter = 1;
-            String qParam = req.getParameter("quarter");
-            if (qParam != null && !qParam.isEmpty()) {
-                quarter = Integer.parseInt(qParam);
+            int quarter = (today.getMonthValue() - 1) / 3 + 1;
+            Integer requestedQuarter = parseInteger(req.getParameter("quarter"));
+            if (req.getParameter("quarter") != null && !req.getParameter("quarter").isBlank()) {
+                if (requestedQuarter == null || requestedQuarter < 1 || requestedQuarter > 4) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid quarter.");
+                    return;
+                }
+                quarter = requestedQuarter;
             }
-            int year = LocalDate.now().getYear();
-            String yParam = req.getParameter("year");
-            if (yParam != null && !yParam.isEmpty()) {
-                year = Integer.parseInt(yParam);
+            int year = today.getYear();
+            Integer requestedYear = parseInteger(req.getParameter("year"));
+            if (req.getParameter("year") != null && !req.getParameter("year").isBlank()) {
+                if (requestedYear == null || requestedYear < 2000 || requestedYear > today.getYear() + 1) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid year.");
+                    return;
+                }
+                year = requestedYear;
             }
             
-            boolean isRestricted = !userPermissions.contains("ATTENDANCE_VIEW_ALL")
-                    && userPermissions.contains("ATTENDANCE_VIEW_DEPARTMENT");
+            boolean isRestricted = !canViewAll && canViewDepartment;
             Integer departmentId = isRestricted
                     ? currentUser.getDepartmentId()
                     : parseInteger(req.getParameter("departmentId"));
@@ -99,15 +116,14 @@ public class ExportAttendanceReportServlet extends HttpServlet {
             CellStyle boldDataStyle = createDataStyle(workbook, true);
             CellStyle sectionHeaderStyle = createSectionHeaderStyle(workbook);
 
-            // ==================== SHEET 1: CHI TIẾT BÁO CÁO ====================
-            Sheet sheet1 = workbook.createSheet("Báo cáo chi tiết");
+            Sheet sheet1 = workbook.createSheet("Attendance Details");
             int r1 = 0;
             
             // Title
             Row titleRow = sheet1.createRow(r1++);
             titleRow.setHeight((short) 500);
             Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue("BÁO CÁO CHUYÊN CẦN CHI TIẾT");
+            titleCell.setCellValue("DETAILED ATTENDANCE REPORT");
             titleCell.setCellStyle(titleStyle);
             sheet1.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
 
@@ -115,7 +131,7 @@ public class ExportAttendanceReportServlet extends HttpServlet {
             Row subtitleRow = sheet1.createRow(r1++);
             subtitleRow.setHeight((short) 350);
             Cell subtitleCell = subtitleRow.createCell(0);
-            subtitleCell.setCellValue("Thời gian: " + startDate.toString() + " đến " + endDate.toString() + " | Số ngày công dự kiến: " + expectedWorkdays);
+            subtitleCell.setCellValue("Period: " + startDate + " to " + endDate + " | Expected workdays: " + expectedWorkdays);
             subtitleCell.setCellStyle(subtitleStyle);
             sheet1.addMergedRegion(new CellRangeAddress(1, 1, 0, 13));
 
@@ -125,9 +141,9 @@ public class ExportAttendanceReportServlet extends HttpServlet {
             Row headerRow = sheet1.createRow(r1++);
             headerRow.setHeight((short) 400);
             String[] headers = {
-                "Mã NV", "Họ tên", "Chức vụ", "Phòng ban", "Tổng ngày công", 
-                "Ngày có mặt", "Ngày vắng", "Đi muộn", "Về sớm", "Quên check-in", 
-                "Quên check-out", "Tổng giờ công", "Tổng giờ OT", "Tổng Phép"
+                "Employee Code", "Full Name", "Position", "Department", "Expected Workdays",
+                "Present Days", "Absent Days", "Late Arrivals", "Early Leaves", "Missing Check-in",
+                "Missing Check-out", "Onsite Work Hours", "Total OT Hours", "Total Leave Days"
             };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -153,6 +169,7 @@ public class ExportAttendanceReportServlet extends HttpServlet {
             double minHours = Double.MAX_VALUE;
             AttendanceReportRowDTO leastPunctual = null;
             int maxIrregularities = 0;
+            int punctualLeaveLimit = getPunctualLeaveLimit(periodType);
 
             for (AttendanceReportRowDTO row : reportRows) {
                 row.setExpectedWorkdays(expectedWorkdays);
@@ -164,15 +181,14 @@ public class ExportAttendanceReportServlet extends HttpServlet {
                 totalLeaveDays += row.getLeaveDays();
                 totalAbsentDays += row.getAbsentDays();
 
-                // Hardest working check
-                double workAndOt = row.getTotalWorkHours() + row.getTotalOvertimeHours();
+                double workAndOt = row.getOnsiteWorkAndOtHours();
                 if (workAndOt > maxHours) {
                     maxHours = workAndOt;
                     hardestWorking = row;
                 }
 
-                // Most punctual check
-                if (row.getPresentDays() > 0) {
+                if (row.getPresentDays() > 0
+                        && row.getAbsentDays() + row.getLeaveDays() <= punctualLeaveLimit) {
                     double irregularities = row.getLateDays() + row.getEarlyLeaveDays()
                             + row.getForgotCheckInDays() + row.getForgotCheckOutDays();
                     if (irregularities < minIrregularities) {
@@ -218,31 +234,29 @@ public class ExportAttendanceReportServlet extends HttpServlet {
                 sheet1.autoSizeColumn(i);
             }
 
-            // ==================== SHEET 2: HIỆU SUẤT & HIGHLIGHTS ====================
-            Sheet sheet2 = workbook.createSheet("Hiệu suất & Highlights");
+            Sheet sheet2 = workbook.createSheet("Performance Highlights");
             int r2 = 0;
 
             // Title
             Row titleRow2 = sheet2.createRow(r2++);
             titleRow2.setHeight((short) 500);
             Cell titleCell2 = titleRow2.createCell(0);
-            titleCell2.setCellValue("TỔNG HỢP HIỆU SUẤT VÀ KHEN THƯỞNG");
+            titleCell2.setCellValue("EMPLOYEE PERFORMANCE SUMMARY");
             titleCell2.setCellStyle(titleStyle);
             sheet2.addMergedRegion(new CellRangeAddress(0, 0, 0, 4));
 
             r2++; // Empty row
 
-            // Section 1: Hiệu Suất Chung
             Row secHeader1 = sheet2.createRow(r2++);
             Cell secCell1 = secHeader1.createCell(0);
-            secCell1.setCellValue("I. HIỆU SUẤT CHUNG CỦA TOÀN BỘ NHÂN VIÊN");
+            secCell1.setCellValue("I. OVERALL EMPLOYEE PERFORMANCE");
             secCell1.setCellStyle(sectionHeaderStyle);
             sheet2.addMergedRegion(new CellRangeAddress(r2-1, r2-1, 0, 4));
 
             // Section 1 Headers
             Row sec1HeaderRow = sheet2.createRow(r2++);
             sec1HeaderRow.setHeight((short) 350);
-            String[] sec1Headers = { "Chỉ số hiệu suất", "Tỉ lệ / Kết quả", "Chi tiết thống kê", "", "" };
+            String[] sec1Headers = { "Performance Metric", "Rate / Result", "Statistics", "", "" };
             for (int i = 0; i < 3; i++) {
                 Cell cell = sec1HeaderRow.createCell(i);
                 cell.setCellValue(sec1Headers[i]);
@@ -254,28 +268,28 @@ public class ExportAttendanceReportServlet extends HttpServlet {
 
             // Stat 1
             Row stat1 = sheet2.createRow(r2++);
-            stat1.createCell(0).setCellValue("Hiệu suất giờ công");
+            stat1.createCell(0).setCellValue("Onsite Work Hours Performance");
             double workPercent = totalExpectedWorkHours > 0 ? (totalActualWorkHours / totalExpectedWorkHours) * 100 : 0.0;
             stat1.createCell(1).setCellValue(String.format("%.1f%%", workPercent));
-            stat1.createCell(2).setCellValue(String.format("%.1f / %.1f giờ công", totalActualWorkHours, totalExpectedWorkHours));
+            stat1.createCell(2).setCellValue(String.format("%.1f / %.1f onsite work hours", totalActualWorkHours, totalExpectedWorkHours));
             stat1.createCell(3);
             stat1.createCell(4);
             sheet2.addMergedRegion(new CellRangeAddress(r2-1, r2-1, 2, 4));
 
             // Stat 2
             Row stat2 = sheet2.createRow(r2++);
-            stat2.createCell(0).setCellValue("Hiệu suất làm thêm (OT)");
+            stat2.createCell(0).setCellValue("Overtime Performance");
             double otPercent = totalRegisteredOvertimeHours > 0 ? (totalActualOvertimeHours / totalRegisteredOvertimeHours) * 100 : 0.0;
             stat2.createCell(1).setCellValue(String.format("%.1f%%", otPercent));
-            stat2.createCell(2).setCellValue(String.format("%.1f / %.1f giờ OT", totalActualOvertimeHours, totalRegisteredOvertimeHours));
+            stat2.createCell(2).setCellValue(String.format("%.1f / %.1f OT hours", totalActualOvertimeHours, totalRegisteredOvertimeHours));
             stat2.createCell(3);
             stat2.createCell(4);
             sheet2.addMergedRegion(new CellRangeAddress(r2-1, r2-1, 2, 4));
 
             // Stat 3
             Row stat3 = sheet2.createRow(r2++);
-            stat3.createCell(0).setCellValue("Tổng ngày nghỉ phép");
-            stat3.createCell(1).setCellValue(totalLeaveDays + " ngày");
+            stat3.createCell(0).setCellValue("Total Leave Days");
+            stat3.createCell(1).setCellValue(totalLeaveDays + " days");
             stat3.createCell(2).setCellValue("-");
             stat3.createCell(3);
             stat3.createCell(4);
@@ -283,8 +297,8 @@ public class ExportAttendanceReportServlet extends HttpServlet {
 
             // Stat 4
             Row stat4 = sheet2.createRow(r2++);
-            stat4.createCell(0).setCellValue("Tổng ngày vắng");
-            stat4.createCell(1).setCellValue(totalAbsentDays + " ngày");
+            stat4.createCell(0).setCellValue("Total Absent Days");
+            stat4.createCell(1).setCellValue(totalAbsentDays + " days");
             stat4.createCell(2).setCellValue("-");
             stat4.createCell(3);
             stat4.createCell(4);
@@ -302,49 +316,46 @@ public class ExportAttendanceReportServlet extends HttpServlet {
 
             r2 += 2; // Spacing
 
-            // Section 2: Khen Thưởng & Vinh Danh
             Row secHeader2 = sheet2.createRow(r2++);
             Cell secCell2 = secHeader2.createCell(0);
-            secCell2.setCellValue("II. DANH HIỆU & VINH DANH CÁ NHÂN");
+            secCell2.setCellValue("II. EMPLOYEE RECOGNITION");
             secCell2.setCellStyle(sectionHeaderStyle);
             sheet2.addMergedRegion(new CellRangeAddress(r2-1, r2-1, 0, 4));
 
             // Section 2 Headers
             Row sec2HeaderRow = sheet2.createRow(r2++);
             sec2HeaderRow.setHeight((short) 350);
-            String[] sec2Headers = { "Danh hiệu", "Họ và tên", "Mã NV", "Phòng ban", "Thành tích" };
+            String[] sec2Headers = { "Recognition", "Full Name", "Employee Code", "Department", "Achievement" };
             for (int i = 0; i < sec2Headers.length; i++) {
                 Cell cell = sec2HeaderRow.createCell(i);
                 cell.setCellValue(sec2Headers[i]);
                 cell.setCellStyle(headerStyle);
             }
 
-            // Hardest Working Row
             Row hwRow = sheet2.createRow(r2++);
-            hwRow.createCell(0).setCellValue("Nhân viên chăm chỉ nhất");
+            hwRow.createCell(0).setCellValue("Top Performing Employee");
             if (hardestWorking != null) {
                 hwRow.createCell(1).setCellValue(hardestWorking.getEmployeeName());
                 hwRow.createCell(2).setCellValue(hardestWorking.getEmployeeCode());
                 hwRow.createCell(3).setCellValue(hardestWorking.getDepartmentName());
-                hwRow.createCell(4).setCellValue(String.format("%.1f giờ (Giờ làm + OT)", hardestWorking.getTotalWorkHours() + hardestWorking.getTotalOvertimeHours()));
+                hwRow.createCell(4).setCellValue(String.format("%.1f onsite work + OT hours", hardestWorking.getOnsiteWorkAndOtHours()));
             } else {
-                hwRow.createCell(1).setCellValue("Không có dữ liệu");
+                hwRow.createCell(1).setCellValue("No data");
                 hwRow.createCell(2).setCellValue("-");
                 hwRow.createCell(3).setCellValue("-");
                 hwRow.createCell(4).setCellValue("-");
             }
 
-            // Most Punctual Row
             Row mpRow = sheet2.createRow(r2++);
-            mpRow.createCell(0).setCellValue("Nhân viên đúng giờ nhất");
+            mpRow.createCell(0).setCellValue("Most Punctual Employee");
             if (mostPunctual != null) {
                 mpRow.createCell(1).setCellValue(mostPunctual.getEmployeeName());
                 mpRow.createCell(2).setCellValue(mostPunctual.getEmployeeCode());
                 mpRow.createCell(3).setCellValue(mostPunctual.getDepartmentName());
-                mpRow.createCell(4).setCellValue(String.format("Đi muộn: %d | Về sớm: %d | Quên: %d", 
-                    mostPunctual.getLateDays(), mostPunctual.getEarlyLeaveDays(), mostPunctual.getForgotCheckInDays()));
+                mpRow.createCell(4).setCellValue(String.format("Late: %d | Early leave: %d | Missing check-in: %d | Missing check-out: %d | Absent days: %d | Leave days: %.0f",
+                    mostPunctual.getLateDays(), mostPunctual.getEarlyLeaveDays(), mostPunctual.getForgotCheckInDays(), mostPunctual.getForgotCheckOutDays(), mostPunctual.getAbsentDays(), mostPunctual.getLeaveDays()));
             } else {
-                mpRow.createCell(1).setCellValue("Không có dữ liệu");
+                mpRow.createCell(1).setCellValue("No data");
                 mpRow.createCell(2).setCellValue("-");
                 mpRow.createCell(3).setCellValue("-");
                 mpRow.createCell(4).setCellValue("-");
@@ -376,11 +387,13 @@ public class ExportAttendanceReportServlet extends HttpServlet {
                 lowestWorking, leastPunctual
             };
             String[] attentionDetails = {
-                lowestWorking == null ? "No data" : String.format("%.1f work + OT hours", lowestWorking.getTotalWorkHours() + lowestWorking.getTotalOvertimeHours()),
+                lowestWorking == null ? "No data" : String.format("%.1f onsite work + OT hours", lowestWorking.getOnsiteWorkAndOtHours()),
                 leastPunctual == null ? "No data" : "Late: " + leastPunctual.getLateDays()
                         + " | Early leave: " + leastPunctual.getEarlyLeaveDays()
                         + " | Missing check-in: " + leastPunctual.getForgotCheckInDays()
                         + " | Missing check-out: " + leastPunctual.getForgotCheckOutDays()
+                        + " | Absent days: " + leastPunctual.getAbsentDays()
+                        + " | Leave days: " + leastPunctual.getLeaveDays()
             };
 
             for (int i = 0; i < attentionLabels.length; i++) {
@@ -430,10 +443,20 @@ public class ExportAttendanceReportServlet extends HttpServlet {
 
     private Integer parseInteger(String value) {
         try {
-            return Integer.parseInt(value);
-        } catch (Exception e) {
+            return value == null || value.isBlank() ? null : Integer.parseInt(value);
+        } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private int getPunctualLeaveLimit(String periodType) {
+        if ("quarter".equals(periodType)) {
+            return 4;
+        }
+        if ("year".equals(periodType)) {
+            return 12;
+        }
+        return 1;
     }
 
     // ====== Styles helper ======

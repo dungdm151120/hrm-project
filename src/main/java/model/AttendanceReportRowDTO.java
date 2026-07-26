@@ -145,4 +145,12 @@ public class AttendanceReportRowDTO {
     public void setLeaveDays(double leaveDays) {
         this.leaveDays = leaveDays;
     }
+
+    public double getOnsiteWorkHours() {
+        return totalWorkHours;
+    }
+
+    public double getOnsiteWorkAndOtHours() {
+        return getOnsiteWorkHours() + totalOvertimeHours;
+    }
 }
