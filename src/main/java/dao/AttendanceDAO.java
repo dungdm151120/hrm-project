@@ -460,6 +460,18 @@ public class AttendanceDAO {
             int page,
             int pageSize
     ) {
+        return getAttendanceRecordsForMatrix(month, year, departmentId, keyword, page, pageSize, false);
+    }
+
+    public List<AttendanceRecordDTO> getAttendanceRecordsForMatrix(
+            int month,
+            int year,
+            Integer departmentId,
+            String keyword,
+            int page,
+            int pageSize,
+            boolean includeEmployeesWithoutRecords
+    ) {
         List<AttendanceRecordDTO> records = new ArrayList<>();
         YearMonth period = YearMonth.of(year, month);
         LocalDate startDate = period.atDay(1);
@@ -467,11 +479,17 @@ public class AttendanceDAO {
         int offset = Math.max(0, page - 1) * pageSize;
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
 
-        StringBuilder employeeFilter = new StringBuilder(
-                " FROM users u " +
-                        "JOIN attendance_records filter_ar ON filter_ar.user_id = u.id " +
-                        "WHERE filter_ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
-        );
+        StringBuilder employeeFilter = includeEmployeesWithoutRecords
+                ? new StringBuilder(
+                        " FROM users u " +
+                                "WHERE u.active = TRUE " +
+                                "AND u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN', 'SYSTEM ADMIN'))"
+                )
+                : new StringBuilder(
+                        " FROM users u " +
+                                "JOIN attendance_records filter_ar ON filter_ar.user_id = u.id " +
+                                "WHERE filter_ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
+                );
         if (departmentId != null) {
             employeeFilter.append(" AND u.department_id = ?");
         }
@@ -491,7 +509,7 @@ public class AttendanceDAO {
                         ") page_users " +
                         "JOIN users u ON u.id = page_users.id " +
                         "LEFT JOIN departments d ON d.id = u.department_id " +
-                        "JOIN attendance_records ar ON ar.user_id = u.id " +
+                        (includeEmployeesWithoutRecords ? "LEFT JOIN" : "JOIN") + " attendance_records ar ON ar.user_id = u.id " +
                         "AND ar.work_date BETWEEN ? AND ? " +
                         "LEFT JOIN (SELECT op1.user_id, op1.status, oreq1.overtime_date FROM overtime_participants op1 JOIN overtime_requests oreq1 ON op1.overtime_request_id = oreq1.id) ot " +
                         "ON ot.user_id = ar.user_id AND ot.overtime_date = ar.work_date " +
@@ -500,8 +518,10 @@ public class AttendanceDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             int index = 1;
-            ps.setDate(index++, Date.valueOf(startDate));
-            ps.setDate(index++, Date.valueOf(endDate));
+            if (!includeEmployeesWithoutRecords) {
+                ps.setDate(index++, Date.valueOf(startDate));
+                ps.setDate(index++, Date.valueOf(endDate));
+            }
             if (departmentId != null) {
                 ps.setInt(index++, departmentId);
             }
@@ -532,14 +552,31 @@ public class AttendanceDAO {
             Integer departmentId,
             String keyword
     ) {
+        return countEmployeesForAttendanceMatrix(month, year, departmentId, keyword, false);
+    }
+
+    public int countEmployeesForAttendanceMatrix(
+            int month,
+            int year,
+            Integer departmentId,
+            String keyword,
+            boolean includeEmployeesWithoutRecords
+    ) {
         YearMonth period = YearMonth.of(year, month);
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
-        StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(DISTINCT u.id) " +
-                        "FROM users u " +
-                        "JOIN attendance_records ar ON ar.user_id = u.id " +
-                        "WHERE ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
-        );
+        StringBuilder sql = includeEmployeesWithoutRecords
+                ? new StringBuilder(
+                        "SELECT COUNT(DISTINCT u.id) " +
+                                "FROM users u " +
+                                "WHERE u.active = TRUE " +
+                                "AND u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN', 'SYSTEM ADMIN'))"
+                )
+                : new StringBuilder(
+                        "SELECT COUNT(DISTINCT u.id) " +
+                                "FROM users u " +
+                                "JOIN attendance_records ar ON ar.user_id = u.id " +
+                                "WHERE ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
+                );
         if (departmentId != null) {
             sql.append(" AND u.department_id = ?");
         }
@@ -550,8 +587,10 @@ public class AttendanceDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int index = 1;
-            ps.setDate(index++, Date.valueOf(period.atDay(1)));
-            ps.setDate(index++, Date.valueOf(period.atEndOfMonth()));
+            if (!includeEmployeesWithoutRecords) {
+                ps.setDate(index++, Date.valueOf(period.atDay(1)));
+                ps.setDate(index++, Date.valueOf(period.atEndOfMonth()));
+            }
             if (departmentId != null) {
                 ps.setInt(index++, departmentId);
             }
@@ -1061,7 +1100,10 @@ public class AttendanceDAO {
         dto.setEmployeeName(rs.getString("employee_name"));
         dto.setDepartmentId((Integer) rs.getObject("department_id"));
         dto.setDepartmentName(rs.getString("department_name"));
-        dto.setWorkDate(rs.getDate("work_date").toLocalDate());
+        java.sql.Date workDate = rs.getDate("work_date");
+        if (workDate != null) {
+            dto.setWorkDate(workDate.toLocalDate());
+        }
         dto.setCheckIn(checkIn);
         dto.setCheckOut(checkOut);
         dto.setTotalWorkHours(getNullableDouble(rs, "total_work_hours"));

@@ -19,7 +19,7 @@ import java.util.Set;
 
 @WebServlet("/create_overtime_request")
 public class CreateOvertimeRequestServlet extends HttpServlet {
-    private static final int MAX_REASON_LENGTH = 500;
+    private static final int MAX_REASON_LENGTH = 1000;
     private final UserDAO userDAO = new UserDAO();
 
     @Override
@@ -44,7 +44,13 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
                 return;
             }
 
-            LocalDate overtimeDate = LocalDate.parse(overtimeDateStr);
+            LocalDate overtimeDate;
+            try {
+                overtimeDate = LocalDate.parse(overtimeDateStr);
+            } catch (Exception e) {
+                response.sendRedirect("create_request?error=missing_date");
+                return;
+            }
             if (overtimeDate.isBefore(LocalDate.now())) {
                 response.sendRedirect("create_request?error=date_past");
                 return;

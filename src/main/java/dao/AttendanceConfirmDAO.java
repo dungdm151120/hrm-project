@@ -66,7 +66,7 @@ public class AttendanceConfirmDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     String action = rs.getString("action");
-                    if ("HR_FINALIZE".equals(action)) return "APPROVED";
+                    if ("HR_FINALIZE".equals(action)) return "FINALIZED";
                 }
             }
         } catch (SQLException e) {
@@ -232,6 +232,67 @@ public class AttendanceConfirmDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public List<Integer> getFinalizedYears(Integer departmentId) {
+        List<Integer> years = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT DISTINCT s.snapshot_year " +
+                "FROM attendance_snapshot s " +
+                "JOIN users emp ON s.user_id = emp.id "
+        );
+
+        if (departmentId != null) {
+            sql.append("WHERE emp.department_id = ? ");
+        }
+
+        sql.append("ORDER BY s.snapshot_year DESC");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            if (departmentId != null) {
+                ps.setInt(1, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    years.add(rs.getInt("snapshot_year"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return years;
+    }
+
+    public boolean hasFinalizedSnapshot(int month, int year, Integer departmentId) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT 1 FROM attendance_snapshot s " +
+                "JOIN users emp ON s.user_id = emp.id " +
+                "WHERE s.snapshot_month = ? AND s.snapshot_year = ? "
+        );
+
+        if (departmentId != null) {
+            sql.append("AND emp.department_id = ? ");
+        }
+
+        sql.append("LIMIT 1");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            if (departmentId != null) {
+                ps.setInt(3, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public AttendanceConfirmedMonthOverviewDTO getConfirmedMonthOverview(int month, int year, Integer departmentId) {

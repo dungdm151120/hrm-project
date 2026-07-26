@@ -25,7 +25,7 @@
                 </h1>
             </div>
             <div class="header-right">
-                <a href="${pageContext.request.contextPath}/admin/departments/detail?id=${param.id}" class="btn-secondary">← Back to Department Detail</a>
+                <a href="${pageContext.request.contextPath}/admin/departments/detail?id=${param.id}" class="btn-secondary">Back to Department Detail</a>
             </div>
         </div>
 
@@ -44,7 +44,7 @@
                         <c:when test="${param.error == 'invalid_data'}">Invalid data provided.</c:when>
                         <c:when test="${param.error == 'invalid_access'}">Invalid access.</c:when>
                         <c:when test="${param.error == 'invalid_id'}">Invalid department or user ID.</c:when>
-                        <c:otherwise>⚠ ${param.error}</c:otherwise>
+                        <c:otherwise>${param.error}</c:otherwise>
                     </c:choose>
                 </div>
             </c:if>
@@ -69,11 +69,11 @@
                     <input type="search"
                            name="keyword"
                            aria-label="Search employees"
-                           placeholder="Search by name, email, phone or position..."
+                            placeholder="Search by name or email"
                            value="<c:out value='${keyword}'/>">
 
                     <select name="status" aria-label="Filter by status" onchange="this.form.submit()">
-                        <option value="all" ${status == 'all' ? 'selected' : ''}>All Status</option>
+                        <option value="all" ${status == 'all' ? 'selected' : ''}>All</option>
                         <option value="active" ${status == 'active' ? 'selected' : ''}>Active</option>
                         <option value="inactive" ${status == 'inactive' ? 'selected' : ''}>Inactive</option>
                     </select>
