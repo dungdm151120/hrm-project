@@ -32,6 +32,11 @@ public class ProfileServlet extends HttpServlet {
         User user = userService.getProfile(userId);
 
         request.setAttribute("user", user);
+        Object profileSuccess = session.getAttribute("profileSuccess");
+        if (profileSuccess != null) {
+            request.setAttribute("profileSuccess", profileSuccess);
+            session.removeAttribute("profileSuccess");
+        }
         request.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp")
                 .forward(request, response);
     }

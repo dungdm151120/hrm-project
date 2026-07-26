@@ -62,9 +62,30 @@ public class UserService {
             return errors;
         }
 
-        boolean updated = userDAO.updateProfile(user);
-        if (!updated) {
+        if (!userDAO.updateProfile(user)) {
             errors.put("global", "Update profile failed.");
+        }
+        return errors;
+    }
+
+    public Map<String, String> changePassword(int userId, String oldPassword, String newPassword,
+                                               String confirmPassword) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        validateOldPassword(oldPassword, errors);
+        validateNewPassword(newPassword, errors);
+        validateConfirmation(newPassword, confirmPassword, errors);
+
+        if (!errors.containsKey("oldPassword") && !isCurrentPassword(userId, oldPassword)) {
+            errors.put("oldPassword", "Current password is incorrect.");
+        }
+
+        if (!errors.isEmpty()) {
+            return errors;
+        }
+
+        if (!userDAO.updatePassword(userId, PasswordUtil.hashPassword(newPassword))) {
+            errors.put("global", "Password could not be changed. Please try again.");
         }
         return errors;
     }
@@ -95,44 +116,36 @@ public class UserService {
         }
     }
 
-    public String changePassword(int userId, String oldPassword, String newPassword, String confirmPassword) {
-        if (oldPassword == null || oldPassword.trim().isEmpty()) {
-            return "Vui lòng nhập mật khẩu cũ";
+    private void validateOldPassword(String oldPassword, Map<String, String> errors) {
+        if (oldPassword == null || oldPassword.isEmpty()) {
+            errors.put("oldPassword", "Current password is required.");
+        } else if (oldPassword.length() > MAX_PASSWORD_LENGTH) {
+            errors.put("oldPassword", "Current password cannot exceed 72 characters.");
         }
+    }
 
-        if (newPassword == null || newPassword.trim().isEmpty()) {
-            return "Vui lòng nhập mật khẩu mới";
+    private void validateNewPassword(String newPassword, Map<String, String> errors) {
+        if (newPassword == null || newPassword.isEmpty()) {
+            errors.put("newPassword", "New password is required.");
+        } else if (newPassword.length() < 6) {
+            errors.put("newPassword", "New password must be at least 6 characters.");
+        } else if (newPassword.length() > MAX_PASSWORD_LENGTH) {
+            errors.put("newPassword", "New password cannot exceed 72 characters.");
         }
+    }
 
-        if (confirmPassword == null || confirmPassword.trim().isEmpty()) {
-            return "Vui lòng xác nhận mật khẩu mới";
+    private void validateConfirmation(String newPassword, String confirmPassword, Map<String, String> errors) {
+        if (confirmPassword == null || confirmPassword.isEmpty()) {
+            errors.put("confirmPassword", "Password confirmation is required.");
+        } else if (confirmPassword.length() > MAX_PASSWORD_LENGTH) {
+            errors.put("confirmPassword", "Password confirmation cannot exceed 72 characters.");
+        } else if (newPassword != null && !newPassword.equals(confirmPassword)) {
+            errors.put("confirmPassword", "Password confirmation does not match.");
         }
+    }
 
-        if (!newPassword.equals(confirmPassword)) {
-            return "Mật khẩu mới và xác nhận mật khẩu không khớp";
-        }
-
-        if (oldPassword.length() > MAX_PASSWORD_LENGTH
-                || newPassword.length() > MAX_PASSWORD_LENGTH
-                || confirmPassword.length() > MAX_PASSWORD_LENGTH) {
-            return "Mật khẩu không được vượt quá 72 ký tự";
-        }
-
-        if (newPassword.length() < 6) {
-            return "Mật khẩu mới phải có ít nhất 6 ký tự";
-        }
-
+    private boolean isCurrentPassword(int userId, String oldPassword) {
         User user = userDAO.findById(userId);
-        if (user == null || !PasswordUtil.verifyPassword(oldPassword, user.getPassword())) {
-            return "Mật khẩu cũ không đúng";
-        }
-
-        boolean updated = userDAO.updatePassword(userId, PasswordUtil.hashPassword(newPassword));
-
-        if (!updated) {
-            return "Đổi mật khẩu thất bại";
-        }
-
-        return null;
+        return user != null && PasswordUtil.verifyPassword(oldPassword, user.getPassword());
     }
 }
