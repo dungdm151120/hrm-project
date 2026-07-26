@@ -100,13 +100,18 @@ public class TaskDAO {
     }
 
     public long insertTask(Task task) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return insertTask(conn, task);
+        }
+    }
+
+    public long insertTask(Connection conn, Task task) throws SQLException {
         String sql = """
                 INSERT INTO tasks (title, description, status, deadline, progress, allow_participants_complete_checklist, created_by, assigned_to)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             bindTask(ps, task, false);
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -119,6 +124,12 @@ public class TaskDAO {
     }
 
     public void updateTask(Task task) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            updateTask(conn, task);
+        }
+    }
+
+    public void updateTask(Connection conn, Task task) throws SQLException {
         String sql = """
                 UPDATE tasks
                 SET title = ?, description = ?, status = ?, deadline = ?, progress = ?,
@@ -126,8 +137,7 @@ public class TaskDAO {
                 WHERE id = ?
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             bindTask(ps, task, true);
             ps.executeUpdate();
         }
@@ -156,9 +166,14 @@ public class TaskDAO {
     }
 
     public void updateTaskStatus(long taskId, String status) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            updateTaskStatus(conn, taskId, status);
+        }
+    }
+
+    public void updateTaskStatus(Connection conn, long taskId, String status) throws SQLException {
         String sql = "UPDATE tasks SET status = ? WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setLong(2, taskId);
             ps.executeUpdate();
@@ -169,16 +184,21 @@ public class TaskDAO {
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                participantDAO.deleteParticipantsByTaskId(conn, task.getId());
-                observerDAO.deleteObserversByTaskId(conn, task.getId());
-                participantDAO.insertParticipants(conn, task.getId(), participantIds);
-                observerDAO.insertObservers(conn, task.getId(), observerIds);
+                replaceTaskRelations(conn, task, participantIds, observerIds);
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
             }
         }
+    }
+
+    public void replaceTaskRelations(Connection conn, Task task, List<Long> participantIds,
+                                     List<Long> observerIds) throws SQLException {
+        participantDAO.deleteParticipantsByTaskId(conn, task.getId());
+        observerDAO.deleteObserversByTaskId(conn, task.getId());
+        participantDAO.insertParticipants(conn, task.getId(), participantIds);
+        observerDAO.insertObservers(conn, task.getId(), observerIds);
     }
 
     public int calculateProgress(long taskId) {
@@ -203,10 +223,19 @@ public class TaskDAO {
     }
 
     public void refreshProgressAndAutoComplete(long taskId) throws SQLException {
-        int progress = calculateProgress(taskId);
-        String calculatedStatus = calculateStatusFromChecklist(taskId);
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement("""
+        try (Connection conn = DBConnection.getConnection()) {
+            refreshProgressAndAutoComplete(conn, taskId);
+        }
+    }
+
+    public void refreshProgressAndAutoComplete(Connection conn, long taskId) throws SQLException {
+        int total = countChecklistItems(conn, taskId, false);
+        int completed = countChecklistItems(conn, taskId, true);
+        int progress = total == 0 ? 0 : completed * 100 / total;
+        String calculatedStatus = total == 0 || completed == 0
+                ? "TODO"
+                : completed == total ? "COMPLETED" : "IN_PROGRESS";
+        try (PreparedStatement ps = conn.prepareStatement("""
                      UPDATE tasks
                      SET progress = ?,
                          status = CASE
@@ -222,16 +251,38 @@ public class TaskDAO {
         }
     }
 
+    private int countChecklistItems(Connection conn, long taskId, boolean completedOnly) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM task_checklist_items WHERE task_id = ?"
+                + (completedOnly ? " AND is_completed = TRUE" : "");
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, taskId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
     public void resumeTask(long taskId) throws SQLException {
-        int progress = calculateProgress(taskId);
-        String calculatedStatus = calculateStatusFromChecklist(taskId);
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement("UPDATE tasks SET progress = ?, status = ? WHERE id = ?")) {
+        try (Connection conn = DBConnection.getConnection()) {
+            resumeTask(conn, taskId);
+        }
+    }
+
+    public String resumeTask(Connection conn, long taskId) throws SQLException {
+        int total = countChecklistItems(conn, taskId, false);
+        int completed = countChecklistItems(conn, taskId, true);
+        int progress = total == 0 ? 0 : completed * 100 / total;
+        String calculatedStatus = total == 0 || completed == 0
+                ? "TODO"
+                : completed == total ? "COMPLETED" : "IN_PROGRESS";
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE tasks SET progress = ?, status = ? WHERE id = ?")) {
             ps.setInt(1, progress);
             ps.setString(2, calculatedStatus);
             ps.setLong(3, taskId);
             ps.executeUpdate();
         }
+        return calculatedStatus;
     }
 
     private void appendFilters(StringBuilder sql, String keyword, String status) {

@@ -10,6 +10,7 @@ import model.PitBracket;
 import model.PitBracketVersion;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +26,11 @@ public class PayrollPitBracketUpdateServlet extends HttpServlet {
         List<PitBracket> bracketList = new ArrayList<>();
         if (latestVersion != null) {
             bracketList = payrollDAO.getPitBrackets(latestVersion.getId());
+
+            if (latestVersion.getEffectiveDate() != null) {
+                request.setAttribute("month", latestVersion.getEffectiveDate().getMonthValue());
+                request.setAttribute("year", latestVersion.getEffectiveDate().getYear());
+            }
         }
         request.setAttribute("bracketList", bracketList);
         request.getRequestDispatcher("/WEB-INF/views/payroll/payroll_pit_bracket_update.jsp").forward(request, response);
@@ -49,11 +55,15 @@ public class PayrollPitBracketUpdateServlet extends HttpServlet {
                 for (int i = 0; i < minValues.length; i++) {
                     PitBracket b = new PitBracket();
                     b.setBracketLevel(i + 1);
+
+                    String cleanMin = minValues[i].replaceAll("\\.", "").trim();
                     b.setMinValue(Long.parseLong(minValues[i].trim()));
 
                     String maxStr = (maxValues != null && i < maxValues.length) ? maxValues[i].trim() : "";
-                    if (!maxStr.isEmpty()) {
-                        b.setMaxValue(Long.parseLong(maxStr));
+                    String cleanMax = maxStr.replaceAll("\\.", "").trim();
+
+                    if (!cleanMax.isEmpty()) {
+                        b.setMaxValue(Long.parseLong(cleanMax));
                     } else {
                         b.setMaxValue(null);
                     }

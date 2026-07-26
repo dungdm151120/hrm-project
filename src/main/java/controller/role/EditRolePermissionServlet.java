@@ -53,7 +53,7 @@ public class EditRolePermissionServlet extends HttpServlet {
         Map<String, List<Permission>> moduleMap = new LinkedHashMap<>();
         String[] moduleOrder = {
                 "HOMEPAGE", "PROFILE", "AUTH", "USER", "ROLE", "DEPARTMENT", "POSITION",
-                "CONTRACT", "ATTENDANCE", "PAYROLL", "ANNOUNCEMENT", "REQUEST", "TASK"
+                "CONTRACT", "ATTENDANCE", "PAYROLL", "ANNOUNCEMENT", "REQUEST", "TASK", "REPORT"
         };
         for (String mod : moduleOrder) {
             moduleMap.put(mod, new ArrayList<>());
@@ -61,6 +61,10 @@ public class EditRolePermissionServlet extends HttpServlet {
 
         for (Permission p : allPermissions) {
             String code = p.getCode();
+            if (code.contains("REPORT")) {
+                moduleMap.get("REPORT").add(p);
+                continue;
+            }
             if (code.contains("REQUEST")) {
                 moduleMap.get("REQUEST").add(p);
                 continue;

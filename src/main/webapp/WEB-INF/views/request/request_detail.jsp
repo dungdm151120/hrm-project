@@ -9,6 +9,24 @@
     <title>Request Detail - #${request.id} | HRM</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <style>
+        .detail-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .detail-label {
+            width: 160px;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            flex: 1;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
         /* ── Sick date tags ── */
         .sick-date-list {
             display: flex;
@@ -145,7 +163,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Reason:</span>
-                        <span class="detail-value">${request.reason}</span>
+                        <span class="detail-value" style="word-break: break-word">${request.reason}</span>
                     </div>
 
                     <%-- ══════════════ LEAVE REQUEST ══════════════ --%>
@@ -321,7 +339,7 @@
                                 <span class="detail-value"><strong>${targetDependent.dependentName} (${targetDependent.relationship})</strong></span>
                             </div>
                         </c:if>
-                        
+
                         <c:choose>
                             <c:when test="${dependentChangeRequest.changeType == 'ADD' || dependentChangeRequest.changeType == 'UPDATE'}">
                                 <div class="detail-row">
@@ -385,22 +403,22 @@
                             <div class="detail-value" style="width: 100%;">
                                 <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                                     <thead>
-                                        <tr style="background-color: #f5f5f5;">
-                                            <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Employee</th>
-                                            <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Status</th>
-                                            <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Actual Hours</th>
-                                        </tr>
+                                    <tr style="background-color: #f5f5f5;">
+                                        <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Employee</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Status</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Actual Hours</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                        <c:forEach items="${overtimeParticipants}" var="p">
-                                            <tr>
-                                                <td style="padding: 8px; border: 1px solid #ddd;">${p.userFullName} - ${p.employeeCode}</td>
-                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                                                    <span class="badge badge-${fn:toLowerCase(p.status)}">${p.status}</span>
-                                                </td>
-                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${p.hoursActual}</td>
-                                            </tr>
-                                        </c:forEach>
+                                    <c:forEach items="${overtimeParticipants}" var="p">
+                                        <tr>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${p.userFullName} - ${p.employeeCode}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                                <span class="badge badge-${fn:toLowerCase(p.status)}">${p.status}</span>
+                                            </td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${p.hoursActual}</td>
+                                        </tr>
+                                    </c:forEach>
                                     </tbody>
                                 </table>
                                 <c:if test="${request.status == 'APPROVED' && (sessionScope.currentUser.id eq request.approverId || fn:contains(sessionScope.currentUser.roleName, 'HR'))}">
@@ -467,7 +485,7 @@
                             <span class="detail-value">
                                 <form action="process_request" method="POST">
                                     <input type="hidden" name="requestId" value="${request.id}">
-                                    <button type="submit" name="action" value="APPLY_CHANGES" class="btn btn-success" 
+                                    <button type="submit" name="action" value="APPLY_CHANGES" class="btn btn-success"
                                             style="border: 2px solid #28a745; padding: 8px 16px; border-radius: 4px; font-weight: bold; background-color: #28a745; color: #fff; cursor: pointer;"
                                             onclick="return confirm('Are you sure you want to apply these attendance changes to the database?');">
                                         Apply Changes
@@ -501,7 +519,12 @@
                                 <c:when test="${request.status == 'PENDING' && sessionScope.currentUser.id eq request.approverId}">
                                     <form action="process_request" method="POST">
                                         <input type="hidden" name="requestId" value="${request.id}">
-                                        <textarea name="comment" class="form-control" required placeholder="Enter approver comment..."></textarea>
+                                        <textarea name="comment"
+                                                  class="form-control"
+                                                  rows="4"
+                                                  style="width: 100%; min-height: 100px; resize: vertical;"
+                                                  required
+                                                  placeholder="Enter approver comment..."></textarea>
                                         <div style="margin-top: 10px;">
                                             <button type="submit" name="action" value="APPROVE" class="btn btn-primary">Approve</button>
                                             <button type="submit" name="action" value="REJECT" class="btn btn-danger">Reject</button>

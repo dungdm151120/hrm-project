@@ -66,7 +66,7 @@ public class AssignManagerServlet extends HttpServlet {
 
         if (departmentIdParam == null || departmentIdParam.trim().isEmpty()
                 || userIdParam == null || userIdParam.trim().isEmpty()) {
-            session.setAttribute("error", "Vui lòng chọn một nhân viên.");
+            session.setAttribute("error", "Please select an employee.");
             response.sendRedirect(request.getContextPath() + "/admin/departments/assign-manager?id=" + departmentIdParam);
             return;
         }
@@ -77,21 +77,21 @@ public class AssignManagerServlet extends HttpServlet {
             deptId = Integer.parseInt(departmentIdParam);
             newManagerId = Integer.parseInt(userIdParam);
         } catch (NumberFormatException e) {
-            session.setAttribute("error", "Dữ liệu không hợp lệ.");
+            session.setAttribute("error", "Invalid data.");
             response.sendRedirect(request.getContextPath() + "/admin/departments");
             return;
         }
 
         Department department = departmentDAO.getDepartmentById(deptId);
         if (department == null) {
-            session.setAttribute("error", "Phòng ban không tồn tại.");
+            session.setAttribute("error", "Department does not exist.");
             response.sendRedirect(request.getContextPath() + "/admin/departments");
             return;
         }
 
         Integer currentManagerId = department.getManagerUserId();
         if (currentManagerId != null && currentManagerId == newManagerId) {
-            session.setAttribute("error", "Nhân viên này đã là trưởng phòng của phòng ban này.");
+            session.setAttribute("error", "This employee is already the manager of this department.");
             response.sendRedirect("assign-manager?id=" + deptId);
             return;
         }
@@ -136,13 +136,13 @@ public class AssignManagerServlet extends HttpServlet {
         Position newPosition = positionDAO.findByName(newPositionName);
 
         if (newPosition == null) {
-            session.setAttribute("error", "Không tìm thấy vị trí '" + newPositionName + "' trong hệ thống.");
+            session.setAttribute("error", "Position '" + newPositionName + "' was not found in the system.");
             response.sendRedirect("assign-manager?id=" + deptId);
             return;
         }
 
         if (!newPosition.isActive()) {
-            session.setAttribute("error", "Vị trí '" + newPositionName + "' hiện không khả dụng (đã bị vô hiệu).");
+            session.setAttribute("error", "Position '" + newPositionName + "' is currently unavailable (inactive).");
             response.sendRedirect("assign-manager?id=" + deptId);
             return;
         }
@@ -168,9 +168,9 @@ public class AssignManagerServlet extends HttpServlet {
                 }
             }
 
-            session.setAttribute("successMessage", "Đã phân công trưởng phòng thành công!");
+            session.setAttribute("successMessage", "Manager assigned successfully!");
         } else {
-            session.setAttribute("error", "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");
+            session.setAttribute("error", "An error occurred during update. Please try again.");
         }
         response.sendRedirect("detail?id=" + deptId);
     }

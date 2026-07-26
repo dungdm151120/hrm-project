@@ -20,6 +20,7 @@
                 <h1 class="header-title">Position List</h1>
             </div>
             <div class="header-right">
+                <a href="${pageContext.request.contextPath}/home" class="btn-secondary">Back to Home</a>
                 <a href="${pageContext.request.contextPath}/position/add" class="btn-primary">Add New Position</a>
             </div>
         </div>

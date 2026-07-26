@@ -396,7 +396,7 @@
                                                 </button>
                                             </div>
 
-                                            <!-- Export Button -->
+                                            <c:if test="${userPermissions.contains('ATTENDANCE_EXPORT_REPORT')}">
                                             <div class="form-group">
                                                 <button type="button" class="btn-generate" style="background-color: #10b981;" onclick="exportToExcel()">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -412,6 +412,7 @@
                                                     Export to Excel
                                                 </button>
                                             </div>
+                                            </c:if>
 
                                         </div>
                                     </form>
@@ -459,7 +460,7 @@
                                              <div style="width: 230px; display: flex; flex-direction: column; gap: 6px;">
                                                  <label for="localSortBy" style="font-weight: 600; font-size: 13px; color: var(--text-secondary);">Sort by</label>
                                                  <select id="localSortBy" style="padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); outline: none; font-size: 14px; background-color: var(--white); color: var(--text-primary);">
-                                                     <option value="workHours">Total Work Hours</option>
+                                                     <option value="workHours">Onsite Work Hours</option>
                                                      <option value="absentDays">Total Absent Days</option>
                                                      <option value="lateEarly">Late Arrivals + Early Leaves</option>
                                                      <option value="missingCheck">Missed Check-ins + outs</option>
@@ -490,7 +491,7 @@
                                                         <th class="align-center">Early Leaves</th>
                                                         <th class="align-center">Missed Check-ins</th>
                                                         <th class="align-center">Missed Check-outs</th>
-                                                        <th class="align-right">Total Work Hours</th>
+                                                        <th class="align-right">Onsite Work Hours</th>
                                                         <th class="align-right">Total OT Hours</th>
                                                         <th class="align-center">Leave Days</th>
                                                     </tr>
@@ -516,7 +517,7 @@
                                                             <td class="align-center">${row.forgotCheckInDays}</td>
                                                             <td class="align-center">${row.forgotCheckOutDays}</td>
                                                             <td class="align-right bold">
-                                                                <fmt:formatNumber value="${row.totalWorkHours}"
+                                                                <fmt:formatNumber value="${row.onsiteWorkHours}"
                                                                     pattern="#,##0.0" />
                                                             </td>
                                                             <td class="align-right bold">
@@ -558,10 +559,10 @@
 
                                             <div class="dashboard-grid">
 
-                                                <!-- Stat 1: Total Work Hours vs Expected -->
+                                                <!-- Stat 1: Onsite Work Hours vs Expected -->
                                                 <div class="stat-card">
                                                     <div class="stat-header">
-                                                        <span class="stat-title">Work Hours Performance</span>
+                                                        <span class="stat-title">Onsite Work Hours Performance</span>
                                                         <div class="stat-icon">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="18"
                                                                 height="18" viewBox="0 0 24 24" fill="none"
@@ -580,7 +581,7 @@
                                                         <fmt:formatNumber value="${totalActualWorkHours}"
                                                             pattern="#,##0.0" /> /
                                                         <fmt:formatNumber value="${totalExpectedWorkHours}"
-                                                            pattern="#,##0.0" /> work hours
+                                                            pattern="#,##0.0" /> onsite work hours
                                                     </div>
                                                     <div class="progress-bar-container">
                                                         <div class="progress-bar-fill"
@@ -706,8 +707,8 @@
                                                         </div>
                                                         <div class="stat-ratio"
                                                             style="color: #2563EB; font-weight: 600; margin-top: 8px;">
-                                                            Total work + OT hours:
-                                                            <fmt:formatNumber value="${hardestWorking.totalWorkHours + hardestWorking.totalOvertimeHours}" pattern="#,##0.0" /> hours
+                                                            Onsite work + OT hours:
+                                                            <fmt:formatNumber value="${hardestWorking.onsiteWorkAndOtHours}" pattern="#,##0.0" /> hours
                                                         </div>
                                                     </div>
                                                 </c:if>
@@ -737,7 +738,9 @@
                                                         <div class="stat-ratio"
                                                             style="color: #059669; font-weight: 600; margin-top: 8px;">
                                                             Late: ${mostPunctual.lateDays} times | Early leave: ${mostPunctual.earlyLeaveDays} times |
-                                                            Missed check-in: ${mostPunctual.forgotCheckInDays} times
+                                                            Missing check-in: ${mostPunctual.forgotCheckInDays} times |
+                                                            Missing check-out: ${mostPunctual.forgotCheckOutDays} times |
+                                                            Absent days: ${mostPunctual.absentDays} | Leave days: ${mostPunctual.leaveDays}
                                                         </div>
                                                     </div>
                                                 </c:if>
@@ -755,8 +758,8 @@
                                                             Department: <span class="bold">${lowestWorking.departmentName}</span>
                                                         </div>
                                                         <div class="stat-ratio" style="color: #C2410C; font-weight: 600; margin-top: 8px;">
-                                                            Total work + OT hours:
-                                                            <fmt:formatNumber value="${lowestWorking.totalWorkHours + lowestWorking.totalOvertimeHours}" pattern="#,##0.0" /> hours
+                                                            Onsite work + OT hours:
+                                                            <fmt:formatNumber value="${lowestWorking.onsiteWorkAndOtHours}" pattern="#,##0.0" /> hours
                                                         </div>
                                                     </div>
                                                 </c:if>
@@ -777,7 +780,8 @@
                                                             Late: ${leastPunctual.lateDays} times |
                                                             Early leave: ${leastPunctual.earlyLeaveDays} times |
                                                             Missing check-in: ${leastPunctual.forgotCheckInDays} times |
-                                                            Missing check-out: ${leastPunctual.forgotCheckOutDays} times
+                                                            Missing check-out: ${leastPunctual.forgotCheckOutDays} times |
+                                                            Absent days: ${leastPunctual.absentDays} | Leave days: ${leastPunctual.leaveDays}
                                                         </div>
                                                     </div>
                                                 </c:if>
@@ -956,17 +960,41 @@
 
                             if (searchInput && deptSelect && sortSelect && sortOrderSelect && tableBody) {
                                 function filterTable() {
-                                    const query = searchInput.value.toLowerCase().trim();
+                                    const query = searchInput.value.trim();
                                     const selectedDept = deptSelect.value;
 
                                     tableBody.querySelectorAll(".employee-row").forEach(row => {
                                         const empName = row.dataset.name || "";
                                         const empDept = row.dataset.dept || "";
-                                        const matchesName = empName.includes(query);
+                                        const matchesName = matchesVietnameseNamePrefix(empName, query);
                                         const matchesDept = selectedDept === "all" || empDept === selectedDept;
 
                                         row.style.display = matchesName && matchesDept ? "" : "none";
                                     });
+                                }
+
+                                function normalizeVietnamese(value, preserveToneMarks) {
+                                    const normalized = (value || "").normalize(preserveToneMarks ? "NFC" : "NFD");
+                                    return normalized
+                                        .replace(preserveToneMarks ? /$^/ : /[\u0300-\u036f]/g, "")
+                                        .replace(/đ/g, "d")
+                                        .replace(/Đ/g, "D")
+                                        .toLowerCase()
+                                        .trim()
+                                        .replace(/\s+/g, " ");
+                                }
+
+                                function matchesVietnameseNamePrefix(name, query) {
+                                    const preserveToneMarks = /[\u0300-\u036f]/.test(query.normalize("NFD"));
+                                    const normalizedQuery = normalizeVietnamese(query, preserveToneMarks);
+                                    if (!normalizedQuery) {
+                                        return true;
+                                    }
+
+                                    const nameTokens = normalizeVietnamese(name, preserveToneMarks).split(" ");
+                                    return normalizedQuery.split(" ").every(queryToken =>
+                                        nameTokens.some(nameToken => nameToken.startsWith(queryToken))
+                                    );
                                 }
 
                                 function sortTable() {

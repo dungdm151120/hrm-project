@@ -50,22 +50,32 @@ public class AttendanceDAO {
                 "VALUES (?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE check_in = VALUES(check_in), check_out = VALUES(check_out)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
-            for (AttendanceLog log : logs) {
-                ps.setDate(1, Date.valueOf(log.getWorkDate()));
-                ps.setInt(2, log.getEmployeeId());
-                setNullableTimestamp(ps, 3, log.getCheckIn());
-                setNullableTimestamp(ps, 4, log.getCheckOut());
-                ps.addBatch();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (AttendanceLog log : logs) {
+                    ps.setDate(1, Date.valueOf(log.getWorkDate()));
+                    ps.setInt(2, log.getEmployeeId());
+                    setNullableTimestamp(ps, 3, log.getCheckIn());
+                    setNullableTimestamp(ps, 4, log.getCheckOut());
+                    ps.addBatch();
+                }
+                int[] results = ps.executeBatch();
+                conn.commit();
+                return results.length;
+            } catch (Exception e) {
+                if (conn != null) conn.rollback();
+                throw e;
             }
-            int[] results = ps.executeBatch();
-            conn.commit();
-            return results.length;
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
+        } finally {
+            if (conn != null) {
+                try { conn.close(); } catch (SQLException ignored) {}
+            }
         }
     }
 
@@ -450,23 +460,67 @@ public class AttendanceDAO {
             int page,
             int pageSize
     ) {
+        return getAttendanceRecordsForMatrix(month, year, departmentId, keyword, page, pageSize, false);
+    }
+
+    private List<Integer> findMatchingUserIds(String keyword) {
+        return new UserDAO().findUserIdsMatchingPersonSearch(keyword);
+    }
+
+    private void appendUserIdFilter(StringBuilder sql, List<Integer> userIds) {
+        sql.append(" AND u.id IN (");
+        for (int i = 0; i < userIds.size(); i++) {
+            if (i > 0) {
+                sql.append(", ");
+            }
+            sql.append('?');
+        }
+        sql.append(')');
+    }
+
+    private int bindUserIds(PreparedStatement ps, int index, List<Integer> userIds) throws SQLException {
+        for (Integer userId : userIds) {
+            ps.setInt(index++, userId);
+        }
+        return index;
+    }
+
+    public List<AttendanceRecordDTO> getAttendanceRecordsForMatrix(
+            int month,
+            int year,
+            Integer departmentId,
+            String keyword,
+            int page,
+            int pageSize,
+            boolean includeEmployeesWithoutRecords
+    ) {
         List<AttendanceRecordDTO> records = new ArrayList<>();
         YearMonth period = YearMonth.of(year, month);
         LocalDate startDate = period.atDay(1);
         LocalDate endDate = period.atEndOfMonth();
         int offset = Math.max(0, page - 1) * pageSize;
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        List<Integer> matchingUserIds = findMatchingUserIds(normalizedKeyword);
+        if (!normalizedKeyword.isEmpty() && matchingUserIds.isEmpty()) {
+            return records;
+        }
 
-        StringBuilder employeeFilter = new StringBuilder(
-                " FROM users u " +
-                        "JOIN attendance_records filter_ar ON filter_ar.user_id = u.id " +
-                        "WHERE filter_ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
-        );
+        StringBuilder employeeFilter = includeEmployeesWithoutRecords
+                ? new StringBuilder(
+                        " FROM users u " +
+                                "WHERE u.active = TRUE " +
+                                "AND u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN', 'SYSTEM ADMIN'))"
+                )
+                : new StringBuilder(
+                        " FROM users u " +
+                                "JOIN attendance_records filter_ar ON filter_ar.user_id = u.id " +
+                                "WHERE filter_ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
+                );
         if (departmentId != null) {
             employeeFilter.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            employeeFilter.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+            appendUserIdFilter(employeeFilter, matchingUserIds);
         }
 
         String sql =
@@ -476,12 +530,12 @@ public class AttendanceDAO {
                         "ar.late_hours, ar.early_leave_hours, ar.status, ar.note, ar.updated_at, " +
                         "ot.status AS ot_status " +
                         "FROM (" +
-                        "SELECT DISTINCT u.id, u.full_name " + employeeFilter +
-                        " ORDER BY u.full_name, u.id LIMIT ? OFFSET ?" +
+                        "SELECT u.id, u.full_name " + employeeFilter +
+                        " GROUP BY u.id, u.full_name ORDER BY u.full_name, u.id LIMIT ? OFFSET ?" +
                         ") page_users " +
                         "JOIN users u ON u.id = page_users.id " +
                         "LEFT JOIN departments d ON d.id = u.department_id " +
-                        "JOIN attendance_records ar ON ar.user_id = u.id " +
+                        (includeEmployeesWithoutRecords ? "LEFT JOIN" : "JOIN") + " attendance_records ar ON ar.user_id = u.id " +
                         "AND ar.work_date BETWEEN ? AND ? " +
                         "LEFT JOIN (SELECT op1.user_id, op1.status, oreq1.overtime_date FROM overtime_participants op1 JOIN overtime_requests oreq1 ON op1.overtime_request_id = oreq1.id) ot " +
                         "ON ot.user_id = ar.user_id AND ot.overtime_date = ar.work_date " +
@@ -490,15 +544,15 @@ public class AttendanceDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             int index = 1;
-            ps.setDate(index++, Date.valueOf(startDate));
-            ps.setDate(index++, Date.valueOf(endDate));
+            if (!includeEmployeesWithoutRecords) {
+                ps.setDate(index++, Date.valueOf(startDate));
+                ps.setDate(index++, Date.valueOf(endDate));
+            }
             if (departmentId != null) {
                 ps.setInt(index++, departmentId);
             }
             if (!normalizedKeyword.isEmpty()) {
-                String likeKeyword = "%" + normalizedKeyword + "%";
-                ps.setString(index++, likeKeyword);
-                ps.setString(index++, likeKeyword);
+                index = bindUserIds(ps, index, matchingUserIds);
             }
             ps.setInt(index++, pageSize);
             ps.setInt(index++, offset);
@@ -522,33 +576,54 @@ public class AttendanceDAO {
             Integer departmentId,
             String keyword
     ) {
+        return countEmployeesForAttendanceMatrix(month, year, departmentId, keyword, false);
+    }
+
+    public int countEmployeesForAttendanceMatrix(
+            int month,
+            int year,
+            Integer departmentId,
+            String keyword,
+            boolean includeEmployeesWithoutRecords
+    ) {
         YearMonth period = YearMonth.of(year, month);
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
-        StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(DISTINCT u.id) " +
-                        "FROM users u " +
-                        "JOIN attendance_records ar ON ar.user_id = u.id " +
-                        "WHERE ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
-        );
+        List<Integer> matchingUserIds = findMatchingUserIds(normalizedKeyword);
+        if (!normalizedKeyword.isEmpty() && matchingUserIds.isEmpty()) {
+            return 0;
+        }
+        StringBuilder sql = includeEmployeesWithoutRecords
+                ? new StringBuilder(
+                        "SELECT COUNT(DISTINCT u.id) " +
+                                "FROM users u " +
+                                "WHERE u.active = TRUE " +
+                                "AND u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN', 'SYSTEM ADMIN'))"
+                )
+                : new StringBuilder(
+                        "SELECT COUNT(DISTINCT u.id) " +
+                                "FROM users u " +
+                                "JOIN attendance_records ar ON ar.user_id = u.id " +
+                                "WHERE ar.work_date BETWEEN ? AND ? AND u.active = TRUE"
+                );
         if (departmentId != null) {
             sql.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            sql.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+            appendUserIdFilter(sql, matchingUserIds);
         }
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int index = 1;
-            ps.setDate(index++, Date.valueOf(period.atDay(1)));
-            ps.setDate(index++, Date.valueOf(period.atEndOfMonth()));
+            if (!includeEmployeesWithoutRecords) {
+                ps.setDate(index++, Date.valueOf(period.atDay(1)));
+                ps.setDate(index++, Date.valueOf(period.atEndOfMonth()));
+            }
             if (departmentId != null) {
                 ps.setInt(index++, departmentId);
             }
             if (!normalizedKeyword.isEmpty()) {
-                String likeKeyword = "%" + normalizedKeyword + "%";
-                ps.setString(index++, likeKeyword);
-                ps.setString(index, likeKeyword);
+                index = bindUserIds(ps, index, matchingUserIds);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
@@ -688,108 +763,107 @@ public class AttendanceDAO {
 
     private void calculateLeaveBalance(Connection conn, int userId, int year, int month,
                                        AttendanceSummary summary) throws SQLException {
-        double entitled = 12.0;
-        LocalDate startOfYear = LocalDate.of(year, 1, 1);
-        LocalDate endOfMonth = LocalDate.of(year, month, YearMonth.of(year, month).lengthOfMonth());
+        double entitledLeave = 12.0;
+        double entitledAbsent = 12.0;
+        double entitledSick = 30.0;
 
-        String sqlLeave = "SELECT COALESCE(SUM(CASE WHEN status = 'ON_LEAVE' THEN 1 ELSE 0 END), 0) AS used_days " +
-                "FROM attendance_records WHERE user_id = ? " +
-                "AND work_date BETWEEN ? AND ?";
-        double usedLeave = 0;
+        LocalDate startOfYear = LocalDate.of(year, 1, 1);
+        LocalDate endOfYear = LocalDate.of(year, 12, 31);
+
+        // 1. Paid Leave (ON_LEAVE) balance calculation
+        String sqlLeave = "SELECT COUNT(DISTINCT d.workdate) FROM (" +
+                "  SELECT COALESCE(ld.leave_date, lr.leave_date, lr.start_date) AS workdate " +
+                "  FROM leave_requests lr " +
+                "  JOIN requests r ON lr.request_id = r.id " +
+                "  LEFT JOIN leave_dates ld ON ld.leave_request_id = lr.id " +
+                "  WHERE r.user_id = ? AND lr.leave_type = 'ON_LEAVE' " +
+                "  AND r.status IN ('PENDING', 'APPROVED') " +
+                "  AND COALESCE(ld.leave_date, lr.leave_date, lr.start_date) BETWEEN ? AND ? " +
+                "  UNION " +
+                "  SELECT work_date AS workdate " +
+                "  FROM attendance_records " +
+                "  WHERE user_id = ? AND status = 'ON_LEAVE' " +
+                "  AND work_date BETWEEN ? AND ?" +
+                ") d";
+        double totalUsedLeave = 0;
         try (PreparedStatement ps = conn.prepareStatement(sqlLeave)) {
             ps.setInt(1, userId);
             ps.setDate(2, Date.valueOf(startOfYear));
-            ps.setDate(3, Date.valueOf(endOfMonth));
+            ps.setDate(3, Date.valueOf(endOfYear));
+            ps.setInt(4, userId);
+            ps.setDate(5, Date.valueOf(startOfYear));
+            ps.setDate(6, Date.valueOf(endOfYear));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    usedLeave = rs.getDouble("used_days");
+                    totalUsedLeave = rs.getDouble(1);
                 }
             }
         }
+        summary.setEntitledLeaveDays(entitledLeave);
+        summary.setRemainingLeaveDays(entitledLeave - totalUsedLeave);
 
-        String sqlRequestsOnLeave = "SELECT COUNT(*) FROM leave_requests lr " +
-                "JOIN requests r ON lr.request_id = r.id " +
-                "WHERE r.user_id = ? AND lr.leave_type = 'ON_LEAVE' " +
-                "AND r.status IN ('PENDING', 'APPROVED') " +
-                "AND lr.leave_date > ? AND lr.leave_date <= ?";
-        double pendingApprovedOnLeave = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlRequestsOnLeave)) {
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(endOfMonth));
-            ps.setDate(3, Date.valueOf(LocalDate.of(year, 12, 31)));
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    pendingApprovedOnLeave = rs.getInt(1);
-                }
-            }
-        }
-
-        double totalUsedLeave = usedLeave + pendingApprovedOnLeave;
-        summary.setEntitledLeaveDays(entitled);
-        summary.setRemainingLeaveDays(entitled - totalUsedLeave);
-
-        double entitledAbsent = month;
-        String sqlAbsent = "SELECT COALESCE(SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END), 0) AS used_days " +
-                "FROM attendance_records WHERE user_id = ? " +
-                "AND work_date BETWEEN ? AND ?";
-        double usedAbsent = 0;
+        // 2. Unpaid Leave / Absent (LEAVE) balance calculation (independent 12 days)
+        String sqlAbsent = "SELECT COUNT(DISTINCT d.workdate) FROM (" +
+                "  SELECT COALESCE(ld.leave_date, lr.leave_date, lr.start_date) AS workdate " +
+                "  FROM leave_requests lr " +
+                "  JOIN requests r ON lr.request_id = r.id " +
+                "  LEFT JOIN leave_dates ld ON ld.leave_request_id = lr.id " +
+                "  WHERE r.user_id = ? AND lr.leave_type = 'LEAVE' " +
+                "  AND r.status IN ('PENDING', 'APPROVED') " +
+                "  AND COALESCE(ld.leave_date, lr.leave_date, lr.start_date) BETWEEN ? AND ? " +
+                "  UNION " +
+                "  SELECT work_date AS workdate " +
+                "  FROM attendance_records " +
+                "  WHERE user_id = ? AND status = 'ABSENT' " +
+                "  AND work_date BETWEEN ? AND ?" +
+                ") d";
+        double totalUsedAbsent = 0;
         try (PreparedStatement ps = conn.prepareStatement(sqlAbsent)) {
             ps.setInt(1, userId);
             ps.setDate(2, Date.valueOf(startOfYear));
-            ps.setDate(3, Date.valueOf(endOfMonth));
+            ps.setDate(3, Date.valueOf(endOfYear));
+            ps.setInt(4, userId);
+            ps.setDate(5, Date.valueOf(startOfYear));
+            ps.setDate(6, Date.valueOf(endOfYear));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    usedAbsent = rs.getDouble("used_days");
+                    totalUsedAbsent = rs.getDouble(1);
                 }
             }
         }
-
-        String sqlRequestsLeave = "SELECT COUNT(*) FROM leave_requests lr " +
-                "JOIN requests r ON lr.request_id = r.id " +
-                "WHERE r.user_id = ? AND lr.leave_type = 'LEAVE' " +
-                "AND r.status IN ('PENDING', 'APPROVED') " +
-                "AND lr.leave_date > ? AND lr.leave_date <= ?";
-        double pendingApprovedLeave = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlRequestsLeave)) {
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(endOfMonth));
-            ps.setDate(3, Date.valueOf(LocalDate.of(year, 12, 31)));
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    pendingApprovedLeave = rs.getInt(1);
-                }
-            }
-        }
-
-        double totalUsedAbsent = usedAbsent + pendingApprovedLeave;
         summary.setEntitledAbsentDays(entitledAbsent);
         summary.setRemainingAbsentDays(entitledAbsent - totalUsedAbsent);
 
-        double entitledSick = 30;
-        String sqlSickUsed = "SELECT COALESCE(COUNT(*), 0) FROM attendance_records WHERE user_id = ? AND status = 'SICK_LEAVE' AND work_date BETWEEN ? AND ?";
-        double usedSick = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlSickUsed)) {
+        // 3. Sick Leave (SICK_LEAVE) balance calculation (30 days)
+        String sqlSick = "SELECT COUNT(DISTINCT d.workdate) FROM (" +
+                "  SELECT sd.leave_date AS workdate " +
+                "  FROM sick_leave_dates sd " +
+                "  JOIN sick_leave_requests sr ON sd.sick_leave_request_id = sr.id " +
+                "  JOIN requests r ON sr.request_id = r.id " +
+                "  WHERE r.user_id = ? AND r.status IN ('PENDING', 'APPROVED') " +
+                "  AND sd.leave_date BETWEEN ? AND ? " +
+                "  UNION " +
+                "  SELECT work_date AS workdate " +
+                "  FROM attendance_records " +
+                "  WHERE user_id = ? AND status = 'SICK_LEAVE' " +
+                "  AND work_date BETWEEN ? AND ?" +
+                ") d";
+        double totalUsedSick = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sqlSick)) {
             ps.setInt(1, userId);
             ps.setDate(2, Date.valueOf(startOfYear));
-            ps.setDate(3, Date.valueOf(endOfMonth));
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) usedSick = rs.getInt(1);
-        }
-
-        String sqlSickPending = "SELECT COUNT(*) FROM sick_leave_dates sd " +
-                "JOIN sick_leave_requests sr ON sd.sick_leave_request_id = sr.id " +
-                "JOIN requests r ON sr.request_id = r.id " +
-                "WHERE r.user_id = ? AND r.status IN ('PENDING','APPROVED') AND sd.leave_date > ? AND sd.leave_date <= ?";
-        double pendingSick = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlSickPending)) {
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(endOfMonth));
-            ps.setDate(3, Date.valueOf(LocalDate.of(year, 12, 31)));
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) pendingSick = rs.getInt(1);
+            ps.setDate(3, Date.valueOf(endOfYear));
+            ps.setInt(4, userId);
+            ps.setDate(5, Date.valueOf(startOfYear));
+            ps.setDate(6, Date.valueOf(endOfYear));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    totalUsedSick = rs.getDouble(1);
+                }
+            }
         }
         summary.setEntitledSickLeaveDays(entitledSick);
-        summary.setRemainingSickLeaveDays(entitledSick - usedSick - pendingSick);
+        summary.setRemainingSickLeaveDays(entitledSick - totalUsedSick);
     }
 
     public List<AttendanceRecordDTO> getAttendanceDetailByUserAndMonth(int userId, int month, int year) {
@@ -834,7 +908,8 @@ public class AttendanceDAO {
                     dto.setNote(rs.getString("note"));
                     dto.setCheckInText(checkIn == null ? "" : checkIn.format(MATRIX_TIME_FORMAT));
                     dto.setCheckOutText(checkOut == null ? "" : checkOut.format(MATRIX_TIME_FORMAT));
-                    dto.setEdited(rs.getTimestamp("updated_at") != null && !"ON_LEAVE".equals(dto.getStatus()));
+                    boolean isSystemStatus = "ON_LEAVE".equals(dto.getStatus()) || "HOLIDAY".equals(dto.getStatus()) || "SICK_LEAVE".equals(dto.getStatus());
+                    dto.setEdited(rs.getTimestamp("updated_at") != null && !isSystemStatus);
                     dto.setOtStatus(rs.getString("ot_status"));
                     list.add(dto);
                 }
@@ -851,6 +926,10 @@ public class AttendanceDAO {
         LocalDate startDate = period.atDay(1);
         LocalDate endDate = period.atEndOfMonth();
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        List<Integer> matchingUserIds = findMatchingUserIds(normalizedKeyword);
+        if (!normalizedKeyword.isEmpty() && matchingUserIds.isEmpty()) {
+            return records;
+        }
 
         StringBuilder sql = new StringBuilder(
                 "SELECT ar.id AS attendance_record_id, u.id AS user_id, u.employee_code, " +
@@ -869,7 +948,7 @@ public class AttendanceDAO {
             sql.append(" AND u.department_id = ?");
         }
         if (!normalizedKeyword.isEmpty()) {
-            sql.append(" AND (u.full_name LIKE ? OR u.employee_code LIKE ?)");
+            appendUserIdFilter(sql, matchingUserIds);
         }
         sql.append(" ORDER BY u.full_name, u.id, ar.work_date");
 
@@ -882,9 +961,7 @@ public class AttendanceDAO {
                 ps.setInt(idx++, departmentId);
             }
             if (!normalizedKeyword.isEmpty()) {
-                String likeKeyword = "%" + normalizedKeyword + "%";
-                ps.setString(idx++, likeKeyword);
-                ps.setString(idx++, likeKeyword);
+                idx = bindUserIds(ps, idx, matchingUserIds);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1051,7 +1128,10 @@ public class AttendanceDAO {
         dto.setEmployeeName(rs.getString("employee_name"));
         dto.setDepartmentId((Integer) rs.getObject("department_id"));
         dto.setDepartmentName(rs.getString("department_name"));
-        dto.setWorkDate(rs.getDate("work_date").toLocalDate());
+        java.sql.Date workDate = rs.getDate("work_date");
+        if (workDate != null) {
+            dto.setWorkDate(workDate.toLocalDate());
+        }
         dto.setCheckIn(checkIn);
         dto.setCheckOut(checkOut);
         dto.setTotalWorkHours(getNullableDouble(rs, "total_work_hours"));
@@ -1062,7 +1142,8 @@ public class AttendanceDAO {
         dto.setNote(rs.getString("note"));
         dto.setCheckInText(checkIn == null ? "--" : checkIn.format(MATRIX_TIME_FORMAT));
         dto.setCheckOutText(checkOut == null ? "--" : checkOut.format(MATRIX_TIME_FORMAT));
-        dto.setEdited(rs.getTimestamp("updated_at") != null);
+        boolean isSystemStatus = "ON_LEAVE".equals(status) || "HOLIDAY".equals(status) || "SICK_LEAVE".equals(status);
+        dto.setEdited(rs.getTimestamp("updated_at") != null && !isSystemStatus);
         dto.setCssClass(resolveMatrixCssClass(status));
         dto.setOtStatus(rs.getString("ot_status"));
         return dto;

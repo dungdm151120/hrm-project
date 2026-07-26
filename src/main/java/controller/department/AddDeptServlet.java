@@ -31,10 +31,10 @@ public class AddDeptServlet extends HttpServlet {
 
         StringBuilder errors = new StringBuilder();
         if (name == null || name.trim().isEmpty()) {
-            errors.append("Tên phòng ban không được để trống.<br/>");
+            errors.append("Department name cannot be empty.<br/>");
         }
         if (description == null || description.trim().isEmpty()) {
-            errors.append("Mô tả không được để trống.<br/>");
+            errors.append("Description cannot be empty.<br/>");
         }
 
         boolean active = activeParam != null && activeParam.equals("true");
@@ -58,14 +58,14 @@ public class AddDeptServlet extends HttpServlet {
 
             boolean positionAssigned = departmentDAO.assignDefaultEmployeePosition(newId);
             if (!positionAssigned) {
-                System.err.println("Không thể gán position 'Employee' mặc định cho department ID " + newId);
+                System.err.println("Could not assign default 'Employee' position for department ID " + newId);
             }
 
             HttpSession session = request.getSession();
-            session.setAttribute("successMessage", "Thêm phòng ban thành công (ID: " + newId + ")");
+            session.setAttribute("successMessage", "Department added successfully (ID: " + newId + ")");
             response.sendRedirect(request.getContextPath() + "/admin/departments");
         } else {
-            request.setAttribute("error", "Thêm phòng ban thất bại. Có thể tên phòng ban đã tồn tại.");
+            request.setAttribute("error", "Failed to add department. Department name may already exist.");
             request.setAttribute("name", name);
             request.setAttribute("description", description);
             request.setAttribute("active", active);

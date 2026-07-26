@@ -39,6 +39,6 @@
 </div>
 
 <div class="request-group">
-    <label>Reason <span class="required-star">*</span></label>
-    <textarea name="reason" class="request-textarea" rows="5" required placeholder="Enter detailed handover info..."></textarea>
+    <label>Request description: <span class="required-star">*</span></label>
+    <textarea name="reason" class="request-textarea" rows="5" maxlength="1000" required placeholder="Enter detail hangover info..."></textarea>
 </div>

@@ -40,22 +40,22 @@
     </div>
 </div>
 
-<div class="request-group" style="margin-top: 15px;">
-    <label>Employees (Select who will work OT) <span class="required-star">*</span></label>
-    <div id="overtimeEmployeeList" class="checkbox-list-container" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px;">
+    <div class="request-group overtime-section">
+        <label>Employees (Select who will work OT) <span class="required-star">*</span></label>
+    <div id="overtimeEmployeeList" class="checkbox-list-container overtime-employee-list">
         <c:forEach var="emp" items="${deptEmployees}">
-            <label style="display: block; margin-bottom: 5px;">
+            <label class="overtime-employee-option">
                 <input type="checkbox" name="employeeIds" value="${emp.id}">
                 <c:out value="${emp.fullName}"/> - <c:out value="${emp.positionName}"/>
             </label>
         </c:forEach>
         <c:if test="${empty deptEmployees}">
-            <p style="color: #888;">No employees found in your department.</p>
+            <p class="overtime-empty-employees">No employees found in your department.</p>
         </c:if>
     </div>
 </div>
 
-<div class="request-group" style="margin-top: 15px;">
+<div class="request-group overtime-section">
     <label>Observers (Managers who can view this request)</label>
     <select name="observerIds" class="request-select select2-dynamic" multiple="multiple">
         <c:forEach var="obs" items="${observerList}">
@@ -64,10 +64,10 @@
     </select>
 </div>
 
-<div class="request-group full-width" style="margin-top: 15px;">
+<div class="request-group full-width overtime-section">
     <label>Reason <span class="required-star">*</span></label>
     <textarea name="reason" class="request-textarea" rows="4"
-              placeholder="Enter reason" maxlength="500" required></textarea>
+              placeholder="Enter reason" maxlength="1000" required></textarea>
 </div>
 
 <script>

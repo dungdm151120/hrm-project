@@ -102,7 +102,7 @@
                                type="search"
                                name="keyword"
                                value="${keyword}"
-                               placeholder="Search name or employee code">
+                               placeholder="Search name, email or employee code">
                     </div>
 
                     <button type="submit" class="matrix-btn matrix-search-btn">Search</button>
@@ -120,13 +120,8 @@
                         </c:if>
                     </c:url>
                     <a href="${exportUrl}"
-                       style="display: inline-flex; align-items: center; gap: 6px; background: #4361ee; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                       Export
+                        class="matrix-btn matrix-export-btn">
+                        Export
                     </a>
                 </form>
 
@@ -138,7 +133,7 @@
     <span><i class="legend-dot status-leave"></i>On leave</span>
     <span><i class="legend-dot status-holiday"></i>Holiday</span>
     <span><i class="legend-dot status-sick-leave"></i>Sick leave</span>
-    <span><span class="matrix-ot-badge" style="margin-right:4px;">OT</span>Overtime</span>
+    <span><span class="matrix-ot-badge matrix-legend-ot">OT</span>Overtime</span>
 </div>
 
                 <div class="attendance-matrix-wrapper">
@@ -209,9 +204,9 @@
                                                                 </c:choose>
                                                             </span>
                                                             <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}">
-                                                                <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge" style="text-decoration:none;" title="View OT Detail">OT</a>
+                                                                <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="matrix-ot-badge matrix-ot-link" title="View OT Detail">OT</a>
                                                             </c:if>
-                                                            <c:if test="${record.edited}">
+                                                            <c:if test="${record.edited and record.status ne 'HOLIDAY' and record.status ne 'ON_LEAVE' and record.status ne 'SICK_LEAVE'}">
                                                                 <span class="matrix-edited-badge">Edited</span>
                                                             </c:if>
                                                         <c:choose>

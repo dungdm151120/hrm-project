@@ -66,7 +66,7 @@ public class AttendanceConfirmDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     String action = rs.getString("action");
-                    if ("HR_FINALIZE".equals(action)) return "APPROVED";
+                    if ("HR_FINALIZE".equals(action)) return "FINALIZED";
                 }
             }
         } catch (SQLException e) {
@@ -234,6 +234,67 @@ public class AttendanceConfirmDAO {
         return list;
     }
 
+    public List<Integer> getFinalizedYears(Integer departmentId) {
+        List<Integer> years = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT DISTINCT s.snapshot_year " +
+                "FROM attendance_snapshot s " +
+                "JOIN users emp ON s.user_id = emp.id "
+        );
+
+        if (departmentId != null) {
+            sql.append("WHERE emp.department_id = ? ");
+        }
+
+        sql.append("ORDER BY s.snapshot_year DESC");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            if (departmentId != null) {
+                ps.setInt(1, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    years.add(rs.getInt("snapshot_year"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return years;
+    }
+
+    public boolean hasFinalizedSnapshot(int month, int year, Integer departmentId) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT 1 FROM attendance_snapshot s " +
+                "JOIN users emp ON s.user_id = emp.id " +
+                "WHERE s.snapshot_month = ? AND s.snapshot_year = ? "
+        );
+
+        if (departmentId != null) {
+            sql.append("AND emp.department_id = ? ");
+        }
+
+        sql.append("LIMIT 1");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            if (departmentId != null) {
+                ps.setInt(3, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public AttendanceConfirmedMonthOverviewDTO getConfirmedMonthOverview(int month, int year, Integer departmentId) {
         AttendanceConfirmedMonthOverviewDTO overview = new AttendanceConfirmedMonthOverviewDTO();
         StringBuilder sql = new StringBuilder(
@@ -274,6 +335,12 @@ public class AttendanceConfirmDAO {
     }
 
     public int getConfirmedDetailsCount(int month, int year, String searchQuery, Integer departmentId) {
+        String normalizedSearchQuery = searchQuery == null ? "" : searchQuery.trim();
+        List<Integer> matchingUserIds = findMatchingUserIds(normalizedSearchQuery);
+        if (!normalizedSearchQuery.isEmpty() && matchingUserIds.isEmpty()) {
+            return 0;
+        }
+
         StringBuilder sql = new StringBuilder(
             "SELECT COUNT(DISTINCT s.user_id) " +
             "FROM attendance_snapshot s " +
@@ -285,8 +352,8 @@ public class AttendanceConfirmDAO {
             sql.append("AND emp.department_id = ? ");
         }
         
-        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            sql.append("AND (emp.employee_code LIKE ? OR emp.full_name LIKE ?) ");
+        if (!normalizedSearchQuery.isEmpty()) {
+            appendUserIdFilter(sql, matchingUserIds);
         }
 
         try (Connection conn = DBConnection.getConnection();
@@ -300,10 +367,8 @@ public class AttendanceConfirmDAO {
                 ps.setInt(paramIndex++, departmentId);
             }
             
-            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                String likeQuery = "%" + searchQuery.trim() + "%";
-                ps.setString(paramIndex++, likeQuery);
-                ps.setString(paramIndex++, likeQuery);
+            if (!normalizedSearchQuery.isEmpty()) {
+                paramIndex = bindUserIds(ps, paramIndex, matchingUserIds);
             }
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -319,6 +384,12 @@ public class AttendanceConfirmDAO {
 
     public List<AttendanceConfirmedDetailDTO> getConfirmedDetails(int month, int year, String searchQuery, Integer departmentId, int offset, int limit) {
         List<AttendanceConfirmedDetailDTO> list = new ArrayList<>();
+        String normalizedSearchQuery = searchQuery == null ? "" : searchQuery.trim();
+        List<Integer> matchingUserIds = findMatchingUserIds(normalizedSearchQuery);
+        if (!normalizedSearchQuery.isEmpty() && matchingUserIds.isEmpty()) {
+            return list;
+        }
+
         StringBuilder sql = new StringBuilder(
             "SELECT emp.id AS employee_id, emp.employee_code, emp.full_name AS employee_name, " +
             "d.name AS department_name, " +
@@ -335,8 +406,8 @@ public class AttendanceConfirmDAO {
             sql.append("AND emp.department_id = ? ");
         }
         
-        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            sql.append("AND (emp.employee_code LIKE ? OR emp.full_name LIKE ?) ");
+        if (!normalizedSearchQuery.isEmpty()) {
+            appendUserIdFilter(sql, matchingUserIds);
         }
 
         sql.append("GROUP BY emp.id, emp.employee_code, emp.full_name, d.name ");
@@ -354,10 +425,8 @@ public class AttendanceConfirmDAO {
                 ps.setInt(paramIndex++, departmentId);
             }
             
-            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                String likeQuery = "%" + searchQuery.trim() + "%";
-                ps.setString(paramIndex++, likeQuery);
-                ps.setString(paramIndex++, likeQuery);
+            if (!normalizedSearchQuery.isEmpty()) {
+                paramIndex = bindUserIds(ps, paramIndex, matchingUserIds);
             }
             
             ps.setInt(paramIndex++, limit);
@@ -380,5 +449,27 @@ public class AttendanceConfirmDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    private List<Integer> findMatchingUserIds(String keyword) {
+        return new UserDAO().findUserIdsMatchingPersonSearch(keyword);
+    }
+
+    private void appendUserIdFilter(StringBuilder sql, List<Integer> userIds) {
+        sql.append("AND emp.id IN (");
+        for (int i = 0; i < userIds.size(); i++) {
+            if (i > 0) {
+                sql.append(", ");
+            }
+            sql.append('?');
+        }
+        sql.append(") ");
+    }
+
+    private int bindUserIds(PreparedStatement ps, int index, List<Integer> userIds) throws SQLException {
+        for (Integer userId : userIds) {
+            ps.setInt(index++, userId);
+        }
+        return index;
     }
 }

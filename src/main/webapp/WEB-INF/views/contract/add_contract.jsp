@@ -26,8 +26,19 @@
             <h2 class="form-title">Add Contract</h2>
 
             <c:if test="${not empty error}">
-                <div class="alert alert-error">${error}</div>
+                <div class="alert alert-error"><c:out value="${error}"/></div>
             </c:if>
+
+            <c:set var="formUserId" value="${formSubmitted ? param.userId : contract.userId}"/>
+            <c:set var="formContractCode" value="${formSubmitted ? param.contractCode : contract.contractCode}"/>
+            <c:set var="formContractType" value="${formSubmitted ? param.contractType : contract.contractType}"/>
+            <c:set var="formStartDate" value="${formSubmitted ? param.startDate : contract.startDate}"/>
+            <c:set var="formEndDate" value="${formSubmitted ? param.endDate : contract.endDate}"/>
+            <c:set var="formBaseSalary" value="${formSubmitted ? param.baseSalary : contract.baseSalary}"/>
+            <c:set var="formWorkLocation" value="${formSubmitted ? param.workLocation : contract.workLocation}"/>
+            <c:set var="formNote" value="${formSubmitted ? param.note : contract.note}"/>
+            <c:set var="formUnionMember"
+                   value="${formSubmitted ? not empty param.unionMember : contract.unionMember}"/>
 
             <form action="${pageContext.request.contextPath}/contracts/add" method="post">
                 <div class="form-group">
@@ -37,9 +48,9 @@
                         <option value="">Select employee</option>
                         <c:forEach items="${users}" var="user">
                             <option value="${user.id}"
-                                    data-search="${user.fullName} ${user.email}"
-                                    ${contract.userId == user.id ? 'selected' : ''}>
-                                    ${user.fullName} - ${user.email}
+                                    data-search="<c:out value='${user.fullName} ${user.email}'/>"
+                                    ${formUserId == user.id ? 'selected' : ''}>
+                                    <c:out value="${user.fullName}"/> - <c:out value="${user.email}"/>
                             </option>
                         </c:forEach>
                     </select>
@@ -47,7 +58,8 @@
 
                 <div class="form-group">
                     <label for="contractCode">Contract Code <span class="required-star">*</span></label>
-                    <input type="text" id="contractCode" name="contractCode" value="${contract.contractCode}"
+                    <input type="text" id="contractCode" name="contractCode"
+                           value="<c:out value='${formContractCode}'/>"
                            maxlength="50" pattern="[A-Za-z0-9/_-]+"
                            title="Use only letters, numbers, hyphens, underscores, and slashes" required>
                 </div>
@@ -55,27 +67,31 @@
                 <div class="form-group">
                     <label for="contractType">Contract Type <span class="required-star">*</span></label>
                     <select id="contractType" name="contractType" required>
-                        <option value="FIXED_TERM" ${contract.contractType == 'FIXED_TERM' ? 'selected' : ''}>FIXED_TERM</option>
-                        <option value="INDEFINITE_TERM" ${contract.contractType == 'INDEFINITE_TERM' ? 'selected' : ''}>INDEFINITE_TERM</option>
-                        <option value="PROBATION" ${contract.contractType == 'PROBATION' ? 'selected' : ''}>PROBATION</option>
+                        <option value="FIXED_TERM" ${formContractType == 'FIXED_TERM' ? 'selected' : ''}>FIXED_TERM</option>
+                        <option value="INDEFINITE_TERM" ${formContractType == 'INDEFINITE_TERM' ? 'selected' : ''}>INDEFINITE_TERM</option>
+                        <option value="PROBATION" ${formContractType == 'PROBATION' ? 'selected' : ''}>PROBATION</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="startDate">Start Date <span class="required-star">*</span></label>
-                    <input type="date" id="startDate" name="startDate" value="${contract.startDate}" required>
+                    <input type="date" id="startDate" name="startDate"
+                           value="<c:out value='${formStartDate}'/>" required>
                 </div>
 
                 <div class="form-group" id="endDateGroup">
                     <label for="endDate">End Date <span class="required-star">*</span></label>
-                    <input type="date" id="endDate" name="endDate" value="${contract.endDate}" required>
+                    <input type="date" id="endDate" name="endDate"
+                           value="<c:out value='${formEndDate}'/>" required>
                 </div>
 
                 <div class="form-group">
                     <label for="baseSalaryDisplay">Base Salary <span class="required-star">*</span></label>
                     <input type="text" id="baseSalaryDisplay" inputmode="decimal"
-                           value="${contract.baseSalary}" placeholder="e.g. 15,000,000" required>
-                    <input type="hidden" id="baseSalary" name="baseSalary" value="${contract.baseSalary}">
+                           value="<c:out value='${formBaseSalary}'/>"
+                           placeholder="e.g. 15,000,000" required>
+                    <input type="hidden" id="baseSalary" name="baseSalary"
+                           value="<c:out value='${formBaseSalary}'/>">
                 </div>
 
                 <div class="form-group">
@@ -87,14 +103,15 @@
                 <div class="form-group">
                     <label>
                         <input type="checkbox" name="unionMember" value="true"
-                               ${contract.unionMember ? 'checked' : ''}>
+                               ${formUnionMember ? 'checked' : ''}>
                         Union member
                     </label>
                 </div>
 
                 <div class="form-group">
                     <label for="workLocation">Work Location <span class="required-star">*</span></label>
-                    <input type="text" id="workLocation" name="workLocation" value="${contract.workLocation}"
+                    <input type="text" id="workLocation" name="workLocation"
+                           value="<c:out value='${formWorkLocation}'/>"
                            maxlength="255" required>
                 </div>
 
@@ -106,7 +123,7 @@
 
                 <div class="form-group">
                     <label for="note">Note</label>
-                    <textarea id="note" name="note" maxlength="1000">${contract.note}</textarea>
+                    <textarea id="note" name="note" maxlength="1000"><c:out value="${formNote}"/></textarea>
                 </div>
 
                 <div class="form-actions">

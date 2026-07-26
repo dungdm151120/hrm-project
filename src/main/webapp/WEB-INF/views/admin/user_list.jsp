@@ -19,9 +19,11 @@
             <div class="header-left">
                 <h1 class="header-title">User List</h1>
             </div>
-            <div class="header-right">
-                <a href="${pageContext.request.contextPath}/admin/users/add" class="btn-primary">Add New User</a>
-            </div>
+            <c:if test="${sessionScope.role == 'SYSTEM ADMIN' || sessionScope.role == 'BUSINESS ADMIN' || sessionScope.role == 'HR_MANAGER'}">
+                <div class="header-right">
+                    <a href="${pageContext.request.contextPath}/admin/users/add" class="btn-primary">Add New User</a>
+                </div>
+            </c:if>
         </div>
 
         <div class="dashboard-content">
@@ -60,7 +62,11 @@
                         <th>Department</th>
                         <th>Position</th>
                         <th>Status</th>
-                        <th>Actions</th>
+
+                        <!-- Hiển thị Actions nếu ko phải Employee -->
+                        <c:if test="${sessionScope.role != 'EMPLOYEE'}">
+                            <th>Actions</th>
+                        </c:if>
                     </tr>
                     </thead>
                     <tbody>
@@ -80,22 +86,29 @@
                                     </c:otherwise>
                                 </c:choose>
                             </td>
-                            <td>
-                                <div class="actions">
-                                    <a href="user_detail?id=${user.id}" class="btn-secondary">View</a>
-                                    <a href="${pageContext.request.contextPath}/users/update?id=${user.id}" class="btn-secondary">Update</a>
-                                    <form action="${pageContext.request.contextPath}/users/toggle-status" method="GET" style="display:inline;">
-                                        <input type="hidden" name="id" value="${user.id}">
-                                        <input type="hidden" name="action" value="${user.active ? 'Deactivate' : 'Activate'}">
-                                        <button type="submit" class="btn ${user.active ? 'btn-danger' : 'btn-warning'}" onclick="return confirm('${user.active ? 'Deactivate' : 'Activate'} this user?')">${user.active ? 'Deactivate' : 'Activate'}</button>
-                                    </form>
-                                </div>
-                            </td>
+
+                                <td>
+                                    <div class="actions">
+                                        <c:if test="${sessionScope.role != 'EMPLOYEE'}">
+                                            <a href="user_detail?id=${user.id}" class="btn-secondary">View Detail</a>
+                                        </c:if>
+                                        <c:if test="${sessionScope.role == 'SYSTEM ADMIN' || sessionScope.role == 'BUSINESS ADMIN' || sessionScope.role == 'HR_MANAGER' || sessionScope.role == 'HR_STAFF'}">
+                                            <a href="${pageContext.request.contextPath}/users/update?id=${user.id}" class="btn-secondary">Update</a>
+                                        </c:if>
+                                        <c:if test="${sessionScope.role == 'SYSTEM ADMIN' || sessionScope.role == 'BUSINESS ADMIN' || sessionScope.role == 'HR_MANAGER'}">
+                                        <form action="${pageContext.request.contextPath}/users/toggle-status" method="GET" style="display:inline;">
+                                            <input type="hidden" name="id" value="${user.id}">
+                                            <input type="hidden" name="action" value="${user.active ? 'Deactivate' : 'Activate'}">
+                                            <button type="submit" class="btn ${user.active ? 'btn-danger' : 'btn-warning'}" onclick="return confirm('${user.active ? 'Deactivate' : 'Activate'} this user?')">${user.active ? 'Deactivate' : 'Activate'}</button>
+                                        </form>
+                                        </c:if>
+                                    </div>
+                                </td>
                         </tr>
                     </c:forEach>
                     <c:if test="${empty userList}">
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: #666; font-style: italic; padding: 15px;">No users found.</td>
+                        <tr>-->
+                            <td colspan="${sessionScope.user.roleName == 'Employee' ? 5 : 6}" style="text-align: center; color: #666; font-style: italic; padding: 15px;">No users found.</td>
                         </tr>
                     </c:if>
                     </tbody>

@@ -16,12 +16,17 @@ import model.Task;
 import model.TaskChecklistItem;
 import model.TaskObserver;
 import model.TaskParticipant;
+import util.DBConnection;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @WebServlet(urlPatterns = {"/tasks", "/tasks/detail", "/tasks/comment", "/tasks/checklist/toggle"})
 public class TaskViewServlet extends HttpServlet {
+    private static final int MAX_COMMENT_LENGTH = 2000;
+
     private static final int PAGE_SIZE = 10;
     private static final String TASK_UPDATE = "TASK_UPDATE";
     private static final String TASK_DELETE = "TASK_DELETE";
@@ -43,10 +48,10 @@ public class TaskViewServlet extends HttpServlet {
             String path = request.getServletPath();
             if ("/tasks/detail".equals(path)) {
                 showDetail(request, response);
-            } else if ("/tasks/checklist/toggle".equals(path)) {
-                toggleChecklist(request, response);
-            } else {
+            } else if ("/tasks".equals(path)) {
                 listRelatedTasks(request, response);
+            } else {
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
             }
         } catch (Exception e) {
             throw new ServletException(e);
@@ -114,7 +119,8 @@ public class TaskViewServlet extends HttpServlet {
         request.setAttribute("checklistItems", task.getChecklistItems());
         request.setAttribute("comments", commentDAO.getCommentsByTaskId(id));
         request.setAttribute("histories", historyDAO.getHistoriesByTaskId(id));
-        request.setAttribute("canToggleChecklist", canToggleChecklist(task, currentUserId));
+        request.setAttribute("toggleableChecklistItemIds",
+                toggleableChecklistItemIds(task, currentUserId));
         request.setAttribute("canUpdateTask", canModifyTask(task, currentUserId, request, TASK_UPDATE));
         request.setAttribute("canDeleteTask", canModifyTask(task, currentUserId, request, TASK_DELETE));
         request.setAttribute("canManageChecklist", canModifyTask(task, currentUserId, request, TASK_MANAGE_CHECKLIST));
@@ -133,7 +139,7 @@ public class TaskViewServlet extends HttpServlet {
 
         Task task = taskDAO.getTaskById(item.getTaskId());
         long currentUserId = currentUserId(request);
-        if (!canToggleChecklist(task, currentUserId)) {
+        if (!canToggleChecklist(task, item, currentUserId)) {
             request.getSession().setAttribute("error", "You do not have permission to complete this checklist item.");
             response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + item.getTaskId());
             return;
@@ -141,10 +147,19 @@ public class TaskViewServlet extends HttpServlet {
 
         String completedParameter = request.getParameter("completed");
         boolean completed = completedParameter == null ? !item.isCompleted() : "true".equals(completedParameter);
-        checklistItemDAO.toggleChecklistItem(itemId, taskId, completed);
-        historyDAO.insertHistory(item.getTaskId(), currentUserId, "Subtask updated",
-                (completed ? "Completed subtask: " : "Reopened subtask: ") + item.getContent());
-        taskDAO.refreshProgressAndAutoComplete(item.getTaskId());
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                checklistItemDAO.toggleChecklistItem(conn, itemId, taskId, completed);
+                historyDAO.insertHistory(conn, item.getTaskId(), currentUserId, "Subtask updated",
+                        (completed ? "Completed subtask: " : "Reopened subtask: ") + item.getContent());
+                taskDAO.refreshProgressAndAutoComplete(conn, item.getTaskId());
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
         response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + item.getTaskId());
     }
 
@@ -166,10 +181,25 @@ public class TaskViewServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
             return;
         }
+        if (content.length() > MAX_COMMENT_LENGTH) {
+            request.getSession().setAttribute(
+                    "error", "Comment must not exceed 2000 characters.");
+            response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
+            return;
+        }
 
         long currentUserId = currentUserId(request);
-        commentDAO.insertComment(taskId, currentUserId, content);
-        historyDAO.insertHistory(taskId, currentUserId, "Comment", "Added a comment");
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                commentDAO.insertComment(conn, taskId, currentUserId, content);
+                historyDAO.insertHistory(conn, taskId, currentUserId, "Comment", "Added a comment");
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
         response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
     }
 
@@ -202,16 +232,33 @@ public class TaskViewServlet extends HttpServlet {
         return false;
     }
 
-    private boolean canToggleChecklist(Task task, long currentUserId) {
-        if (task == null || currentUserId <= 0 || "PAUSED".equals(task.getStatus())) {
+    private Set<Long> toggleableChecklistItemIds(Task task, long currentUserId) {
+        Set<Long> itemIds = new LinkedHashSet<>();
+        if (task == null || task.getChecklistItems() == null) {
+            return itemIds;
+        }
+        for (TaskChecklistItem item : task.getChecklistItems()) {
+            if (canToggleChecklist(task, item, currentUserId)) {
+                itemIds.add(item.getId());
+            }
+        }
+        return itemIds;
+    }
+
+    private boolean canToggleChecklist(Task task, TaskChecklistItem item, long currentUserId) {
+        if (task == null || item == null || currentUserId <= 0 || "PAUSED".equals(task.getStatus())) {
             return false;
         }
-        if (task.getCreatedBy() == currentUserId) {
+        if (task.getCreatedBy() == currentUserId || task.getAssignedTo() == currentUserId) {
             return true;
         }
-        return task.isAllowParticipantsCompleteChecklist()
-                && (task.getAssignedTo() == currentUserId
-                || participantDAO.existsByTaskIdAndUserId(task.getId(), currentUserId));
+        if (!task.isAllowParticipantsCompleteChecklist()) {
+            return false;
+        }
+        boolean isParticipant = participantDAO.existsByTaskIdAndUserId(task.getId(), currentUserId);
+        return isParticipant
+                && item.getAssignedTo() != null
+                && item.getAssignedTo() == currentUserId;
     }
 
     private boolean canModifyTask(Task task, long currentUserId, HttpServletRequest request, String permission) {

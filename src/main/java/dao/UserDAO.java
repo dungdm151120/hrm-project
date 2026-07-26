@@ -3,14 +3,13 @@ package dao;
 import model.User;
 import util.DBConnection;
 import util.PasswordUtil;
+import util.VietnameseSearchUtil;
 
 import java.sql.*;
-import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 public class UserDAO {
 
@@ -222,7 +221,7 @@ public class UserDAO {
     public List<User> getEmployeesByDepartment(int departmentId, String keyword, String status, String sort,
                                                int page, int pageSize, Integer managerUserId) {
         List<User> employees = getAllEmployeesByDepartment(departmentId);
-        employees = searchEmployeesByKeyword(employees, keyword);
+        employees = searchDepartmentEmployeesByNameOrEmail(employees, keyword);
         employees = filterEmployeesByStatus(employees, status);
         employees = sortEmployeesByName(employees, sort, managerUserId);
         return pagingEmployees(employees, page, pageSize);
@@ -288,67 +287,36 @@ public class UserDAO {
         }
         return false;
     }
-    public List<User> searchEmployeesByKeyword(List<User> employees, String keyword) {
-        boolean accentSensitive = containsVietnameseDiacritics(keyword);
-        String normalizedKeyword = normalizeSearchText(keyword, accentSensitive);
-        if (normalizedKeyword.isEmpty()) {
-            return employees;
-        }
-
-        String[] searchTerms = normalizedKeyword.split(" ");
+    private List<User> searchDepartmentEmployeesByNameOrEmail(List<User> employees, String keyword) {
         List<User> result = new ArrayList<>();
         for (User user : employees) {
-            String searchableText = normalizeSearchText(String.join(" ",
-                    valueOrEmpty(user.getFullName()),
-                    valueOrEmpty(user.getEmail()),
-                    valueOrEmpty(user.getPhone()),
-                    valueOrEmpty(user.getPositionName())
-            ), accentSensitive);
-
-            boolean matchesAllTerms = true;
-            for (String term : searchTerms) {
-                if (!searchableText.contains(term)) {
-                    matchesAllTerms = false;
-                    break;
-                }
-            }
-            if (matchesAllTerms) {
+            if (VietnameseSearchUtil.matchesPerson(user.getFullName(), user.getEmail(), null, keyword)) {
                 result.add(user);
             }
         }
         return result;
     }
 
-    private String normalizeSearchText(String value, boolean preserveDiacritics) {
-        if (value == null || value.trim().isEmpty()) {
-            return "";
+    public List<Integer> findUserIdsMatchingPersonSearch(String keyword) {
+        List<Integer> userIds = new ArrayList<>();
+        if (keyword == null || keyword.isBlank()) {
+            return userIds;
         }
 
-        String normalized = value;
-        if (!preserveDiacritics) {
-            normalized = Normalizer.normalize(normalized, Normalizer.Form.NFD)
-                    .replaceAll("\\p{M}+", "")
-                    .replace('đ', 'd')
-                    .replace('Đ', 'D');
+        String sql = "SELECT id, full_name, email, employee_code FROM users";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                if (VietnameseSearchUtil.matchesPerson(rs.getString("full_name"),
+                        rs.getString("email"), rs.getString("employee_code"), keyword)) {
+                    userIds.add(rs.getInt("id"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        normalized = normalized.toLowerCase(Locale.ROOT);
-        return normalized.trim().replaceAll("\\s+", " ");
-    }
-
-    private boolean containsVietnameseDiacritics(String value) {
-        if (value == null || value.isEmpty()) {
-            return false;
-        }
-
-        String withoutDiacritics = Normalizer.normalize(value, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}+", "")
-                .replace('đ', 'd')
-                .replace('Đ', 'D');
-        return !value.equals(withoutDiacritics);
-    }
-
-    private String valueOrEmpty(String value) {
-        return value == null ? "" : value;
+        return userIds;
     }
 
     public List<User> filterEmployeesByStatus(List<User> employees, String status) {
@@ -428,7 +396,7 @@ public class UserDAO {
 
     public int countEmployeesByDepartment(int departmentId, String keyword, String status) {
         List<User> employees = getAllEmployeesByDepartment(departmentId);
-        employees = searchEmployeesByKeyword(employees, keyword);
+        employees = searchDepartmentEmployeesByNameOrEmail(employees, keyword);
         employees = filterEmployeesByStatus(employees, status);
         return employees.size();
     }
@@ -476,37 +444,6 @@ public class UserDAO {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 users.add(mapResultSetToUser(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return users;
-    }
-
-    public List<User> searchUsers(String keyword) {
-        List<User> users = new ArrayList<>();
-        String sql = """
-        SELECT u.*, r.name AS role_name
-        FROM users u
-        JOIN roles r ON u.role_id = r.id
-        WHERE (u.full_name LIKE ?
-               OR u.email LIKE ?
-               OR u.phone LIKE ?
-               OR r.name LIKE ?)
-          AND r.name NOT IN ('SYSTEM ADMIN', 'BUSINESS ADMIN')
-        ORDER BY u.id ASC
-        """;
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            String searchKeyword = "%" + keyword + "%";
-            ps.setString(1, searchKeyword);
-            ps.setString(2, searchKeyword);
-            ps.setString(3, searchKeyword);
-            ps.setString(4, searchKeyword);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    users.add(mapResultSetToUser(rs));
-                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -644,6 +581,31 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean isPhoneUsedByAnotherUser(String phone, int userId) {
+        String sql = """
+                SELECT 1
+                FROM users
+                WHERE phone = ?
+                  AND id <> ?
+                LIMIT 1
+                """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, phone);
+            ps.setInt(2, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
@@ -2041,5 +2003,60 @@ public class UserDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public boolean isEmailExists(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        String sql = "SELECT 1 FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean isPhoneExists(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return false;
+        }
+        String sql = "SELECT 1 FROM users WHERE TRIM(phone) = TRIM(?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, phone.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean isPhoneExistsForUpdate(String phone, int userId) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return false;
+        }
+        String sql = "SELECT 1 FROM users WHERE TRIM(phone) = TRIM(?) AND id != ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, phone.trim());
+            ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

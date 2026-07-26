@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,7 +31,17 @@
                 <div class="alert alert-success">✓ ${param.success}</div>
             </c:if>
             <c:if test="${not empty param.error}">
-                <div class="alert alert-error">⚠ ${param.error}</div>
+                <div class="alert alert-error">
+                    <c:choose>
+                        <c:when test="${param.error == 'invalid_data'}">Invalid data provided.</c:when>
+                        <c:when test="${param.error == 'department_not_found'}">Department not found.</c:when>
+                        <c:when test="${param.error == 'invalid_request_method'}">Invalid request method.</c:when>
+                        <c:when test="${param.error == 'invalid_access'}">Invalid access.</c:when>
+                        <c:when test="${param.error == 'invalid_id'}">Invalid department ID.</c:when>
+                        <c:when test="${param.error == 'Inactive department!'}">Inactive department!</c:when>
+                        <c:otherwise>⚠ ${param.error}</c:otherwise>
+                    </c:choose>
+                </div>
             </c:if>
 
             <div class="search-filter">

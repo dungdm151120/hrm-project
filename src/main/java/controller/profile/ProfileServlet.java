@@ -8,6 +8,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @WebServlet("/profile")
 public class ProfileServlet extends HttpServlet {
@@ -30,6 +32,11 @@ public class ProfileServlet extends HttpServlet {
         User user = userService.getProfile(userId);
 
         request.setAttribute("user", user);
+        Object profileSuccess = session.getAttribute("profileSuccess");
+        if (profileSuccess != null) {
+            request.setAttribute("profileSuccess", profileSuccess);
+            session.removeAttribute("profileSuccess");
+        }
         request.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp")
                 .forward(request, response);
     }
@@ -55,23 +62,22 @@ public class ProfileServlet extends HttpServlet {
         user.setAvatarUrl(trimToNull(request.getParameter("avatarUrl")));
 
         String dateOfBirth = trimToNull(request.getParameter("dateOfBirth"));
+        Map<String, String> profileErrors = new LinkedHashMap<>();
         try {
             if (dateOfBirth != null) {
                 user.setDateOfBirth(LocalDate.parse(dateOfBirth).atStartOfDay());
             }
         } catch (Exception e) {
-            User currentProfile = userService.getProfile(userId);
-            request.setAttribute("user", currentProfile);
-            request.setAttribute("profileError", "Date of birth is invalid.");
-            request.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp")
-                    .forward(request, response);
-            return;
+            profileErrors.put("dateOfBirth", "Date of birth is invalid.");
         }
 
-        String error = userService.updateProfile(user);
-        if (error != null) {
+        if (profileErrors.isEmpty()) {
+            profileErrors.putAll(userService.updateProfile(user));
+        }
+
+        if (!profileErrors.isEmpty()) {
             copyEditableFieldsToCurrentProfile(userService.getProfile(userId), user, request);
-            request.setAttribute("profileError", error);
+            request.setAttribute("profileErrors", profileErrors);
             request.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp")
                     .forward(request, response);
             return;

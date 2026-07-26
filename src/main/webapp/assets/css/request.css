@@ -110,6 +110,27 @@
     line-height: 1.5;
 }
 
+.overtime-section {
+    margin-top: 15px;
+}
+
+.overtime-employee-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.overtime-employee-option {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.overtime-empty-employees {
+    color: #888;
+}
+
 .request-info-box {
     background: var(--bg);
     border: 1px solid var(--border-color);

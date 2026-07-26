@@ -44,6 +44,7 @@ public class AttendanceConfirmListServlet extends HttpServlet {
         }
 
         int currentYear = LocalDate.now().getYear();
+        List<Integer> finalizedYears = confirmedDAO.getFinalizedYears(departmentIdFilter);
         String yearParam = request.getParameter("year");
         int year = currentYear;
         if (yearParam != null && !yearParam.isEmpty()) {
@@ -53,12 +54,15 @@ public class AttendanceConfirmListServlet extends HttpServlet {
                 year = currentYear;
             }
         }
+        if (!finalizedYears.isEmpty() && !finalizedYears.contains(year)) {
+            year = finalizedYears.contains(currentYear) ? currentYear : finalizedYears.get(0);
+        }
 
         List<AttendanceConfirmedSummaryDTO> confirmedList = confirmedDAO.getConfirmedMonths(year, departmentIdFilter);
 
         request.setAttribute("confirmedList", confirmedList);
+        request.setAttribute("finalizedYears", finalizedYears);
         request.setAttribute("selectedYear", year);
-        request.setAttribute("currentYear", currentYear);
         
         request.getRequestDispatcher("/WEB-INF/views/attendance/attendance_confirm_list.jsp").forward(request, response);
     }

@@ -134,7 +134,7 @@ public class HRReportDAO {
             }
 
             /* =================================================================
-             * QUERY 3: Cơ cấu Phòng Ban (Đã sửa lỗi không cập nhật sau khi Move)
+             * QUERY 3: Cơ cấu Phòng Ban 
              * ================================================================= */
             String deptSql =
                     "SELECT d.name as dept_name, COUNT(DISTINCT lc.user_id) as count "
@@ -193,30 +193,42 @@ public class HRReportDAO {
         List<DeptEmployeeChangeDTO> list = new ArrayList<>();
 
         String sql =
-                "SELECT " +
+                "WITH raw_events AS ( " +
+                        "    /* 1. Lượt IN: Lấy kèm ngày thực hiện (start_date) */ " +
+                        "    SELECT department_id, user_id, 1 AS event_type, start_date AS event_date " +
+                        "    FROM ( " +
+                        "        SELECT department_id, user_id, start_date FROM department_history WHERE start_date BETWEEN ? AND ? " +
+                        "        UNION " +
+                        "        SELECT department_id, user_id, start_date FROM department_after_update WHERE start_date BETWEEN ? AND ? " +
+                        "    ) t_in " +
+                        "    UNION " +
+                        "    /* 2. Lượt OUT: Lấy kèm ngày thực hiện (end_date) */ " +
+                        "    SELECT department_id, user_id, -1 AS event_type, end_date AS event_date " +
+                        "    FROM ( " +
+                        "        SELECT department_id, user_id, end_date FROM department_history WHERE end_date BETWEEN ? AND ? " +
+                        "        UNION " +
+                        "        SELECT department_id, user_id, end_date FROM department_after_update WHERE end_date BETWEEN ? AND ? " +
+                        "    ) t_out " +
+                        "), " +
+                        "daily_net_change AS ( " +
+                        "    /* 3. Gom nhóm theo CÙNG NGÀY: Chỉ triệt tiêu nếu hành động IN và OUT diễn ra trong cùng 1 ngày */ " +
+                        "    SELECT " +
+                        "        department_id, " +
+                        "        user_id, " +
+                        "        event_date, " +
+                        "        SUM(event_type) AS net_effect " +
+                        "    FROM raw_events " +
+                        "    GROUP BY department_id, user_id, event_date " +
+                        ") " +
+                        "/* 4. Tổng hợp số lượt IN/OUT theo phòng ban */ " +
+                        "SELECT " +
                         "    d.id AS department_id, " +
                         "    d.name AS department_name, " +
-                        "    COALESCE(e_in.in_count, 0) AS in_count, " +
-                        "    COALESCE(e_out.out_count, 0) AS out_count " +
+                        "    COALESCE(SUM(CASE WHEN dnc.net_effect > 0 THEN dnc.net_effect ELSE 0 END), 0) AS in_count, " +
+                        "    COALESCE(SUM(CASE WHEN dnc.net_effect < 0 THEN ABS(dnc.net_effect) ELSE 0 END), 0) AS out_count " +
                         "FROM departments d " +
-                        "LEFT JOIN ( " +
-                        "    /* Đếm số nhân sự DISTINCT CHUYỂN ĐẾN trong khoảng lọc */ " +
-                        "    SELECT department_id, COUNT(DISTINCT user_id) AS in_count " +
-                        "    FROM ( " +
-                        "        SELECT department_id, user_id FROM department_history WHERE start_date BETWEEN ? AND ? " +
-                        "        UNION " +
-                        "        SELECT department_id, user_id FROM department_after_update WHERE start_date BETWEEN ? AND ? " +
-                        "    ) t_in GROUP BY department_id " +
-                        ") e_in ON d.id = e_in.department_id " +
-                        "LEFT JOIN ( " +
-                        "    /* Đếm số nhân sự DISTINCT RỜI ĐI trong khoảng lọc */ " +
-                        "    SELECT department_id, COUNT(DISTINCT user_id) AS out_count " +
-                        "    FROM ( " +
-                        "        SELECT department_id, user_id FROM department_history WHERE end_date BETWEEN ? AND ? " +
-                        "        UNION " +
-                        "        SELECT department_id, user_id FROM department_after_update WHERE end_date BETWEEN ? AND ? " +
-                        "    ) t_out GROUP BY department_id " +
-                        ") e_out ON d.id = e_out.department_id " +
+                        "LEFT JOIN daily_net_change dnc ON d.id = dnc.department_id " +
+                        "GROUP BY d.id, d.name " +
                         "ORDER BY d.id ASC";
 
         try (Connection conn = DBConnection.getConnection();

@@ -20,7 +20,6 @@ import java.util.Objects;
 public class LaborContractDAO {
     public List<LaborContract> search(Integer userId, String keyword, String contractType, String status,
                                       int offset, int limit) {
-        expireEndedActiveContracts();
         List<LaborContract> contracts = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         StringBuilder sql = new StringBuilder(baseSelect()).append(" WHERE 1=1");
@@ -45,7 +44,6 @@ public class LaborContractDAO {
     }
 
     public int count(Integer userId, String keyword, String contractType, String status) {
-        expireEndedActiveContracts();
         List<Object> params = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
                 SELECT COUNT(*) AS total
@@ -185,7 +183,6 @@ public class LaborContractDAO {
         String sql = """
                 UPDATE labor_contracts
                 SET status = 'TERMINATED',
-                    end_date = CURRENT_DATE,
                     terminated_at = CURRENT_TIMESTAMP,
                     terminated_by = ?,
                     termination_reason = ?,
@@ -525,8 +522,6 @@ public class LaborContractDAO {
     private void insertTerminateLogs(Connection conn, LaborContract oldContract, String reason,
                                      Integer changedBy) throws Exception {
         insertLog(conn, oldContract.getId(), "TERMINATE", "status", oldContract.getStatus(), "TERMINATED", changedBy);
-        insertLog(conn, oldContract.getId(), "TERMINATE", "end_date",
-                formatValue(oldContract.getEndDate()), formatValue(LocalDate.now()), changedBy);
         insertLog(conn, oldContract.getId(), "TERMINATE", "termination_reason",
                 oldContract.getTerminationReason(), trimToNull(reason), changedBy);
     }
@@ -592,7 +587,16 @@ public class LaborContractDAO {
 
     public BigDecimal findActiveSalaryByUserId(int userId) {
         expireEndedActiveContracts();
-        String sql = "SELECT base_salary FROM labor_contracts WHERE user_id = ? AND status = 'ACTIVE' LIMIT 1";
+        String sql = """
+                SELECT base_salary
+                FROM labor_contracts
+                WHERE user_id = ?
+                  AND status = 'ACTIVE'
+                  AND start_date <= CURRENT_DATE
+                  AND (end_date IS NULL OR end_date >= CURRENT_DATE)
+                ORDER BY start_date DESC, id DESC
+                LIMIT 1
+                """;
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

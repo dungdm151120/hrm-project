@@ -9,8 +9,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.Task;
+import util.DBConnection;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.Set;
 
 @WebServlet("/tasks/status")
@@ -46,7 +48,6 @@ public class TaskStatusServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
                     return;
                 }
-                taskDAO.updateTaskStatus(taskId, "PAUSED");
                 actionType = "Task paused";
                 historyContent = "Paused task: " + oldStatus + " -> PAUSED";
             } else if ("RESUME".equals(requestedStatus)) {
@@ -55,17 +56,30 @@ public class TaskStatusServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
                     return;
                 }
-                taskDAO.resumeTask(taskId);
-                String newStatus = taskDAO.calculateStatusFromChecklist(taskId);
                 actionType = "Task resumed";
-                historyContent = "Resumed task: PAUSED -> " + newStatus;
+                historyContent = null;
             } else {
                 request.getSession().setAttribute("error", "Task status can only be paused or resumed manually.");
                 response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
                 return;
             }
 
-            historyDAO.insertHistory(taskId, currentUserId(request), actionType, historyContent);
+            try (Connection conn = DBConnection.getConnection()) {
+                conn.setAutoCommit(false);
+                try {
+                    if ("PAUSED".equals(requestedStatus)) {
+                        taskDAO.updateTaskStatus(conn, taskId, "PAUSED");
+                    } else {
+                        String newStatus = taskDAO.resumeTask(conn, taskId);
+                        historyContent = "Resumed task: PAUSED -> " + newStatus;
+                    }
+                    historyDAO.insertHistory(conn, taskId, currentUserId(request), actionType, historyContent);
+                    conn.commit();
+                } catch (Exception e) {
+                    conn.rollback();
+                    throw e;
+                }
+            }
             response.sendRedirect(request.getContextPath() + "/tasks/detail?id=" + taskId);
         } catch (Exception e) {
             throw new ServletException(e);

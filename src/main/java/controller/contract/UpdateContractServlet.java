@@ -46,6 +46,7 @@ public class UpdateContractServlet extends HttpServlet {
         try {
             updatedContract = ContractFormMapper.fromRequest(request);
         } catch (IllegalArgumentException e) {
+            request.setAttribute("formSubmitted", true);
             forwardForm(request, response, current, e.getMessage());
             return;
         }
@@ -61,7 +62,10 @@ public class UpdateContractServlet extends HttpServlet {
         Integer changedBy = currentUser == null ? null : currentUser.getId();
 
         if (contractDAO.update(updatedContract, changedBy)) {
-            response.sendRedirect(request.getContextPath() + "/contracts/detail?id=" + updatedContract.getId());
+            request.getSession().setAttribute(
+                    "contractSuccessMessage", "Contract updated successfully.");
+            response.sendRedirect(request.getContextPath()
+                    + "/contracts/detail?id=" + updatedContract.getId());
         } else {
             forwardForm(request, response, updatedContract, "Update contract failed.");
         }

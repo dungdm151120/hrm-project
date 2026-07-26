@@ -63,7 +63,7 @@
                         </form>
                         <a href="${pageContext.request.contextPath}/admin/attendance/exportPersonal?userId=${displayUser.id}&month=${selectedMonth}&year=${selectedYear}"
                            class="btn-export"
-                           style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: #4361ee; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px;">
+                           style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: #4361ee; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px; cursor: pointer;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Export
                         </a>
@@ -97,7 +97,7 @@
                         <c:set var="currentDay" value="${firstDayOfMonth.minusDays(dayOfWeekIndex)}" />
                         <c:set var="lastDayOfMonth" value="${daysInMonth[daysInMonth.size() - 1]}" />
 
-                        <c:forEach var="week" begin="0" end="4">
+                        <c:forEach var="week" begin="0" end="5">
                             <c:if test="${currentDay <= lastDayOfMonth}">
                                 <div class="calendar-week">
                                     <c:forEach var="dayOfWeek" begin="0" end="6">
@@ -124,7 +124,7 @@
                                                             <c:if test="${not empty record.otStatus and (record.otStatus == 'REGISTERED' or record.otStatus == 'COMPLETED' or record.otStatus == 'PARTIAL' or record.otStatus == 'ABSENT')}">
                                                                 <a href="${pageContext.request.contextPath}/get_overtime_detail?userId=${record.userId}&workDate=${record.workDate}" class="record-chip chip-ot" style="text-decoration:none;" title="View OT Detail">OT</a>
                                                             </c:if>
-                                                            <c:if test="${record.edited}">
+                                                            <c:if test="${record.edited and record.status ne 'HOLIDAY' and record.status ne 'ON_LEAVE' and record.status ne 'SICK_LEAVE'}">
                                                                 <span class="record-chip chip-edited">Edited</span>
                                                             </c:if>
                                                         </c:when>

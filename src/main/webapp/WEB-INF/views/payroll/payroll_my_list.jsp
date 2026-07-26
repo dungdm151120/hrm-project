@@ -139,6 +139,9 @@
             <div class="header-left">
                 <h1 class="header-title">My Payslip History</h1>
             </div>
+            <div class="header-right">
+                <a href="${pageContext.request.contextPath}/home" class="btn-secondary">Back to Home</a>
+            </div>
         </div>
 
         <div class="dashboard-content">

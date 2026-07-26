@@ -214,7 +214,7 @@ public class ExportAttendanceServlet extends HttpServlet {
         Row companyRow = sheet.createRow(rowIdx++);
         companyRow.setHeight((short) 500);
         Cell companyCell = companyRow.createCell(0);
-        companyCell.setCellValue("CÔNG TY QUẢN LÍ NHÂN SỰ HRM");
+        companyCell.setCellValue("HRM MANAGEMENT COMPANY");
         companyCell.setCellStyle(companyStyle);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
 
@@ -222,7 +222,7 @@ public class ExportAttendanceServlet extends HttpServlet {
         Row titleRow = sheet.createRow(rowIdx++);
         titleRow.setHeight((short) 400);
         Cell titleCell = titleRow.createCell(0);
-        titleCell.setCellValue("BÁO CÁO CHẤM CÔNG THÁNG " + month + "/" + year);
+        titleCell.setCellValue("ATTENDANCE REPORT FOR MONTH " + month + "/" + year);
         titleCell.setCellStyle(reportTitleStyle);
         sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, colCount - 1));
 
@@ -335,27 +335,27 @@ public class ExportAttendanceServlet extends HttpServlet {
 
     private String vietnameseDayOfWeek(DayOfWeek dayOfWeek) {
         return switch (dayOfWeek) {
-            case MONDAY -> "Thứ Hai";
-            case TUESDAY -> "Thứ Ba";
-            case WEDNESDAY -> "Thứ Tư";
-            case THURSDAY -> "Thứ Năm";
-            case FRIDAY -> "Thứ Sáu";
-            case SATURDAY -> "Thứ Bảy";
-            case SUNDAY -> "Chủ Nhật";
+            case MONDAY -> "Mon";
+            case TUESDAY -> "Tue";
+            case WEDNESDAY -> "Wed";
+            case THURSDAY -> "Thu";
+            case FRIDAY -> "Fri";
+            case SATURDAY -> "Sat";
+            case SUNDAY -> "Sun";
         };
     }
 
-    // ====== Sheet CHI TIẾT NHÂN VIÊN (style thường) ======
+    // ====== Sheet EMPLOYEE DETAILS ======
     private void createEmployeeDetailSheet(Workbook workbook, List<AttendanceRecordDTO> records,
                                            CellStyle companyStyle, CellStyle headerStyle, CellStyle dataStyle) {
-        Sheet sheet = workbook.createSheet("CHI TIẾT NHÂN VIÊN");
+        Sheet sheet = workbook.createSheet("EMPLOYEE DETAILS");
         int colCount = 4;
         int rowIdx = 0;
 
         Row companyRow = sheet.createRow(rowIdx++);
         companyRow.setHeight((short) 500);
         Cell companyCell = companyRow.createCell(0);
-        companyCell.setCellValue("CÔNG TY QUẢN LÍ NHÂN SỰ HRM");
+        companyCell.setCellValue("HRM MANAGEMENT COMPANY");
         companyCell.setCellStyle(companyStyle);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
 
@@ -387,23 +387,23 @@ public class ExportAttendanceServlet extends HttpServlet {
         for (int i = 0; i < colCount; i++) sheet.autoSizeColumn(i);
     }
 
-    // ====== Sheet CHÚ THÍCH (style thường) ======
+    // ====== Sheet RULES & LEGEND ======
     private void createRuleSheet(Workbook workbook, CellStyle companyStyle, CellStyle headerStyle, CellStyle dataStyle) {
-        Sheet sheet = workbook.createSheet("CHÚ THÍCH");
+        Sheet sheet = workbook.createSheet("RULES & LEGEND");
         int colCount = 3;
         int rowIdx = 0;
 
         Row companyRow = sheet.createRow(rowIdx++);
         companyRow.setHeight((short) 500);
         Cell companyCell = companyRow.createCell(0);
-        companyCell.setCellValue("CÔNG TY QUẢN LÍ NHÂN SỰ HRM");
+        companyCell.setCellValue("HRM MANAGEMENT COMPANY");
         companyCell.setCellStyle(companyStyle);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
 
         rowIdx++;
 
         Row headerRow = sheet.createRow(rowIdx++);
-        String[] headers = {"Rule", "Mô tả", "Trạng thái"};
+        String[] headers = {"Rule", "Description", "Status"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -430,26 +430,26 @@ public class ExportAttendanceServlet extends HttpServlet {
         for (int i = 0; i < colCount; i++) sheet.autoSizeColumn(i);
     }
 
-    // ====== Sheet TỔNG HỢP (style thường) ======
+    // ====== Sheet SUMMARY ======
     private void createSummarySheet(Workbook workbook, List<AttendanceRecordDTO> records,
                                     int month, int year,
                                     CellStyle companyStyle, CellStyle headerStyle, CellStyle dataStyle) {
-        Sheet sheet = workbook.createSheet("TỔNG HỢP");
+        Sheet sheet = workbook.createSheet("SUMMARY");
         int colCount = 11;
         int rowIdx = 0;
 
         Row titleRow = sheet.createRow(rowIdx++);
         titleRow.setHeight((short) 500);
         Cell titleCell = titleRow.createCell(0);
-        titleCell.setCellValue("TỔNG HỢP CHẤM CÔNG");
+        titleCell.setCellValue("ATTENDANCE SUMMARY");
         titleCell.setCellStyle(companyStyle);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colCount - 1));
 
         rowIdx++;
 
         Row headerRow = sheet.createRow(rowIdx++);
-        String[] headers = {"Mã NV", "Họ tên", "Chức vụ", "Phòng ban", "Tổng ngày công",
-                "Ngày có mặt", "Ngày vắng", "Đi muộn", "Về sớm", "Quên check-in", "Quên check-out"};
+        String[] headers = {"Employee Code", "Full Name", "Position", "Department", "Total Work Days",
+                "Present Days", "Absent Days", "Late Count", "Early Leave Count", "Forgot Check-in", "Forgot Check-out"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);

@@ -694,6 +694,13 @@ tbody tr:last-child td {
     padding-right: 2.5rem;
 }
 
+.field-error {
+    color: #b42318;
+    display: block;
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
 .form-actions {
     display: flex;
     align-items: center;

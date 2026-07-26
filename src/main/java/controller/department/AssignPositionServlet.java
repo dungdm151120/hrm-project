@@ -40,7 +40,7 @@ public class AssignPositionServlet extends HttpServlet {
         Department department = departmentDAO.getDepartmentById(deptId);
         if (department == null || !department.isActive()) {
             HttpSession session = request.getSession();
-            session.setAttribute("error", "Phòng ban không tồn tại hoặc đã bị vô hiệu.");
+            session.setAttribute("error", "Department does not exist or is inactive.");
             response.sendRedirect(request.getContextPath() + "/admin/departments");
             return;
         }
@@ -67,7 +67,7 @@ public class AssignPositionServlet extends HttpServlet {
         HttpSession session = request.getSession();
 
         if (departmentIdParam == null || userIdParam == null || positionIdParam == null) {
-            session.setAttribute("error", "Dữ liệu không hợp lệ.");
+            session.setAttribute("error", "Invalid data.");
             response.sendRedirect(request.getContextPath() + "/admin/departments");
             return;
         }
@@ -80,14 +80,14 @@ public class AssignPositionServlet extends HttpServlet {
             userId = Integer.parseInt(userIdParam);
             posId = Integer.parseInt(positionIdParam);
         } catch (NumberFormatException e) {
-            session.setAttribute("error", "Dữ liệu không hợp lệ.");
+            session.setAttribute("error", "Invalid data.");
             response.sendRedirect(request.getContextPath() + "/admin/departments");
             return;
         }
 
         Department department = departmentDAO.getDepartmentById(deptId);
         if (department == null || !department.isActive()) {
-            session.setAttribute("error", "Phòng ban không tồn tại hoặc đã bị vô hiệu.");
+            session.setAttribute("error", "Department does not exist or is inactive.");
             response.sendRedirect(request.getContextPath() + "/admin/departments");
             return;
         }
@@ -97,7 +97,7 @@ public class AssignPositionServlet extends HttpServlet {
         if (currentUser != null && currentUser.getPositionName() != null) {
             String posName = currentUser.getPositionName();
             if ("HR Manager".equals(posName) || "System Administrator".equals(posName) || "Department Manager".equals(posName)) {
-                session.setAttribute("error", "Không thể thay đổi vị trí của nhân viên đang giữ vai trò quản lý chủ chốt.");
+                session.setAttribute("error", "Cannot change position of an employee holding a key management role.");
                 response.sendRedirect(request.getContextPath() + "/admin/departments/assign-positions?id=" + deptId);
                 return;
             }
@@ -108,7 +108,7 @@ public class AssignPositionServlet extends HttpServlet {
             List<Position> allowed = positionDAO.getAssignablePositionsByDepartment(deptId);
             boolean valid = allowed.stream().anyMatch(p -> p.getId() == posId);
             if (!valid) {
-                session.setAttribute("error", "Vị trí được chọn không được phép.");
+                session.setAttribute("error", "The selected position is not allowed.");
                 response.sendRedirect(request.getContextPath() + "/admin/departments/assign-positions?id=" + deptId);
                 return;
             }
@@ -118,9 +118,9 @@ public class AssignPositionServlet extends HttpServlet {
         boolean updated = userDAO.updateUserPosition(userId, newPositionId);
 
         if (updated) {
-            session.setAttribute("successMessage", "Cập nhật vị trí thành công!");
+            session.setAttribute("successMessage", "Position updated successfully!");
         } else {
-            session.setAttribute("error", "Có lỗi xảy ra khi cập nhật vị trí.");
+            session.setAttribute("error", "An error occurred while updating position.");
         }
         response.sendRedirect(request.getContextPath() + "/admin/departments/assign-positions?id=" + deptId);
     }
