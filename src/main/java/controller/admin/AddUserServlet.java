@@ -70,7 +70,7 @@ public class AddUserServlet extends HttpServlet {
             }
 
             if (email.isEmpty() || email.length() > 100 || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
-                errorMsg.append("Invalid email format or email length exceeds 100 characters.<br/>");
+                errorMsg.append("Invalid email format (missing @ or .) or email length exceeds 100 characters.<br/>");
             } else if (dao.isEmailExists(email)) {
                 errorMsg.append("Email is already registered in the system.<br/>");
             }
