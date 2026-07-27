@@ -134,9 +134,9 @@
                 <c:if test="${userPermissions.contains('PAYROLL_CONFIRM')}">
                     <form action="${pageContext.request.contextPath}/payroll/confirm" method="POST" onsubmit="return confirm('Confirm all payrolls?')">
                         <input type="hidden" name="all" value="all">
-                        <input type="hidden" name="redirectDepartmentId" value="${currentDeptParam}">
-                        <input type="hidden" name="redirectMonth" value="${month}">
-                        <input type="hidden" name="redirectYear" value="${year}">
+                        <input type="hidden" name="redirectDepartmentId" value="${not empty departmentId ? departmentId : param.departmentId}">
+                        <input type="hidden" name="redirectMonth" value="${not empty month ? month : param.month}">
+                        <input type="hidden" name="redirectYear" value="${not empty year ? year : param.year}">
 
                         <button type="submit" class="btn-save" style="padding: 6px 12px; font-size: 0.85rem;">Confirm All</button>
                     </form>
