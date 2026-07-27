@@ -36,13 +36,6 @@ public class TaskParticipantDAO {
         return participants;
     }
 
-    public void insertParticipants(long taskId, List<Long> userIds) throws SQLException {
-        String sql = "INSERT INTO task_participants (task_id, user_id) VALUES (?, ?)";
-        try (Connection conn = DBConnection.getConnection()) {
-            insertParticipants(conn, taskId, userIds);
-        }
-    }
-
     public void insertParticipants(Connection conn, long taskId, List<Long> userIds) throws SQLException {
         if (userIds == null || userIds.isEmpty()) {
             return;
@@ -58,12 +51,6 @@ public class TaskParticipantDAO {
                 ps.addBatch();
             }
             ps.executeBatch();
-        }
-    }
-
-    public void deleteParticipantsByTaskId(long taskId) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            deleteParticipantsByTaskId(conn, taskId);
         }
     }
 

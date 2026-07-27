@@ -36,12 +36,6 @@ public class TaskHistoryDAO {
         return histories;
     }
 
-    public void insertHistory(long taskId, long userId, String actionType, String content) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            insertHistory(conn, taskId, userId, actionType, content);
-        }
-    }
-
     public void insertHistory(Connection conn, long taskId, long userId,
                               String actionType, String content) throws SQLException {
         String sql = "INSERT INTO task_histories (task_id, user_id, action_type, content) VALUES (?, ?, ?, ?)";
@@ -51,12 +45,6 @@ public class TaskHistoryDAO {
             ps.setString(3, actionType);
             ps.setString(4, content);
             ps.executeUpdate();
-        }
-    }
-
-    public void deleteHistoriesByTaskId(long taskId) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            deleteHistoriesByTaskId(conn, taskId);
         }
     }
 

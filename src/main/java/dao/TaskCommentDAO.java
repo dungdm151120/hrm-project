@@ -37,12 +37,6 @@ public class TaskCommentDAO {
         return comments;
     }
 
-    public void insertComment(long taskId, long userId, String content) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            insertComment(conn, taskId, userId, content);
-        }
-    }
-
     public void insertComment(Connection conn, long taskId, long userId, String content) throws SQLException {
         String sql = "INSERT INTO task_comments (task_id, user_id, content) VALUES (?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -50,12 +44,6 @@ public class TaskCommentDAO {
             ps.setLong(2, userId);
             ps.setString(3, content);
             ps.executeUpdate();
-        }
-    }
-
-    public void deleteCommentsByTaskId(long taskId) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            deleteCommentsByTaskId(conn, taskId);
         }
     }
 
