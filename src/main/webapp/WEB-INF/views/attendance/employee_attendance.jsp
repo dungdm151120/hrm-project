@@ -194,14 +194,6 @@
                             <strong><fmt:formatNumber value="${summary.remainingLeaveDays}" maxFractionDigits="2"/></strong>
                         </div>
                         <div class="attendance-summary-row">
-                            <span>Leave Allowed</span>
-                            <strong><fmt:formatNumber value="${summary.entitledLeaveDays}" maxFractionDigits="2"/></strong>
-                        </div>
-                        <div class="attendance-summary-row">
-                            <span>Advanced Leave Taken</span>
-                            <strong><fmt:formatNumber value="${summary.advancedLeaveDays}" maxFractionDigits="2"/></strong>
-                        </div>
-                        <div class="attendance-summary-row">
                             <span>Remaining Sick Leave Balance</span>
                             <strong><fmt:formatNumber value="${summary.remainingSickLeaveDays}" maxFractionDigits="2"/> / <fmt:formatNumber value="${summary.entitledSickLeaveDays}" maxFractionDigits="2"/></strong>
                         </div>
