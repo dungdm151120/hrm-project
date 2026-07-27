@@ -53,7 +53,6 @@ public class AttendanceRecordServlet extends HttpServlet {
         String keyword = normalizeKeyword(request.getParameter("keyword"));
         int currentPage = Math.max(1, parseInt(request.getParameter("page"), 1));
 
-        // Đảm bảo dữ liệu holiday đã có cho tất cả nhân viên trong tháng
         attendanceDAO.createHolidayRecordsForMonth(selectedYear, selectedMonth);
 
         int totalEmployees = attendanceDAO.countEmployeesForAttendanceMatrix(
@@ -100,7 +99,6 @@ public class AttendanceRecordServlet extends HttpServlet {
             }
         }
 
-        // Lấy danh sách ngày lễ trong tháng
         List<LocalDate> holidayDates = attendanceDAO.getHolidayDatesInMonth(selectedYear, selectedMonth);
 
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);

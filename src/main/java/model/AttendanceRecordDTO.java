@@ -25,10 +25,9 @@ public class AttendanceRecordDTO {
     private boolean edited;
     private String otStatus;
     private String positionName;
-    private boolean holiday; // <-- Thêm thuộc tính này
-    private boolean locked; // <-- Thêm thuộc tính này
+    private boolean holiday;
+    private boolean locked;
 
-    // Getter & Setter cho locked
     public boolean isLocked() {
         return locked;
     }
@@ -37,7 +36,6 @@ public class AttendanceRecordDTO {
         this.locked = locked;
     }
 
-    // Getter & Setter cho departmentId
     public Integer getDepartmentId() {
         return departmentId;
     }
@@ -46,7 +44,6 @@ public class AttendanceRecordDTO {
         this.departmentId = departmentId;
     }
 
-    // Getter & Setter cho holiday
     public boolean isHoliday() {
         return holiday;
     }
@@ -55,7 +52,6 @@ public class AttendanceRecordDTO {
         this.holiday = holiday;
     }
 
-    // Các getter/setter khác giữ nguyên
     public String getOtStatus() {
         return otStatus;
     }

@@ -1,9 +1,7 @@
 package controller.attendance;
 
 import dao.AttendanceDAO;
-import dao.AttendanceConfirmDAO;
 import dao.DepartmentDAO;
-import model.DepartmentConfirmStatusDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -27,7 +25,7 @@ import java.util.Map;
 @WebServlet("/attendance/department")
 public class DepartmentAttendanceServlet extends HttpServlet {
     private static final int PAGE_SIZE = 5;
-    // private static final int MATRIX_DAY_COUNT = 7; // không còn dùng nữa
+
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM");
 
     private final AttendanceDAO attendanceDAO = new AttendanceDAO();
@@ -111,7 +109,7 @@ public class DepartmentAttendanceServlet extends HttpServlet {
         YearMonth selectedPeriod = YearMonth.of(selectedYear, selectedMonth);
         List<LocalDate> daysInMonth = new ArrayList<>();
         List<String> dayLabels = new ArrayList<>();
-        // Hiển thị toàn bộ các ngày trong tháng (không giới hạn 7 ngày)
+
         for (int day = 1; day <= selectedPeriod.lengthOfMonth(); day++) {
             LocalDate date = selectedPeriod.atDay(day);
             daysInMonth.add(date);
@@ -131,17 +129,6 @@ public class DepartmentAttendanceServlet extends HttpServlet {
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalEmployees", totalEmployees);
         request.setAttribute("departmentName", department != null ? department.getName() : "My department");
-        request.setAttribute("departmentManagerId", department != null ? department.getManagerUserId() : null);
-
-        boolean isConfirmed = false;
-        List<DepartmentConfirmStatusDTO> lockStatuses = new AttendanceConfirmDAO().getDepartmentLockStatuses(selectedMonth, selectedYear);
-        for (DepartmentConfirmStatusDTO s : lockStatuses) {
-            if (s.getDepartmentId() == departmentId && "CONFIRMED".equals(s.getStatus())) {
-                isConfirmed = true;
-                break;
-            }
-        }
-        request.setAttribute("isConfirmed", isConfirmed);
 
         request.getRequestDispatcher("/WEB-INF/views/attendance/department_attendance.jsp")
                 .forward(request, response);
@@ -151,7 +138,6 @@ public class DepartmentAttendanceServlet extends HttpServlet {
         return userId + "_" + workDate;
     }
 
-    // Đã đổi sang tiếng Anh
     private String formatDayLabel(LocalDate date) {
         return englishDayOfWeek(date.getDayOfWeek()) + " - " + date.format(DAY_FORMAT);
     }

@@ -34,13 +34,13 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
 
         try {
             if (currentUser.getDepartmentId() == null || currentUser.getDepartmentId() == 0) {
-                response.sendRedirect("create_request?error=missing_department");
+                redirectToOvertimeForm(request, response, "missing_department");
                 return;
             }
 
             String overtimeDateStr = request.getParameter("overtimeDate");
             if (overtimeDateStr == null || overtimeDateStr.trim().isEmpty()) {
-                response.sendRedirect("create_request?error=missing_date");
+                redirectToOvertimeForm(request, response, "missing_date");
                 return;
             }
 
@@ -48,59 +48,59 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
             try {
                 overtimeDate = LocalDate.parse(overtimeDateStr);
             } catch (Exception e) {
-                response.sendRedirect("create_request?error=missing_date");
+                redirectToOvertimeForm(request, response, "missing_date");
                 return;
             }
             if (overtimeDate.isBefore(LocalDate.now())) {
-                response.sendRedirect("create_request?error=date_past");
+                redirectToOvertimeForm(request, response, "date_past");
                 return;
             }
 
             DayOfWeek dayOfWeek = overtimeDate.getDayOfWeek();
             if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-                response.sendRedirect("create_request?error=date_weekend");
+                redirectToOvertimeForm(request, response, "date_weekend");
                 return;
             }
 
             dao.HolidayDAO holidayDAO = new dao.HolidayDAO();
             if (holidayDAO.isHoliday(overtimeDate)) {
-                response.sendRedirect("create_request?error=overtime_date_holiday");
+                redirectToOvertimeForm(request, response, "overtime_date_holiday");
                 return;
             }
 
             String reason = request.getParameter("reason");
             if (reason == null || reason.trim().isEmpty()) {
-                response.sendRedirect("create_request?error=missing_reason");
+                redirectToOvertimeForm(request, response, "missing_reason");
                 return;
             }
             reason = reason.trim();
             if (reason.length() > MAX_REASON_LENGTH) {
-                response.sendRedirect("create_request?error=reason_too_long");
+                redirectToOvertimeForm(request, response, "reason_too_long");
                 return;
             }
 
             String approverIdParam = request.getParameter("approverId");
             if (approverIdParam == null || approverIdParam.trim().isEmpty()) {
-                response.sendRedirect("create_request?error=missing_approver");
+                redirectToOvertimeForm(request, response, "missing_approver");
                 return;
             }
             int approverId;
             try {
                 approverId = Integer.parseInt(approverIdParam);
             } catch (NumberFormatException e) {
-                response.sendRedirect("create_request?error=invalid_approver");
+                redirectToOvertimeForm(request, response, "invalid_approver");
                 return;
             }
             boolean validApprover = userDAO.getUserByPosition("HR Manager").stream()
                     .anyMatch(manager -> manager.getId() == approverId);
             if (!validApprover) {
-                response.sendRedirect("create_request?error=invalid_approver");
+                redirectToOvertimeForm(request, response, "invalid_approver");
                 return;
             }
 
             String[] employeeIds = request.getParameterValues("employeeIds");
             if (employeeIds == null || employeeIds.length == 0) {
-                response.sendRedirect("create_request?error=missing_employees");
+                redirectToOvertimeForm(request, response, "missing_employees");
                 return;
             }
 
@@ -111,7 +111,7 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
                 try {
                     empId = Integer.parseInt(empIdStr);
                 } catch (NumberFormatException e) {
-                    response.sendRedirect("create_request?error=invalid_employee");
+                    redirectToOvertimeForm(request, response, "invalid_employee");
                     return;
                 }
                 User employee = userDAO.findById(empId);
@@ -119,11 +119,11 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
                         || !employee.isActive()
                         || employee.getDepartmentId() == null
                         || !employee.getDepartmentId().equals(currentUser.getDepartmentId())) {
-                    response.sendRedirect("create_request?error=invalid_employee");
+                    redirectToOvertimeForm(request, response, "invalid_employee");
                     return;
                 }
                 if (overtimeService.checkDuplicateOvertime(empId, overtimeDate)) {
-                    response.sendRedirect("create_request?error=duplicate_overtime");
+                    redirectToOvertimeForm(request, response, "duplicate_overtime");
                     return;
                 }
                 uniqueEmployeeIds.add(empId);
@@ -150,12 +150,17 @@ public class CreateOvertimeRequestServlet extends HttpServlet {
             if (success) {
                 response.sendRedirect("view_my_request?success=true");
             } else {
-                response.sendRedirect("create_request?error=system_error");
+                redirectToOvertimeForm(request, response, "system_error");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect("create_request?error=system_error");
+            redirectToOvertimeForm(request, response, "system_error");
         }
+    }
+
+    private void redirectToOvertimeForm(HttpServletRequest request, HttpServletResponse response, String error)
+            throws IOException {
+        response.sendRedirect(request.getContextPath() + "/create_request?type=OVERTIME&error=" + error);
     }
 }

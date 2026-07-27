@@ -12,7 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance.css">
-
 </head>
 <body class="dashboard-body">
 <div class="dashboard-wrapper">
@@ -47,59 +46,74 @@
         </header>
 
         <div class="dashboard-content">
-            <div class="ot-detail-container">
-                <h2 style="margin-bottom: 20px; font-size: 18px; color: #0f172a;">${detail.userFullName} (${detail.employeeCode})</h2>
-                
-                <div class="ot-info-grid">
-                    <div class="ot-info-item">
-                        <span class="ot-info-label">Overtime Date</span>
-                        <span class="ot-info-value"><fmt:parseDate value="${detail.overtimeDate}" pattern="yyyy-MM-dd" var="parsedDate" type="date" />
-                        <fmt:formatDate value="${parsedDate}" type="date" pattern="MMM dd, yyyy" /></span>
+            <div class="ot-detail-page">
+                <section class="ot-detail-summary">
+                    <div class="ot-detail-person">
+                        <span class="ot-detail-eyebrow">Employee</span>
+                        <h2><c:out value="${detail.userFullName}"/></h2>
+                        <span><c:out value="${detail.employeeCode}"/></span>
                     </div>
-                    <div class="ot-info-item">
-                        <span class="ot-info-label">Shift Duration</span>
-                        <span class="ot-info-value">${detail.shiftStart} - ${detail.shiftEnd}</span>
-                    </div>
-                    <div class="ot-info-item">
-                        <span class="ot-info-label">Request Status</span>
-                        <span class="ot-status-badge status-${detail.requestStatus}">${detail.requestStatus}</span>
-                    </div>
-                    <div class="ot-info-item">
-                        <span class="ot-info-label">Actual OT Hours</span>
-                        <span class="ot-info-value"><fmt:formatNumber value="${detail.hoursActual}" maxFractionDigits="2"/> h</span>
-                    </div>
-                    <div class="ot-info-item" style="grid-column: 1 / -1;">
-                        <span class="ot-info-label">Reason</span>
-                        <span class="ot-info-value" style="font-weight: 400;">${detail.reason}</span>
-                    </div>
-                </div>
 
-                <h3 style="margin-top: 30px; font-size: 16px; color: #334155; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Participants</h3>
-                <div style="overflow-x: auto;">
-                    <table class="participants-table">
-                        <thead>
-                            <tr>
-                                <th>Employee Code</th>
-                                <th>Full Name</th>
-                                <th>Position</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:forEach var="p" items="${detail.participants}">
+                    <div class="ot-detail-grid">
+                        <div class="ot-detail-field">
+                            <span>Overtime Date</span>
+                            <strong><c:out value="${detail.overtimeDate}"/></strong>
+                        </div>
+                        <div class="ot-detail-field">
+                            <span>Shift Time</span>
+                            <strong><c:out value="${detail.shiftStart}"/> - <c:out value="${detail.shiftEnd}"/></strong>
+                        </div>
+                        <div class="ot-detail-field">
+                            <span>Request Status</span>
+                            <strong class="ot-detail-status"><c:out value="${detail.requestStatus}"/></strong>
+                        </div>
+                        <div class="ot-detail-field">
+                            <span>Actual OT Hours</span>
+                            <strong><fmt:formatNumber value="${detail.hoursActual}" maxFractionDigits="2"/> h</strong>
+                        </div>
+                    </div>
+
+                    <div class="ot-detail-reason">
+                        <span>Reason</span>
+                        <p><c:out value="${detail.reason}"/></p>
+                    </div>
+                </section>
+
+                <section class="ot-detail-participants">
+                    <div class="ot-detail-section-heading">
+                        <h3>Participants</h3>
+                        <span>${empty detail.participants ? 0 : detail.participants.size()} employee(s)</span>
+                    </div>
+                    <div class="ot-detail-table-wrap">
+                        <table class="participants-table">
+                            <thead>
                                 <tr>
-                                    <td>${p.employeeCode}</td>
-                                    <td>${p.userFullName}</td>
-                                    <td>${p.positionName}</td>
+                                    <th>Employee Code</th>
+                                    <th>Full Name</th>
+                                    <th>Position</th>
+                                    <th>Status</th>
+                                    <th>Actual OT Hours</th>
                                 </tr>
-                            </c:forEach>
-                            <c:if test="${empty detail.participants}">
-                                <tr>
-                                    <td colspan="4" style="text-align: center; color: #64748b;">No participants found.</td>
-                                </tr>
-                            </c:if>
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="p" items="${detail.participants}">
+                                    <tr>
+                                        <td><c:out value="${p.employeeCode}"/></td>
+                                        <td><c:out value="${p.userFullName}"/></td>
+                                        <td><c:out value="${p.positionName}"/></td>
+                                        <td><span class="ot-detail-status"><c:out value="${p.status}"/></span></td>
+                                        <td><fmt:formatNumber value="${p.hoursActual}" maxFractionDigits="2"/> h</td>
+                                    </tr>
+                                </c:forEach>
+                                <c:if test="${empty detail.participants}">
+                                    <tr>
+                                        <td colspan="5" class="ot-detail-empty">No participants found.</td>
+                                    </tr>
+                                </c:if>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
         </div>
     </main>

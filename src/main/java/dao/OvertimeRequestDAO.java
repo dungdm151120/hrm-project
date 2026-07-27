@@ -69,7 +69,7 @@ public class OvertimeRequestDAO {
         String sql = "SELECT COUNT(*) FROM overtime_participants op " +
                      "JOIN overtime_requests oreq ON op.overtime_request_id = oreq.id " +
                      "WHERE op.user_id = ? AND oreq.overtime_date = ? " +
-                     "AND op.status IN ('PENDING', 'REGISTERED', 'COMPLETED', 'PARTIAL')";
+                     "AND op.status IN ('PENDING', 'REGISTERED', 'COMPLETED', 'PARTIAL', 'ABSENT')";
                      
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -111,7 +111,6 @@ public class OvertimeRequestDAO {
                     detail.setRequestStatus(rs.getString("status"));
                     detail.setHoursActual(rs.getDouble("hours_actual"));
 
-                    // Fetch participants for the same request
                     int overtimeRequestId = rs.getInt("overtime_request_id");
                     OvertimeParticipantDAO participantDAO = new OvertimeParticipantDAO();
                     detail.setParticipants(participantDAO.getByOvertimeRequestId(overtimeRequestId));
