@@ -107,7 +107,7 @@
                         </tr>
                     </c:forEach>
                     <c:if test="${empty userList}">
-                        <tr>-->
+                        <tr>
                             <td colspan="${sessionScope.user.roleName == 'Employee' ? 5 : 6}" style="text-align: center; color: #666; font-style: italic; padding: 15px;">No users found.</td>
                         </tr>
                     </c:if>

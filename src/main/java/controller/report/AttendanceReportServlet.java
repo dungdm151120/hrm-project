@@ -103,7 +103,7 @@ public class AttendanceReportServlet extends HttpServlet {
         int selectedYear = today.getYear();
         Integer requestedYear = parseInteger(request.getParameter("year"));
         if (request.getParameter("year") != null && !request.getParameter("year").isBlank()) {
-            if (requestedYear == null || requestedYear < 2000 || requestedYear > today.getYear() + 1) {
+            if (requestedYear == null || requestedYear < 2000 || requestedYear > today.getYear()) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid year.");
                 return;
             }
@@ -145,14 +145,18 @@ public class AttendanceReportServlet extends HttpServlet {
 
             AttendanceReportRowDTO hardestWorking = null;
             double maxHours = -1.0;
+            boolean hardestWorkingTied = false;
 
             AttendanceReportRowDTO mostPunctual = null;
             double minIrregularities = Double.MAX_VALUE;
+            boolean mostPunctualTied = false;
 
             AttendanceReportRowDTO lowestWorking = null;
             double minHours = Double.MAX_VALUE;
+            boolean lowestWorkingTied = false;
             AttendanceReportRowDTO leastPunctual = null;
             int maxIrregularities = 0;
+            boolean leastPunctualTied = false;
             int punctualLeaveLimit = getPunctualLeaveLimit(periodType);
 
             for (AttendanceReportRowDTO row : reportRows) {
@@ -170,6 +174,9 @@ public class AttendanceReportServlet extends HttpServlet {
                 if (workAndOt > maxHours) {
                     maxHours = workAndOt;
                     hardestWorking = row;
+                    hardestWorkingTied = false;
+                } else if (Double.compare(workAndOt, maxHours) == 0) {
+                    hardestWorkingTied = true;
                 }
 
                 // Most punctual check: min (lateDays + earlyLeaveDays + forgotCheckInDays)
@@ -181,11 +188,17 @@ public class AttendanceReportServlet extends HttpServlet {
                     if (irregularities < minIrregularities) {
                         minIrregularities = irregularities;
                         mostPunctual = row;
+                        mostPunctualTied = false;
+                    } else if (Double.compare(irregularities, minIrregularities) == 0) {
+                        mostPunctualTied = true;
                     }
 
                     if (workAndOt < minHours) {
                         minHours = workAndOt;
                         lowestWorking = row;
+                        lowestWorkingTied = false;
+                    } else if (Double.compare(workAndOt, minHours) == 0) {
+                        lowestWorkingTied = true;
                     }
                 }
 
@@ -194,7 +207,23 @@ public class AttendanceReportServlet extends HttpServlet {
                 if (irregularities > maxIrregularities) {
                     maxIrregularities = irregularities;
                     leastPunctual = row;
+                    leastPunctualTied = false;
+                } else if (irregularities == maxIrregularities && irregularities > 0) {
+                    leastPunctualTied = true;
                 }
+            }
+
+            if (maxHours <= 0 || hardestWorkingTied) {
+                hardestWorking = null;
+            }
+            if (mostPunctualTied) {
+                mostPunctual = null;
+            }
+            if (lowestWorkingTied) {
+                lowestWorking = null;
+            }
+            if (maxIrregularities == 0 || leastPunctualTied) {
+                leastPunctual = null;
             }
 
             request.setAttribute("reportRows", reportRows);
@@ -211,9 +240,8 @@ public class AttendanceReportServlet extends HttpServlet {
             request.setAttribute("leastPunctual", leastPunctual);
         }
 
-        // Available years for dropdown option (e.g. current year +/- 3 years)
         List<Integer> years = new ArrayList<>();
-        for (int y = today.getYear() - 3; y <= today.getYear() + 3; y++) {
+        for (int y = today.getYear(); y >= today.getYear() - 3; y--) {
             years.add(y);
         }
 

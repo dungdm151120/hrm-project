@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Confirmation & Snapshot | HRM</title>
+    <title>Attendance Confirmation | HRM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@
     <main class="dashboard-main">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 class="header-title">Attendance Confirmation & Snapshot</h1>
+                <h1 class="header-title">Attendance Confirmation</h1>
             </div>
         </header>
 
@@ -29,7 +29,7 @@
                 <div class="attendance-records-heading">
                     <div>
                         <h2>Attendance Confirmation Status</h2>
-                        <p>View and manage the attendance confirmation progress for ${selectedMonth}/${selectedYear}.</p>
+                        <p>Review department confirmations and finalize attendance for ${selectedMonth}/${selectedYear}.</p>
                     </div>
                 </div>
 
@@ -74,25 +74,35 @@
                             <c:when test="${overallStatus == 'FINALIZED'}">
                                 <span class="attendance-confirm-status finalized">Finalized</span>
                             </c:when>
+                            <c:when test="${allConfirmed}">
+                                <span class="attendance-confirm-status confirmed">Ready to Finalize</span>
+                            </c:when>
                             <c:otherwise>
-                                <span class="attendance-confirm-status pending">PENDING DEPARTMENT CONFIRMATIONS</span>
+                                <span class="attendance-confirm-status pending">Awaiting Department Confirmations</span>
                             </c:otherwise>
                         </c:choose>
                     </h3>
                     
                     <c:if test="${overallStatus == 'PENDING' && confirmationAllowed}">
                         <c:if test="${isHRManager}">
-                            <p class="attendance-confirm-note">All department confirmations are required before HR can finalize attendance.</p>
-                            <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" class="attendance-confirm-finalize-form">
-                                <input type="hidden" name="month" value="${selectedMonth}">
-                                <input type="hidden" name="year" value="${selectedYear}">
-                                <input type="hidden" name="action" value="hr_finalize">
-                                <button type="submit" class="matrix-btn matrix-search-btn attendance-confirm-finalize-btn" ${!allConfirmed ? 'disabled' : ''} onclick="return confirm('Are you sure? This will create a permanent snapshot.');">Finalize Attendance</button>
-                            </form>
+                            <c:choose>
+                                <c:when test="${allConfirmed}">
+                                    <p class="attendance-confirm-note">All departments have confirmed attendance. The monthly record is ready to finalize.</p>
+                                    <form action="${pageContext.request.contextPath}/attendance/confirm" method="post" class="attendance-confirm-finalize-form">
+                                        <input type="hidden" name="month" value="${selectedMonth}">
+                                        <input type="hidden" name="year" value="${selectedYear}">
+                                        <input type="hidden" name="action" value="hr_finalize">
+                                        <button type="submit" class="matrix-btn matrix-search-btn attendance-confirm-finalize-btn" onclick="return confirm('Finalize attendance for ${selectedMonth}/${selectedYear}? This action cannot be undone.');">Finalize Attendance</button>
+                                    </form>
+                                </c:when>
+                                <c:otherwise>
+                                    <p class="attendance-confirm-note">Finalize Attendance becomes available after every department manager confirms attendance.</p>
+                                </c:otherwise>
+                            </c:choose>
                         </c:if>
                     </c:if>
                     <c:if test="${overallStatus == 'PENDING' && !confirmationAllowed}">
-                        <p class="attendance-confirm-note">Attendance can only be confirmed for the previous month from day 5 to day 10.</p>
+                        <p class="attendance-confirm-note">Attendance confirmation is available for the previous month from the 5th to the 10th.</p>
                     </c:if>
                     
                 </div>
