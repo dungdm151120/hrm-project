@@ -310,11 +310,9 @@ public class CreateRequestServlet extends HttpServlet {
                 }
 
                 Part filePart = request.getPart("dependentFile");
-                if ("ADD".equals(changeType) || "UPDATE".equals(changeType)) {
-                    if (filePart == null || filePart.getSize() == 0) {
-                        response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=missing_evidence_file");
-                        return;
-                    }
+                if (filePart == null || filePart.getSize() == 0) {
+                    response.sendRedirect("create_request?type=DEPENDENT_CHANGE_REQUEST&error=missing_evidence_file");
+                    return;
                 }
 
                 String relativePath = null;
@@ -415,7 +413,7 @@ public class CreateRequestServlet extends HttpServlet {
                 String relativePath = "/uploads/sick_leave/" + fileName;
 
                 int requestId = requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
-                sickDAO.createSickLeaveRequest(requestId, relativePath, requestedDates);
+                sickDAO.createSickLeaveRequest(requestId, startDate, endDate, relativePath, requestedDates);
             } else {
                 requestDAO.createRequestAndGetId(req, new ArrayList<>(uniqueObsIds));
             }

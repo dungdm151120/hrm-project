@@ -163,7 +163,7 @@ public class LeaveRequestDAO {
 
                 String holidayName = holidayDAO.getHolidayName(date);
                 if (holidayName != null) {
-                    conflicts.add("Ngày " + date + " là ngày nghỉ lễ (" + holidayName + ")");
+                    conflicts.add("Date " + date + " is a public holiday (" + holidayName + ")");
                     continue;
                 }
 
@@ -174,7 +174,7 @@ public class LeaveRequestDAO {
                         if (rs.next()) {
                             String st = rs.getString("status");
                             String label = "ON_LEAVE".equals(st) ? "On Leave (Paid)" : ("SICK_LEAVE".equals(st) ? "Sick Leave" : "Absent");
-                            conflicts.add("Ngày " + date + " đã có điểm danh: " + label);
+                            conflicts.add("Date " + date + " already has an attendance record: " + label);
                             foundConflict = true;
                         }
                     }
@@ -191,7 +191,7 @@ public class LeaveRequestDAO {
                         if (rs.next()) {
                             String lt = rs.getString("leave_type");
                             String label = "ON_LEAVE".equals(lt) ? "On Leave (Paid)" : "Leave (Absent)";
-                            conflicts.add("Ngày " + date + " đã có đơn " + label);
+                            conflicts.add("Date " + date + " already has a leave request (" + label + ")");
                             foundConflict = true;
                         }
                     }
@@ -204,7 +204,7 @@ public class LeaveRequestDAO {
                     ps.setDate(2, Date.valueOf(date));
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
-                            conflicts.add("Ngày " + date + " đã có đơn Sick Leave");
+                            conflicts.add("Date " + date + " already has a Sick Leave request");
                         }
                     }
                 }

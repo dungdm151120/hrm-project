@@ -11,8 +11,8 @@ import java.util.List;
 
 public class SickLeaveRequestDAO {
 
-    public int createSickLeaveRequest(int requestId, String filePath, List<LocalDate> dates) throws SQLException {
-        String sqlSick = "INSERT INTO sick_leave_requests (request_id, file_path) VALUES (?, ?)";
+    public int createSickLeaveRequest(int requestId, LocalDate startDate, LocalDate endDate, String filePath, List<LocalDate> dates) throws SQLException {
+        String sqlSick = "INSERT INTO sick_leave_requests (request_id, start_date, end_date, file_path) VALUES (?, ?, ?, ?)";
         String sqlDate = "INSERT INTO sick_leave_dates (sick_leave_request_id, leave_date) VALUES (?, ?)";
 
         Connection conn = null;
@@ -23,7 +23,11 @@ public class SickLeaveRequestDAO {
             int sickRequestId;
             try (PreparedStatement ps = conn.prepareStatement(sqlSick, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, requestId);
-                ps.setString(2, filePath);
+                if (startDate != null) ps.setDate(2, Date.valueOf(startDate));
+                else ps.setNull(2, Types.DATE);
+                if (endDate != null) ps.setDate(3, Date.valueOf(endDate));
+                else ps.setNull(3, Types.DATE);
+                ps.setString(4, filePath);
                 ps.executeUpdate();
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) {
@@ -52,6 +56,12 @@ public class SickLeaveRequestDAO {
         }
     }
 
+    public int createSickLeaveRequest(int requestId, String filePath, List<LocalDate> dates) throws SQLException {
+        LocalDate startDate = (dates != null && !dates.isEmpty()) ? dates.get(0) : null;
+        LocalDate endDate = (dates != null && !dates.isEmpty()) ? dates.get(dates.size() - 1) : null;
+        return createSickLeaveRequest(requestId, startDate, endDate, filePath, dates);
+    }
+
     public SickLeaveRequest getByRequestId(int requestId) {
         String sql = "SELECT * FROM sick_leave_requests WHERE request_id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -62,8 +72,14 @@ public class SickLeaveRequestDAO {
                 SickLeaveRequest sr = new SickLeaveRequest();
                 sr.setId(rs.getInt("id"));
                 sr.setRequestId(rs.getInt("request_id"));
+                Date sDate = rs.getDate("start_date");
+                Date eDate = rs.getDate("end_date");
+                if (sDate != null) sr.setStartDate(sDate.toLocalDate());
+                if (eDate != null) sr.setEndDate(eDate.toLocalDate());
                 sr.setFilePath(rs.getString("file_path"));
-                sr.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                if (rs.getTimestamp("created_at") != null) {
+                    sr.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                }
                 return sr;
             }
         } catch (SQLException e) {

@@ -71,7 +71,7 @@
     <input type="text" name="relationship" id="relationship" class="request-input" required placeholder="e.g., Child, Spouse, Parent" />
 </div>
 
-<div class="request-group dependent-detail-field">
+<div class="request-group" id="proofImageGroup">
     <label for="dependentFile">Proof Image <span class="required-star">*</span></label>
     <input type="file" name="dependentFile" id="dependentFile" class="request-input" accept="image/*" required />
 </div>
@@ -114,6 +114,7 @@
         var depSelect = document.getElementById('dependentId');
         var detailFields = document.querySelectorAll('.dependent-detail-field');
         var statusField = document.getElementById('dependentStatus');
+        var proofImageGroup = document.getElementById('proofImageGroup');
         
         // Detail inputs
         var nameInput = document.getElementById('dependentName');
@@ -137,6 +138,8 @@
             dobInput.required = true;
             idNumInput.required = true;
             relInput.required = true;
+
+            proofImageGroup.style.display = 'block';
             fileInput.required = true;
             
             // Clear fields
@@ -160,6 +163,8 @@
             dobInput.required = true;
             idNumInput.required = true;
             relInput.required = true;
+
+            proofImageGroup.style.display = 'block';
             fileInput.required = true;
 
             // Trigger details fill if a dependent was already selected
@@ -187,7 +192,9 @@
             dobInput.required = false;
             idNumInput.required = false;
             relInput.required = false;
-            fileInput.required = false;
+
+            proofImageGroup.style.display = 'block';
+            fileInput.required = true;
             
             // Clear inputs
             nameInput.value = '';

@@ -36,6 +36,14 @@
             <div style="max-width: 720px; margin: 0 auto;">
 
                 <%-- ERROR / SUCCESS MESSAGES --%>
+                <div id="clientErrorAlert" class="alert alert-error" role="alert" style="display: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    <span id="clientErrorText"></span>
+                </div>
                 <c:if test="${not empty importError}">
                     <div class="alert alert-error" role="alert">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -92,11 +100,11 @@
                                 <input type="file"
                                        name="excelFile"
                                        id="excelFile"
-                                       accept=".xlsx"
+                                       accept=".xlsx,.xls"
                                        required
                                        style="padding: 0.85rem 1.1rem;">
                                 <p class="text-muted" style="margin-top: 0.4rem; font-size: 0.8rem;">
-                                    Only .xlsx files are accepted (Excel 2007 and later). Maximum file size: 10 MB.
+                                    Only Excel files (.xlsx, .xls) are accepted. Maximum file size: 10 MB.
                                 </p>
                             </div>
 
@@ -137,8 +145,26 @@
 
     <%-- LIGHTWEIGHT JAVASCRIPT --%>
     <script>
+        function showClientError(msg) {
+            const errAlert = document.getElementById('clientErrorAlert');
+            const errText = document.getElementById('clientErrorText');
+            if (errAlert && errText) {
+                errText.textContent = msg;
+                errAlert.style.display = 'flex';
+                errAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function clearClientError() {
+            const errAlert = document.getElementById('clientErrorAlert');
+            if (errAlert) {
+                errAlert.style.display = 'none';
+            }
+        }
+
         // Display selected file name
         document.getElementById('excelFile').addEventListener('change', function(e) {
+            clearClientError();
             const fileName = e.target.files[0]?.name;
             if (fileName) {
                 const label = document.querySelector('label[for="excelFile"]');
@@ -148,19 +174,20 @@
 
         // Validate before submit
         document.getElementById('import-form').addEventListener('submit', function(e) {
+            clearClientError();
             const fileInput = document.getElementById('excelFile');
             if (!fileInput.files.length) {
                 e.preventDefault();
-                alert('Please select an Excel file.');
+                showClientError('Import failed: Please select an Excel file.');
                 return false;
             }
-            const fileName = fileInput.files[0].name;
-            if (!fileName.toLowerCase().endsWith('.xlsx')) {
+            const fileName = fileInput.files[0].name.toLowerCase();
+            if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
                 e.preventDefault();
-                alert('Only .xlsx files are accepted. Please choose a valid file.');
+                showClientError('Import failed: Invalid file type. Only Excel files (.xlsx, .xls) are allowed.');
                 return false;
             }
-            return confirm('Are you sure you want to import data from "' + fileName + '"?');
+            return confirm('Are you sure you want to import data from "' + fileInput.files[0].name + '"?');
         });
     </script>
 </body>

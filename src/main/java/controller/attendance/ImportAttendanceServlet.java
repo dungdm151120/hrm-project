@@ -51,8 +51,30 @@ public class ImportAttendanceServlet extends HttpServlet {
                 return;
             }
 
-            InputStream fileContent = filePart.getInputStream();
-            Workbook workbook = new XSSFWorkbook(fileContent);
+            String fileName = filePart.getSubmittedFileName();
+            if (fileName == null || (!fileName.toLowerCase().endsWith(".xlsx") && !fileName.toLowerCase().endsWith(".xls"))) {
+                req.setAttribute("importError", "Import failed: Invalid file type. Only Excel files (.xlsx, .xls) are allowed.");
+                req.getRequestDispatcher("/WEB-INF/views/attendance/import.jsp").forward(req, resp);
+                return;
+            }
+
+            Workbook workbook;
+            try {
+                InputStream fileContent = filePart.getInputStream();
+                workbook = WorkbookFactory.create(fileContent);
+            } catch (Exception e) {
+                req.setAttribute("importError", "Import failed: The selected file is not a valid Excel file or is corrupted. Please choose a valid Excel file.");
+                req.getRequestDispatcher("/WEB-INF/views/attendance/import.jsp").forward(req, resp);
+                return;
+            }
+
+            if (workbook.getNumberOfSheets() == 0) {
+                workbook.close();
+                req.setAttribute("importError", "Import failed: Excel file contains no worksheets.");
+                req.getRequestDispatcher("/WEB-INF/views/attendance/import.jsp").forward(req, resp);
+                return;
+            }
+
             Sheet sheet = workbook.getSheetAt(0);
 
             List<AttendanceLog> logs = new ArrayList<>();

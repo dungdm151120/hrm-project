@@ -49,9 +49,15 @@ public class RequestDetailServlet extends HttpServlet {
             if ("LEAVE_REQUEST".equals(req.getType())) {
                 LeaveRequestDAO leaveRequestDAO = new LeaveRequestDAO();
                 LeaveRequest lr = leaveRequestDAO.getByRequestId(id);
-                request.setAttribute("leaveRequest", lr);
                 if (lr != null) {
                     List<LocalDate> dates = leaveRequestDAO.getDatesByLeaveRequestId(lr.getId());
+                    if (lr.getStartDate() == null && dates != null && !dates.isEmpty()) {
+                        lr.setStartDate(dates.get(0));
+                    }
+                    if (lr.getEndDate() == null && dates != null && !dates.isEmpty()) {
+                        lr.setEndDate(dates.get(dates.size() - 1));
+                    }
+                    request.setAttribute("leaveRequest", lr);
                     request.setAttribute("leaveDates", dates);
                 }
             } else if ("ATTENDANCE_ADJUST".equals(req.getType())) {
@@ -62,8 +68,14 @@ public class RequestDetailServlet extends HttpServlet {
                 SickLeaveRequestDAO sickDAO = new SickLeaveRequestDAO();
                 SickLeaveRequest sickReq = sickDAO.getByRequestId(id);
                 if (sickReq != null) {
-                    request.setAttribute("sickLeaveRequest", sickReq);
                     List<LocalDate> dates = sickDAO.getDatesBySickRequestId(sickReq.getId());
+                    if (sickReq.getStartDate() == null && dates != null && !dates.isEmpty()) {
+                        sickReq.setStartDate(dates.get(0));
+                    }
+                    if (sickReq.getEndDate() == null && dates != null && !dates.isEmpty()) {
+                        sickReq.setEndDate(dates.get(dates.size() - 1));
+                    }
+                    request.setAttribute("sickLeaveRequest", sickReq);
                     request.setAttribute("sickLeaveDates", dates);
                 }
             } else if ("OVERTIME".equals(req.getType())) {

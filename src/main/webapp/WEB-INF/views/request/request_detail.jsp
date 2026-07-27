@@ -179,8 +179,16 @@
                             </span>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Leave Date:</span>
-                            <span class="detail-value"><strong>${leaveRequest.leaveDate}</strong></span>
+                            <span class="detail-label">Start Date:</span>
+                            <span class="detail-value"><strong>${leaveRequest.startDate}</strong></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">End Date:</span>
+                            <span class="detail-value"><strong>${leaveRequest.endDate}</strong></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Proposed Days:</span>
+                            <span class="detail-value"><strong>${not empty leaveDates ? fn:length(leaveDates) : 0}</strong> day(s)</span>
                         </div>
                     </c:if>
 
@@ -202,35 +210,17 @@
 
                     <%-- ══════════════ SICK LEAVE REQUEST ══════════════ --%>
                     <c:if test="${request.type == 'SICK_LEAVE_REQUEST' && not empty sickLeaveRequest}">
-
-                        <%-- Sick Dates --%>
-                        <div class="detail-row" style="grid-column: 1 / -1;">
-                            <span class="detail-label">Sick Dates:</span>
-                            <span class="detail-value">
-                                <c:choose>
-                                    <c:when test="${not empty sickLeaveDates}">
-                                        <div class="sick-date-list">
-                                            <c:forEach items="${sickLeaveDates}" var="d">
-                                                <span class="sick-date-tag">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                                         stroke="currentColor" stroke-width="2"
-                                                         stroke-linecap="round" stroke-linejoin="round">
-                                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                                        <line x1="16" y1="2" x2="16" y2="6"/>
-                                                        <line x1="8"  y1="2" x2="8"  y2="6"/>
-                                                        <line x1="3"  y1="10" x2="21" y2="10"/>
-                                                    </svg>
-                                                    ${d}
-                                                </span>
-                                            </c:forEach>
-                                        </div>
-                                        <div class="sick-date-count">
-                                            Total: <strong>${fn:length(sickLeaveDates)}</strong> day(s)
-                                        </div>
-                                    </c:when>
-                                    <c:otherwise><span style="color:#999;">No dates recorded.</span></c:otherwise>
-                                </c:choose>
-                            </span>
+                        <div class="detail-row">
+                            <span class="detail-label">Start Date:</span>
+                            <span class="detail-value"><strong>${sickLeaveRequest.startDate}</strong></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">End Date:</span>
+                            <span class="detail-value"><strong>${sickLeaveRequest.endDate}</strong></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Proposed Days:</span>
+                            <span class="detail-value"><strong>${not empty sickLeaveDates ? fn:length(sickLeaveDates) : 0}</strong> day(s)</span>
                         </div>
 
                         <%-- Attachment --%>
@@ -383,6 +373,26 @@
                                 <div class="detail-row" style="grid-column: 1 / -1;">
                                     <span class="detail-label">Target Dependent Status:</span>
                                     <span class="detail-value" style="color: #dc3545; font-weight: bold;">To Be Marked Inactive</span>
+                                </div>
+                                <div class="detail-row" style="grid-column: 1 / -1;">
+                                    <span class="detail-label">Evidence Image:</span>
+                                    <span class="detail-value">
+                                        <c:choose>
+                                            <c:when test="${not empty dependentChangeRequest.documentPath}">
+                                                <c:set var="fullUrl" value="${pageContext.request.contextPath}${dependentChangeRequest.documentPath}"/>
+                                                <div class="attachment-preview-wrap" style="margin-top: 10px;">
+                                                    <img src="${fullUrl}" alt="Evidence Image"
+                                                         onclick="window.open('${fullUrl}','_blank')"
+                                                         title="Click to open full size"
+                                                         style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: contain;"/>
+                                                    <div class="att-open-hint" style="font-size: 12px; color: #666; margin-top: 5px;">Click image to open full size</div>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span style="color:#999;">No image uploaded.</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </span>
                                 </div>
                             </c:when>
                         </c:choose>
