@@ -1216,4 +1216,29 @@ public class PayrollDAO {
         }
         return false;
     }
+
+    public int countTotalEmployees(Integer departmentId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1=1");
+
+        if (departmentId != null && departmentId > 0) {
+            sql.append(" AND department_id = ? ");
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            if (departmentId != null && departmentId > 0) {
+                ps.setInt(1, departmentId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }
