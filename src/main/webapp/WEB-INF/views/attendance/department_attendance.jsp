@@ -177,31 +177,6 @@
                     </table>
                 </div>
 
-                <c:if test="${currentUser.id == departmentManagerId
-                              && sessionScope.userPermissions.contains('ATTENDANCE_CONFIRM_DEPT')}">
-                    <div style="margin-top: 20px; text-align: right;">
-                        <c:choose>
-                            <c:when test="${isConfirmed}">
-                                <div class="attendance-matrix-message success">
-                                    ✅ Department Attendance Confirmed
-                                </div>
-                            </c:when>
-                            <c:otherwise>
-                                <form action="${pageContext.request.contextPath}/attendance/confirm"
-                                       method="post"
-                                       style="display:inline;"
-                                       onsubmit="return confirm('Confirm department attendance for ${selectedMonth}/${selectedYear}? This action cannot be undone.');">
-                                    <input type="hidden" name="month" value="${selectedMonth}">
-                                    <input type="hidden" name="year" value="${selectedYear}">
-                                    <input type="hidden" name="departmentId" value="${currentUser.departmentId}">
-                                    <input type="hidden" name="action" value="dept_confirm">
-                                    <button type="submit" class="matrix-btn matrix-search-btn">Confirm</button>
-                                </form>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-                </c:if>
-
                 <div class="matrix-pagination-wrapper">
                     <p>
                         <c:choose>

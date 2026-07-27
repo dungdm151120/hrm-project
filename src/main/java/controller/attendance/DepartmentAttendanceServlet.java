@@ -1,9 +1,7 @@
 package controller.attendance;
 
 import dao.AttendanceDAO;
-import dao.AttendanceConfirmDAO;
 import dao.DepartmentDAO;
-import model.DepartmentConfirmStatusDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -131,17 +129,6 @@ public class DepartmentAttendanceServlet extends HttpServlet {
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalEmployees", totalEmployees);
         request.setAttribute("departmentName", department != null ? department.getName() : "My department");
-        request.setAttribute("departmentManagerId", department != null ? department.getManagerUserId() : null);
-
-        boolean isConfirmed = false;
-        List<DepartmentConfirmStatusDTO> lockStatuses = new AttendanceConfirmDAO().getDepartmentLockStatuses(selectedMonth, selectedYear);
-        for (DepartmentConfirmStatusDTO s : lockStatuses) {
-            if (s.getDepartmentId() == departmentId && "CONFIRMED".equals(s.getStatus())) {
-                isConfirmed = true;
-                break;
-            }
-        }
-        request.setAttribute("isConfirmed", isConfirmed);
 
         request.getRequestDispatcher("/WEB-INF/views/attendance/department_attendance.jsp")
                 .forward(request, response);
