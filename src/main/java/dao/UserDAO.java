@@ -1740,7 +1740,8 @@ public class UserDAO {
     }
 
     public int countUsers(String keyword, Boolean active) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE u.role_id <> (SELECT id FROM roles WHERE name = 'BUSINESS ADMIN')");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u " +
+                "WHERE u.role_id NOT IN (SELECT id FROM roles WHERE name IN ('BUSINESS ADMIN','SYSTEM ADMIN'))");
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND u.full_name LIKE ?");
