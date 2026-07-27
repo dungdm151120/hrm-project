@@ -8,8 +8,6 @@ public class AttendanceSummary {
     private int forgotCheckCount;
     private double totalLateAndEarlyHours;
     private double remainingLeaveDays;
-    private double entitledLeaveDays;
-    private double advancedLeaveDays;
     private double overtimeHours;
     private double leaveDaysInMonth;
     private double absentDaysInMonth;
@@ -73,22 +71,6 @@ public class AttendanceSummary {
 
     public void setRemainingLeaveDays(double remainingLeaveDays) {
         this.remainingLeaveDays = remainingLeaveDays;
-    }
-
-    public double getEntitledLeaveDays() {
-        return entitledLeaveDays;
-    }
-
-    public void setEntitledLeaveDays(double entitledLeaveDays) {
-        this.entitledLeaveDays = entitledLeaveDays;
-    }
-
-    public double getAdvancedLeaveDays() {
-        return advancedLeaveDays;
-    }
-
-    public void setAdvancedLeaveDays(double advancedLeaveDays) {
-        this.advancedLeaveDays = advancedLeaveDays;
     }
 
     public double getOvertimeHours() {

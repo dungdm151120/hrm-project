@@ -799,7 +799,6 @@ public class AttendanceDAO {
                 }
             }
         }
-        summary.setEntitledLeaveDays(entitledLeave);
         summary.setRemainingLeaveDays(entitledLeave - totalUsedLeave);
 
         // 2. Unpaid Leave / Absent (LEAVE) balance calculation (independent 12 days)
