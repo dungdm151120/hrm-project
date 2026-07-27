@@ -71,7 +71,6 @@ public class UserListServlet extends HttpServlet {
 
         request.setAttribute("userList", userList);
         request.setAttribute("keyword", keyword);
-        request.setAttribute("search", keyword);
         request.setAttribute("status", status);
         request.setAttribute("sort", sort);
         request.setAttribute("currentPage", currentPage);
