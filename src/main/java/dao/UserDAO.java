@@ -14,38 +14,6 @@ import java.util.List;
 public class UserDAO {
 
 
-    public User findByEmailAndPassword(String email, String password) {
-        String sql = """
-                SELECT u.*, r.name AS role_name, p.name AS position_name, d.name AS department_name
-                FROM users u
-                JOIN roles r ON u.role_id = r.id
-                LEFT JOIN positions p ON u.position_id = p.id
-                LEFT JOIN departments d ON u.department_id = d.id
-                WHERE u.email = ?
-                  AND u.password = ?
-                  AND u.active = TRUE
-                  AND r.active = TRUE
-                """;
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, email);
-            ps.setString(2, password);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToUser(rs);
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
     public User findActiveUserByEmail(String email) {
         String sql = """
                 SELECT u.*, r.name AS role_name
@@ -674,25 +642,27 @@ public class UserDAO {
 
 
     public boolean updatePassword(int userId, String newPassword) {
+        try (Connection conn = DBConnection.getConnection()) {
+            return updatePassword(conn, userId, newPassword);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean updatePassword(Connection conn, int userId, String newPassword) throws SQLException {
         String sql = """
                 UPDATE users
                 SET password = ?
                 WHERE id = ?
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newPassword);
             ps.setInt(2, userId);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+            return ps.executeUpdate() == 1;
         }
-
-        return false;
     }
 
 
