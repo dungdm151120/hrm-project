@@ -107,12 +107,24 @@ public class ExportPayrollServlet extends HttpServlet {
         if (isAllCompany) {
             titleLine1 = "BÁO CÁO TIỀN LƯƠNG CÔNG TY";
             titleLine2 = "TOÀN CÔNG TY - THÁNG " + month + "/" + year;
-            headers = new String[]{"Full Name", "Position", "Department", "Basic Salary", "Net Pay Amount"};
+            headers = new String[]{
+                    "Full Name", "Position", "Department",
+                    "Basic Salary", "Hours (Act/Exp)", "Actual Base Income", "Allowance", "Total Gross Income",
+                    "Social Insurance", "Health Insurance", "Unemployment Insurance", "Union Fee",
+                    "Income Before Tax", "Taxable Income", "Personal Income Tax", "Overtime Pay", "Sick Leave Pay", "Net Pay Amount",
+                    "Status"
+            };
         } else {
             String deptName = (payrollList != null && !payrollList.isEmpty()) ? payrollList.get(0).getDepartmentName() : "N/A";
             titleLine1 = "BÁO CÁO TIỀN LƯƠNG PHÒNG";
             titleLine2 = deptName.toUpperCase() + " - THÁNG " + month + "/" + year;
-            headers = new String[]{"Full Name", "Position", "Basic Salary", "Net Pay Amount"};
+            headers = new String[]{
+                    "Full Name", "Position",
+                    "Basic Salary", "Hours (Act/Exp)", "Actual Base Income", "Allowance", "Total Gross Income",
+                    "Social Insurance", "Health Insurance", "Unemployment Insurance", "Union Fee",
+                    "Income Before Tax", "Taxable Income", "Personal Income Tax", "Overtime Pay", "Sick Leave Pay", "Net Pay Amount",
+                    "Status"
+            };
         }
 
         Font companyFont = workbook.createFont();
@@ -139,7 +151,7 @@ public class ExportPayrollServlet extends HttpServlet {
 
         Font headerFont = workbook.createFont();
         headerFont.setFontName("Arial");
-        headerFont.setFontHeightInPoints((short) 11);
+        headerFont.setFontHeightInPoints((short) 10);
         headerFont.setBold(true);
         headerFont.setColor(IndexedColors.WHITE.getIndex());
 
@@ -148,12 +160,17 @@ public class ExportPayrollServlet extends HttpServlet {
         headerStyle.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
         CellStyle currencyStyle = workbook.createCellStyle();
         DataFormat format = workbook.createDataFormat();
         currencyStyle.setDataFormat(format.getFormat("#,##0\" VND\""));
 
+        CellStyle centerStyle = workbook.createCellStyle();
+        centerStyle.setAlignment(HorizontalAlignment.CENTER);
+
         Font totalFont = workbook.createFont();
+        totalFont.setFontName("Arial");
         totalFont.setBold(true);
         CellStyle totalStyle = workbook.createCellStyle();
         totalStyle.setFont(totalFont);
@@ -190,31 +207,79 @@ public class ExportPayrollServlet extends HttpServlet {
         if (payrollList != null) {
             for (Payroll p : payrollList) {
                 Row row = sheet.createRow(rowIndex++);
+                int col = 0;
 
+                row.createCell(col++).setCellValue(p.getEmployeeName() != null ? p.getEmployeeName() : "");
+                row.createCell(col++).setCellValue(p.getPositionName() != null ? p.getPositionName() : "");
                 if (isAllCompany) {
-                    row.createCell(0).setCellValue(p.getEmployeeName());
-                    row.createCell(1).setCellValue(p.getPositionName());
-                    row.createCell(2).setCellValue(p.getDepartmentName());
-
-                    Cell cellBasic = row.createCell(3);
-                    cellBasic.setCellValue(p.getBasicSalary());
-                    cellBasic.setCellStyle(currencyStyle);
-
-                    Cell cellNetPay = row.createCell(4);
-                    cellNetPay.setCellValue(p.getNetPay());
-                    cellNetPay.setCellStyle(currencyStyle);
-                } else {
-                    row.createCell(0).setCellValue(p.getEmployeeName());
-                    row.createCell(1).setCellValue(p.getPositionName());
-
-                    Cell cellBasic = row.createCell(2);
-                    cellBasic.setCellValue(p.getBasicSalary());
-                    cellBasic.setCellStyle(currencyStyle);
-
-                    Cell cellNetPay = row.createCell(3);
-                    cellNetPay.setCellValue(p.getNetPay());
-                    cellNetPay.setCellStyle(currencyStyle);
+                    row.createCell(col++).setCellValue(p.getDepartmentName() != null ? p.getDepartmentName() : "");
                 }
+
+                Cell cellBasic = row.createCell(col++);
+                cellBasic.setCellValue(p.getBasicSalary());
+                cellBasic.setCellStyle(currencyStyle);
+
+                Cell cellHours = row.createCell(col++);
+                cellHours.setCellValue(p.getActualHours() + " / " + p.getExpectedHours());
+                cellHours.setCellStyle(centerStyle);
+
+                Cell cellActBase = row.createCell(col++);
+                cellActBase.setCellValue(p.getActualBasicSalary());
+                cellActBase.setCellStyle(currencyStyle);
+
+                Cell cellBonus = row.createCell(col++);
+                cellBonus.setCellValue(p.getBonus());
+                cellBonus.setCellStyle(currencyStyle);
+
+                Cell cellGross = row.createCell(col++);
+                cellGross.setCellValue(p.getTotalIncome());
+                cellGross.setCellStyle(currencyStyle);
+
+                Cell cellSocial = row.createCell(col++);
+                cellSocial.setCellValue(p.getSocialInsurance());
+                cellSocial.setCellStyle(currencyStyle);
+
+                Cell cellHealth = row.createCell(col++);
+                cellHealth.setCellValue(p.getHealthInsurance());
+                cellHealth.setCellStyle(currencyStyle);
+
+                Cell cellUnemploy = row.createCell(col++);
+                cellUnemploy.setCellValue(p.getUnemploymentInsurance());
+                cellUnemploy.setCellStyle(currencyStyle);
+
+                Cell cellUnion = row.createCell(col++);
+                cellUnion.setCellValue(p.getUnionFee());
+                cellUnion.setCellStyle(currencyStyle);
+
+                Cell cellIncBeforeTax = row.createCell(col++);
+                cellIncBeforeTax.setCellValue(p.getIncomeBeforeTax());
+                cellIncBeforeTax.setCellStyle(currencyStyle);
+
+                Cell cellTaxable = row.createCell(col++);
+                cellTaxable.setCellValue(p.getTaxableIncome());
+                cellTaxable.setCellStyle(currencyStyle);
+
+                Cell cellPIT = row.createCell(col++);
+                cellPIT.setCellValue(p.getIncomeTax());
+                cellPIT.setCellStyle(currencyStyle);
+
+                Cell cellOT = row.createCell(col++);
+                cellOT.setCellValue(p.getOvertimePay());
+                cellOT.setCellStyle(currencyStyle);
+
+                Cell cellSick = row.createCell(col++);
+                cellSick.setCellValue(p.getSickLeavePay());
+                cellSick.setCellStyle(currencyStyle);
+
+                Cell cellNet = row.createCell(col++);
+                cellNet.setCellValue(p.getNetPay());
+                cellNet.setCellStyle(currencyStyle);
+
+                Cell cellStatus = row.createCell(col++);
+                String statusStr = (p.getStatus() != null && !p.getStatus().isEmpty()) ? p.getStatus().toUpperCase() : "DRAFT";
+                cellStatus.setCellValue(statusStr);
+                cellStatus.setCellStyle(centerStyle);
+
                 totalNetPay += p.getNetPay();
             }
         }
@@ -224,15 +289,15 @@ public class ExportPayrollServlet extends HttpServlet {
         cellTotalLabel.setCellValue("Total Net Pay");
         cellTotalLabel.setCellStyle(totalStyle);
 
-        int totalValueColumnIndex = isAllCompany ? 4 : 3;
-        Cell cellTotalValue = totalRow.createCell(totalValueColumnIndex);
+        int netPayColIndex = headers.length - 2;
+        Cell cellTotalValue = totalRow.createCell(netPayColIndex);
         cellTotalValue.setCellValue(totalNetPay);
         cellTotalValue.setCellStyle(totalStyle);
 
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
-            if (sheet.getColumnWidth(i) < 5000) {
-                sheet.setColumnWidth(i, 5200);
+            if (sheet.getColumnWidth(i) < 4500) {
+                sheet.setColumnWidth(i, 4800);
             }
         }
 

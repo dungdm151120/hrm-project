@@ -1218,7 +1218,7 @@ public class PayrollDAO {
     }
 
     public int countTotalEmployees(Integer departmentId) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1=1 AND active = 1 AND role_id NOT IN (1, 2)");
 
         if (departmentId != null && departmentId > 0) {
             sql.append(" AND department_id = ? ");
