@@ -19,7 +19,7 @@ public class EmailUtil {
 
     public static boolean sendResetPasswordEmail(String toEmail, String newPassword) {
         if (FROM_EMAIL.isBlank() || APP_PASSWORD.isBlank()) {
-            System.out.println("Mail is not configured. New password for " + toEmail + ": " + newPassword);
+            System.err.println("Password reset email was not sent because mail is not configured.");
             return false;
         }
 

@@ -169,11 +169,10 @@ public class PasswordResetRequestDAO {
         return null;
     }
 
-    public boolean approve(int requestId, String generatedPassword, int handledBy, String adminNote) {
+    public boolean approve(Connection conn, int requestId, int handledBy, String adminNote) throws Exception {
         String sql = """
                 UPDATE password_reset_requests
                 SET status = 'APPROVED',
-                    generated_password = ?,
                     admin_note = ?,
                     handled_at = NOW(),
                     handled_by = ?
@@ -181,20 +180,12 @@ public class PasswordResetRequestDAO {
                   AND status = 'PENDING'
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, generatedPassword);
-            ps.setString(2, adminNote);
-            ps.setInt(3, handledBy);
-            ps.setInt(4, requestId);
-
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, adminNote);
+            ps.setInt(2, handledBy);
+            ps.setInt(3, requestId);
+            return ps.executeUpdate() == 1;
         }
-
-        return false;
     }
 
     public boolean reject(int requestId, int handledBy, String adminNote) {
@@ -232,7 +223,6 @@ public class PasswordResetRequestDAO {
         request.setEmail(rs.getString("email"));
         request.setReason(rs.getString("reason"));
         request.setStatus(rs.getString("status"));
-        request.setGeneratedPassword(rs.getString("generated_password"));
         request.setAdminNote(rs.getString("admin_note"));
         request.setCreatedAt(getNullableLocalDateTime(rs, "created_at"));
         request.setHandledAt(getNullableLocalDateTime(rs, "handled_at"));

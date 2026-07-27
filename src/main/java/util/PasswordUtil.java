@@ -29,16 +29,11 @@ public class PasswordUtil {
             return false;
         }
 
-        if (isBcryptHash(storedPassword)) {
-            return BCrypt.checkpw(plainPassword, storedPassword);
+        if (!isBcryptHash(storedPassword)) {
+            return false;
         }
 
-        // Temporary compatibility for existing seed/legacy users stored as plain text.
-        return plainPassword.equals(storedPassword);
-    }
-
-    public static boolean needsHashUpgrade(String storedPassword) {
-        return storedPassword != null && !isBcryptHash(storedPassword);
+        return BCrypt.checkpw(plainPassword, storedPassword);
     }
 
     private static boolean isBcryptHash(String value) {

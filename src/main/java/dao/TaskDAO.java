@@ -99,12 +99,6 @@ public class TaskDAO {
         return null;
     }
 
-    public long insertTask(Task task) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            return insertTask(conn, task);
-        }
-    }
-
     public long insertTask(Connection conn, Task task) throws SQLException {
         String sql = """
                 INSERT INTO tasks (title, description, status, deadline, progress, allow_participants_complete_checklist, created_by, assigned_to)
@@ -121,12 +115,6 @@ public class TaskDAO {
             }
         }
         throw new SQLException("Could not insert task.");
-    }
-
-    public void updateTask(Task task) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            updateTask(conn, task);
-        }
     }
 
     public void updateTask(Connection conn, Task task) throws SQLException {
@@ -165,31 +153,12 @@ public class TaskDAO {
         }
     }
 
-    public void updateTaskStatus(long taskId, String status) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            updateTaskStatus(conn, taskId, status);
-        }
-    }
-
     public void updateTaskStatus(Connection conn, long taskId, String status) throws SQLException {
         String sql = "UPDATE tasks SET status = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setLong(2, taskId);
             ps.executeUpdate();
-        }
-    }
-
-    public void replaceTaskRelations(Task task, List<Long> participantIds, List<Long> observerIds) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-                replaceTaskRelations(conn, task, participantIds, observerIds);
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
         }
     }
 
@@ -208,24 +177,6 @@ public class TaskDAO {
         }
         int completed = checklistItemDAO.countCompletedChecklistItems(taskId);
         return completed * 100 / total;
-    }
-
-    public String calculateStatusFromChecklist(long taskId) {
-        int total = checklistItemDAO.countChecklistItems(taskId);
-        if (total == 0) {
-            return "TODO";
-        }
-        int completed = checklistItemDAO.countCompletedChecklistItems(taskId);
-        if (completed == 0) {
-            return "TODO";
-        }
-        return completed == total ? "COMPLETED" : "IN_PROGRESS";
-    }
-
-    public void refreshProgressAndAutoComplete(long taskId) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            refreshProgressAndAutoComplete(conn, taskId);
-        }
     }
 
     public void refreshProgressAndAutoComplete(Connection conn, long taskId) throws SQLException {
@@ -259,12 +210,6 @@ public class TaskDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }
-        }
-    }
-
-    public void resumeTask(long taskId) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            resumeTask(conn, taskId);
         }
     }
 

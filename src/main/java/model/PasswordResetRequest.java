@@ -9,7 +9,6 @@ public class PasswordResetRequest {
     private String email;
     private String reason;
     private String status;
-    private String generatedPassword;
     private String adminNote;
     private LocalDateTime createdAt;
     private LocalDateTime handledAt;
@@ -61,14 +60,6 @@ public class PasswordResetRequest {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getGeneratedPassword() {
-        return generatedPassword;
-    }
-
-    public void setGeneratedPassword(String generatedPassword) {
-        this.generatedPassword = generatedPassword;
     }
 
     public String getAdminNote() {

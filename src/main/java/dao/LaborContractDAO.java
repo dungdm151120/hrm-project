@@ -87,10 +87,6 @@ public class LaborContractDAO {
         return null;
     }
 
-    public boolean add(LaborContract contract) {
-        return add(contract, null);
-    }
-
     public boolean add(LaborContract contract, Integer changedBy) {
         expireEndedActiveContracts();
         String sql = """
@@ -123,10 +119,6 @@ public class LaborContractDAO {
         }
 
         return false;
-    }
-
-    public boolean update(LaborContract contract) {
-        return update(contract, null);
     }
 
     public boolean update(LaborContract contract, Integer changedBy) {

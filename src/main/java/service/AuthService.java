@@ -24,10 +24,6 @@ public class AuthService {
             return null;
         }
 
-        if (PasswordUtil.needsHashUpgrade(user.getPassword())) {
-            userDAO.updatePassword(user.getId(), PasswordUtil.hashPassword(password));
-        }
-
         return user;
     }
 }

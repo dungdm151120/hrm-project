@@ -37,12 +37,6 @@ public class TaskChecklistItemDAO {
         return items;
     }
 
-    public void insertChecklistItem(TaskChecklistItem item) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            insertChecklistItem(conn, item);
-        }
-    }
-
     public void insertChecklistItem(Connection conn, TaskChecklistItem item) throws SQLException {
         String sql = "INSERT INTO task_checklist_items (task_id, content, is_completed, assigned_to, completed_at) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -52,12 +46,6 @@ public class TaskChecklistItemDAO {
             setNullableLong(ps, 4, item.getAssignedTo());
             ps.setTimestamp(5, item.getCompletedAt());
             ps.executeUpdate();
-        }
-    }
-
-    public void updateChecklistItem(TaskChecklistItem item) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            updateChecklistItem(conn, item);
         }
     }
 
@@ -72,24 +60,12 @@ public class TaskChecklistItemDAO {
         }
     }
 
-    public void deleteChecklistItem(long itemId, long taskId) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            deleteChecklistItem(conn, itemId, taskId);
-        }
-    }
-
     public void deleteChecklistItem(Connection conn, long itemId, long taskId) throws SQLException {
         String sql = "DELETE FROM task_checklist_items WHERE id = ? AND task_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, itemId);
             ps.setLong(2, taskId);
             ps.executeUpdate();
-        }
-    }
-
-    public void deleteChecklistItemsByTaskId(long taskId) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            deleteChecklistItemsByTaskId(conn, taskId);
         }
     }
 
@@ -120,12 +96,6 @@ public class TaskChecklistItemDAO {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public void toggleChecklistItem(long itemId, long taskId, boolean completed) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            toggleChecklistItem(conn, itemId, taskId, completed);
-        }
     }
 
     public void toggleChecklistItem(Connection conn, long itemId, long taskId,

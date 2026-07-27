@@ -35,6 +35,19 @@
                 <div class="alert alert-error">⚠ ${param.error}</div>
             </c:if>
 
+            <c:if test="${not empty sessionScope.resetSuccess}">
+                <div class="alert alert-success">
+                    <c:out value="${sessionScope.resetSuccess}"/>
+                </div>
+                <c:remove var="resetSuccess" scope="session"/>
+            </c:if>
+            <c:if test="${not empty sessionScope.resetError}">
+                <div class="alert alert-error">
+                    <c:out value="${sessionScope.resetError}"/>
+                </div>
+                <c:remove var="resetError" scope="session"/>
+            </c:if>
+
             <div class="search-filter">
                 <form action="${pageContext.request.contextPath}/admin/password-reset-requests" method="get">
                     <input type="text" name="search" placeholder="Search user, email, or reason..." value="${search}">
