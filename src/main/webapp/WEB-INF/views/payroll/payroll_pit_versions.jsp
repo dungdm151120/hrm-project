@@ -170,7 +170,7 @@
                 <% session.removeAttribute("message"); %>
             </c:if>
             <c:if test="${not empty sessionScope.error}">
-                <div class="alert alert-danger" style="padding: 8px 12px; font-size: 0.85rem;">${sessionScope.error}</div>
+                <div class="alert alert-error" style="padding: 8px 12px; font-size: 0.85rem;">${sessionScope.error}</div>
                 <% session.removeAttribute("error"); %>
             </c:if>
 

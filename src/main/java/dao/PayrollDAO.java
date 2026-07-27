@@ -1202,4 +1202,18 @@ public class PayrollDAO {
         }
         return false;
     }
+
+    public boolean deletePitVersion(int versionId) {
+        String sql = "DELETE FROM pit_bracket_versions WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, versionId);
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
