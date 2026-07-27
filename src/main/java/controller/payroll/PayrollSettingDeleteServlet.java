@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.PayrollSetting;
 
 import java.io.IOException;
 
@@ -23,11 +24,17 @@ public class PayrollSettingDeleteServlet extends HttpServlet {
             if (idStr != null && !idStr.trim().isEmpty()) {
                 int id = Integer.parseInt(idStr);
 
-                boolean deleted = payrollDAO.deletePayrollSetting(id);
-                if (deleted) {
-                    request.getSession().setAttribute("message", "Payroll setting deleted successfully!");
+                PayrollSetting activeSetting = payrollDAO.getCurrentlyActivePayrollSetting();
+
+                if (activeSetting != null && activeSetting.getId() == id) {
+                    request.getSession().setAttribute("error", "Cannot delete the currently active payroll setting!");
                 } else {
-                    request.getSession().setAttribute("error", "Failed to delete payroll setting.");
+                    boolean deleted = payrollDAO.deletePayrollSetting(id);
+                    if (deleted) {
+                        request.getSession().setAttribute("message", "Payroll setting deleted successfully!");
+                    } else {
+                        request.getSession().setAttribute("error", "Failed to delete payroll setting.");
+                    }
                 }
             }
         } catch (Exception e) {

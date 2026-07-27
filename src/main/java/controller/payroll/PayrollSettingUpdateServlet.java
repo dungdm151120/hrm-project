@@ -144,7 +144,8 @@ public class PayrollSettingUpdateServlet extends HttpServlet {
             return 0L;
         }
         try {
-            long val = Long.parseLong(rawVal.trim());
+            String cleanVal = rawVal.replaceAll("\\.", "").trim();
+            long val = Long.parseLong(cleanVal);
             if (val < min) {
                 errorMsg.append(fieldName).append(" cannot be negative.<br/>");
             }
