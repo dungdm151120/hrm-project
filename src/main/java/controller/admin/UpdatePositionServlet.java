@@ -71,6 +71,7 @@ public class UpdatePositionServlet extends HttpServlet {
             boolean isSuccess = dao.updatePosition(updatedPost);
 
             if (isSuccess) {
+                req.getSession().setAttribute("message", "Updated position successfully!");
                 resp.sendRedirect(req.getContextPath() + "/position/list");
             } else {
                 req.setAttribute("departments", deptDao.getAllDepartments());

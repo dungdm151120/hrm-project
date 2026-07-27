@@ -58,6 +58,7 @@ public class AddPositionServlet extends HttpServlet {
             boolean isSuccess = dao.addPosition(position);
 
             if (isSuccess) {
+                request.getSession().setAttribute("message", "Added new position successfully!");
                 response.sendRedirect(request.getContextPath() + "/position/list");
             } else {
                 request.setAttribute("departments", deptDAO.getAllDepartments());

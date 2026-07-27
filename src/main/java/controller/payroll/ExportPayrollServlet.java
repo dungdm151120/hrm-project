@@ -48,21 +48,38 @@ public class ExportPayrollServlet extends HttpServlet {
             return;
         }
 
-        Integer departmentId = (deptIdParam != null && !deptIdParam.isEmpty()) ? Integer.parseInt(deptIdParam) : null;
+        Integer departmentId = null;
+        if (deptIdParam != null && !deptIdParam.trim().isEmpty() && !"0".equals(deptIdParam.trim())) {
+            departmentId = Integer.parseInt(deptIdParam.trim());
+        }
+
         int month = Integer.parseInt(monthParam);
         int year = Integer.parseInt(yearParam);
 
-        int totalUsers = userDAO.findByDepartmentId(departmentId).size();
+        int totalUsers = payrollDAO.countTotalEmployees(departmentId);
 
         int payrollCount = payrollDAO.countEmployeesWithPayroll(departmentId, month, year);
+
+        if (totalUsers == 0) {
+            request.getSession().setAttribute("error", "Cannot export report! No employees found.");
+            response.sendRedirect(request.getContextPath() + "/payroll/export");
+            return;
+        }
+
+        if (payrollCount == 0) {
+            request.getSession().setAttribute("error", "Cannot export report! Payroll for " + month + "/" + year + " has not been generated yet.");
+            response.sendRedirect(request.getContextPath() + "/payroll/export");
+            return;
+        }
 
         if (payrollCount < totalUsers) {
             int missingPayrollCount = totalUsers - payrollCount;
             request.getSession().setAttribute("error", "Cannot export report! There are " + missingPayrollCount
-                    + " employee(s) in this department who do not have payroll records for " + month + "/" + year + ". Please generate payroll first.");
+                    + " employee(s) who do not have payroll records for " + month + "/" + year + ". Please generate payroll first.");
             response.sendRedirect(request.getContextPath() + "/payroll/export");
             return;
         }
+
 
         List<Payroll> payrollList = payrollDAO.findPayrollsByDepartment(departmentId, month, year);
         boolean isAllCompany = (departmentId == null || departmentId == 0);
