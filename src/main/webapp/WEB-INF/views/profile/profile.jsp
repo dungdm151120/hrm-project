@@ -77,7 +77,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="phone">Phone</label>
+                                <label for="phone">Phone <span class="required-star">*</span></label>
                                 <input type="text" id="phone" name="phone"
                                        value="${fn:escapeXml(user.phone)}" maxlength="15" required
                                        inputmode="numeric" pattern="\d{10,15}"
@@ -88,7 +88,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="gender">Gender</label>
+                                <label for="gender">Gender <span class="required-star">*</span></label>
                                 <select id="gender" name="gender" required>
                                     <option value="" disabled ${empty user.gender ? 'selected' : ''}>Select gender</option>
                                     <option value="Male" ${user.gender == 'Male' ? 'selected' : ''}>Male</option>
@@ -101,7 +101,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="dateOfBirth">Date of Birth</label>
+                                <label for="dateOfBirth">Date of Birth <span class="required-star">*</span></label>
                                 <input type="date" id="dateOfBirth" name="dateOfBirth" value="<%= dob %>"
                                        max="<%= maxDob %>" required title="DD/MM/YYYY">
                                 <c:if test="${not empty profileErrors.dateOfBirth}">

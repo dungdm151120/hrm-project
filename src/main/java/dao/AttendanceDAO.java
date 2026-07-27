@@ -531,7 +531,7 @@ public class AttendanceDAO {
                         "ot.status AS ot_status " +
                         "FROM (" +
                         "SELECT u.id, u.full_name " + employeeFilter +
-                        " GROUP BY u.id, u.full_name ORDER BY u.full_name, u.id LIMIT ? OFFSET ?" +
+                        " GROUP BY u.id, u.full_name ORDER BY SUBSTRING_INDEX(TRIM(u.full_name), ' ', -1), u.full_name, u.id LIMIT ? OFFSET ?" +
                         ") page_users " +
                         "JOIN users u ON u.id = page_users.id " +
                         "LEFT JOIN departments d ON d.id = u.department_id " +
@@ -539,7 +539,7 @@ public class AttendanceDAO {
                         "AND ar.work_date BETWEEN ? AND ? " +
                         "LEFT JOIN (SELECT op1.user_id, op1.status, oreq1.overtime_date FROM overtime_participants op1 JOIN overtime_requests oreq1 ON op1.overtime_request_id = oreq1.id) ot " +
                         "ON ot.user_id = ar.user_id AND ot.overtime_date = ar.work_date " +
-                        "ORDER BY u.full_name, u.id, ar.work_date";
+                        "ORDER BY SUBSTRING_INDEX(TRIM(u.full_name), ' ', -1), u.full_name, u.id, ar.work_date";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -950,7 +950,7 @@ public class AttendanceDAO {
         if (!normalizedKeyword.isEmpty()) {
             appendUserIdFilter(sql, matchingUserIds);
         }
-        sql.append(" ORDER BY u.full_name, u.id, ar.work_date");
+        sql.append(" ORDER BY SUBSTRING_INDEX(TRIM(u.full_name), ' ', -1), u.full_name, u.id, ar.work_date");
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
