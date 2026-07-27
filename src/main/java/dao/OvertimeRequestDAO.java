@@ -111,7 +111,6 @@ public class OvertimeRequestDAO {
                     detail.setRequestStatus(rs.getString("status"));
                     detail.setHoursActual(rs.getDouble("hours_actual"));
 
-                    // Fetch participants for the same request
                     int overtimeRequestId = rs.getInt("overtime_request_id");
                     OvertimeParticipantDAO participantDAO = new OvertimeParticipantDAO();
                     detail.setParticipants(participantDAO.getByOvertimeRequestId(overtimeRequestId));

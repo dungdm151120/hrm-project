@@ -16,7 +16,6 @@ public class OvertimeDetail {
     private Double hoursActual;
     private List<OvertimeParticipant> participants;
 
-    // Getters and Setters
     public int getUserId() {
         return userId;
     }

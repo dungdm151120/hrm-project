@@ -11,7 +11,6 @@ public class OvertimeParticipant {
     private LocalDateTime confirmedAt;
     private LocalDateTime createdAt;
 
-    // Transient fields for display
     private String userFullName;
     private String employeeCode;
     private String positionName;

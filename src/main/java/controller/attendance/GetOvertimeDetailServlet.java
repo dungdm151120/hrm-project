@@ -33,7 +33,6 @@ public class GetOvertimeDetailServlet extends HttpServlet {
             OvertimeDetail detail = overtimeService.getOvertimeDetailByUserAndDate(userId, workDate);
 
             if (detail == null) {
-                // If there's no OT detail, redirect back to attendance with a message
                 session.setAttribute("errorMessage", "There is no Overtime record for this day.");
                 response.sendRedirect(request.getContextPath() + "/admin/attendance/my");
                 return;

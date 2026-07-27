@@ -71,10 +71,6 @@ public class OvertimeService {
         return overtimeRequestDAO.checkDuplicateOvertime(userId, date);
     }
 
-    /**
-     * Handles the specific processing logic for Overtime Requests (Calculate hours, update status).
-     * This is called AFTER the main Request is updated to APPROVED/REJECTED/CANCELLED.
-     */
     public void handleProcessAction(int requestId, String action) {
         OvertimeRequest oreq = overtimeRequestDAO.getByRequestId(requestId);
         if (oreq == null) return;
@@ -105,7 +101,7 @@ public class OvertimeService {
         boolean hasUpdates = false;
 
         for (OvertimeParticipant p : parts) {
-            // Only confirm if they are still REGISTERED
+
             if (!"REGISTERED".equals(p.getStatus())) continue;
 
             AttendanceRecord ar = attendanceDAO.getRecordByUserAndDate(p.getUserId(), oreq.getOvertimeDate());
@@ -128,7 +124,6 @@ public class OvertimeService {
                     pHours = blocks * 0.5;
                 }
 
-                // Update attendance records immediately without marking as edited
                 ar.setOvertimeHours((ar.getOvertimeHours() != null ? ar.getOvertimeHours() : 0.0) + pHours);
                 attendanceDAO.updateOvertimeHours(ar.getId(), ar.getOvertimeHours());
             }
@@ -141,11 +136,9 @@ public class OvertimeService {
             RequestDAO requestDAO = new RequestDAO();
             boolean success = requestDAO.updateRequestStatusOnly(requestId, "CONFIRMED");
             if (!success) {
-                // If the update fails (e.g. because of ENUM constraints), return false
                 return false;
             }
         }
-
         return hasUpdates;
     }
 
