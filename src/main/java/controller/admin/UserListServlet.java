@@ -14,7 +14,7 @@ import java.util.List;
 public class UserListServlet extends HttpServlet {
 
     private final UserDAO userDAO = new UserDAO();
-    private static final int PAGE_SIZE = 5; // Đồng bộ PAGE_SIZE = 5
+    private static final int PAGE_SIZE = 5;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -22,7 +22,6 @@ public class UserListServlet extends HttpServlet {
 
         // Search
         String keyword = request.getParameter("keyword");
-        if (keyword == null) keyword = request.getParameter("search");
         if (keyword == null) keyword = "";
 
         // Status
