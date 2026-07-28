@@ -477,7 +477,7 @@
                 <c:if test="${currentUser.roleName != 'BUSINESS ADMIN' && (userPermissions.contains('ATTENDANCE_CONFIRM_DEPT') || (currentUser.roleName == 'HR_MANAGER' && userPermissions.contains('ATTENDANCE_FINALIZE_HR')))}">
                     <a href="${ctx}/attendance/confirm" class="submenu-item ${currentPath == ctx.concat('/attendance/confirm') ? 'active' : ''}">Confirm Attendance</a>
                 </c:if>
-                <c:if test="${currentUser.roleName == 'HR_MANAGER' || currentUser.manager || currentUser.roleName == 'PAYROLL_MANAGER' || currentUser.roleName == 'PAYROLL_STAFF'}">
+                <c:if test="${userPermissions.contains('ATTENDANCE_VIEW_ALL') || userPermissions.contains('ATTENDANCE_VIEW_DEPARTMENT') || userPermissions.contains('ATTENDANCE_CONFIRM_DEPT') || userPermissions.contains('ATTENDANCE_FINALIZE_HR') || userPermissions.contains('PAYROLL_VIEW_DEPARTMENT') || userPermissions.contains('PAYROLL_VIEW_LIST')}">
                     <a href="${ctx}/attendance/confirm_list" class="submenu-item ${currentPath.startsWith(ctx.concat('/attendance/confirm_list')) or currentPath.startsWith(ctx.concat('/attendance/confirm_detail')) ? 'active' : ''}">Confirmed Attendance List</a>
                 </c:if>
             </div>
